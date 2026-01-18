@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Implémentation complète du plugin Moodle Gestion de Projet\n\nMigration complète des 6 pages de l''application standalone vers un plugin Moodle fonctionnel.\n\nPages enseignant \\(configuration\\):\n- Step 1: Fiche Descriptive avec 8 champs de description\n- Step 2: Expression du Besoin avec diagramme Bête à Corne SVG\n- Step 3: Planification avec timeline et gestion des tâches\n\nPages élèves \\(travail de groupe\\):\n- Step 4: Cahier des Charges avec diagramme interacteurs dynamique\n- Step 5: Fiche Essai avec protocole expérimental\n- Step 6: Rapport de Projet avec 6 sections complètes\n\nFonctionnalités:\n- Auto-save toutes les 30 secondes \\(configurable\\)\n- Système de verrouillage par page\n- Gestion de groupes Moodle\n- Stockage JSON pour données complexes\n- Interface de notation pour enseignants\n- Historique des modifications \\(audit trail\\)\n- Diagrammes SVG interactifs\n- Support multilingue \\(français\\)\n\nStructure technique:\n- 8 tables en base de données\n- AJAX pour sauvegarde automatique\n- AMD JavaScript modules\n- Intégration Bootstrap/Moodle\n- Permissions et capacités Moodle\n- Formulaires dynamiques\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }
