@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/gestionprojet/db" VERSION="20260117" COMMENT="XMLDB file for Moodle mod_gestionprojet"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <!-- Table principale: instances du module dans les cours -->
+    <TABLE NAME="gestionprojet" COMMENT="Gestion de Projet module instances">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Course ID"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Activity name"/>
+        <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Activity description"/>
+        <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="groupmode" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=no groups, 1=separate groups, 2=visible groups"/>
+        <FIELD NAME="autosave_interval" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="30" SEQUENCE="false" COMMENT="Auto-save interval in seconds"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="course_idx" UNIQUE="false" FIELDS="course"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Table: Fiche Descriptive (enseignant) -->
+    <TABLE NAME="gestionprojet_description" COMMENT="Fiche descriptive du projet">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Instance ID"/>
+        <FIELD NAME="intitule" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="niveau" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="support" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="duree" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="besoin" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="production" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="outils" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="evaluation" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="competences" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of competencies"/>
+        <FIELD NAME="imageid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="File ID for project image"/>
+        <FIELD NAME="locked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=locked by teacher"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- Table: Expression du Besoin (enseignant) -->
+    <TABLE NAME="gestionprojet_besoin" COMMENT="Expression du besoin - Bête à Corne">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="aqui" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="À qui rend-il service?"/>
+        <FIELD NAME="surquoi" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Sur quoi agit-il?"/>
+        <FIELD NAME="dansquelbut" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Dans quel but?"/>
+        <FIELD NAME="locked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- Table: Planification (enseignant) -->
+    <TABLE NAME="gestionprojet_planning" COMMENT="Planification du projet">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="projectname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="startdate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Unix timestamp"/>
+        <FIELD NAME="enddate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Unix timestamp"/>
+        <FIELD NAME="vacationzone" TYPE="char" LENGTH="1" NOTNULL="false" SEQUENCE="false" COMMENT="A, B, or C"/>
+        <FIELD NAME="task1_hours" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="1"/>
+        <FIELD NAME="task2_hours" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="1"/>
+        <FIELD NAME="task3_hours" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="1"/>
+        <FIELD NAME="task4_hours" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="1"/>
+        <FIELD NAME="task5_hours" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="1"/>
+        <FIELD NAME="locked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- Table: Cahier des Charges (groupe d'élèves) -->
+    <TABLE NAME="gestionprojet_cdcf" COMMENT="Cahier des charges fonctionnel par groupe">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=individual work"/>
+        <FIELD NAME="produit" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="milieu" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="fp" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Fonction Principale"/>
+        <FIELD NAME="interacteurs_data" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of interactors with FCs and criteres"/>
+        <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Note sur 20"/>
+        <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Teacher comments"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+        <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="gestionprojet_group_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Table: Fiche Essai (groupe d'élèves) -->
+    <TABLE NAME="gestionprojet_essai" COMMENT="Fiche d'essai par groupe">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="nom_essai" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="date_essai" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="groupe_eleves" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="fonction_service" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="niveaux_reussite" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="etapes_protocole" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="materiel_outils" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="precautions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of 6 precautions"/>
+        <FIELD NAME="resultats_obtenus" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="observations_remarques" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="conclusion" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2"/>
+        <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+        <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="gestionprojet_group_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Table: Rapport de Projet (groupe d'élèves) -->
+    <TABLE NAME="gestionprojet_rapport" COMMENT="Rapport final par groupe">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="titre_projet" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="auteurs" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of member names"/>
+        <FIELD NAME="besoin_projet" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="imperatifs" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="solutions" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="justification" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="realisation" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="difficultes" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="validation" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ameliorations" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="bilan" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="perspectives" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2"/>
+        <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+        <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="gestionprojet_group_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Table: Historique des modifications (audit trail) -->
+    <TABLE NAME="gestionprojet_history" COMMENT="Audit trail for all modifications">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="tablename" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="Table modified"/>
+        <FIELD NAME="recordid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Record ID in that table"/>
+        <FIELD NAME="fieldname" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="oldvalue" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newvalue" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="table_record_idx" UNIQUE="false" FIELDS="tablename, recordid"/>
+        <INDEX NAME="timecreated_idx" UNIQUE="false" FIELDS="timecreated"/>
+      </INDEXES>
+    </TABLE>
+
+  </TABLES>
+</XMLDB>

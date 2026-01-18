@@ -1,0 +1,458 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+/**
+ * Library of interface functions and constants for module gestionprojet.
+ *
+ * @package    mod_gestionprojet
+ * @copyright  2026 Emmanuel REMY
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Supported features
+ */
+function gestionprojet_supports($feature) {
+    switch($feature) {
+        case FEATURE_MOD_INTRO:
+            return true;
+        case FEATURE_BACKUP_MOODLE2:
+            return true;
+        case FEATURE_SHOW_DESCRIPTION:
+            return true;
+        case FEATURE_GROUPS:
+            return true;
+        case FEATURE_GROUPINGS:
+            return true;
+        case FEATURE_GRADE_HAS_GRADE:
+            return true;
+        case FEATURE_GRADE_OUTCOMES:
+            return false;
+        case FEATURE_COMPLETION_TRACKS_VIEWS:
+            return true;
+        case FEATURE_COMPLETION_HAS_RULES:
+            return true;
+        default:
+            return null;
+    }
+}
+
+/**
+ * Add gestionprojet instance.
+ *
+ * @param stdClass $data
+ * @param mod_gestionprojet_mod_form $mform
+ * @return int new gestionprojet instance id
+ */
+function gestionprojet_add_instance($data, $mform = null) {
+    global $DB;
+
+    $data->timecreated = time();
+    $data->timemodified = $data->timecreated;
+
+    // Set default autosave interval if not specified
+    if (!isset($data->autosave_interval)) {
+        $data->autosave_interval = 30;
+    }
+
+    $data->id = $DB->insert_record('gestionprojet', $data);
+
+    // Create empty teacher pages
+    gestionprojet_create_teacher_pages($data->id);
+
+    return $data->id;
+}
+
+/**
+ * Update gestionprojet instance.
+ *
+ * @param stdClass $data
+ * @param mod_gestionprojet_mod_form $mform
+ * @return bool true
+ */
+function gestionprojet_update_instance($data, $mform = null) {
+    global $DB;
+
+    $data->timemodified = time();
+    $data->id = $data->instance;
+
+    return $DB->update_record('gestionprojet', $data);
+}
+
+/**
+ * Delete gestionprojet instance.
+ *
+ * @param int $id
+ * @return bool true
+ */
+function gestionprojet_delete_instance($id) {
+    global $DB;
+
+    if (!$gestionprojet = $DB->get_record('gestionprojet', ['id' => $id])) {
+        return false;
+    }
+
+    // Delete all related data
+    $DB->delete_records('gestionprojet_description', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_besoin', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_planning', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_cdcf', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_essai', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_rapport', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
+
+    // Delete the instance
+    $DB->delete_records('gestionprojet', ['id' => $id]);
+
+    return true;
+}
+
+/**
+ * Create empty teacher pages for a new instance.
+ *
+ * @param int $gestionprojetid
+ */
+function gestionprojet_create_teacher_pages($gestionprojetid) {
+    global $DB;
+
+    $time = time();
+
+    // Create description
+    $description = new stdClass();
+    $description->gestionprojetid = $gestionprojetid;
+    $description->locked = 0;
+    $description->timecreated = $time;
+    $description->timemodified = $time;
+    $DB->insert_record('gestionprojet_description', $description);
+
+    // Create besoin
+    $besoin = new stdClass();
+    $besoin->gestionprojetid = $gestionprojetid;
+    $besoin->locked = 0;
+    $besoin->timecreated = $time;
+    $besoin->timemodified = $time;
+    $DB->insert_record('gestionprojet_besoin', $besoin);
+
+    // Create planning
+    $planning = new stdClass();
+    $planning->gestionprojetid = $gestionprojetid;
+    $planning->locked = 0;
+    $planning->task1_hours = 0;
+    $planning->task2_hours = 0;
+    $planning->task3_hours = 0;
+    $planning->task4_hours = 0;
+    $planning->task5_hours = 0;
+    $planning->timecreated = $time;
+    $planning->timemodified = $time;
+    $DB->insert_record('gestionprojet_planning', $planning);
+}
+
+/**
+ * Get user's group for this activity.
+ *
+ * @param int $cmid Course module ID
+ * @param int $userid User ID
+ * @return int|false Group ID or false if no group
+ */
+function gestionprojet_get_user_group($cmid, $userid) {
+    $groups = groups_get_activity_allowed_groups($cmid, $userid);
+
+    if (empty($groups)) {
+        return 0; // No groups mode or user not in any group
+    }
+
+    // Return first group (students should only be in one group per activity)
+    return array_key_first($groups);
+}
+
+/**
+ * Get or create student submission record.
+ *
+ * @param int $gestionprojetid
+ * @param int $groupid
+ * @param string $table Table name (cdcf, essai, or rapport)
+ * @return stdClass
+ */
+function gestionprojet_get_or_create_submission($gestionprojetid, $groupid, $table) {
+    global $DB;
+
+    $tablename = 'gestionprojet_' . $table;
+
+    $params = [
+        'gestionprojetid' => $gestionprojetid,
+        'groupid' => $groupid
+    ];
+
+    $record = $DB->get_record($tablename, $params);
+
+    if (!$record) {
+        $record = new stdClass();
+        $record->gestionprojetid = $gestionprojetid;
+        $record->groupid = $groupid;
+        $record->timecreated = time();
+        $record->timemodified = time();
+        $record->id = $DB->insert_record($tablename, $record);
+    }
+
+    return $record;
+}
+
+/**
+ * Log a modification to history table.
+ *
+ * @param int $gestionprojetid
+ * @param string $tablename
+ * @param int $recordid
+ * @param string $fieldname
+ * @param mixed $oldvalue
+ * @param mixed $newvalue
+ * @param int $userid
+ * @param int $groupid
+ */
+function gestionprojet_log_change($gestionprojetid, $tablename, $recordid, $fieldname, $oldvalue, $newvalue, $userid, $groupid = null) {
+    global $DB;
+
+    // Don't log if values are the same
+    if ($oldvalue === $newvalue) {
+        return;
+    }
+
+    $history = new stdClass();
+    $history->gestionprojetid = $gestionprojetid;
+    $history->tablename = $tablename;
+    $history->recordid = $recordid;
+    $history->fieldname = $fieldname;
+    $history->oldvalue = is_string($oldvalue) ? $oldvalue : json_encode($oldvalue);
+    $history->newvalue = is_string($newvalue) ? $newvalue : json_encode($newvalue);
+    $history->userid = $userid;
+    $history->groupid = $groupid;
+    $history->timecreated = time();
+
+    $DB->insert_record('gestionprojet_history', $history);
+}
+
+/**
+ * Check if teacher pages are locked.
+ *
+ * @param int $gestionprojetid
+ * @return bool
+ */
+function gestionprojet_teacher_pages_locked($gestionprojetid) {
+    global $DB;
+
+    $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojetid]);
+    $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojetid]);
+    $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojetid]);
+
+    return ($description && $description->locked) ||
+           ($besoin && $besoin->locked) ||
+           ($planning && $planning->locked);
+}
+
+/**
+ * Check if teacher pages are complete.
+ *
+ * @param int $gestionprojetid
+ * @return bool
+ */
+function gestionprojet_teacher_pages_complete($gestionprojetid) {
+    global $DB;
+
+    $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojetid]);
+    $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojetid]);
+    $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojetid]);
+
+    // Check if basic required fields are filled
+    return $description && !empty($description->intitule) &&
+           $besoin && !empty($besoin->aqui) &&
+           $planning && !empty($planning->projectname);
+}
+
+/**
+ * Get all groups with submissions for grading.
+ *
+ * @param int $gestionprojetid
+ * @param int $courseid
+ * @return array Array of groups with submission status
+ */
+function gestionprojet_get_groups_for_grading($gestionprojetid, $courseid) {
+    global $DB;
+
+    $groups = groups_get_all_groups($courseid);
+    $result = [];
+
+    foreach ($groups as $group) {
+        $cdcf = $DB->get_record('gestionprojet_cdcf', [
+            'gestionprojetid' => $gestionprojetid,
+            'groupid' => $group->id
+        ]);
+        $essai = $DB->get_record('gestionprojet_essai', [
+            'gestionprojetid' => $gestionprojetid,
+            'groupid' => $group->id
+        ]);
+        $rapport = $DB->get_record('gestionprojet_rapport', [
+            'gestionprojetid' => $gestionprojetid,
+            'groupid' => $group->id
+        ]);
+
+        $result[] = [
+            'group' => $group,
+            'cdcf' => $cdcf,
+            'essai' => $essai,
+            'rapport' => $rapport,
+            'has_submission' => ($cdcf || $essai || $rapport)
+        ];
+    }
+
+    return $result;
+}
+
+/**
+ * Extend navigation settings.
+ *
+ * @param settings_navigation $settings
+ * @param navigation_node $navref
+ */
+function gestionprojet_extend_settings_navigation($settings, $navref) {
+    global $PAGE, $USER;
+
+    $context = $PAGE->cm->context;
+
+    // Add link to view history for teachers
+    if (has_capability('mod/gestionprojet:viewhistory', $context)) {
+        $url = new moodle_url('/mod/gestionprojet/history.php', ['id' => $PAGE->cm->id]);
+        $navref->add(get_string('view_history', 'gestionprojet'), $url, navigation_node::TYPE_SETTING);
+    }
+
+    // Add link to export all for teachers
+    if (has_capability('mod/gestionprojet:exportall', $context)) {
+        $url = new moodle_url('/mod/gestionprojet/export.php', ['id' => $PAGE->cm->id]);
+        $navref->add(get_string('export_all', 'gestionprojet'), $url, navigation_node::TYPE_SETTING);
+    }
+}
+
+/**
+ * Update activity grades.
+ *
+ * @param stdClass $gestionprojet
+ * @param int $userid
+ * @param bool $nullifnone
+ */
+function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = true) {
+    global $CFG, $DB;
+    require_once($CFG->libdir . '/gradelib.php');
+
+    if ($gestionprojet->grade == 0) {
+        gestionprojet_grade_item_update($gestionprojet);
+    } else {
+        $grades = gestionprojet_get_user_grades($gestionprojet, $userid);
+        gestionprojet_grade_item_update($gestionprojet, $grades);
+    }
+}
+
+/**
+ * Create or update grade item.
+ *
+ * @param stdClass $gestionprojet
+ * @param mixed $grades
+ * @return int 0 if ok, error code otherwise
+ */
+function gestionprojet_grade_item_update($gestionprojet, $grades = null) {
+    global $CFG;
+    require_once($CFG->libdir . '/gradelib.php');
+
+    $params = [
+        'itemname' => $gestionprojet->name,
+        'idnumber' => $gestionprojet->id
+    ];
+
+    $params['gradetype'] = GRADE_TYPE_VALUE;
+    $params['grademax'] = 20;
+    $params['grademin'] = 0;
+
+    if ($grades === 'reset') {
+        $params['reset'] = true;
+        $grades = null;
+    }
+
+    return grade_update('mod/gestionprojet', $gestionprojet->course, 'mod', 'gestionprojet',
+                       $gestionprojet->id, 0, $grades, $params);
+}
+
+/**
+ * Get user grades.
+ *
+ * @param stdClass $gestionprojet
+ * @param int $userid
+ * @return array
+ */
+function gestionprojet_get_user_grades($gestionprojet, $userid = 0) {
+    global $DB;
+
+    $grades = [];
+
+    // Get all groups
+    $groups = groups_get_all_groups($gestionprojet->course);
+
+    foreach ($groups as $group) {
+        // Get group members
+        $members = groups_get_members($group->id, 'u.id');
+
+        if (empty($members)) {
+            continue;
+        }
+
+        // Get grades for this group
+        $cdcf = $DB->get_record('gestionprojet_cdcf', [
+            'gestionprojetid' => $gestionprojet->id,
+            'groupid' => $group->id
+        ]);
+        $essai = $DB->get_record('gestionprojet_essai', [
+            'gestionprojetid' => $gestionprojet->id,
+            'groupid' => $group->id
+        ]);
+        $rapport = $DB->get_record('gestionprojet_rapport', [
+            'gestionprojetid' => $gestionprojet->id,
+            'groupid' => $group->id
+        ]);
+
+        // Calculate average grade
+        $totalgrade = 0;
+        $count = 0;
+
+        if ($cdcf && $cdcf->grade !== null) {
+            $totalgrade += $cdcf->grade;
+            $count++;
+        }
+        if ($essai && $essai->grade !== null) {
+            $totalgrade += $essai->grade;
+            $count++;
+        }
+        if ($rapport && $rapport->grade !== null) {
+            $totalgrade += $rapport->grade;
+            $count++;
+        }
+
+        if ($count > 0) {
+            $avggrade = $totalgrade / $count;
+
+            // Assign same grade to all group members
+            foreach ($members as $member) {
+                if ($userid == 0 || $userid == $member->id) {
+                    $grades[$member->id] = new stdClass();
+                    $grades[$member->id]->userid = $member->id;
+                    $grades[$member->id]->rawgrade = $avggrade;
+                }
+            }
+        }
+    }
+
+    return $grades;
+}
