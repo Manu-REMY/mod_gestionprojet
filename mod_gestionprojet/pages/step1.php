@@ -45,12 +45,13 @@ if (optional_param('togglelock', false, PARAM_BOOL) && confirm_sesskey()) {
     redirect($PAGE->url);
 }
 
-$PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [
-    'cmid' => $cm->id,
-    'step' => 1,
-    'interval' => $gestionprojet->autosave_interval * 1000,
-    'formSelector' => '#descriptionForm'
-]);
+// Autosave handled inline at bottom of file
+// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [
+//     'cmid' => $cm->id,
+//     'step' => 1,
+//     'interval' => $gestionprojet->autosave_interval * 1000,
+//     'formSelector' => '#descriptionForm'
+// ]);
 
 echo $OUTPUT->header();
 ?>
@@ -573,7 +574,70 @@ input:checked + .lock-slider:before {
     </div>
 </div>
 
+<?php
+// Ensure jQuery is loaded
+$PAGE->requires->jquery();
+?>
+
 <script>
+// Wait for jQuery to be loaded
+(function checkJQuery() {
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
+            const cmid = <?php echo $cm->id; ?>;
+            const step = 1;
+            const autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+            let autosaveTimer;
+
+            // Autosave on input change
+            $('#descriptionForm input, #descriptionForm textarea, #descriptionForm select').on('input change', function() {
+                clearTimeout(autosaveTimer);
+                autosaveTimer = setTimeout(function() {
+                    autosave();
+                }, 2000);
+            });
+
+            // Autosave on blur
+            $('#descriptionForm input, #descriptionForm textarea, #descriptionForm select').on('blur', function() {
+                autosave();
+            });
+
+            // Autosave when page loses focus
+            $(window).on('blur', function() {
+                autosave();
+            });
+
+            // Periodic autosave
+            let periodicTimer = setInterval(function() {
+                autosave();
+            }, autosaveInterval);
+
+            function autosave() {
+                const formData = collectFormData();
+                console.log('Autosave triggered (step1)', formData);
+
+                $.ajax({
+                    url: '<?php echo new moodle_url('/mod/gestionprojet/ajax/autosave.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        cmid: cmid,
+                        step: step,
+                        data: JSON.stringify(formData)
+                    },
+                    success: function(response) {
+                        console.log('Autosave response:', response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', status, error);
+                    }
+                });
+            }
+        });
+    } else {
+        setTimeout(checkJQuery, 50);
+    }
+})();
+
 // Export PDF functionality (to be implemented with TCPDF)
 function exportToPDF() {
     alert('Export PDF sera implémenté avec TCPDF côté serveur');

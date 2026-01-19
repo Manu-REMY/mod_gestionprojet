@@ -194,8 +194,16 @@ input:checked + .slider:before {
 }
 </style>
 
+<?php
+// Ensure jQuery is loaded
+$PAGE->requires->jquery();
+?>
+
 <script>
-require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
+// Wait for jQuery to be loaded
+(function checkJQuery() {
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
     const cmid = <?php echo $cm->id; ?>;
     const step = 3;
     const autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
@@ -260,7 +268,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
         $('#autosaveIndicator').html('<i class="fa fa-spinner fa-spin"></i> <?php echo get_string('autosaving', 'gestionprojet'); ?>');
 
         $.ajax({
-            url: '../ajax/autosave.php',
+            url: '<?php echo new moodle_url('/mod/gestionprojet/ajax/autosave.php'); ?>',
             type: 'POST',
             data: {
                 cmid: cmid,
@@ -354,7 +362,11 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
 
     // Initial timeline render
     updateTimeline();
-});
+        });
+    } else {
+        setTimeout(checkJQuery, 50);
+    }
+})();
 </script>
 
 <?php

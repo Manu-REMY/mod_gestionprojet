@@ -50,12 +50,12 @@ if (!$groupid) {
 // Get or create submission
 $submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'cdcf');
 
-// Load auto-save JavaScript
-$PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
-    'cmid' => $cm->id,
-    'step' => 4,
-    'interval' => $gestionprojet->autosaveinterval * 1000
-]]);
+// Autosave handled inline at bottom of file
+// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
+//     'cmid' => $cm->id,
+//     'step' => 4,
+//     'interval' => $gestionprojet->autosaveinterval * 1000
+// ]]);
 
 echo $OUTPUT->header();
 
@@ -557,7 +557,82 @@ if (empty($interacteurs)) {
     </form>
 </div>
 
+<?php
+// Ensure jQuery is loaded
+$PAGE->requires->jquery();
+?>
+
 <script>
+// Wait for jQuery to be loaded
+(function checkJQuery() {
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
+            const cmid = <?php echo $cm->id; ?>;
+            const step = 4;
+            const autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+            let autosaveTimer;
+
+            // Autosave on input change
+            $('form input, form textarea, form select').on('input change', function() {
+                clearTimeout(autosaveTimer);
+                autosaveTimer = setTimeout(function() {
+                    autosave();
+                }, 2000);
+            });
+
+            // Autosave on blur
+            $('form input, form textarea, form select').on('blur', function() {
+                autosave();
+            });
+
+            // Autosave when page loses focus
+            $(window).on('blur', function() {
+                autosave();
+            });
+
+            // Periodic autosave
+            let periodicTimer = setInterval(function() {
+                autosave();
+            }, autosaveInterval);
+
+            function collectFormData() {
+                const formData = {};
+                $('form input, form textarea, form select').each(function() {
+                    if (this.name) {
+                        formData[this.name] = this.value;
+                    }
+                });
+                formData['interacteurs_data'] = JSON.stringify(interacteurs);
+                return formData;
+            }
+
+            function autosave() {
+                const formData = collectFormData();
+                console.log('Autosave triggered (step4)', formData);
+
+                $.ajax({
+                    url: '<?php echo new moodle_url('/mod/gestionprojet/ajax/autosave.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        cmid: cmid,
+                        step: step,
+                        groupid: <?php echo $groupid; ?>,
+                        data: JSON.stringify(formData)
+                    },
+                    success: function(response) {
+                        console.log('Autosave response:', response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', status, error);
+                    }
+                });
+            }
+        });
+    } else {
+        setTimeout(checkJQuery, 50);
+    }
+})();
+
 // Interacteurs data
 let interacteurs = <?php echo json_encode($interacteurs); ?>;
 

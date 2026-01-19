@@ -19,6 +19,11 @@ define('AJAX_SCRIPT', true);
 require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../lib.php');
 
+// Debug logging
+$debug_log = __DIR__ . '/../../../moodledata/temp/autosave_debug.log';
+@file_put_contents($debug_log, "\n=== " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
+@file_put_contents($debug_log, "POST: " . print_r($_POST, true), FILE_APPEND);
+
 $cmid = required_param('cmid', PARAM_INT);
 $step = required_param('step', PARAM_INT);
 $data = required_param('data', PARAM_RAW);
@@ -33,8 +38,11 @@ $context = context_module::instance($cm->id);
 
 // Decode JSON data
 $formdata = json_decode($data, true);
+@file_put_contents($debug_log, "Data received: " . $data . "\n", FILE_APPEND);
+@file_put_contents($debug_log, "Decoded: " . print_r($formdata, true) . "\n", FILE_APPEND);
 
 if (!$formdata) {
+    @file_put_contents($debug_log, "ERROR: Invalid JSON\n", FILE_APPEND);
     echo json_encode(['success' => false, 'error' => 'Invalid data']);
     exit;
 }
@@ -59,9 +67,11 @@ try {
                 $record->timecreated = $time;
             }
 
-            // Update fields
+            // List of valid fields for description table
+            $validfields = ['intitule', 'niveau', 'support', 'duree', 'besoin', 'production', 'outils', 'evaluation', 'competences', 'imageid', 'locked'];
+
             foreach ($formdata as $key => $value) {
-                if ($key !== 'id' && property_exists($record, $key)) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     $record->$key = $value;
 
@@ -95,8 +105,11 @@ try {
                 $record->timecreated = $time;
             }
 
+            // List of valid fields for besoin table
+            $validfields = ['aqui', 'surquoi', 'dansquelbut', 'locked'];
+
             foreach ($formdata as $key => $value) {
-                if ($key !== 'id' && property_exists($record, $key)) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     $record->$key = $value;
 
@@ -109,8 +122,10 @@ try {
             $record->timemodified = $time;
 
             if (isset($record->id)) {
+                @file_put_contents($debug_log, "STEP 2 UPDATE: " . print_r($record, true) . "\n", FILE_APPEND);
                 $DB->update_record('gestionprojet_besoin', $record);
             } else {
+                @file_put_contents($debug_log, "STEP 2 INSERT: " . print_r($record, true) . "\n", FILE_APPEND);
                 $record->id = $DB->insert_record('gestionprojet_besoin', $record);
             }
 
@@ -129,8 +144,11 @@ try {
                 $record->timecreated = $time;
             }
 
+            // List of valid fields for planning table
+            $validfields = ['projectname', 'startdate', 'enddate', 'vacationzone', 'task1_hours', 'task2_hours', 'task3_hours', 'task4_hours', 'task5_hours', 'locked'];
+
             foreach ($formdata as $key => $value) {
-                if ($key !== 'id' && property_exists($record, $key)) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     $record->$key = $value;
 
@@ -158,8 +176,11 @@ try {
 
             $record = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'cdcf');
 
+            // List of valid fields for cdcf table
+            $validfields = ['produit', 'milieu', 'fp', 'interacteurs_data', 'grade', 'feedback'];
+
             foreach ($formdata as $key => $value) {
-                if ($key !== 'id' && property_exists($record, $key)) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     $record->$key = is_array($value) ? json_encode($value) : $value;
 
@@ -180,8 +201,11 @@ try {
 
             $record = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'essai');
 
+            // List of valid fields for essai table
+            $validfields = ['nom_essai', 'date_essai', 'groupe_eleves', 'fonction_service', 'niveaux_reussite', 'etapes_protocole', 'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion', 'grade', 'feedback'];
+
             foreach ($formdata as $key => $value) {
-                if ($key !== 'id' && property_exists($record, $key)) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     $record->$key = $value;
 
@@ -202,8 +226,11 @@ try {
 
             $record = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'rapport');
 
+            // List of valid fields for rapport table
+            $validfields = ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions', 'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives', 'grade', 'feedback'];
+
             foreach ($formdata as $key => $value) {
-                if ($key !== 'id' && property_exists($record, $key)) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     $record->$key = $value;
 

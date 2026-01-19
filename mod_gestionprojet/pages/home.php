@@ -382,9 +382,10 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
 </div>
 
 <?php
-// Include autosave JavaScript
-$PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [
-    'cmid' => $cm->id,
-    'interval' => $gestionprojet->autosave_interval * 1000
-]);
+// Note: Autosave JavaScript is now inline in each step file
+// Commented out to avoid "No define call" error
+// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [
+//     'cmid' => $cm->id,
+//     'interval' => $gestionprojet->autosave_interval * 1000
+// ]);
 ?>

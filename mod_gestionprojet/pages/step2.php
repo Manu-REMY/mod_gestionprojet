@@ -49,10 +49,22 @@ echo $OUTPUT->header();
 // Navigation buttons
 echo '<div class="navigation-container" style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">';
 echo '<div>';
-echo '<a href="../view.php?id=' . $cm->id . '" class="btn btn-secondary">← ' . get_string('back') . '</a>';
+if (defined('MOODLE_INTERNAL')) {
+    // Included from view.php
+    echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 1]) . '" class="btn btn-secondary">← ' . get_string('back') . '</a>';
+} else {
+    // Direct access
+    echo '<a href="../view.php?id=' . $cm->id . '&step=1" class="btn btn-secondary">← ' . get_string('back') . '</a>';
+}
 echo '</div>';
 echo '<div>';
-echo '<a href="step3.php?cmid=' . $cm->id . '" class="btn btn-primary">' . get_string('next') . ' →</a>';
+if (defined('MOODLE_INTERNAL')) {
+    // Included from view.php
+    echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 3]) . '" class="btn btn-primary">' . get_string('next') . ' →</a>';
+} else {
+    // Direct access
+    echo '<a href="../view.php?id=' . $cm->id . '&step=3" class="btn btn-primary">' . get_string('next') . ' →</a>';
+}
 echo '</div>';
 echo '</div>';
 
@@ -159,8 +171,16 @@ input:checked + .slider:before {
 }
 </style>
 
+<?php
+// Ensure jQuery is loaded
+$PAGE->requires->jquery();
+?>
+
 <script>
-require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
+// Wait for jQuery to be loaded
+(function checkJQuery() {
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
     const cmid = <?php echo $cm->id; ?>;
     const step = 2;
     const autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
@@ -188,11 +208,26 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
         triggerAutosave();
     });
 
+    // Autosave on blur (when field loses focus)
+    $('#besoinForm textarea').on('blur', function() {
+        autosave();
+    });
+
+    // Autosave when page loses focus
+    $(window).on('blur', function() {
+        autosave();
+    });
+
+    // Periodic autosave
+    let periodicTimer = setInterval(function() {
+        autosave();
+    }, autosaveInterval);
+
     function triggerAutosave() {
         clearTimeout(autosaveTimer);
         autosaveTimer = setTimeout(function() {
             autosave();
-        }, autosaveInterval);
+        }, 2000); // Autosave 2 seconds after last change
     }
 
     // Collect form data
@@ -210,51 +245,40 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
     function autosave() {
         const formData = collectFormData();
 
+        console.log('Autosave triggered', formData);
         $('#autosaveIndicator').html('<i class="fa fa-spinner fa-spin"></i> <?php echo get_string('autosaving', 'gestionprojet'); ?>');
 
-        Ajax.call([{
-            methodname: 'core_form_dynamic_form',
-            args: {
-                form: 'mod_gestionprojet\\form\\autosave_form',
-                formdata: JSON.stringify({
-                    cmid: cmid,
-                    step: step,
-                    data: JSON.stringify(formData)
-                })
+        $.ajax({
+            url: '<?php echo new moodle_url('/mod/gestionprojet/ajax/autosave.php'); ?>',
+            type: 'POST',
+            data: {
+                cmid: cmid,
+                step: step,
+                data: JSON.stringify(formData)
             },
-            done: function(response) {
-                $('#autosaveIndicator').html('<i class="fa fa-check text-success"></i> <?php echo get_string('autosaved', 'gestionprojet'); ?>');
+            success: function(response) {
+                console.log('Autosave response:', response);
+                try {
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (result.success) {
+                        $('#autosaveIndicator').html('<i class="fa fa-check text-success"></i> <?php echo get_string('autosaved', 'gestionprojet'); ?>');
+                    } else {
+                        $('#autosaveIndicator').html('<i class="fa fa-exclamation-triangle text-warning"></i> ' + (result.message || result.error));
+                        console.error('Autosave failed:', result);
+                    }
+                } catch (e) {
+                    console.error('JSON parse error:', e, response);
+                    $('#autosaveIndicator').html('<i class="fa fa-exclamation-triangle text-danger"></i> Parse error');
+                }
                 setTimeout(function() {
                     $('#autosaveIndicator').html('');
                 }, 3000);
             },
-            fail: function(error) {
-                // Use AJAX endpoint directly
-                $.ajax({
-                    url: '../ajax/autosave.php',
-                    type: 'POST',
-                    data: {
-                        cmid: cmid,
-                        step: step,
-                        data: JSON.stringify(formData)
-                    },
-                    success: function(response) {
-                        const result = JSON.parse(response);
-                        if (result.success) {
-                            $('#autosaveIndicator').html('<i class="fa fa-check text-success"></i> <?php echo get_string('autosaved', 'gestionprojet'); ?>');
-                        } else {
-                            $('#autosaveIndicator').html('<i class="fa fa-exclamation-triangle text-warning"></i> ' + result.message);
-                        }
-                        setTimeout(function() {
-                            $('#autosaveIndicator').html('');
-                        }, 3000);
-                    },
-                    error: function() {
-                        $('#autosaveIndicator').html('<i class="fa fa-exclamation-triangle text-danger"></i> <?php echo get_string('autosave_failed', 'gestionprojet'); ?>');
-                    }
-                });
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', status, error, xhr.responseText);
+                $('#autosaveIndicator').html('<i class="fa fa-exclamation-triangle text-danger"></i> <?php echo get_string('autosave_failed', 'gestionprojet'); ?>');
             }
-        }]);
+        });
     }
 
     // Simplified Bête à Corne SVG diagram
@@ -502,13 +526,13 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
         bottomSubtitle.textContent = '(fonction d\'usage ou besoin)';
         svg.appendChild(bottomSubtitle);
 
-        // Simplified "horn" curve
-        const topCurveStartX = leftCenterX;
-        const topCurveStartY = leftCenterY + boxHeight / 2;
-        const topCurveEndX = rightCenterX;
-        const topCurveEndY = rightCenterY + boxHeight / 2;
+        // "Horn" curve - top arc connecting left and right ellipses
+        const topCurveStartX = leftCenterX + boxWidth / 2 - 10;
+        const topCurveStartY = leftCenterY;
+        const topCurveEndX = rightCenterX - boxWidth / 2 + 10;
+        const topCurveEndY = rightCenterY;
         const topCurveControlX = centerX;
-        const topCurveControlY = 235;
+        const topCurveControlY = centerY - 50;
 
         const topCurve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         topCurve.setAttribute('d', `M ${topCurveStartX} ${topCurveStartY} Q ${topCurveControlX} ${topCurveControlY} ${topCurveEndX} ${topCurveEndY}`);
@@ -517,7 +541,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
         topCurve.setAttribute('fill', 'none');
         svg.appendChild(topCurve);
 
-        // Circles at curve ends
+        // Circles at top curve ends
         const leftCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         leftCircle.setAttribute('cx', topCurveStartX);
         leftCircle.setAttribute('cy', topCurveStartY);
@@ -532,26 +556,40 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
         rightCircle.setAttribute('fill', '#e91e63');
         svg.appendChild(rightCircle);
 
-        // Simplified arrow from right to bottom
-        const arrowStartX = rightCenterX - 30;
-        const arrowStartY = rightCenterY + 60;
-        const arrowEndX = bottomCenterX;
-        const arrowEndY = bottomCenterY - boxHeight / 2;
+        // Bottom "horn" curve - connecting top arc to bottom box
+        const bottomCurveStartX = centerX;
+        const bottomCurveStartY = centerY + productHeight / 2 + 10;
+        const bottomCurveEndX = bottomCenterX;
+        const bottomCurveEndY = bottomBoxY - 5;
+        const bottomCurveControl1X = centerX + 80;
+        const bottomCurveControl1Y = centerY + 70;
+        const bottomCurveControl2X = bottomCenterX + 60;
+        const bottomCurveControl2Y = bottomBoxY - 40;
 
-        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        arrow.setAttribute('x1', arrowStartX);
-        arrow.setAttribute('y1', arrowStartY);
-        arrow.setAttribute('x2', arrowEndX);
-        arrow.setAttribute('y2', arrowEndY);
-        arrow.setAttribute('stroke', '#e91e63');
-        arrow.setAttribute('stroke-width', '3');
-        arrow.setAttribute('marker-end', 'url(#arrowhead)');
-        svg.appendChild(arrow);
+        const bottomCurve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        bottomCurve.setAttribute('d', `M ${bottomCurveStartX} ${bottomCurveStartY} C ${bottomCurveControl1X} ${bottomCurveControl1Y}, ${bottomCurveControl2X} ${bottomCurveControl2Y}, ${bottomCurveEndX} ${bottomCurveEndY}`);
+        bottomCurve.setAttribute('stroke', '#e91e63');
+        bottomCurve.setAttribute('stroke-width', '3');
+        bottomCurve.setAttribute('fill', 'none');
+        bottomCurve.setAttribute('marker-end', 'url(#arrowhead)');
+        svg.appendChild(bottomCurve);
+
+        // Circle at bottom curve start
+        const bottomStartCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bottomStartCircle.setAttribute('cx', bottomCurveStartX);
+        bottomStartCircle.setAttribute('cy', bottomCurveStartY);
+        bottomStartCircle.setAttribute('r', '5');
+        bottomStartCircle.setAttribute('fill', '#e91e63');
+        svg.appendChild(bottomStartCircle);
     }
 
     // Initial diagram render
     updateDiagram();
-});
+        });
+    } else {
+        setTimeout(checkJQuery, 50);
+    }
+})();
 </script>
 
 <?php
