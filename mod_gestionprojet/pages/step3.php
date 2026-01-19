@@ -14,22 +14,29 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../../config.php');
-require_once(__DIR__ . '/../lib.php');
+// Check if this file is included by view.php or accessed directly
+if (!defined('MOODLE_INTERNAL')) {
+    // Standalone mode - requires config
+    require_once(__DIR__ . '/../../../config.php');
+    require_once(__DIR__ . '/../lib.php');
 
-$cmid = required_param('cmid', PARAM_INT);
-$cm = get_coursemodule_from_id('gestionprojet', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
-$gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
+    $cmid = required_param('cmid', PARAM_INT);
+    $cm = get_coursemodule_from_id('gestionprojet', $cmid, 0, false, MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
 
-require_login($course, false, $cm);
-$context = context_module::instance($cm->id);
-require_capability('mod/gestionprojet:configureteacherpages', $context);
+    require_login($course, false, $cm);
+    $context = context_module::instance($cm->id);
+    require_capability('mod/gestionprojet:configureteacherpages', $context);
 
-$PAGE->set_url(new moodle_url('/mod/gestionprojet/pages/step3.php', ['cmid' => $cm->id]));
-$PAGE->set_title(get_string('step3', 'gestionprojet'));
-$PAGE->set_heading($course->fullname);
-$PAGE->set_context($context);
+    $PAGE->set_url(new moodle_url('/mod/gestionprojet/pages/step3.php', ['cmid' => $cm->id]));
+    $PAGE->set_title(get_string('step3', 'gestionprojet'));
+    $PAGE->set_heading($course->fullname);
+    $PAGE->set_context($context);
+} else {
+    // Included mode - variables already set by view.php
+    require_capability('mod/gestionprojet:configureteacherpages', $context);
+}
 
 // Get existing data
 $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);

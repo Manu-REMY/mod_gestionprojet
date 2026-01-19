@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other metadata.
+ * Upgrade script for mod_gestionprojet.
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -24,8 +24,23 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'mod_gestionprojet';
-$plugin->version = 2026011700;  // YYYYMMDDXX format
-$plugin->requires = 2024100700; // Moodle 5.0+
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '1.0.0';
+/**
+ * Execute mod_gestionprojet upgrade from the given old version.
+ *
+ * @param int $oldversion
+ * @return bool
+ */
+function xmldb_mod_gestionprojet_upgrade($oldversion) {
+    global $DB;
+
+    $dbman = $DB->get_manager();
+
+    // Upgrades will be added here as the plugin evolves.
+    // Example:
+    // if ($oldversion < 2026011701) {
+    //     // Upgrade code here.
+    //     upgrade_mod_savepoint(true, 2026011701, 'gestionprojet');
+    // }
+
+    return true;
+}

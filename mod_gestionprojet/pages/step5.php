@@ -14,18 +14,30 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../../config.php');
-require_once(__DIR__ . '/../lib.php');
+// Check if this file is included by view.php or accessed directly
+if (!defined('MOODLE_INTERNAL')) {
+    // Standalone mode - requires config
+    require_once(__DIR__ . '/../../../config.php');
+    require_once(__DIR__ . '/../lib.php');
 
-$id = required_param('id', PARAM_INT); // Course module ID
+    $id = required_param('id', PARAM_INT); // Course module ID
 
-$cm = get_coursemodule_from_id('gestionprojet', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
-$gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
+    $cm = get_coursemodule_from_id('gestionprojet', $id, 0, false, MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
 
-require_login($course, true, $cm);
+    require_login($course, true, $cm);
 
-$context = context_module::instance($cm->id);
+    $context = context_module::instance($cm->id);
+
+    // Page setup
+    $PAGE->set_url('/mod/gestionprojet/pages/step5.php', ['id' => $cm->id]);
+    $PAGE->set_title(get_string('step5', 'gestionprojet'));
+    $PAGE->set_heading(format_string($course->fullname));
+    $PAGE->set_context($context);
+}
+
+// Variables are set - continue with page logic
 require_capability('mod/gestionprojet:submit', $context);
 
 // Get user's group
@@ -36,13 +48,7 @@ if (!$groupid) {
 }
 
 // Get or create submission
-$submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'gestionprojet_essai');
-
-// Page setup
-$PAGE->set_url('/mod/gestionprojet/pages/step5.php', ['id' => $cm->id]);
-$PAGE->set_title(get_string('step5', 'gestionprojet'));
-$PAGE->set_heading(format_string($course->fullname));
-$PAGE->set_context($context);
+$submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'essai');
 
 // Load auto-save JavaScript
 $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[

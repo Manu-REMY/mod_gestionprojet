@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="12" cy="12" r="10" fill="#4A90E2" opacity="0.1"/>
+
+  <!-- Project document -->
+  <path d="M7 4C7 3.44772 7.44772 3 8 3H13L17 7V19C17 19.5523 16.5523 20 16 20H8C7.44772 20 7 19.5523 7 19V4Z" fill="#4A90E2" stroke="#4A90E2" stroke-width="1.5"/>
+
+  <!-- Document fold -->
+  <path d="M13 3V6C13 6.55228 13.4477 7 14 7H17" fill="#FFFFFF" stroke="#4A90E2" stroke-width="1.5"/>
+
+  <!-- Gantt chart lines -->
+  <line x1="9" y1="10" x2="15" y2="10" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="9" y1="13" x2="13" y2="13" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="9" y1="16" x2="14" y2="16" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Checkmark badge -->
+  <circle cx="18" cy="18" r="3.5" fill="#27AE60"/>
+  <path d="M16.5 18L17.5 19L19.5 17" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

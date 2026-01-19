@@ -478,7 +478,7 @@ input:checked + .lock-slider:before {
                                <?php echo in_array('OST1', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">OST1</div>
-                            <div class="competence-text">Pratiquer des démarches scientifiques et technologiques</div>
+                            <div class="competence-text">Décrire les liens entre usages et évolutions technologiques des objets et des systèmes techniques</div>
                         </div>
                     </div>
 
@@ -487,7 +487,7 @@ input:checked + .lock-slider:before {
                                <?php echo in_array('OST2', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">OST2</div>
-                            <div class="competence-text">Concevoir, créer, réaliser</div>
+                            <div class="competence-text">Décrire les interactions entre un objet ou un système technique, son environnement et les utilisateurs</div>
                         </div>
                     </div>
 
