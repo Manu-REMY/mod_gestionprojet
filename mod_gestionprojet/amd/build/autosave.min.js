@@ -20,6 +20,8 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
         step: 0,
         groupid: 0,
         interval: 30000,
+        debounceDelay: 2000, // Delay after input before saving
+        debounceTimer: null,
         timer: null,
         formSelector: null,
         statusElement: null,
@@ -91,8 +93,12 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
                 this.formSelector + ' textarea, ' +
                 this.formSelector + ' select', function () {
                     self.isDirty = true;
-                    // Don't show "unsaved" status immediately for every keystroke, 
-                    // just mark as dirty. The saving status will be enough feedback.
+
+                    // Debounce save
+                    clearTimeout(self.debounceTimer);
+                    self.debounceTimer = setTimeout(function () {
+                        self.save();
+                    }, self.debounceDelay);
                 });
         },
 
@@ -182,6 +188,9 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
             if (!this.step) {
                 return; // No step specified
             }
+
+            // Clear any pending debounce timer since we are saving now
+            clearTimeout(this.debounceTimer);
 
             this.showStatus('saving');
 
