@@ -582,61 +582,49 @@ $PAGE->requires->jquery();
 <script>
 // Wait for jQuery to be loaded
 (function checkJQuery() {
-    if (typeof jQuery !== 'undefined') {
-        jQuery(document).ready(function($) {
-            const cmid = <?php echo $cm->id; ?>;
-            const step = 1;
-            const autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-            let autosaveTimer;
+<script>
+require(['mod_gestionprojet/autosave'], function(Autosave) {
+    var cmid = <?php echo $cm->id; ?>;
+    var step = 1;
+    var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
 
-            // Autosave on input change
-            $('#descriptionForm input, #descriptionForm textarea, #descriptionForm select').on('input change', function() {
-                clearTimeout(autosaveTimer);
-                autosaveTimer = setTimeout(function() {
-                    autosave();
-                }, 2000);
-            });
+    // Custom serialization for step 1 (handling competences array)
+    var serializeData = function() {
+        var formData = {};
+        var form = document.getElementById('descriptionForm');
 
-            // Autosave on blur
-            $('#descriptionForm input, #descriptionForm textarea, #descriptionForm select').on('blur', function() {
-                autosave();
-            });
-
-            // Autosave when page loses focus
-            $(window).on('blur', function() {
-                autosave();
-            });
-
-            // Periodic autosave
-            let periodicTimer = setInterval(function() {
-                autosave();
-            }, autosaveInterval);
-
-            function autosave() {
-                const formData = collectFormData();
-                console.log('Autosave triggered (step1)', formData);
-
-                $.ajax({
-                    url: '<?php echo new moodle_url('/mod/gestionprojet/ajax/autosave.php'); ?>',
-                    type: 'POST',
-                    data: {
-                        cmid: cmid,
-                        step: step,
-                        data: JSON.stringify(formData)
-                    },
-                    success: function(response) {
-                        console.log('Autosave response:', response);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('AJAX error:', status, error);
-                    }
-                });
+        // Collect regular fields
+        form.querySelectorAll('input[type="text"], select, textarea').forEach(function(field) {
+            if (field.name && !field.name.includes('[]')) {
+                formData[field.name] = field.value;
             }
         });
-    } else {
-        setTimeout(checkJQuery, 50);
-    }
-})();
+
+        // Collect competences as array
+        var competences = [];
+        form.querySelectorAll('input[name="competences[]"]:checked').forEach(function(cb) {
+            competences.push(cb.value);
+        });
+        formData['competences'] = JSON.stringify(competences);
+
+        // Include lock state if present
+        var lockInput = document.querySelector('input[name="togglelock"]');
+        if (lockInput) {
+             // Lock state is handled separately via form submission but consistent data collection is good practice
+        }
+        
+        return formData;
+    };
+
+    Autosave.init({
+        cmid: cmid,
+        step: step,
+        groupid: 0,
+        interval: autosaveInterval,
+        formSelector: '#descriptionForm',
+        serialize: serializeData
+    });
+});
 
 // Export PDF functionality (to be implemented with TCPDF)
 function exportToPDF() {
@@ -646,30 +634,6 @@ function exportToPDF() {
 }
 
 // Custom handling for checkbox arrays
-document.addEventListener('DOMContentLoaded', function() {
-    // Override autosave form data collection for competences
-    const originalCollect = window.collectFormData;
-    window.collectFormData = function() {
-        const formData = {};
-        const form = document.getElementById('descriptionForm');
-
-        // Collect regular fields
-        form.querySelectorAll('input[type="text"], select, textarea').forEach(field => {
-            if (field.name && !field.name.includes('[]')) {
-                formData[field.name] = field.value;
-            }
-        });
-
-        // Collect competences as array
-        const competences = [];
-        form.querySelectorAll('input[name="competences[]"]:checked').forEach(cb => {
-            competences.push(cb.value);
-        });
-        formData['competences'] = JSON.stringify(competences);
-
-        return formData;
-    };
-});
 </script>
 
 <?php

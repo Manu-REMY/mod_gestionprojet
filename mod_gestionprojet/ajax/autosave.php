@@ -19,6 +19,9 @@ define('AJAX_SCRIPT', true);
 require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../lib.php');
 
+// Ensure JSON headers
+header('Content-Type: application/json');
+
 // Debug logging
 $debug_log = __DIR__ . '/../../../moodledata/temp/autosave_debug.log';
 @file_put_contents($debug_log, "\n=== " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
@@ -43,7 +46,7 @@ $formdata = json_decode($data, true);
 
 if (!$formdata) {
     @file_put_contents($debug_log, "ERROR: Invalid JSON\n", FILE_APPEND);
-    echo json_encode(['success' => false, 'error' => 'Invalid data']);
+    echo json_encode(['success' => false, 'message' => 'Invalid data']);
     exit;
 }
 

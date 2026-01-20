@@ -180,411 +180,361 @@ $PAGE->requires->jquery();
 // Wait for jQuery to be loaded
 (function checkJQuery() {
     if (typeof jQuery !== 'undefined') {
-        jQuery(document).ready(function($) {
-    const cmid = <?php echo $cm->id; ?>;
-    const step = 2;
-    const autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-    let autosaveTimer;
-    let isLocked = <?php echo $locked ? 'true' : 'false'; ?>;
+        require(['mod_gestionprojet/autosave'], function(Autosave) {
+            jQuery(document).ready(function($) {
+                var cmid = <?php echo $cm->id; ?>;
+                var step = 2;
+                var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+                var isLocked = <?php echo $locked ? 'true' : 'false'; ?>;
 
-    // Lock toggle
-    $('#lockToggle').on('change', function() {
-        isLocked = this.checked;
-        updateFormLockState();
-        triggerAutosave();
-    });
+                // Lock toggle
+                $('#lockToggle').on('change', function() {
+                    isLocked = this.checked;
+                    updateFormLockState();
+                    // Manually trigger save when lock changes
+                    Autosave.save();
+                });
 
-    function updateFormLockState() {
-        if (isLocked) {
-            $('#besoinForm textarea').attr('readonly', true);
-        } else {
-            $('#besoinForm textarea').attr('readonly', false);
-        }
-    }
-
-    // Update diagram when text changes
-    $('#besoinForm textarea').on('input', function() {
-        updateDiagram();
-        triggerAutosave();
-    });
-
-    // Autosave on blur (when field loses focus)
-    $('#besoinForm textarea').on('blur', function() {
-        autosave();
-    });
-
-    // Autosave when page loses focus
-    $(window).on('blur', function() {
-        autosave();
-    });
-
-    // Periodic autosave
-    let periodicTimer = setInterval(function() {
-        autosave();
-    }, autosaveInterval);
-
-    function triggerAutosave() {
-        clearTimeout(autosaveTimer);
-        autosaveTimer = setTimeout(function() {
-            autosave();
-        }, 2000); // Autosave 2 seconds after last change
-    }
-
-    // Collect form data
-    window.collectFormData = function() {
-        const formData = {};
-        $('#besoinForm textarea').each(function() {
-            if (this.name) {
-                formData[this.name] = this.value;
-            }
-        });
-        formData['locked'] = isLocked ? 1 : 0;
-        return formData;
-    };
-
-    function autosave() {
-        const formData = collectFormData();
-
-        console.log('Autosave triggered', formData);
-        $('#autosaveIndicator').html('<i class="fa fa-spinner fa-spin"></i> <?php echo get_string('autosaving', 'gestionprojet'); ?>');
-
-        $.ajax({
-            url: '<?php echo new moodle_url('/mod/gestionprojet/ajax/autosave.php'); ?>',
-            type: 'POST',
-            data: {
-                cmid: cmid,
-                step: step,
-                data: JSON.stringify(formData)
-            },
-            success: function(response) {
-                console.log('Autosave response:', response);
-                try {
-                    const result = typeof response === 'string' ? JSON.parse(response) : response;
-                    if (result.success) {
-                        $('#autosaveIndicator').html('<i class="fa fa-check text-success"></i> <?php echo get_string('autosaved', 'gestionprojet'); ?>');
+                function updateFormLockState() {
+                    if (isLocked) {
+                        $('#besoinForm textarea').attr('readonly', true);
                     } else {
-                        $('#autosaveIndicator').html('<i class="fa fa-exclamation-triangle text-warning"></i> ' + (result.message || result.error));
-                        console.error('Autosave failed:', result);
+                        $('#besoinForm textarea').attr('readonly', false);
                     }
-                } catch (e) {
-                    console.error('JSON parse error:', e, response);
-                    $('#autosaveIndicator').html('<i class="fa fa-exclamation-triangle text-danger"></i> Parse error');
                 }
-                setTimeout(function() {
-                    $('#autosaveIndicator').html('');
-                }, 3000);
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX error:', status, error, xhr.responseText);
-                $('#autosaveIndicator').html('<i class="fa fa-exclamation-triangle text-danger"></i> <?php echo get_string('autosave_failed', 'gestionprojet'); ?>');
-            }
-        });
-    }
 
-    // Simplified Bête à Corne SVG diagram
-    function wrapText(text, maxLength) {
-        if (!text) return [''];
-        const words = text.split(' ');
-        const lines = [];
-        let currentLine = '';
+                // Update diagram when text changes
+                $('#besoinForm textarea').on('input', function() {
+                    updateDiagram();
+                });
 
-        words.forEach(word => {
-            if ((currentLine + word).length <= maxLength) {
-                currentLine += (currentLine ? ' ' : '') + word;
-            } else {
-                if (currentLine) lines.push(currentLine);
-                currentLine = word;
-            }
-        });
-        if (currentLine) lines.push(currentLine);
-        return lines;
-    }
+                // Custom serialization for step 2
+                var serializeData = function() {
+                    var formData = {};
+                    $('#besoinForm textarea').each(function() {
+                        if (this.name) {
+                            formData[this.name] = this.value;
+                        }
+                    });
+                    formData['locked'] = isLocked ? 1 : 0;
+                    return formData;
+                };
 
-    function updateDiagram() {
-        const svg = document.getElementById('beteACorneCanvas');
-        const width = svg.clientWidth;
-        const height = 500;
+                // Initialize Autosave
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: 0,
+                    interval: autosaveInterval,
+                    formSelector: '#besoinForm',
+                    serialize: serializeData
+                });
 
-        // Clear SVG
-        svg.innerHTML = '';
-        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                // Simplified Bête à Corne SVG diagram
+                function wrapText(text, maxLength) {
+                    if (!text) return [''];
+                    const words = text.split(' ');
+                    const lines = [];
+                    let currentLine = '';
 
-        // Define arrow marker
-        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-        marker.setAttribute('id', 'arrowhead');
-        marker.setAttribute('markerWidth', '10');
-        marker.setAttribute('markerHeight', '10');
-        marker.setAttribute('refX', '9');
-        marker.setAttribute('refY', '3');
-        marker.setAttribute('orient', 'auto');
+                    words.forEach(word => {
+                        if ((currentLine + word).length <= maxLength) {
+                            currentLine += (currentLine ? ' ' : '') + word;
+                        } else {
+                            if (currentLine) lines.push(currentLine);
+                            currentLine = word;
+                        }
+                    });
+                    if (currentLine) lines.push(currentLine);
+                    return lines;
+                }
 
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
-        path.setAttribute('fill', '#e91e63');
-        marker.appendChild(path);
-        defs.appendChild(marker);
-        svg.appendChild(defs);
+                function updateDiagram() {
+                    const svg = document.getElementById('beteACorneCanvas');
+                    const width = svg.clientWidth;
+                    const height = 500;
 
-        const centerX = width / 2;
-        const topY = 70;
-        const centerY = 240;
-        const bottomY = 360;
-        const boxWidth = 250;
-        const boxHeight = 90;
-        const productWidth = 220;
-        const productHeight = 110;
-        const spacing = 160;
+                    // Clear SVG
+                    svg.innerHTML = '';
+                    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
-        // Get values
-        const aquiText = document.getElementById('aqui').value || '';
-        const surquoiText = document.getElementById('surquoi').value || '';
-        const dansquelbutText = document.getElementById('dansquelbut').value || '';
+                    // Define arrow marker
+                    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                    marker.setAttribute('id', 'arrowhead');
+                    marker.setAttribute('markerWidth', '10');
+                    marker.setAttribute('markerHeight', '10');
+                    marker.setAttribute('refX', '9');
+                    marker.setAttribute('refY', '3');
+                    marker.setAttribute('orient', 'auto');
 
-        // Left ellipse - À qui rend-il service ?
-        const leftBoxX = centerX - spacing - boxWidth / 2;
-        const leftBoxY = topY;
-        const leftCenterX = leftBoxX + boxWidth / 2;
-        const leftCenterY = leftBoxY + boxHeight / 2;
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+                    path.setAttribute('fill', '#e91e63');
+                    marker.appendChild(path);
+                    defs.appendChild(marker);
+                    svg.appendChild(defs);
 
-        const leftBox = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        leftBox.setAttribute('cx', leftCenterX);
-        leftBox.setAttribute('cy', leftCenterY);
-        leftBox.setAttribute('rx', boxWidth / 2);
-        leftBox.setAttribute('ry', boxHeight / 2);
-        leftBox.setAttribute('fill', 'white');
-        leftBox.setAttribute('stroke', '#4fc3f7');
-        leftBox.setAttribute('stroke-width', '2.5');
-        svg.appendChild(leftBox);
+                    const centerX = width / 2;
+                    const topY = 70;
+                    const centerY = 240;
+                    const bottomY = 360;
+                    const boxWidth = 250;
+                    const boxHeight = 90;
+                    const productWidth = 220;
+                    const productHeight = 110;
+                    const spacing = 160;
 
-        // Left content
-        const leftLines = wrapText(aquiText, 30);
-        const leftTextStartY = leftBoxY + boxHeight / 2 - (leftLines.length * 8);
-        leftLines.forEach((line, i) => {
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', leftCenterX);
-            text.setAttribute('y', leftTextStartY + i * 18);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('fill', '#555');
-            text.setAttribute('font-size', '13');
-            text.textContent = line;
-            svg.appendChild(text);
-        });
+                    // Get values
+                    const aquiText = document.getElementById('aqui').value || '';
+                    const surquoiText = document.getElementById('surquoi').value || '';
+                    const dansquelbutText = document.getElementById('dansquelbut').value || '';
 
-        // Left title
-        const leftTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        leftTitle.setAttribute('x', leftCenterX);
-        leftTitle.setAttribute('y', leftBoxY - 25);
-        leftTitle.setAttribute('text-anchor', 'middle');
-        leftTitle.setAttribute('fill', '#333');
-        leftTitle.setAttribute('font-size', '15');
-        leftTitle.setAttribute('font-weight', '700');
-        leftTitle.textContent = 'À qui le produit rend-il service ?';
-        svg.appendChild(leftTitle);
+                    // Left ellipse - À qui rend-il service ?
+                    const leftBoxX = centerX - spacing - boxWidth / 2;
+                    const leftBoxY = topY;
+                    const leftCenterX = leftBoxX + boxWidth / 2;
+                    const leftCenterY = leftBoxY + boxHeight / 2;
 
-        const leftSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        leftSubtitle.setAttribute('x', leftCenterX);
-        leftSubtitle.setAttribute('y', leftBoxY - 8);
-        leftSubtitle.setAttribute('text-anchor', 'middle');
-        leftSubtitle.setAttribute('fill', '#666');
-        leftSubtitle.setAttribute('font-size', '12');
-        leftSubtitle.textContent = '(utilisateur)';
-        svg.appendChild(leftSubtitle);
+                    const leftBox = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                    leftBox.setAttribute('cx', leftCenterX);
+                    leftBox.setAttribute('cy', leftCenterY);
+                    leftBox.setAttribute('rx', boxWidth / 2);
+                    leftBox.setAttribute('ry', boxHeight / 2);
+                    leftBox.setAttribute('fill', 'white');
+                    leftBox.setAttribute('stroke', '#4fc3f7');
+                    leftBox.setAttribute('stroke-width', '2.5');
+                    svg.appendChild(leftBox);
 
-        // Right ellipse - Sur quoi agit-il ?
-        const rightBoxX = centerX + spacing - boxWidth / 2;
-        const rightBoxY = topY;
-        const rightCenterX = rightBoxX + boxWidth / 2;
-        const rightCenterY = rightBoxY + boxHeight / 2;
+                    // Left content
+                    const leftLines = wrapText(aquiText, 30);
+                    const leftTextStartY = leftBoxY + boxHeight / 2 - (leftLines.length * 8);
+                    leftLines.forEach((line, i) => {
+                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        text.setAttribute('x', leftCenterX);
+                        text.setAttribute('y', leftTextStartY + i * 18);
+                        text.setAttribute('text-anchor', 'middle');
+                        text.setAttribute('fill', '#555');
+                        text.setAttribute('font-size', '13');
+                        text.textContent = line;
+                        svg.appendChild(text);
+                    });
 
-        const rightBox = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-        rightBox.setAttribute('cx', rightCenterX);
-        rightBox.setAttribute('cy', rightCenterY);
-        rightBox.setAttribute('rx', boxWidth / 2);
-        rightBox.setAttribute('ry', boxHeight / 2);
-        rightBox.setAttribute('fill', 'white');
-        rightBox.setAttribute('stroke', '#4fc3f7');
-        rightBox.setAttribute('stroke-width', '2.5');
-        svg.appendChild(rightBox);
+                    // Left title
+                    const leftTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    leftTitle.setAttribute('x', leftCenterX);
+                    leftTitle.setAttribute('y', leftBoxY - 25);
+                    leftTitle.setAttribute('text-anchor', 'middle');
+                    leftTitle.setAttribute('fill', '#333');
+                    leftTitle.setAttribute('font-size', '15');
+                    leftTitle.setAttribute('font-weight', '700');
+                    leftTitle.textContent = 'À qui le produit rend-il service ?';
+                    svg.appendChild(leftTitle);
 
-        // Right content
-        const rightLines = wrapText(surquoiText, 30);
-        const rightTextStartY = rightBoxY + boxHeight / 2 - (rightLines.length * 8);
-        rightLines.forEach((line, i) => {
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', rightCenterX);
-            text.setAttribute('y', rightTextStartY + i * 18);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('fill', '#555');
-            text.setAttribute('font-size', '13');
-            text.textContent = line;
-            svg.appendChild(text);
-        });
+                    const leftSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    leftSubtitle.setAttribute('x', leftCenterX);
+                    leftSubtitle.setAttribute('y', leftBoxY - 8);
+                    leftSubtitle.setAttribute('text-anchor', 'middle');
+                    leftSubtitle.setAttribute('fill', '#666');
+                    leftSubtitle.setAttribute('font-size', '12');
+                    leftSubtitle.textContent = '(utilisateur)';
+                    svg.appendChild(leftSubtitle);
 
-        // Right title
-        const rightTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        rightTitle.setAttribute('x', rightCenterX);
-        rightTitle.setAttribute('y', rightBoxY - 25);
-        rightTitle.setAttribute('text-anchor', 'middle');
-        rightTitle.setAttribute('fill', '#333');
-        rightTitle.setAttribute('font-size', '15');
-        rightTitle.setAttribute('font-weight', '700');
-        rightTitle.textContent = 'Sur quoi agit-il ?';
-        svg.appendChild(rightTitle);
+                    // Right ellipse - Sur quoi agit-il ?
+                    const rightBoxX = centerX + spacing - boxWidth / 2;
+                    const rightBoxY = topY;
+                    const rightCenterX = rightBoxX + boxWidth / 2;
+                    const rightCenterY = rightBoxY + boxHeight / 2;
 
-        const rightSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        rightSubtitle.setAttribute('x', rightCenterX);
-        rightSubtitle.setAttribute('y', rightBoxY - 8);
-        rightSubtitle.setAttribute('text-anchor', 'middle');
-        rightSubtitle.setAttribute('fill', '#666');
-        rightSubtitle.setAttribute('font-size', '12');
-        rightSubtitle.textContent = '(matière d\'œuvre)';
-        svg.appendChild(rightSubtitle);
+                    const rightBox = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                    rightBox.setAttribute('cx', rightCenterX);
+                    rightBox.setAttribute('cy', rightCenterY);
+                    rightBox.setAttribute('rx', boxWidth / 2);
+                    rightBox.setAttribute('ry', boxHeight / 2);
+                    rightBox.setAttribute('fill', 'white');
+                    rightBox.setAttribute('stroke', '#4fc3f7');
+                    rightBox.setAttribute('stroke-width', '2.5');
+                    svg.appendChild(rightBox);
 
-        // Product box in center
-        const productX = centerX - productWidth / 2;
-        const productY = centerY - productHeight / 2;
+                    // Right content
+                    const rightLines = wrapText(surquoiText, 30);
+                    const rightTextStartY = rightBoxY + boxHeight / 2 - (rightLines.length * 8);
+                    rightLines.forEach((line, i) => {
+                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        text.setAttribute('x', rightCenterX);
+                        text.setAttribute('y', rightTextStartY + i * 18);
+                        text.setAttribute('text-anchor', 'middle');
+                        text.setAttribute('fill', '#555');
+                        text.setAttribute('font-size', '13');
+                        text.textContent = line;
+                        svg.appendChild(text);
+                    });
 
-        const productBox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        productBox.setAttribute('x', productX);
-        productBox.setAttribute('y', productY);
-        productBox.setAttribute('width', productWidth);
-        productBox.setAttribute('height', productHeight);
-        productBox.setAttribute('rx', '25');
-        productBox.setAttribute('fill', '#667eea');
-        productBox.setAttribute('stroke', '#764ba2');
-        productBox.setAttribute('stroke-width', '2.5');
-        svg.appendChild(productBox);
+                    // Right title
+                    const rightTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    rightTitle.setAttribute('x', rightCenterX);
+                    rightTitle.setAttribute('y', rightBoxY - 25);
+                    rightTitle.setAttribute('text-anchor', 'middle');
+                    rightTitle.setAttribute('fill', '#333');
+                    rightTitle.setAttribute('font-size', '15');
+                    rightTitle.setAttribute('font-weight', '700');
+                    rightTitle.textContent = 'Sur quoi agit-il ?';
+                    svg.appendChild(rightTitle);
 
-        const productLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        productLabel.setAttribute('x', centerX);
-        productLabel.setAttribute('y', centerY - 8);
-        productLabel.setAttribute('text-anchor', 'middle');
-        productLabel.setAttribute('fill', 'white');
-        productLabel.setAttribute('font-size', '20');
-        productLabel.setAttribute('font-weight', 'bold');
-        productLabel.textContent = 'Produit';
-        svg.appendChild(productLabel);
+                    const rightSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    rightSubtitle.setAttribute('x', rightCenterX);
+                    rightSubtitle.setAttribute('y', rightBoxY - 8);
+                    rightSubtitle.setAttribute('text-anchor', 'middle');
+                    rightSubtitle.setAttribute('fill', '#666');
+                    rightSubtitle.setAttribute('font-size', '12');
+                    rightSubtitle.textContent = '(matière d\'œuvre)';
+                    svg.appendChild(rightSubtitle);
 
-        const productSubLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        productSubLabel.setAttribute('x', centerX);
-        productSubLabel.setAttribute('y', centerY + 12);
-        productSubLabel.setAttribute('text-anchor', 'middle');
-        productSubLabel.setAttribute('fill', 'white');
-        productSubLabel.setAttribute('font-size', '14');
-        productSubLabel.textContent = '(objet technique)';
-        svg.appendChild(productSubLabel);
+                    // Product box in center
+                    const productX = centerX - productWidth / 2;
+                    const productY = centerY - productHeight / 2;
 
-        // Bottom rectangle - Dans quel but ?
-        const bottomBoxX = centerX - boxWidth / 2;
-        const bottomBoxY = bottomY;
-        const bottomCenterX = bottomBoxX + boxWidth / 2;
-        const bottomCenterY = bottomBoxY + boxHeight / 2;
+                    const productBox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    productBox.setAttribute('x', productX);
+                    productBox.setAttribute('y', productY);
+                    productBox.setAttribute('width', productWidth);
+                    productBox.setAttribute('height', productHeight);
+                    productBox.setAttribute('rx', '25');
+                    productBox.setAttribute('fill', '#667eea');
+                    productBox.setAttribute('stroke', '#764ba2');
+                    productBox.setAttribute('stroke-width', '2.5');
+                    svg.appendChild(productBox);
 
-        const bottomBox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        bottomBox.setAttribute('x', bottomBoxX);
-        bottomBox.setAttribute('y', bottomBoxY);
-        bottomBox.setAttribute('width', boxWidth);
-        bottomBox.setAttribute('height', boxHeight);
-        bottomBox.setAttribute('rx', '10');
-        bottomBox.setAttribute('fill', 'white');
-        bottomBox.setAttribute('stroke', '#4fc3f7');
-        bottomBox.setAttribute('stroke-width', '2.5');
-        svg.appendChild(bottomBox);
+                    const productLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    productLabel.setAttribute('x', centerX);
+                    productLabel.setAttribute('y', centerY - 8);
+                    productLabel.setAttribute('text-anchor', 'middle');
+                    productLabel.setAttribute('fill', 'white');
+                    productLabel.setAttribute('font-size', '20');
+                    productLabel.setAttribute('font-weight', 'bold');
+                    productLabel.textContent = 'Produit';
+                    svg.appendChild(productLabel);
 
-        // Bottom content
-        const bottomLines = wrapText(dansquelbutText, 30);
-        const bottomTextStartY = bottomBoxY + boxHeight / 2 - (bottomLines.length * 8);
-        bottomLines.forEach((line, i) => {
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', bottomCenterX);
-            text.setAttribute('y', bottomTextStartY + i * 18);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('fill', '#555');
-            text.setAttribute('font-size', '13');
-            text.textContent = line;
-            svg.appendChild(text);
-        });
+                    const productSubLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    productSubLabel.setAttribute('x', centerX);
+                    productSubLabel.setAttribute('y', centerY + 12);
+                    productSubLabel.setAttribute('text-anchor', 'middle');
+                    productSubLabel.setAttribute('fill', 'white');
+                    productSubLabel.setAttribute('font-size', '14');
+                    productSubLabel.textContent = '(objet technique)';
+                    svg.appendChild(productSubLabel);
 
-        // Bottom title
-        const bottomTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        bottomTitle.setAttribute('x', bottomCenterX);
-        bottomTitle.setAttribute('y', bottomBoxY + boxHeight + 20);
-        bottomTitle.setAttribute('text-anchor', 'middle');
-        bottomTitle.setAttribute('fill', '#333');
-        bottomTitle.setAttribute('font-size', '15');
-        bottomTitle.setAttribute('font-weight', '700');
-        bottomTitle.textContent = 'Dans quel but ?';
-        svg.appendChild(bottomTitle);
+                    // Bottom rectangle - Dans quel but ?
+                    const bottomBoxX = centerX - boxWidth / 2;
+                    const bottomBoxY = bottomY;
+                    const bottomCenterX = bottomBoxX + boxWidth / 2;
+                    const bottomCenterY = bottomBoxY + boxHeight / 2;
 
-        const bottomSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        bottomSubtitle.setAttribute('x', bottomCenterX);
-        bottomSubtitle.setAttribute('y', bottomBoxY + boxHeight + 37);
-        bottomSubtitle.setAttribute('text-anchor', 'middle');
-        bottomSubtitle.setAttribute('fill', '#666');
-        bottomSubtitle.setAttribute('font-size', '12');
-        bottomSubtitle.textContent = '(fonction d\'usage ou besoin)';
-        svg.appendChild(bottomSubtitle);
+                    const bottomBox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    bottomBox.setAttribute('x', bottomBoxX);
+                    bottomBox.setAttribute('y', bottomBoxY);
+                    bottomBox.setAttribute('width', boxWidth);
+                    bottomBox.setAttribute('height', boxHeight);
+                    bottomBox.setAttribute('rx', '10');
+                    bottomBox.setAttribute('fill', 'white');
+                    bottomBox.setAttribute('stroke', '#4fc3f7');
+                    bottomBox.setAttribute('stroke-width', '2.5');
+                    svg.appendChild(bottomBox);
 
-        // "Horn" curve - top arc connecting left and right ellipses
-        const topCurveStartX = leftCenterX + boxWidth / 2 - 10;
-        const topCurveStartY = leftCenterY;
-        const topCurveEndX = rightCenterX - boxWidth / 2 + 10;
-        const topCurveEndY = rightCenterY;
-        const topCurveControlX = centerX;
-        const topCurveControlY = centerY - 50;
+                    // Bottom content
+                    const bottomLines = wrapText(dansquelbutText, 30);
+                    const bottomTextStartY = bottomBoxY + boxHeight / 2 - (bottomLines.length * 8);
+                    bottomLines.forEach((line, i) => {
+                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        text.setAttribute('x', bottomCenterX);
+                        text.setAttribute('y', bottomTextStartY + i * 18);
+                        text.setAttribute('text-anchor', 'middle');
+                        text.setAttribute('fill', '#555');
+                        text.setAttribute('font-size', '13');
+                        text.textContent = line;
+                        svg.appendChild(text);
+                    });
 
-        const topCurve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        topCurve.setAttribute('d', `M ${topCurveStartX} ${topCurveStartY} Q ${topCurveControlX} ${topCurveControlY} ${topCurveEndX} ${topCurveEndY}`);
-        topCurve.setAttribute('stroke', '#e91e63');
-        topCurve.setAttribute('stroke-width', '3');
-        topCurve.setAttribute('fill', 'none');
-        svg.appendChild(topCurve);
+                    // Bottom title
+                    const bottomTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    bottomTitle.setAttribute('x', bottomCenterX);
+                    bottomTitle.setAttribute('y', bottomBoxY + boxHeight + 20);
+                    bottomTitle.setAttribute('text-anchor', 'middle');
+                    bottomTitle.setAttribute('fill', '#333');
+                    bottomTitle.setAttribute('font-size', '15');
+                    bottomTitle.setAttribute('font-weight', '700');
+                    bottomTitle.textContent = 'Dans quel but ?';
+                    svg.appendChild(bottomTitle);
 
-        // Circles at top curve ends
-        const leftCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        leftCircle.setAttribute('cx', topCurveStartX);
-        leftCircle.setAttribute('cy', topCurveStartY);
-        leftCircle.setAttribute('r', '5');
-        leftCircle.setAttribute('fill', '#e91e63');
-        svg.appendChild(leftCircle);
+                    const bottomSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    bottomSubtitle.setAttribute('x', bottomCenterX);
+                    bottomSubtitle.setAttribute('y', bottomBoxY + boxHeight + 37);
+                    bottomSubtitle.setAttribute('text-anchor', 'middle');
+                    bottomSubtitle.setAttribute('fill', '#666');
+                    bottomSubtitle.setAttribute('font-size', '12');
+                    bottomSubtitle.textContent = '(fonction d\'usage ou besoin)';
+                    svg.appendChild(bottomSubtitle);
 
-        const rightCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        rightCircle.setAttribute('cx', topCurveEndX);
-        rightCircle.setAttribute('cy', topCurveEndY);
-        rightCircle.setAttribute('r', '5');
-        rightCircle.setAttribute('fill', '#e91e63');
-        svg.appendChild(rightCircle);
+                    // "Horn" curve - top arc connecting left and right ellipses
+                    const topCurveStartX = leftCenterX + boxWidth / 2 - 10;
+                    const topCurveStartY = leftCenterY;
+                    const topCurveEndX = rightCenterX - boxWidth / 2 + 10;
+                    const topCurveEndY = rightCenterY;
+                    const topCurveControlX = centerX;
+                    const topCurveControlY = centerY - 50;
 
-        // Bottom "horn" curve - connecting top arc to bottom box
-        const bottomCurveStartX = centerX;
-        const bottomCurveStartY = centerY + productHeight / 2 + 10;
-        const bottomCurveEndX = bottomCenterX;
-        const bottomCurveEndY = bottomBoxY - 5;
-        const bottomCurveControl1X = centerX + 80;
-        const bottomCurveControl1Y = centerY + 70;
-        const bottomCurveControl2X = bottomCenterX + 60;
-        const bottomCurveControl2Y = bottomBoxY - 40;
+                    const topCurve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    topCurve.setAttribute('d', `M ${topCurveStartX} ${topCurveStartY} Q ${topCurveControlX} ${topCurveControlY} ${topCurveEndX} ${topCurveEndY}`);
+                    topCurve.setAttribute('stroke', '#e91e63');
+                    topCurve.setAttribute('stroke-width', '3');
+                    topCurve.setAttribute('fill', 'none');
+                    svg.appendChild(topCurve);
 
-        const bottomCurve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        bottomCurve.setAttribute('d', `M ${bottomCurveStartX} ${bottomCurveStartY} C ${bottomCurveControl1X} ${bottomCurveControl1Y}, ${bottomCurveControl2X} ${bottomCurveControl2Y}, ${bottomCurveEndX} ${bottomCurveEndY}`);
-        bottomCurve.setAttribute('stroke', '#e91e63');
-        bottomCurve.setAttribute('stroke-width', '3');
-        bottomCurve.setAttribute('fill', 'none');
-        bottomCurve.setAttribute('marker-end', 'url(#arrowhead)');
-        svg.appendChild(bottomCurve);
+                    // Circles at top curve ends
+                    const leftCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    leftCircle.setAttribute('cx', topCurveStartX);
+                    leftCircle.setAttribute('cy', topCurveStartY);
+                    leftCircle.setAttribute('r', '5');
+                    leftCircle.setAttribute('fill', '#e91e63');
+                    svg.appendChild(leftCircle);
 
-        // Circle at bottom curve start
-        const bottomStartCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        bottomStartCircle.setAttribute('cx', bottomCurveStartX);
-        bottomStartCircle.setAttribute('cy', bottomCurveStartY);
-        bottomStartCircle.setAttribute('r', '5');
-        bottomStartCircle.setAttribute('fill', '#e91e63');
-        svg.appendChild(bottomStartCircle);
-    }
+                    const rightCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    rightCircle.setAttribute('cx', topCurveEndX);
+                    rightCircle.setAttribute('cy', topCurveEndY);
+                    rightCircle.setAttribute('r', '5');
+                    rightCircle.setAttribute('fill', '#e91e63');
+                    svg.appendChild(rightCircle);
 
-    // Initial diagram render
-    updateDiagram();
+                    // Bottom "horn" curve - connecting top arc to bottom box
+                    const bottomCurveStartX = centerX;
+                    const bottomCurveStartY = centerY + productHeight / 2 + 10;
+                    const bottomCurveEndX = bottomCenterX;
+                    const bottomCurveEndY = bottomBoxY - 5;
+                    const bottomCurveControl1X = centerX + 80;
+                    const bottomCurveControl1Y = centerY + 70;
+                    const bottomCurveControl2X = bottomCenterX + 60;
+                    const bottomCurveControl2Y = bottomBoxY - 40;
+
+                    const bottomCurve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    bottomCurve.setAttribute('d', `M ${bottomCurveStartX} ${bottomCurveStartY} C ${bottomCurveControl1X} ${bottomCurveControl1Y}, ${bottomCurveControl2X} ${bottomCurveControl2Y}, ${bottomCurveEndX} ${bottomCurveEndY}`);
+                    bottomCurve.setAttribute('stroke', '#e91e63');
+                    bottomCurve.setAttribute('stroke-width', '3');
+                    bottomCurve.setAttribute('fill', 'none');
+                    bottomCurve.setAttribute('marker-end', 'url(#arrowhead)');
+                    svg.appendChild(bottomCurve);
+
+                    // Circle at bottom curve start
+                    const bottomStartCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    bottomStartCircle.setAttribute('cx', bottomCurveStartX);
+                    bottomStartCircle.setAttribute('cy', bottomCurveStartY);
+                    bottomStartCircle.setAttribute('r', '5');
+                    bottomStartCircle.setAttribute('fill', '#e91e63');
+                    svg.appendChild(bottomStartCircle);
+                }
+
+                // Initial diagram render
+                updateDiagram();
+            });
         });
     } else {
         setTimeout(checkJQuery, 50);

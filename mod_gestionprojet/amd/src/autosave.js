@@ -13,7 +13,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
+define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notification) {
 
     var autosave = {
         cmid: 0,
@@ -24,18 +24,28 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
         formSelector: null,
         statusElement: null,
         isDirty: false,
+        serialize: null, // Custom serialization function
+        onSave: null,   // Custom callback after save
 
         /**
          * Initialize autosave.
          *
          * @param {Object} config Configuration object
          */
-        init: function(config) {
+        init: function (config) {
             this.cmid = config.cmid;
             this.step = config.step || 0;
             this.groupid = config.groupid || 0;
             this.interval = config.interval || 30000;
             this.formSelector = config.formSelector || 'form';
+
+            // Custom functions
+            if (typeof config.serialize === 'function') {
+                this.serialize = config.serialize;
+            }
+            if (typeof config.onSave === 'function') {
+                this.onSave = config.onSave;
+            }
 
             // Create status indicator
             this.createStatusIndicator();
@@ -53,14 +63,17 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
         /**
          * Create visual status indicator.
          */
-        createStatusIndicator: function() {
+        createStatusIndicator: function () {
+            // Remove existing indicator if any
+            $('#autosave-status').remove();
+
             var statusHtml = '<div id="autosave-status" style="' +
                 'position: fixed; top: 60px; right: 20px; z-index: 9999; ' +
                 'padding: 10px 20px; border-radius: 8px; ' +
                 'background: #f8f9fa; border: 2px solid #dee2e6; ' +
                 'box-shadow: 0 4px 12px rgba(0,0,0,0.1); ' +
-                'display: none; transition: all 0.3s;">' +
-                '<span id="autosave-icon">💾</span> ' +
+                'display: none; transition: all 0.3s; font-family: -apple-system, system-ui, BlinkMacSystemFont, sans-serif;">' +
+                '<span id="autosave-icon" style="margin-right: 8px;">💾</span> ' +
                 '<span id="autosave-text">Sauvegarde automatique...</span>' +
                 '</div>';
 
@@ -71,24 +84,25 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
         /**
          * Monitor form changes.
          */
-        monitorChanges: function() {
+        monitorChanges: function () {
             var self = this;
 
             $(document).on('change input', this.formSelector + ' input, ' +
-                          this.formSelector + ' textarea, ' +
-                          this.formSelector + ' select', function() {
-                self.isDirty = true;
-                self.showStatus('unsaved');
-            });
+                this.formSelector + ' textarea, ' +
+                this.formSelector + ' select', function () {
+                    self.isDirty = true;
+                    // Don't show "unsaved" status immediately for every keystroke, 
+                    // just mark as dirty. The saving status will be enough feedback.
+                });
         },
 
         /**
          * Start autosave timer.
          */
-        startTimer: function() {
+        startTimer: function () {
             var self = this;
 
-            this.timer = setInterval(function() {
+            this.timer = setInterval(function () {
                 if (self.isDirty) {
                     self.save();
                 }
@@ -98,7 +112,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
         /**
          * Stop autosave timer.
          */
-        stopTimer: function() {
+        stopTimer: function () {
             if (this.timer) {
                 clearInterval(this.timer);
                 this.timer = null;
@@ -110,36 +124,34 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
          *
          * @param {String} type Status type (saving, saved, unsaved, error)
          */
-        showStatus: function(type) {
+        showStatus: function (type) {
             var icon = '💾';
             var text = 'Sauvegarde automatique...';
             var bgColor = '#f8f9fa';
             var borderColor = '#dee2e6';
+            var textColor = '#212529';
 
             switch (type) {
                 case 'saving':
                     icon = '⏳';
                     text = 'Sauvegarde en cours...';
                     bgColor = '#fff3cd';
-                    borderColor = '#ffc107';
+                    borderColor = '#ffeeba';
+                    textColor = '#856404';
                     break;
                 case 'saved':
                     icon = '✓';
                     text = 'Sauvegardé';
                     bgColor = '#d4edda';
-                    borderColor = '#28a745';
-                    break;
-                case 'unsaved':
-                    icon = '📝';
-                    text = 'Modifications non sauvegardées';
-                    bgColor = '#fff3cd';
-                    borderColor = '#ffc107';
+                    borderColor = '#c3e6cb';
+                    textColor = '#155724';
                     break;
                 case 'error':
                     icon = '⚠️';
                     text = 'Erreur de sauvegarde';
                     bgColor = '#f8d7da';
-                    borderColor = '#dc3545';
+                    borderColor = '#f5c6cb';
+                    textColor = '#721c24';
                     break;
             }
 
@@ -148,13 +160,15 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
             this.statusElement.css({
                 'background': bgColor,
                 'border-color': borderColor,
-                'display': 'block'
+                'color': textColor,
+                'display': 'flex',
+                'align-items': 'center'
             });
 
             // Auto-hide after 3 seconds for saved/error states
-            if (type === 'saved' || type === 'error') {
-                setTimeout(() => {
-                    this.statusElement.fadeOut();
+            if (type === 'saved') {
+                setTimeout(function () {
+                    $('#autosave-status').fadeOut();
                 }, 3000);
             }
         },
@@ -162,7 +176,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
         /**
          * Save form data.
          */
-        save: function() {
+        save: function () {
             var self = this;
 
             if (!this.step) {
@@ -173,25 +187,37 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
 
             // Collect form data
             var formData = {};
-            $(this.formSelector).find('input, textarea, select').each(function() {
-                var $field = $(this);
-                var name = $field.attr('name');
-                var type = $field.attr('type');
 
-                if (!name) {
-                    return;
-                }
+            if (this.serialize) {
+                // Use custom serialization
+                formData = this.serialize();
+            } else {
+                // Default serialization
+                $(this.formSelector).find('input, textarea, select').each(function () {
+                    var $field = $(this);
+                    var name = $field.attr('name');
+                    var type = $field.attr('type');
 
-                if (type === 'checkbox') {
-                    formData[name] = $field.is(':checked') ? 1 : 0;
-                } else if (type === 'radio') {
-                    if ($field.is(':checked')) {
+                    if (!name) {
+                        return;
+                    }
+
+                    // Handle array inputs (e.g., name="competences[]")
+                    if (name.endsWith('[]')) {
+                        return; // Skip arrays in default serializer, needs custom
+                    }
+
+                    if (type === 'checkbox') {
+                        formData[name] = $field.is(':checked') ? 1 : 0;
+                    } else if (type === 'radio') {
+                        if ($field.is(':checked')) {
+                            formData[name] = $field.val();
+                        }
+                    } else {
                         formData[name] = $field.val();
                     }
-                } else {
-                    formData[name] = $field.val();
-                }
-            });
+                });
+            }
 
             // Make AJAX request
             $.ajax({
@@ -205,24 +231,26 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
                     sesskey: M.cfg.sesskey
                 },
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         self.isDirty = false;
                         self.showStatus('saved');
+
+                        // Callback if defined
+                        if (self.onSave) {
+                            self.onSave(response);
+                        }
                     } else {
                         self.showStatus('error');
-                        Notification.addNotification({
-                            message: response.message || 'Erreur de sauvegarde',
-                            type: 'error'
-                        });
+                        // Only show notification for actual errors, not just failed status updates
+                        if (response.message) {
+                            console.error('Autosave error:', response.message);
+                        }
                     }
                 },
-                error: function() {
+                error: function (xhr, status, error) {
                     self.showStatus('error');
-                    Notification.addNotification({
-                        message: 'Erreur de connexion',
-                        type: 'error'
-                    });
+                    console.error('Autosave connection error:', status, error);
                 }
             });
         },
@@ -230,12 +258,13 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
         /**
          * Setup before unload warning.
          */
-        setupBeforeUnload: function() {
+        setupBeforeUnload: function () {
             var self = this;
 
-            $(window).on('beforeunload', function() {
+            $(window).on('beforeunload', function () {
                 if (self.isDirty) {
-                    // Save immediately
+                    // Try to save synchronously if possible, or just warn
+                    // Modern browsers don't allow sync XHR in beforeunload often
                     self.save();
                     return 'Vous avez des modifications non sauvegardées.';
                 }
