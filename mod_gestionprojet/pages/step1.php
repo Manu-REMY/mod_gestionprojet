@@ -581,50 +581,56 @@ $PAGE->requires->jquery();
 
 <script>
 // Wait for jQuery to be loaded
-(function checkJQuery() {
-<script>
-require(['mod_gestionprojet/autosave'], function(Autosave) {
-    var cmid = <?php echo $cm->id; ?>;
-    var step = 1;
-    var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+// Wait for RequireJS to be loaded
+(function waitRequire() {
+    if (typeof require === 'undefined') {
+        setTimeout(waitRequire, 50);
+        return;
+    }
+    
+    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
+        var cmid = <?php echo $cm->id; ?>;
+        var step = 1;
+        var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
 
-    // Custom serialization for step 1 (handling competences array)
-    var serializeData = function() {
-        var formData = {};
-        var form = document.getElementById('descriptionForm');
+        // Custom serialization for step 1 (handling competences array)
+        var serializeData = function() {
+            var formData = {};
+            var form = document.getElementById('descriptionForm');
 
-        // Collect regular fields
-        form.querySelectorAll('input[type="text"], select, textarea').forEach(function(field) {
-            if (field.name && !field.name.includes('[]')) {
-                formData[field.name] = field.value;
+            // Collect regular fields
+            form.querySelectorAll('input[type="text"], select, textarea').forEach(function(field) {
+                if (field.name && !field.name.includes('[]')) {
+                    formData[field.name] = field.value;
+                }
+            });
+
+            // Collect competences as array
+            var competences = [];
+            form.querySelectorAll('input[name="competences[]"]:checked').forEach(function(cb) {
+                competences.push(cb.value);
+            });
+            formData['competences'] = JSON.stringify(competences);
+
+            // Include lock state if present
+            var lockInput = document.querySelector('input[name="togglelock"]');
+            if (lockInput) {
+                 // Lock state is handled separately via form submission but consistent data collection is good practice
             }
+            
+            return formData;
+        };
+
+        Autosave.init({
+            cmid: cmid,
+            step: step,
+            groupid: 0,
+            interval: autosaveInterval,
+            formSelector: '#descriptionForm',
+            serialize: serializeData
         });
-
-        // Collect competences as array
-        var competences = [];
-        form.querySelectorAll('input[name="competences[]"]:checked').forEach(function(cb) {
-            competences.push(cb.value);
-        });
-        formData['competences'] = JSON.stringify(competences);
-
-        // Include lock state if present
-        var lockInput = document.querySelector('input[name="togglelock"]');
-        if (lockInput) {
-             // Lock state is handled separately via form submission but consistent data collection is good practice
-        }
-        
-        return formData;
-    };
-
-    Autosave.init({
-        cmid: cmid,
-        step: step,
-        groupid: 0,
-        interval: autosaveInterval,
-        formSelector: '#descriptionForm',
-        serialize: serializeData
     });
-});
+})();
 
 // Export PDF functionality (to be implemented with TCPDF)
 function exportToPDF() {

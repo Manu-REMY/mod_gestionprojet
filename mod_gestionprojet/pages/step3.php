@@ -122,7 +122,8 @@ $locked = $planning ? $planning->locked : 0;
                         <label for="vacationzone"><?php echo get_string('vacationzone', 'gestionprojet'); ?></label>
                         <select class="form-control" id="vacationzone" name="vacationzone" <?php echo $locked ? 'disabled' : ''; ?>>
                             <option value="" <?php echo !$planning || !$planning->vacationzone ? 'selected' : ''; ?>>
-                                <?php echo get_string('vacationzone_none', 'gestionprojet'); ?></option>
+                                <?php echo get_string('vacationzone_none', 'gestionprojet'); ?>
+                            </option>
                             <option value="A" <?php echo $planning && $planning->vacationzone === 'A' ? 'selected' : ''; ?>><?php echo get_string('vacationzone_a', 'gestionprojet'); ?></option>
                             <option value="B" <?php echo $planning && $planning->vacationzone === 'B' ? 'selected' : ''; ?>><?php echo get_string('vacationzone_b', 'gestionprojet'); ?></option>
                             <option value="C" <?php echo $planning && $planning->vacationzone === 'C' ? 'selected' : ''; ?>><?php echo get_string('vacationzone_c', 'gestionprojet'); ?></option>
@@ -207,145 +208,147 @@ $PAGE->requires->jquery();
 
 <script>
     // Wait for jQuery to be loaded
-    (function checkJQuery() {
-        if (typeof jQuery !== 'undefined') {
-            require(['mod_gestionprojet/autosave'], function (Autosave) {
-                jQuery(document).ready(function ($) {
-                    var cmid = <?php echo $cm->id; ?>;
-                    var step = 3;
-                    var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-                    var isLocked = <?php echo $locked ? 'true' : 'false'; ?>;
+    // Wait for RequireJS and jQuery
+    (function waitRequire() {
+        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
+            setTimeout(waitRequire, 50);
+            return;
+        }
 
-                    var taskColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
-                    var HOURS_PER_WEEK = 1.5;
+        require(['mod_gestionprojet/autosave'], function (Autosave) {
+            jQuery(document).ready(function ($) {
+                var cmid = <?php echo $cm->id; ?>;
+                var step = 3;
+                var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+                var isLocked = <?php echo $locked ? 'true' : 'false'; ?>;
 
-                    // Lock toggle
-                    $('#lockToggle').on('change', function () {
-                        isLocked = this.checked;
-                        updateFormLockState();
-                        // Manually trigger save when lock changes
-                        Autosave.save();
-                    });
+                var taskColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+                var HOURS_PER_WEEK = 1.5;
 
-                    function updateFormLockState() {
-                        if (isLocked) {
-                            $('#planningForm input, #planningForm select').attr('readonly', true).attr('disabled', true);
-                        } else {
-                            $('#planningForm input, #planningForm select').attr('readonly', false).attr('disabled', false);
-                        }
+                // Lock toggle
+                $('#lockToggle').on('change', function () {
+                    isLocked = this.checked;
+                    updateFormLockState();
+                    // Manually trigger save when lock changes
+                    Autosave.save();
+                });
+
+                function updateFormLockState() {
+                    if (isLocked) {
+                        $('#planningForm input, #planningForm select').attr('readonly', true).attr('disabled', true);
+                    } else {
+                        $('#planningForm input, #planningForm select').attr('readonly', false).attr('disabled', false);
                     }
+                }
 
-                    // Update timeline when values change
-                    $('#planningForm input, #planningForm select').on('input change', function () {
-                        updateTimeline();
-                    });
-
-                    // Custom serialization for step 3
-                    var serializeData = function () {
-                        var formData = {};
-
-                        formData['projectname'] = $('#projectname').val();
-
-                        var startDate = $('#startdate').val();
-                        var endDate = $('#enddate').val();
-                        formData['startdate'] = startDate ? new Date(startDate).getTime() / 1000 : 0;
-                        formData['enddate'] = endDate ? new Date(endDate).getTime() / 1000 : 0;
-                        formData['vacationzone'] = $('#vacationzone').val();
-
-                        for (var i = 1; i <= 5; i++) {
-                            formData['task' + i + '_hours'] = parseFloat($('#task' + i + '_hours').val()) || 0;
-                        }
-
-                        formData['locked'] = isLocked ? 1 : 0;
-
-                        return formData;
-                    };
-
-                    // Initialize Autosave
-                    Autosave.init({
-                        cmid: cmid,
-                        step: step,
-                        groupid: 0,
-                        interval: autosaveInterval,
-                        formSelector: '#planningForm',
-                        serialize: serializeData
-                    });
-
-                    function updateTimeline() {
-                        const svg = document.getElementById('timelineSVG');
-                        svg.innerHTML = '';
-
-                        const startDate = $('#startdate').val();
-                        const endDate = $('#enddate').val();
-
-                        if (!startDate || !endDate) {
-                            $('#totalInfo').html('Veuillez sélectionner les dates de début et de fin');
-                            return;
-                        }
-
-                        const start = new Date(startDate);
-                        const end = new Date(endDate);
-
-                        if (end <= start) {
-                            $('#totalInfo').html('La date de fin doit être après la date de début');
-                            return;
-                        }
-
-                        // Calculate total hours and weeks
-                        let totalHours = 0;
-                        const taskHours = [];
-                        for (let i = 1; i <= 5; i++) {
-                            const hours = parseFloat($('#task' + i + '_hours').val()) || 0;
-                            taskHours.push(hours);
-                            totalHours += hours;
-                        }
-
-                        const totalWeeks = Math.ceil(totalHours / HOURS_PER_WEEK);
-
-                        // Display total info
-                        $('#totalInfo').html(`Total: ${totalHours.toFixed(1)}h sur ${totalWeeks} semaines (${HOURS_PER_WEEK}h/semaine)`);
-
-                        // Draw timeline
-                        const svgWidth = svg.clientWidth;
-                        let currentX = 0;
-
-                        taskHours.forEach((hours, index) => {
-                            if (hours > 0) {
-                                const weeks = hours / HOURS_PER_WEEK;
-                                const width = (weeks / totalWeeks) * svgWidth;
-
-                                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                                rect.setAttribute('x', currentX);
-                                rect.setAttribute('y', 0);
-                                rect.setAttribute('width', width);
-                                rect.setAttribute('height', 60);
-                                rect.setAttribute('fill', taskColors[index]);
-                                svg.appendChild(rect);
-
-                                if (width > 40) {
-                                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                                    text.setAttribute('x', currentX + width / 2);
-                                    text.setAttribute('y', 35);
-                                    text.setAttribute('text-anchor', 'middle');
-                                    text.setAttribute('fill', 'white');
-                                    text.setAttribute('font-weight', 'bold');
-                                    text.setAttribute('font-size', '14');
-                                    text.textContent = hours.toFixed(1) + 'h';
-                                    svg.appendChild(text);
-                                }
-
-                                currentX += width;
-                            }
-                        });
-                    }
-
-                    // Initial timeline render
+                // Update timeline when values change
+                $('#planningForm input, #planningForm select').on('input change', function () {
                     updateTimeline();
                 });
+
+                // Custom serialization for step 3
+                var serializeData = function () {
+                    var formData = {};
+
+                    formData['projectname'] = $('#projectname').val();
+
+                    var startDate = $('#startdate').val();
+                    var endDate = $('#enddate').val();
+                    formData['startdate'] = startDate ? new Date(startDate).getTime() / 1000 : 0;
+                    formData['enddate'] = endDate ? new Date(endDate).getTime() / 1000 : 0;
+                    formData['vacationzone'] = $('#vacationzone').val();
+
+                    for (var i = 1; i <= 5; i++) {
+                        formData['task' + i + '_hours'] = parseFloat($('#task' + i + '_hours').val()) || 0;
+                    }
+
+                    formData['locked'] = isLocked ? 1 : 0;
+
+                    return formData;
+                };
+
+                // Initialize Autosave
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: 0,
+                    interval: autosaveInterval,
+                    formSelector: '#planningForm',
+                    serialize: serializeData
+                });
+
+                function updateTimeline() {
+                    const svg = document.getElementById('timelineSVG');
+                    svg.innerHTML = '';
+
+                    const startDate = $('#startdate').val();
+                    const endDate = $('#enddate').val();
+
+                    if (!startDate || !endDate) {
+                        $('#totalInfo').html('Veuillez sélectionner les dates de début et de fin');
+                        return;
+                    }
+
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+
+                    if (end <= start) {
+                        $('#totalInfo').html('La date de fin doit être après la date de début');
+                        return;
+                    }
+
+                    // Calculate total hours and weeks
+                    let totalHours = 0;
+                    const taskHours = [];
+                    for (let i = 1; i <= 5; i++) {
+                        const hours = parseFloat($('#task' + i + '_hours').val()) || 0;
+                        taskHours.push(hours);
+                        totalHours += hours;
+                    }
+
+                    const totalWeeks = Math.ceil(totalHours / HOURS_PER_WEEK);
+
+                    // Display total info
+                    $('#totalInfo').html(`Total: ${totalHours.toFixed(1)}h sur ${totalWeeks} semaines (${HOURS_PER_WEEK}h/semaine)`);
+
+                    // Draw timeline
+                    const svgWidth = svg.clientWidth;
+                    let currentX = 0;
+
+                    taskHours.forEach((hours, index) => {
+                        if (hours > 0) {
+                            const weeks = hours / HOURS_PER_WEEK;
+                            const width = (weeks / totalWeeks) * svgWidth;
+
+                            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            rect.setAttribute('x', currentX);
+                            rect.setAttribute('y', 0);
+                            rect.setAttribute('width', width);
+                            rect.setAttribute('height', 60);
+                            rect.setAttribute('fill', taskColors[index]);
+                            svg.appendChild(rect);
+
+                            if (width > 40) {
+                                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                                text.setAttribute('x', currentX + width / 2);
+                                text.setAttribute('y', 35);
+                                text.setAttribute('text-anchor', 'middle');
+                                text.setAttribute('fill', 'white');
+                                text.setAttribute('font-weight', 'bold');
+                                text.setAttribute('font-size', '14');
+                                text.textContent = hours.toFixed(1) + 'h';
+                                svg.appendChild(text);
+                            }
+
+                            currentX += width;
+                        }
+                    });
+                }
+
+                // Initial timeline render
+                updateTimeline();
             });
-        } else {
-            setTimeout(checkJQuery, 50);
-        }
+        });
     })();
 </script>
 

@@ -70,265 +70,265 @@ if ($submission->auteurs) {
 ?>
 
 <style>
-.step6-container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
+    .step6-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-/* Navigation */
-.navigation-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
+    /* Navigation */
+    .navigation-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
 
-.nav-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 50px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    transition: all 0.3s;
-    text-decoration: none;
-}
+    .nav-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s;
+        text-decoration: none;
+    }
 
-.nav-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-    color: white;
-    text-decoration: none;
-}
+    .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        color: white;
+        text-decoration: none;
+    }
 
-.nav-button-prev {
-    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-}
+    .nav-button-prev {
+        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    }
 
-/* Header */
-.header-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 30px;
-    border-radius: 15px;
-    margin-bottom: 30px;
-}
-
-.header-section h2 {
-    font-size: 2em;
-    margin-bottom: 10px;
-}
-
-.header-section p {
-    font-size: 1em;
-    opacity: 0.9;
-}
-
-/* Group info */
-.group-info {
-    background: #d1ecf1;
-    border: 2px solid #bee5eb;
-    border-radius: 10px;
-    padding: 15px 20px;
-    margin-bottom: 30px;
-    color: #0c5460;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.info-box {
-    background: #e3f2fd;
-    border-left: 4px solid #2196f3;
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 30px;
-    color: #1565c0;
-}
-
-.info-box p {
-    margin: 5px 0;
-    font-size: 14px;
-}
-
-/* Sections */
-.section {
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 10px;
-    margin-bottom: 25px;
-    border-left: 5px solid #667eea;
-}
-
-.section-title {
-    color: #667eea;
-    font-size: 1.3em;
-    font-weight: 700;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #667eea;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #333;
-    font-weight: 600;
-    font-size: 15px;
-}
-
-.form-group input[type="text"],
-.form-group textarea {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    transition: border-color 0.3s;
-}
-
-.form-group input[type="text"]:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #667eea;
-    background: #f0f3ff;
-}
-
-.form-group textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-/* Members list */
-.member-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-    align-items: center;
-}
-
-.member-group input {
-    flex: 1;
-}
-
-.btn-add,
-.btn-remove {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-add {
-    background: #48bb78;
-    color: white;
-}
-
-.btn-add:hover {
-    background: #38a169;
-    transform: scale(1.1);
-}
-
-.btn-remove {
-    background: #dc3545;
-    color: white;
-    font-size: 16px;
-}
-
-.btn-remove:hover {
-    background: #c82333;
-    transform: scale(1.1);
-}
-
-/* Export section */
-.export-section {
-    text-align: center;
-    margin-top: 40px;
-    padding: 30px;
-    background: #f8f9fa;
-    border-radius: 15px;
-}
-
-.btn-export {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 15px 40px;
-    border-radius: 50px;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    transition: all 0.3s;
-}
-
-.btn-export:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
-}
-
-/* Grade display */
-.grade-display {
-    background: #d4edda;
-    border: 2px solid #c3e6cb;
-    border-radius: 10px;
-    padding: 15px 20px;
-    margin-bottom: 20px;
-    color: #155724;
-}
-
-.grade-display strong {
-    font-size: 1.1em;
-}
-
-.feedback-display {
-    background: #fff3cd;
-    border: 2px solid #ffeaa7;
-    border-radius: 10px;
-    padding: 15px 20px;
-    margin-top: 15px;
-    color: #856404;
-}
-
-.feedback-display h4 {
-    margin: 0 0 10px 0;
-    font-size: 1em;
-}
-
-.feedback-display p {
-    margin: 0;
-    white-space: pre-wrap;
-}
-
-@media (max-width: 768px) {
+    /* Header */
     .header-section {
-        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
     }
 
-    .section {
-        padding: 15px;
+    .header-section h2 {
+        font-size: 2em;
+        margin-bottom: 10px;
     }
-}
+
+    .header-section p {
+        font-size: 1em;
+        opacity: 0.9;
+    }
+
+    /* Group info */
+    .group-info {
+        background: #d1ecf1;
+        border: 2px solid #bee5eb;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 30px;
+        color: #0c5460;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-box {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        color: #1565c0;
+    }
+
+    .info-box p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+
+    /* Sections */
+    .section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        border-left: 5px solid #667eea;
+    }
+
+    .section-title {
+        color: #667eea;
+        font-size: 1.3em;
+        font-weight: 700;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #667eea;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .form-group input[type="text"],
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color 0.3s;
+    }
+
+    .form-group input[type="text"]:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #f0f3ff;
+    }
+
+    .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    /* Members list */
+    .member-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        align-items: center;
+    }
+
+    .member-group input {
+        flex: 1;
+    }
+
+    .btn-add,
+    .btn-remove {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+
+    .btn-add:hover {
+        background: #38a169;
+        transform: scale(1.1);
+    }
+
+    .btn-remove {
+        background: #dc3545;
+        color: white;
+        font-size: 16px;
+    }
+
+    .btn-remove:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+
+    /* Export section */
+    .export-section {
+        text-align: center;
+        margin-top: 40px;
+        padding: 30px;
+        background: #f8f9fa;
+        border-radius: 15px;
+    }
+
+    .btn-export {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s;
+    }
+
+    .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    /* Grade display */
+    .grade-display {
+        background: #d4edda;
+        border: 2px solid #c3e6cb;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        color: #155724;
+    }
+
+    .grade-display strong {
+        font-size: 1.1em;
+    }
+
+    .feedback-display {
+        background: #fff3cd;
+        border: 2px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-top: 15px;
+        color: #856404;
+    }
+
+    .feedback-display h4 {
+        margin: 0 0 10px 0;
+        font-size: 1em;
+    }
+
+    .feedback-display p {
+        margin: 0;
+        white-space: pre-wrap;
+    }
+
+    @media (max-width: 768px) {
+        .header-section {
+            padding: 20px;
+        }
+
+        .section {
+            padding: 15px;
+        }
+    }
 </style>
 
 <div class="step6-container">
@@ -336,12 +336,12 @@ if ($submission->auteurs) {
     <div class="navigation-top">
         <div style="display: flex; gap: 10px;">
             <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>"
-               class="nav-button nav-button-prev">
+                class="nav-button nav-button-prev">
                 <span>🏠</span>
                 <span><?php echo get_string('home', 'gestionprojet'); ?></span>
             </a>
             <a href="<?php echo new moodle_url('/mod/gestionprojet/pages/step5.php', ['id' => $cm->id]); ?>"
-               class="nav-button nav-button-prev">
+                class="nav-button nav-button-prev">
                 <span>←</span>
                 <span><?php echo get_string('previous', 'gestionprojet'); ?></span>
             </a>
@@ -390,8 +390,7 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="titre_projet"><?php echo get_string('titre_projet', 'gestionprojet'); ?></label>
                 <input type="text" id="titre_projet" name="titre_projet"
-                       value="<?php echo s($submission->titre_projet ?? ''); ?>"
-                       placeholder="Nom de votre projet">
+                    value="<?php echo s($submission->titre_projet ?? ''); ?>" placeholder="Nom de votre projet">
             </div>
 
             <div class="form-group">
@@ -409,13 +408,13 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="besoin_projet"><?php echo get_string('besoin_projet', 'gestionprojet'); ?></label>
                 <textarea id="besoin_projet" name="besoin_projet"
-                          placeholder="Décrivez le besoin auquel répond votre projet..."><?php echo s($submission->besoin_projet ?? ''); ?></textarea>
+                    placeholder="Décrivez le besoin auquel répond votre projet..."><?php echo s($submission->besoin_projet ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="imperatifs"><?php echo get_string('imperatifs', 'gestionprojet'); ?></label>
                 <textarea id="imperatifs" name="imperatifs"
-                          placeholder="Listez les contraintes et impératifs du projet..."><?php echo s($submission->imperatifs ?? ''); ?></textarea>
+                    placeholder="Listez les contraintes et impératifs du projet..."><?php echo s($submission->imperatifs ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -426,13 +425,13 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="solutions"><?php echo get_string('solutions', 'gestionprojet'); ?></label>
                 <textarea id="solutions" name="solutions"
-                          placeholder="Décrivez les solutions retenues..."><?php echo s($submission->solutions ?? ''); ?></textarea>
+                    placeholder="Décrivez les solutions retenues..."><?php echo s($submission->solutions ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="justification"><?php echo get_string('justification', 'gestionprojet'); ?></label>
                 <textarea id="justification" name="justification"
-                          placeholder="Justifiez vos choix techniques et stratégiques..."><?php echo s($submission->justification ?? ''); ?></textarea>
+                    placeholder="Justifiez vos choix techniques et stratégiques..."><?php echo s($submission->justification ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -443,13 +442,13 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="realisation"><?php echo get_string('realisation', 'gestionprojet'); ?></label>
                 <textarea id="realisation" name="realisation"
-                          placeholder="Comment avez-vous réalisé votre projet ?"><?php echo s($submission->realisation ?? ''); ?></textarea>
+                    placeholder="Comment avez-vous réalisé votre projet ?"><?php echo s($submission->realisation ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="difficultes"><?php echo get_string('difficultes', 'gestionprojet'); ?></label>
                 <textarea id="difficultes" name="difficultes"
-                          placeholder="Quelles difficultés avez-vous rencontrées et comment les avez-vous surmontées ?"><?php echo s($submission->difficultes ?? ''); ?></textarea>
+                    placeholder="Quelles difficultés avez-vous rencontrées et comment les avez-vous surmontées ?"><?php echo s($submission->difficultes ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -460,13 +459,13 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="validation"><?php echo get_string('validation', 'gestionprojet'); ?></label>
                 <textarea id="validation" name="validation"
-                          placeholder="Décrivez les résultats de vos tests et essais..."><?php echo s($submission->validation ?? ''); ?></textarea>
+                    placeholder="Décrivez les résultats de vos tests et essais..."><?php echo s($submission->validation ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="ameliorations"><?php echo get_string('ameliorations', 'gestionprojet'); ?></label>
                 <textarea id="ameliorations" name="ameliorations"
-                          placeholder="Quelles améliorations pourriez-vous apporter au projet ?"><?php echo s($submission->ameliorations ?? ''); ?></textarea>
+                    placeholder="Quelles améliorations pourriez-vous apporter au projet ?"><?php echo s($submission->ameliorations ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -477,13 +476,13 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="bilan"><?php echo get_string('bilan', 'gestionprojet'); ?></label>
                 <textarea id="bilan" name="bilan"
-                          placeholder="Quel est votre bilan global du projet ? Qu'avez-vous appris ?"><?php echo s($submission->bilan ?? ''); ?></textarea>
+                    placeholder="Quel est votre bilan global du projet ? Qu'avez-vous appris ?"><?php echo s($submission->bilan ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="perspectives"><?php echo get_string('perspectives', 'gestionprojet'); ?></label>
                 <textarea id="perspectives" name="perspectives"
-                          placeholder="Quelles sont les perspectives d'évolution du projet ?"><?php echo s($submission->perspectives ?? ''); ?></textarea>
+                    placeholder="Quelles sont les perspectives d'évolution du projet ?"><?php echo s($submission->perspectives ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -505,161 +504,144 @@ $PAGE->requires->jquery();
 ?>
 
 <script>
-// Wait for jQuery to be loaded
-(function checkJQuery() {
-    if (typeof jQuery !== 'undefined') {
-        jQuery(document).ready(function($) {
-            const cmid = <?php echo $cm->id; ?>;
-            const step = 6;
-            const autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-            let autosaveTimer;
+    // Wait for jQuery to be loaded
+    // Wait for RequireJS and jQuery
+    (function waitRequire() {
+        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
+            setTimeout(waitRequire, 50);
+            return;
+        }
 
-            // Autosave on input change
-            $('#rapportForm input, #rapportForm textarea').on('input change', function() {
-                clearTimeout(autosaveTimer);
-                autosaveTimer = setTimeout(function() {
-                    autosave();
-                }, 2000);
-            });
+        require(['jquery', 'mod_gestionprojet/autosave'], function ($, Autosave) {
+            var cmid = <?php echo $cm->id; ?>;
+            var step = 6;
+            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+            var groupid = <?php echo $groupid; ?>;
 
-            // Autosave on blur
-            $('#rapportForm input, #rapportForm textarea').on('blur', function() {
-                autosave();
-            });
+            // Custom serialization for step 6
+            var serializeData = function () {
+                var formData = {};
 
-            // Autosave when page loses focus
-            $(window).on('blur', function() {
-                autosave();
-            });
-
-            // Periodic autosave
-            let periodicTimer = setInterval(function() {
-                autosave();
-            }, autosaveInterval);
-
-            function collectFormData() {
-                const formData = {};
-                $('#rapportForm input, #rapportForm textarea').each(function() {
-                    if (this.name && !this.name.includes('[]')) {
+                // Collect regular fields (text inputs, textareas)
+                $('#rapportForm').find('input[type="text"], textarea').each(function () {
+                    if (this.name) {
                         formData[this.name] = this.value;
                     }
                 });
-                formData['auteurs'] = JSON.stringify(members);
+
+                // Collect authors as JSON array
+                // members is defined globally in the script below
+                if (typeof members !== 'undefined') {
+                    formData['auteurs'] = JSON.stringify(members.filter(function (m) {
+                        return m.trim() !== '';
+                    }));
+                } else {
+                    formData['auteurs'] = '[]';
+                }
+
                 return formData;
+            };
+
+            Autosave.init({
+                cmid: cmid,
+                step: step,
+                groupid: groupid,
+                interval: autosaveInterval,
+                formSelector: '#rapportForm',
+                serialize: serializeData
+            });
+
+            // We need to trigger autosave when members change, which is handled in renderMembers
+            // by dispatching a change event to the form.
+            // The Autosave module listens for 'change input' on the form, so this should work automatically.
+        });
+    })();
+
+    // Members management
+    let members = <?php echo json_encode($auteurs); ?>;
+    if (members.length === 0) {
+        members = [''];
+    }
+
+    function renderMembers() {
+        const container = document.getElementById('membersContainer');
+        container.innerHTML = '';
+
+        members.forEach((member, index) => {
+            const memberGroup = document.createElement('div');
+            memberGroup.className = 'member-group';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Nom et prénom';
+            input.value = member;
+            input.onchange = (e) => {
+                members[index] = e.target.value;
+                // Trigger auto-save
+                const event = new Event('change', { bubbles: true });
+                document.getElementById('rapportForm').dispatchEvent(event);
+            };
+
+            memberGroup.appendChild(input);
+
+            if (index === members.length - 1) {
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.className = 'btn-add';
+                addBtn.innerHTML = '+';
+                addBtn.title = 'Ajouter un membre';
+                addBtn.onclick = () => {
+                    members.push('');
+                    renderMembers();
+                };
+                memberGroup.appendChild(addBtn);
+            } else {
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn-remove';
+                removeBtn.innerHTML = '✕';
+                removeBtn.title = 'Retirer ce membre';
+                removeBtn.onclick = () => {
+                    if (members.length > 1) {
+                        members.splice(index, 1);
+                        renderMembers();
+                    }
+                };
+                memberGroup.appendChild(removeBtn);
             }
 
-            function autosave() {
-                const formData = collectFormData();
-                console.log('Autosave triggered (step6)', formData);
+            container.appendChild(memberGroup);
+        });
+    }
 
-                $.ajax({
-                    url: '<?php echo new moodle_url('/mod/gestionprojet/ajax/autosave.php'); ?>',
-                    type: 'POST',
-                    data: {
-                        cmid: cmid,
-                        step: step,
-                        groupid: <?php echo $groupid; ?>,
-                        data: JSON.stringify(formData)
-                    },
-                    success: function(response) {
-                        console.log('Autosave response:', response);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('AJAX error:', status, error);
-                    }
-                });
+    // Custom data collection for auto-save (auteurs as JSON array)
+    window.collectFormData = function () {
+        const formData = {};
+        const form = document.getElementById('rapportForm');
+
+        // Regular fields (text inputs, textareas)
+        form.querySelectorAll('input[type="text"], textarea').forEach(field => {
+            if (field.name) {
+                formData[field.name] = field.value;
             }
         });
-    } else {
-        setTimeout(checkJQuery, 50);
+
+        // Collect authors as JSON array
+        formData['auteurs'] = JSON.stringify(members.filter(m => m.trim() !== ''));
+
+        return formData;
+    };
+
+    // PDF Export placeholder (will use TCPDF server-side in future)
+    function exportPDF() {
+        alert('<?php echo get_string('export_pdf_coming_soon', 'gestionprojet'); ?>');
+        // TODO: Implement server-side PDF generation with TCPDF
     }
-})();
 
-// Members management
-let members = <?php echo json_encode($auteurs); ?>;
-if (members.length === 0) {
-    members = [''];
-}
-
-function renderMembers() {
-    const container = document.getElementById('membersContainer');
-    container.innerHTML = '';
-
-    members.forEach((member, index) => {
-        const memberGroup = document.createElement('div');
-        memberGroup.className = 'member-group';
-
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = 'Nom et prénom';
-        input.value = member;
-        input.onchange = (e) => {
-            members[index] = e.target.value;
-            // Trigger auto-save
-            const event = new Event('change', { bubbles: true });
-            document.getElementById('rapportForm').dispatchEvent(event);
-        };
-
-        memberGroup.appendChild(input);
-
-        if (index === members.length - 1) {
-            const addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.className = 'btn-add';
-            addBtn.innerHTML = '+';
-            addBtn.title = 'Ajouter un membre';
-            addBtn.onclick = () => {
-                members.push('');
-                renderMembers();
-            };
-            memberGroup.appendChild(addBtn);
-        } else {
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'btn-remove';
-            removeBtn.innerHTML = '✕';
-            removeBtn.title = 'Retirer ce membre';
-            removeBtn.onclick = () => {
-                if (members.length > 1) {
-                    members.splice(index, 1);
-                    renderMembers();
-                }
-            };
-            memberGroup.appendChild(removeBtn);
-        }
-
-        container.appendChild(memberGroup);
+    // Initialize members on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        renderMembers();
     });
-}
-
-// Custom data collection for auto-save (auteurs as JSON array)
-window.collectFormData = function() {
-    const formData = {};
-    const form = document.getElementById('rapportForm');
-
-    // Regular fields (text inputs, textareas)
-    form.querySelectorAll('input[type="text"], textarea').forEach(field => {
-        if (field.name) {
-            formData[field.name] = field.value;
-        }
-    });
-
-    // Collect authors as JSON array
-    formData['auteurs'] = JSON.stringify(members.filter(m => m.trim() !== ''));
-
-    return formData;
-};
-
-// PDF Export placeholder (will use TCPDF server-side in future)
-function exportPDF() {
-    alert('<?php echo get_string('export_pdf_coming_soon', 'gestionprojet'); ?>');
-    // TODO: Implement server-side PDF generation with TCPDF
-}
-
-// Initialize members on page load
-document.addEventListener('DOMContentLoaded', function() {
-    renderMembers();
-});
 </script>
 
 <?php
