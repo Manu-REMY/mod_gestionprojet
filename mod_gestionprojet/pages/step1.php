@@ -16,7 +16,22 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_capability('mod/gestionprojet:configureteacherpages', $context);
+
+// Check capability
+$context = context_module::instance($cm->id);
+$isteacher = has_capability('mod/gestionprojet:configureteacherpages', $context);
+
+if (!$isteacher) {
+    // Students can view but not edit
+    require_capability('mod/gestionprojet:view', $context);
+} else {
+    // Teachers need full access
+    require_capability('mod/gestionprojet:configureteacherpages', $context);
+}
+
+// Force locked state for students
+$readonly = !$isteacher;
+
 
 // Get description record
 $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]);
@@ -352,7 +367,7 @@ input:checked + .lock-slider:before {
     <div class="title-container">
         <h2>📋 <?php echo get_string('step1', 'gestionprojet'); ?></h2>
 
-        <?php if (has_capability('mod/gestionprojet:lock', $context)): ?>
+        <?php if (!$readonly && has_capability('mod/gestionprojet:lock', $context)): ?>
             <form method="post" action="">
                 <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
                 <input type="hidden" name="togglelock" value="1">
@@ -376,7 +391,7 @@ input:checked + .lock-slider:before {
         <p>La fiche descriptive permet de cadrer le projet en définissant son intitulé, son niveau, les compétences travaillées et les modalités d'évaluation.</p>
     </div>
 
-    <form id="descriptionForm" class="locked-overlay <?php echo $description->locked ? 'locked' : ''; ?>">
+    <form id="descriptionForm" class="locked-overlay <?php echo ($description->locked || $readonly) ? 'locked' : ''; ?>">
         <div class="form-layout">
             <div class="form-main">
                 <div class="form-row">
@@ -579,6 +594,7 @@ input:checked + .lock-slider:before {
 $PAGE->requires->jquery();
 ?>
 
+
 <script>
 // Wait for jQuery to be loaded
 // Wait for RequireJS to be loaded
@@ -589,6 +605,7 @@ $PAGE->requires->jquery();
     }
     
     require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
+        <?php if (!$readonly): ?>
         var cmid = <?php echo $cm->id; ?>;
         var step = 1;
         var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
@@ -629,8 +646,15 @@ $PAGE->requires->jquery();
             formSelector: '#descriptionForm',
             serialize: serializeData
         });
+        <?php endif; ?>
+
+        // Lock form elements if readonly
+        <?php if ($readonly): ?>
+        $('#descriptionForm input, #descriptionForm select, #descriptionForm textarea').prop('disabled', true);
+        <?php endif; ?>
     });
 })();
+
 
 // Export PDF functionality (to be implemented with TCPDF)
 function exportToPDF() {

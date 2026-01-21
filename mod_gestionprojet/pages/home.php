@@ -326,6 +326,54 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
 
                 <div class="gestionprojet-cards">
                     <?php
+                    // Consultation steps (read-only for students)
+                    $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]);
+                    $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]);
+                    $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);
+
+                    $consultationsteps = [
+                        1 => [
+                            'icon' => '📋',
+                            'title' => get_string('step1', 'gestionprojet'),
+                            'desc' => get_string('step1_desc', 'gestionprojet'),
+                            'data' => $description,
+                            'complete' => $description && !empty($description->intitule)
+                        ],
+                        2 => [
+                            'icon' => '🦏',
+                            'title' => get_string('step2', 'gestionprojet'),
+                            'desc' => get_string('step2_desc', 'gestionprojet'),
+                            'data' => $besoin,
+                            'complete' => $besoin && !empty($besoin->aqui)
+                        ],
+                        3 => [
+                            'icon' => '📅',
+                            'title' => get_string('step3', 'gestionprojet'),
+                            'desc' => get_string('step3_desc', 'gestionprojet'),
+                            'data' => $planning,
+                            'complete' => $planning && !empty($planning->projectname)
+                        ]
+                    ];
+
+                    foreach ($consultationsteps as $stepnum => $step):
+                        ?>
+                        <div class="gestionprojet-card student" style="border-top-color: #667eea; opacity: 0.9;">
+                            <div class="card-icon"><?php echo $step['icon']; ?></div>
+                            <h3 class="card-title"><?php echo $step['title']; ?></h3>
+                            <p class="card-description"><?php echo $step['desc']; ?></p>
+
+                            <div class="card-status locked" style="background: #e2e8f0; color: #4a5568;">
+                                👁️ Consultation
+                            </div>
+
+                            <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="card-button"
+                                style="background: #667eea;">
+                                Consulter
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+
+                    <?php
                     // Get student submissions
                     $cdcf = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'cdcf');
                     $essai = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'essai');

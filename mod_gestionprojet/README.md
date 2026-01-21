@@ -486,6 +486,16 @@ SOFTWARE.
 - **Forum Moodle** : https://moodle.org/mod/forum/
 - **Documentation** : Ce README.md
 
+## 📅 Historique des versions
+
+### Version 1.1.0 (2026-01-21)
+- **Nouveauté** : Accès en lecture seule pour les élèves aux étapes 1, 2 et 3 (Fiche Descriptive, Expression du Besoin, Planification)
+- **Amélioration** : Interface de consultation adaptée pour les élèves
+- **Correctif** : Désactivation de la sauvegarde automatique en mode lecture seule
+
+### Version 1.0.5 (2026-01-20)
+- **Correctif** : Problèmes de chargement RequireJS et Autosave
+
 ---
 
 Développé avec ❤️ pour la communauté éducative française

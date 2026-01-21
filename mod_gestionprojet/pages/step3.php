@@ -27,16 +27,27 @@ if (!defined('MOODLE_INTERNAL')) {
 
     require_login($course, false, $cm);
     $context = context_module::instance($cm->id);
-    require_capability('mod/gestionprojet:configureteacherpages', $context);
-
-    $PAGE->set_url(new moodle_url('/mod/gestionprojet/pages/step3.php', ['cmid' => $cm->id]));
-    $PAGE->set_title(get_string('step3', 'gestionprojet'));
-    $PAGE->set_heading($course->fullname);
     $PAGE->set_context($context);
+
+    // Check capability for standalone
+    $isteacher = has_capability('mod/gestionprojet:configureteacherpages', $context);
+    if (!$isteacher) {
+        require_capability('mod/gestionprojet:view', $context);
+    } else {
+        require_capability('mod/gestionprojet:configureteacherpages', $context);
+    }
 } else {
     // Included mode - variables already set by view.php
-    require_capability('mod/gestionprojet:configureteacherpages', $context);
+    // Check capability
+    $isteacher = has_capability('mod/gestionprojet:configureteacherpages', $context);
+    if (!$isteacher) {
+        require_capability('mod/gestionprojet:view', $context);
+    } else {
+        require_capability('mod/gestionprojet:configureteacherpages', $context);
+    }
 }
+
+$readonly = !$isteacher;
 
 // Get existing data
 $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);
@@ -81,21 +92,23 @@ $locked = $planning ? $planning->locked : 0;
     <div class="card-body">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h4 style="margin: 0;"><?php echo get_string('project_planning', 'gestionprojet'); ?></h4>
-            <div>
-                <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-                    <input type="checkbox" id="lockToggle" <?php echo $locked ? 'checked' : ''; ?>>
-                    <span class="slider"
-                        style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.4s; border-radius: 34px;"></span>
-                </label>
-                <span style="margin-left: 10px;"><?php echo get_string('lock_page', 'gestionprojet'); ?></span>
-            </div>
+            <?php if (!$readonly): ?>
+                <div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
+                        <input type="checkbox" id="lockToggle" <?php echo $locked ? 'checked' : ''; ?>>
+                        <span class="slider"
+                            style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.4s; border-radius: 34px;"></span>
+                    </label>
+                    <span style="margin-left: 10px;"><?php echo get_string('lock_page', 'gestionprojet'); ?></span>
+                </div>
+            <?php endif; ?>
         </div>
 
         <form id="planningForm">
             <div class="form-group mb-3">
                 <label for="projectname"><?php echo get_string('projectname', 'gestionprojet'); ?></label>
                 <input type="text" class="form-control" id="projectname" name="projectname"
-                    value="<?php echo $planning ? s($planning->projectname) : ''; ?>" <?php echo $locked ? 'readonly' : ''; ?>>
+                    value="<?php echo $planning ? s($planning->projectname) : ''; ?>" <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>>
             </div>
 
             <div class="row">
@@ -104,7 +117,7 @@ $locked = $planning ? $planning->locked : 0;
                         <label for="startdate"><?php echo get_string('startdate', 'gestionprojet'); ?></label>
                         <input type="date" class="form-control" id="startdate" name="startdate"
                             value="<?php echo $planning && $planning->startdate ? date('Y-m-d', $planning->startdate) : ''; ?>"
-                            <?php echo $locked ? 'readonly' : ''; ?>>
+                            <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>>
                     </div>
                 </div>
 
@@ -113,14 +126,14 @@ $locked = $planning ? $planning->locked : 0;
                         <label for="enddate"><?php echo get_string('enddate', 'gestionprojet'); ?></label>
                         <input type="date" class="form-control" id="enddate" name="enddate"
                             value="<?php echo $planning && $planning->enddate ? date('Y-m-d', $planning->enddate) : ''; ?>"
-                            <?php echo $locked ? 'readonly' : ''; ?>>
+                            <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>>
                     </div>
                 </div>
 
                 <div class="col-md-4">
                     <div class="form-group mb-3">
                         <label for="vacationzone"><?php echo get_string('vacationzone', 'gestionprojet'); ?></label>
-                        <select class="form-control" id="vacationzone" name="vacationzone" <?php echo $locked ? 'disabled' : ''; ?>>
+                        <select class="form-control" id="vacationzone" name="vacationzone" <?php echo ($locked || $readonly) ? 'disabled' : ''; ?>>
                             <option value="" <?php echo !$planning || !$planning->vacationzone ? 'selected' : ''; ?>>
                                 <?php echo get_string('vacationzone_none', 'gestionprojet'); ?>
                             </option>
@@ -149,7 +162,7 @@ $locked = $planning ? $planning->locked : 0;
                     <div style="flex: 1; font-weight: 500;"><?php echo get_string('task' . $i, 'gestionprojet'); ?></div>
                     <input type="number" class="form-control" id="task<?php echo $i; ?>_hours"
                         name="task<?php echo $i; ?>_hours" min="0" step="0.5" value="<?php echo $value; ?>"
-                        style="width: 100px;" <?php echo $locked ? 'readonly' : ''; ?>>
+                        style="width: 100px;" <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>>
                     <span class="ml-2"><?php echo get_string('hours', 'gestionprojet'); ?></span>
                 </div>
             <?php endfor; ?>
@@ -267,15 +280,17 @@ $PAGE->requires->jquery();
                     return formData;
                 };
 
-                // Initialize Autosave
-                Autosave.init({
-                    cmid: cmid,
-                    step: step,
-                    groupid: 0,
-                    interval: autosaveInterval,
-                    formSelector: '#planningForm',
-                    serialize: serializeData
-                });
+                // Initialize Autosave if not readonly
+                <?php if (!$readonly): ?>
+                    Autosave.init({
+                        cmid: cmid,
+                        step: step,
+                        groupid: 0,
+                        interval: autosaveInterval,
+                        formSelector: '#planningForm',
+                        serialize: serializeData
+                    });
+                <?php endif; ?>
 
                 function updateTimeline() {
                     const svg = document.getElementById('timelineSVG');

@@ -27,16 +27,27 @@ if (!defined('MOODLE_INTERNAL')) {
 
     require_login($course, false, $cm);
     $context = context_module::instance($cm->id);
-    require_capability('mod/gestionprojet:configureteacherpages', $context);
-
-    $PAGE->set_url(new moodle_url('/mod/gestionprojet/pages/step2.php', ['cmid' => $cm->id]));
-    $PAGE->set_title(get_string('step2', 'gestionprojet'));
-    $PAGE->set_heading($course->fullname);
     $PAGE->set_context($context);
+    
+    // Check capability for standalone
+    $isteacher = has_capability('mod/gestionprojet:configureteacherpages', $context);
+    if (!$isteacher) {
+        require_capability('mod/gestionprojet:view', $context);
+    } else {
+        require_capability('mod/gestionprojet:configureteacherpages', $context);
+    }
 } else {
     // Included mode - variables already set by view.php
-    require_capability('mod/gestionprojet:configureteacherpages', $context);
+    // Check capability
+    $isteacher = has_capability('mod/gestionprojet:configureteacherpages', $context);
+    if (!$isteacher) {
+        require_capability('mod/gestionprojet:view', $context);
+    } else {
+        require_capability('mod/gestionprojet:configureteacherpages', $context);
+    }
 }
+
+$readonly = !$isteacher;
 
 // Get existing data
 $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]);
@@ -98,6 +109,7 @@ $locked = $besoin ? $besoin->locked : 0;
     <div class="card-body">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h4 style="margin: 0;"><?php echo get_string('bete_a_corne_diagram', 'gestionprojet'); ?></h4>
+            <?php if (!$readonly): ?>
             <div>
                 <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
                     <input type="checkbox" id="lockToggle" <?php echo $locked ? 'checked' : ''; ?>>
@@ -105,6 +117,7 @@ $locked = $besoin ? $besoin->locked : 0;
                 </label>
                 <span style="margin-left: 10px;"><?php echo get_string('lock_page', 'gestionprojet'); ?></span>
             </div>
+            <?php endif; ?>
         </div>
 
         <div id="diagramContainer" style="background: #fafbfc; padding: 20px; border-radius: 10px; border: 2px solid #e9ecef; margin-bottom: 30px;">
@@ -116,21 +129,21 @@ $locked = $besoin ? $besoin->locked : 0;
                 <label for="aqui" style="font-weight: 600; color: #667eea;"><?php echo get_string('aqui', 'gestionprojet'); ?></label>
                 <small class="form-text text-muted"><?php echo get_string('aqui_help', 'gestionprojet'); ?></small>
                 <textarea class="form-control" id="aqui" name="aqui" rows="3"
-                    <?php echo $locked ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->aqui) : ''; ?></textarea>
+                    <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->aqui) : ''; ?></textarea>
             </div>
 
             <div class="form-group mb-3">
                 <label for="surquoi" style="font-weight: 600; color: #667eea;"><?php echo get_string('surquoi', 'gestionprojet'); ?></label>
                 <small class="form-text text-muted"><?php echo get_string('surquoi_help', 'gestionprojet'); ?></small>
                 <textarea class="form-control" id="surquoi" name="surquoi" rows="3"
-                    <?php echo $locked ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->surquoi) : ''; ?></textarea>
+                    <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->surquoi) : ''; ?></textarea>
             </div>
 
             <div class="form-group mb-3">
                 <label for="dansquelbut" style="font-weight: 600; color: #667eea;"><?php echo get_string('dansquelbut', 'gestionprojet'); ?></label>
                 <small class="form-text text-muted"><?php echo get_string('dansquelbut_help', 'gestionprojet'); ?></small>
                 <textarea class="form-control" id="dansquelbut" name="dansquelbut" rows="3"
-                    <?php echo $locked ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->dansquelbut) : ''; ?></textarea>
+                    <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->dansquelbut) : ''; ?></textarea>
             </div>
         </form>
 
@@ -225,7 +238,8 @@ $PAGE->requires->jquery();
                 return formData;
             };
 
-            // Initialize Autosave
+            // Initialize Autosave if not readonly
+            <?php if (!$readonly): ?>
             Autosave.init({
                 cmid: cmid,
                 step: step,
@@ -234,6 +248,7 @@ $PAGE->requires->jquery();
                 formSelector: '#besoinForm',
                 serialize: serializeData
             });
+            <?php endif; ?>
 
             // Simplified Bête à Corne SVG diagram
             function wrapText(text, maxLength) {
