@@ -488,6 +488,10 @@ SOFTWARE.
 
 ## 📅 Historique des versions
 
+### Version 1.1.1 (2026-01-21)
+- **Correctif** : Résolution du plantage lors de l'accès étudiant aux étapes 4, 5 et 6 (erreur de récupération du groupe)
+- **Correctif** : Amélioration de la robustesse de l'accès aux groupes
+
 ### Version 1.1.0 (2026-01-21)
 - **Nouveauté** : Accès en lecture seule pour les élèves aux étapes 1, 2 et 3 (Fiche Descriptive, Expression du Besoin, Planification)
 - **Amélioration** : Interface de consultation adaptée pour les élèves

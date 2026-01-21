@@ -41,7 +41,7 @@ if (!defined('MOODLE_INTERNAL')) {
 require_capability('mod/gestionprojet:submit', $context);
 
 // Get user's group
-$groupid = gestionprojet_get_user_group($cm->id, $USER->id);
+$groupid = gestionprojet_get_user_group($cm, $USER->id);
 
 if (!$groupid) {
     throw new \moodle_exception('not_in_group', 'gestionprojet');
@@ -61,6 +61,10 @@ echo $OUTPUT->header();
 
 // Get group info
 $group = groups_get_group($groupid);
+if (!$group) {
+    $group = new stdClass(); // Fallback to avoid crash on name access
+    $group->name = get_string('defaultgroup', 'group'); // Generic fallback
+}
 
 // Parse interacteurs (stored as JSON array)
 $interacteurs = [];
