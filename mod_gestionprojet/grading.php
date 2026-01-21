@@ -34,7 +34,8 @@ require_capability('mod/gestionprojet:grade', $context);
 $groups = groups_get_all_groups($course->id);
 
 if (empty($groups)) {
-    print_error('no_groups', 'gestionprojet');
+    // If no groups, create a virtual group for "All participants"
+    $groups = [0 => (object) ['id' => 0, 'name' => get_string('allparticipants')]];
 }
 
 // If no group specified, use first group
@@ -104,180 +105,180 @@ echo $OUTPUT->header();
 ?>
 
 <style>
-.grading-navigation {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+    .grading-navigation {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-.grading-nav-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
+    .grading-nav-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
 
-.step-selector {
-    display: flex;
-    gap: 10px;
-}
+    .step-selector {
+        display: flex;
+        gap: 10px;
+    }
 
-.step-btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s;
-    border: 2px solid #dee2e6;
-    background: white;
-    color: #495057;
-}
+    .step-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        border: 2px solid #dee2e6;
+        background: white;
+        color: #495057;
+    }
 
-.step-btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-color: #667eea;
-}
+    .step-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #667eea;
+    }
 
-.step-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    text-decoration: none;
-}
+    .step-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        text-decoration: none;
+    }
 
-.group-navigation {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
+    .group-navigation {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
 
-.group-nav-btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    background: white;
-    border: 2px solid #667eea;
-    color: #667eea;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s;
-}
+    .group-nav-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: white;
+        border: 2px solid #667eea;
+        color: #667eea;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
 
-.group-nav-btn:hover:not(:disabled) {
-    background: #667eea;
-    color: white;
-    text-decoration: none;
-}
+    .group-nav-btn:hover:not(:disabled) {
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+    }
 
-.group-nav-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
+    .group-nav-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
 
-.group-info {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    padding: 8px 16px;
-    background: white;
-    border-radius: 8px;
-    border: 2px solid #dee2e6;
-}
+    .group-info {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        padding: 8px 16px;
+        background: white;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
 
-.submission-content {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
-}
+    .submission-content {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
 
-.grading-form {
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 12px;
-    margin-top: 30px;
-}
+    .grading-form {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        margin-top: 30px;
+    }
 
-.form-group {
-    margin-bottom: 20px;
-}
+    .form-group {
+        margin-bottom: 20px;
+    }
 
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #333;
-}
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+    }
 
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
-    font-size: 16px;
-}
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 16px;
+    }
 
-.form-group textarea {
-    min-height: 120px;
-    resize: vertical;
-}
+    .form-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
 
-.btn-save-grade {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
+    .btn-save-grade {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
 
-.btn-save-grade:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-}
+    .btn-save-grade:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
 
-.context-indicator {
-    background: #d1ecf1;
-    border: 2px solid #bee5eb;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    color: #0c5460;
-}
+    .context-indicator {
+        background: #d1ecf1;
+        border: 2px solid #bee5eb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: #0c5460;
+    }
 
-.no-submission {
-    text-align: center;
-    padding: 60px 20px;
-    color: #6c757d;
-}
+    .no-submission {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
 
-.field-display {
-    margin-bottom: 20px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #667eea;
-}
+    .field-display {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
 
-.field-display h4 {
-    margin: 0 0 10px 0;
-    color: #667eea;
-    font-size: 16px;
-}
+    .field-display h4 {
+        margin: 0 0 10px 0;
+        color: #667eea;
+        font-size: 16px;
+    }
 
-.field-display p {
-    margin: 0;
-    color: #333;
-    white-space: pre-wrap;
-}
+    .field-display p {
+        margin: 0;
+        color: #333;
+        white-space: pre-wrap;
+    }
 </style>
 
 <div class="grading-navigation">
@@ -297,7 +298,7 @@ echo $OUTPUT->header();
                     'step' => $stepnum,
                     'groupid' => $groupid
                 ]);
-            ?>
+                ?>
                 <a href="<?php echo $url; ?>" class="step-btn <?php echo $active; ?>">
                     <?php echo $stepinfo['icon'] . ' ' . $stepinfo['name']; ?>
                 </a>
@@ -307,7 +308,7 @@ echo $OUTPUT->header();
         <div class="group-navigation">
             <?php if ($prevgroupid): ?>
                 <a href="?id=<?php echo $id; ?>&step=<?php echo $step; ?>&groupid=<?php echo $prevgroupid; ?>"
-                   class="group-nav-btn">
+                    class="group-nav-btn">
                     ← <?php echo get_string('grading_previous', 'gestionprojet'); ?>
                 </a>
             <?php else: ?>
@@ -323,7 +324,7 @@ echo $OUTPUT->header();
 
             <?php if ($nextgroupid): ?>
                 <a href="?id=<?php echo $id; ?>&step=<?php echo $step; ?>&groupid=<?php echo $nextgroupid; ?>"
-                   class="group-nav-btn">
+                    class="group-nav-btn">
                     <?php echo get_string('grading_next', 'gestionprojet'); ?> →
                 </a>
             <?php else: ?>
@@ -403,7 +404,7 @@ if (!$submission): ?>
         <?php
         // Display submission content based on step
         if ($step == 1): // Description
-        ?>
+            ?>
             <div class="field-display">
                 <h4><?php echo get_string('intitule', 'gestionprojet'); ?></h4>
                 <p><?php echo s($submission->intitule ?? ''); ?></p>
@@ -467,7 +468,9 @@ if (!$submission): ?>
             </div>
 
             <div class="field-display">
-                <h4><?php echo get_string('startdate', 'gestionprojet'); ?> - <?php echo get_string('enddate', 'gestionprojet'); ?></h4>
+                <h4><?php echo get_string('startdate', 'gestionprojet'); ?> -
+                    <?php echo get_string('enddate', 'gestionprojet'); ?>
+                </h4>
                 <p>
                     <?php
                     if ($submission->startdate) {
@@ -485,7 +488,8 @@ if (!$submission): ?>
 
             <div class="field-display">
                 <h4><?php echo get_string('vacationzone', 'gestionprojet'); ?></h4>
-                <p><?php echo $submission->vacationzone ? get_string('vacationzone_' . strtolower($submission->vacationzone), 'gestionprojet') : get_string('vacationzone_none', 'gestionprojet'); ?></p>
+                <p><?php echo $submission->vacationzone ? get_string('vacationzone_' . strtolower($submission->vacationzone), 'gestionprojet') : get_string('vacationzone_none', 'gestionprojet'); ?>
+                </p>
             </div>
 
         <?php elseif ($step == 4): // CDCF
@@ -494,7 +498,7 @@ if (!$submission): ?>
             if ($submission->interacteurs_data) {
                 $interacteursData = json_decode($submission->interacteurs_data, true) ?? [];
             }
-        ?>
+            ?>
             <div class="field-display">
                 <h4><?php echo get_string('produit', 'gestionprojet'); ?></h4>
                 <p><?php echo s($submission->produit ?? ''); ?></p>
@@ -639,14 +643,13 @@ if (!$submission): ?>
                 <div class="form-group">
                     <label for="grade"><?php echo get_string('grading_grade', 'gestionprojet'); ?></label>
                     <input type="number" name="grade" id="grade" min="0" max="20" step="0.5"
-                           value="<?php echo $submission->grade ?? ''; ?>"
-                           placeholder="Note sur 20">
+                        value="<?php echo $submission->grade ?? ''; ?>" placeholder="Note sur 20">
                 </div>
 
                 <div class="form-group">
                     <label for="feedback"><?php echo get_string('grading_feedback', 'gestionprojet'); ?></label>
                     <textarea name="feedback" id="feedback"
-                              placeholder="Vos commentaires pour le groupe..."><?php echo s($submission->feedback ?? ''); ?></textarea>
+                        placeholder="Vos commentaires pour le groupe..."><?php echo s($submission->feedback ?? ''); ?></textarea>
                 </div>
 
                 <button type="submit" class="btn-save-grade">

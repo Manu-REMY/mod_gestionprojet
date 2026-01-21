@@ -18,15 +18,35 @@ require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course module ID
+$a = optional_param('a', 0, PARAM_INT);  // Gestionprojet instance ID
 $step = optional_param('step', 0, PARAM_INT); // Step number (1-6)
 $groupid = optional_param('groupid', 0, PARAM_INT); // For grading navigation
 
+$cm = false;
+$gestionprojet = false;
+$course = false;
+
 if ($id) {
-    $cm = get_coursemodule_from_id('gestionprojet', $id, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
-    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
-} else {
-    print_error('missingidandcmid', 'gestionprojet');
+    $cm = get_coursemodule_from_id('gestionprojet', $id, 0, false, IGNORE_MISSING);
+    if ($cm) {
+        $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+        $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
+    } else {
+        // If CM lookup failed, maybe id was actually the instance id?
+        // This handles cases where links are malformed using id=INSTANCEID
+        $a = $id;
+        $id = 0;
+    }
+}
+
+if ($a) {
+    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $a], '*', MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $gestionprojet->course], '*', MUST_EXIST);
+    $cm = get_coursemodule_from_instance('gestionprojet', $gestionprojet->id, $course->id, false, MUST_EXIST);
+}
+
+if (!$cm) {
+    throw new \moodle_exception('missingidandcmid', 'gestionprojet');
 }
 
 require_login($course, true, $cm);
@@ -62,7 +82,7 @@ $cansubmit = has_capability('mod/gestionprojet:submit', $context);
 // Get user's group if student
 $usergroup = 0;
 if ($cansubmit && !$isteacher) {
-    $usergroup = gestionprojet_get_user_group($cm->id, $USER->id);
+    $usergroup = gestionprojet_get_user_group($cm, $USER->id);
 }
 
 // Determine which view to show

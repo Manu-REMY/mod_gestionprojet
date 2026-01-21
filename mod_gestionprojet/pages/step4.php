@@ -44,7 +44,7 @@ require_capability('mod/gestionprojet:submit', $context);
 $groupid = gestionprojet_get_user_group($cm->id, $USER->id);
 
 if (!$groupid) {
-    print_error('not_in_group', 'gestionprojet');
+    throw new \moodle_exception('not_in_group', 'gestionprojet');
 }
 
 // Get or create submission

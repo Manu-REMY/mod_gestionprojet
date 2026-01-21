@@ -22,165 +22,165 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
 ?>
 
 <style>
-.gestionprojet-home {
-    max-width: 1400px;
-    margin: 0 auto;
-}
+    .gestionprojet-home {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
 
-.gestionprojet-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 30px;
-    margin: 30px 0;
-}
+    .gestionprojet-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin: 30px 0;
+    }
 
-.gestionprojet-card {
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    border-top: 5px solid;
-    position: relative;
-}
+    .gestionprojet-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border-top: 5px solid;
+        position: relative;
+    }
 
-.gestionprojet-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
+    .gestionprojet-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
 
-.gestionprojet-card.teacher {
-    border-top-color: #667eea;
-}
+    .gestionprojet-card.teacher {
+        border-top-color: #667eea;
+    }
 
-.gestionprojet-card.student {
-    border-top-color: #48bb78;
-}
+    .gestionprojet-card.student {
+        border-top-color: #48bb78;
+    }
 
-.gestionprojet-card.locked {
-    opacity: 0.7;
-}
+    .gestionprojet-card.locked {
+        opacity: 0.7;
+    }
 
-.card-icon {
-    font-size: 48px;
-    text-align: center;
-    margin-bottom: 15px;
-}
+    .card-icon {
+        font-size: 48px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
 
-.card-title {
-    font-size: 22px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10px;
-    text-align: center;
-}
+    .card-title {
+        font-size: 22px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+        text-align: center;
+    }
 
-.card-description {
-    color: #666;
-    line-height: 1.6;
-    margin-bottom: 15px;
-    text-align: center;
-}
+    .card-description {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        text-align: center;
+    }
 
-.card-status {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 6px;
-    font-size: 14px;
-    margin-bottom: 15px;
-}
+    .card-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
 
-.card-status.complete {
-    background: #d4edda;
-    color: #155724;
-}
+    .card-status.complete {
+        background: #d4edda;
+        color: #155724;
+    }
 
-.card-status.incomplete {
-    background: #fff3cd;
-    color: #856404;
-}
+    .card-status.incomplete {
+        background: #fff3cd;
+        color: #856404;
+    }
 
-.card-status.locked {
-    background: #f8d7da;
-    color: #721c24;
-}
+    .card-status.locked {
+        background: #f8d7da;
+        color: #721c24;
+    }
 
-.card-button {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    text-align: center;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s;
-}
+    .card-button {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
 
-.card-button:hover {
-    transform: scale(1.02);
-    color: white;
-    text-decoration: none;
-}
+    .card-button:hover {
+        transform: scale(1.02);
+        color: white;
+        text-decoration: none;
+    }
 
-.card-button:disabled,
-.card-button.disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-}
+    .card-button:disabled,
+    .card-button.disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
 
-.section-header {
-    margin: 40px 0 20px;
-    padding-bottom: 10px;
-    border-bottom: 3px solid #667eea;
-}
+    .section-header {
+        margin: 40px 0 20px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #667eea;
+    }
 
-.section-header h2 {
-    color: #667eea;
-    font-size: 28px;
-    margin: 0;
-}
+    .section-header h2 {
+        color: #667eea;
+        font-size: 28px;
+        margin: 0;
+    }
 
-.section-header p {
-    color: #666;
-    margin: 5px 0 0;
-}
+    .section-header p {
+        color: #666;
+        margin: 5px 0 0;
+    }
 
-.grading-section {
-    margin-top: 40px;
-    padding: 25px;
-    background: #f8f9fa;
-    border-radius: 12px;
-}
+    .grading-section {
+        margin-top: 40px;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
 
-.grading-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
+    .grading-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
 
-.grading-card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+    .grading-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-.grading-card h4 {
-    color: #667eea;
-    margin-bottom: 15px;
-}
+    .grading-card h4 {
+        color: #667eea;
+        margin-bottom: 15px;
+    }
 
-.alert-warning {
-    margin: 20px 0;
-}
+    .alert-warning {
+        margin: 20px 0;
+    }
 </style>
 
 <div class="gestionprojet-home">
@@ -190,8 +190,8 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
         <div class="section-header">
             <h2>📋 <?php echo get_string('navigation_teacher', 'gestionprojet'); ?></h2>
             <p><?php echo get_string('step1_desc', 'gestionprojet') . ', ' .
-                          get_string('step2_desc', 'gestionprojet') . ', ' .
-                          get_string('step3_desc', 'gestionprojet'); ?></p>
+                get_string('step2_desc', 'gestionprojet') . ', ' .
+                get_string('step3_desc', 'gestionprojet'); ?></p>
         </div>
 
         <div class="gestionprojet-cards">
@@ -227,7 +227,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
 
             foreach ($steps as $stepnum => $step):
                 $islocked = $step['data'] && $step['data']->locked;
-            ?>
+                ?>
                 <div class="gestionprojet-card teacher <?php echo $islocked ? 'locked' : ''; ?>">
                     <div class="card-icon"><?php echo $step['icon']; ?></div>
                     <h3 class="card-title"><?php echo $step['title']; ?></h3>
@@ -247,8 +247,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                         </div>
                     <?php endif; ?>
 
-                    <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>"
-                       class="card-button">
+                    <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="card-button">
                         <?php echo $islocked ? get_string('unlock', 'gestionprojet') : 'Configurer'; ?>
                     </a>
                 </div>
@@ -277,12 +276,11 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                         ];
 
                         foreach ($studentsteps as $stepnum => $step):
-                        ?>
+                            ?>
                             <div class="grading-card">
                                 <div class="card-icon"><?php echo $step['icon']; ?></div>
                                 <h4><?php echo $step['title']; ?></h4>
-                                <a href="grading.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>"
-                                   class="btn btn-primary">
+                                <a href="grading.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="btn btn-primary">
                                     Corriger
                                 </a>
                             </div>
@@ -309,73 +307,84 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
             </div>
         <?php else: ?>
             <?php
-            $groupinfo = $DB->get_record('groups', ['id' => $usergroup]);
-            ?>
-            <div class="alert alert-info">
-                👥 Vous travaillez en groupe: <strong><?php echo $groupinfo->name; ?></strong>
-            </div>
+            // Safe retrieval of group info
+            $groupinfo = null;
+            if ($usergroup > 0) {
+                $groupinfo = $DB->get_record('groups', ['id' => $usergroup]);
+            }
 
-            <div class="gestionprojet-cards">
-                <?php
-                // Get student submissions
-                $cdcf = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'cdcf');
-                $essai = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'essai');
-                $rapport = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'rapport');
-
-                $steps = [
-                    4 => [
-                        'icon' => '📋',
-                        'title' => get_string('step4', 'gestionprojet'),
-                        'desc' => get_string('step4_desc', 'gestionprojet'),
-                        'data' => $cdcf,
-                        'complete' => $cdcf && !empty($cdcf->produit)
-                    ],
-                    5 => [
-                        'icon' => '🔬',
-                        'title' => get_string('step5', 'gestionprojet'),
-                        'desc' => get_string('step5_desc', 'gestionprojet'),
-                        'data' => $essai,
-                        'complete' => $essai && !empty($essai->objectif)
-                    ],
-                    6 => [
-                        'icon' => '📝',
-                        'title' => get_string('step6', 'gestionprojet'),
-                        'desc' => get_string('step6_desc', 'gestionprojet'),
-                        'data' => $rapport,
-                        'complete' => $rapport && !empty($rapport->besoins)
-                    ]
-                ];
-
-                foreach ($steps as $stepnum => $step):
+            // If group not found despite ID existing, fallback to no groups error
+            if (!$groupinfo) {
                 ?>
-                    <div class="gestionprojet-card student">
-                        <div class="card-icon"><?php echo $step['icon']; ?></div>
-                        <h3 class="card-title"><?php echo $step['title']; ?></h3>
-                        <p class="card-description"><?php echo $step['desc']; ?></p>
+                <div class="alert alert-danger">
+                    ❌ Erreur : Groupe introuvable (ID: <?php echo $usergroup; ?>)
+                </div>
+            <?php } else { ?>
+                <div class="alert alert-info">
+                    👥 Vous travaillez en groupe: <strong><?php echo $groupinfo->name; ?></strong>
+                </div>
 
-                        <?php if ($step['complete']): ?>
-                            <div class="card-status complete">
-                                ✓ Complété
-                            </div>
-                        <?php else: ?>
-                            <div class="card-status incomplete">
-                                ⏳ À compléter
-                            </div>
-                        <?php endif; ?>
+                <div class="gestionprojet-cards">
+                    <?php
+                    // Get student submissions
+                    $cdcf = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'cdcf');
+                    $essai = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'essai');
+                    $rapport = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'rapport');
 
-                        <?php if ($step['data'] && $step['data']->grade !== null): ?>
-                            <div class="card-status">
-                                Note: <?php echo number_format($step['data']->grade, 1); ?> / 20
-                            </div>
-                        <?php endif; ?>
+                    $steps = [
+                        4 => [
+                            'icon' => '📋',
+                            'title' => get_string('step4', 'gestionprojet'),
+                            'desc' => get_string('step4_desc', 'gestionprojet'),
+                            'data' => $cdcf,
+                            'complete' => $cdcf && !empty($cdcf->produit)
+                        ],
+                        5 => [
+                            'icon' => '🔬',
+                            'title' => get_string('step5', 'gestionprojet'),
+                            'desc' => get_string('step5_desc', 'gestionprojet'),
+                            'data' => $essai,
+                            'complete' => $essai && !empty($essai->objectif)
+                        ],
+                        6 => [
+                            'icon' => '📝',
+                            'title' => get_string('step6', 'gestionprojet'),
+                            'desc' => get_string('step6_desc', 'gestionprojet'),
+                            'data' => $rapport,
+                            'complete' => $rapport && !empty($rapport->besoins)
+                        ]
+                    ];
 
-                        <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>"
-                           class="card-button">
-                            Travailler
-                        </a>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+                    foreach ($steps as $stepnum => $step):
+                        ?>
+                        <div class="gestionprojet-card student">
+                            <div class="card-icon"><?php echo $step['icon']; ?></div>
+                            <h3 class="card-title"><?php echo $step['title']; ?></h3>
+                            <p class="card-description"><?php echo $step['desc']; ?></p>
+
+                            <?php if ($step['complete']): ?>
+                                <div class="card-status complete">
+                                    ✓ Complété
+                                </div>
+                            <?php else: ?>
+                                <div class="card-status incomplete">
+                                    ⏳ À compléter
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($step['data'] && $step['data']->grade !== null): ?>
+                                <div class="card-status">
+                                    Note: <?php echo number_format($step['data']->grade, 1); ?> / 20
+                                </div>
+                            <?php endif; ?>
+
+                            <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="card-button">
+                                Travailler
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php } ?>
         <?php endif; ?>
     <?php endif; ?>
 

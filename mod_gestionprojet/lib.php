@@ -19,8 +19,9 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Supported features
  */
-function gestionprojet_supports($feature) {
-    switch($feature) {
+function gestionprojet_supports($feature)
+{
+    switch ($feature) {
         case FEATURE_MOD_INTRO:
             return true;
         case FEATURE_BACKUP_MOODLE2:
@@ -51,7 +52,8 @@ function gestionprojet_supports($feature) {
  * @param mod_gestionprojet_mod_form $mform
  * @return int new gestionprojet instance id
  */
-function gestionprojet_add_instance($data, $mform = null) {
+function gestionprojet_add_instance($data, $mform = null)
+{
     global $DB;
 
     $data->timecreated = time();
@@ -77,7 +79,8 @@ function gestionprojet_add_instance($data, $mform = null) {
  * @param mod_gestionprojet_mod_form $mform
  * @return bool true
  */
-function gestionprojet_update_instance($data, $mform = null) {
+function gestionprojet_update_instance($data, $mform = null)
+{
     global $DB;
 
     $data->timemodified = time();
@@ -92,7 +95,8 @@ function gestionprojet_update_instance($data, $mform = null) {
  * @param int $id
  * @return bool true
  */
-function gestionprojet_delete_instance($id) {
+function gestionprojet_delete_instance($id)
+{
     global $DB;
 
     if (!$gestionprojet = $DB->get_record('gestionprojet', ['id' => $id])) {
@@ -119,7 +123,8 @@ function gestionprojet_delete_instance($id) {
  *
  * @param int $gestionprojetid
  */
-function gestionprojet_create_teacher_pages($gestionprojetid) {
+function gestionprojet_create_teacher_pages($gestionprojetid)
+{
     global $DB;
 
     $time = time();
@@ -161,7 +166,8 @@ function gestionprojet_create_teacher_pages($gestionprojetid) {
  * @param int $userid User ID
  * @return int|false Group ID or false if no group
  */
-function gestionprojet_get_user_group($cmid, $userid) {
+function gestionprojet_get_user_group($cmid, $userid)
+{
     $groups = groups_get_activity_allowed_groups($cmid, $userid);
 
     if (empty($groups)) {
@@ -180,7 +186,8 @@ function gestionprojet_get_user_group($cmid, $userid) {
  * @param string $table Table name (cdcf, essai, or rapport)
  * @return stdClass
  */
-function gestionprojet_get_or_create_submission($gestionprojetid, $groupid, $table) {
+function gestionprojet_get_or_create_submission($gestionprojetid, $groupid, $table)
+{
     global $DB;
 
     $tablename = 'gestionprojet_' . $table;
@@ -216,7 +223,8 @@ function gestionprojet_get_or_create_submission($gestionprojetid, $groupid, $tab
  * @param int $userid
  * @param int $groupid
  */
-function gestionprojet_log_change($gestionprojetid, $tablename, $recordid, $fieldname, $oldvalue, $newvalue, $userid, $groupid = null) {
+function gestionprojet_log_change($gestionprojetid, $tablename, $recordid, $fieldname, $oldvalue, $newvalue, $userid, $groupid = null)
+{
     global $DB;
 
     // Don't log if values are the same
@@ -244,7 +252,8 @@ function gestionprojet_log_change($gestionprojetid, $tablename, $recordid, $fiel
  * @param int $gestionprojetid
  * @return bool
  */
-function gestionprojet_teacher_pages_locked($gestionprojetid) {
+function gestionprojet_teacher_pages_locked($gestionprojetid)
+{
     global $DB;
 
     $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojetid]);
@@ -252,8 +261,8 @@ function gestionprojet_teacher_pages_locked($gestionprojetid) {
     $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojetid]);
 
     return ($description && $description->locked) ||
-           ($besoin && $besoin->locked) ||
-           ($planning && $planning->locked);
+        ($besoin && $besoin->locked) ||
+        ($planning && $planning->locked);
 }
 
 /**
@@ -262,7 +271,8 @@ function gestionprojet_teacher_pages_locked($gestionprojetid) {
  * @param int $gestionprojetid
  * @return bool
  */
-function gestionprojet_teacher_pages_complete($gestionprojetid) {
+function gestionprojet_teacher_pages_complete($gestionprojetid)
+{
     global $DB;
 
     $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojetid]);
@@ -271,8 +281,8 @@ function gestionprojet_teacher_pages_complete($gestionprojetid) {
 
     // Check if basic required fields are filled
     return $description && !empty($description->intitule) &&
-           $besoin && !empty($besoin->aqui) &&
-           $planning && !empty($planning->projectname);
+        $besoin && !empty($besoin->aqui) &&
+        $planning && !empty($planning->projectname);
 }
 
 /**
@@ -282,7 +292,8 @@ function gestionprojet_teacher_pages_complete($gestionprojetid) {
  * @param int $courseid
  * @return array Array of groups with submission status
  */
-function gestionprojet_get_groups_for_grading($gestionprojetid, $courseid) {
+function gestionprojet_get_groups_for_grading($gestionprojetid, $courseid)
+{
     global $DB;
 
     $groups = groups_get_all_groups($courseid);
@@ -320,7 +331,8 @@ function gestionprojet_get_groups_for_grading($gestionprojetid, $courseid) {
  * @param settings_navigation $settings
  * @param navigation_node $navref
  */
-function gestionprojet_extend_settings_navigation($settings, $navref) {
+function gestionprojet_extend_settings_navigation($settings, $navref)
+{
     global $PAGE, $USER;
 
     $context = $PAGE->cm->context;
@@ -345,7 +357,8 @@ function gestionprojet_extend_settings_navigation($settings, $navref) {
  * @param int $userid
  * @param bool $nullifnone
  */
-function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = true) {
+function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = true)
+{
     global $CFG, $DB;
     require_once($CFG->libdir . '/gradelib.php');
 
@@ -364,7 +377,8 @@ function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = 
  * @param mixed $grades
  * @return int 0 if ok, error code otherwise
  */
-function gestionprojet_grade_item_update($gestionprojet, $grades = null) {
+function gestionprojet_grade_item_update($gestionprojet, $grades = null)
+{
     global $CFG;
     require_once($CFG->libdir . '/gradelib.php');
 
@@ -382,8 +396,16 @@ function gestionprojet_grade_item_update($gestionprojet, $grades = null) {
         $grades = null;
     }
 
-    return grade_update('mod/gestionprojet', $gestionprojet->course, 'mod', 'gestionprojet',
-                       $gestionprojet->id, 0, $grades, $params);
+    return grade_update(
+        'mod/gestionprojet',
+        $gestionprojet->course,
+        'mod',
+        'gestionprojet',
+        $gestionprojet->id,
+        0,
+        $grades,
+        $params
+    );
 }
 
 /**
@@ -393,7 +415,8 @@ function gestionprojet_grade_item_update($gestionprojet, $grades = null) {
  * @param int $userid
  * @return array
  */
-function gestionprojet_get_user_grades($gestionprojet, $userid = 0) {
+function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
+{
     global $DB;
 
     $grades = [];
@@ -401,9 +424,20 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0) {
     // Get all groups
     $groups = groups_get_all_groups($gestionprojet->course);
 
+    // If no groups, create a virtual group for "All participants"
+    if (empty($groups)) {
+        $groups = [0 => (object) ['id' => 0]];
+    }
+
     foreach ($groups as $group) {
         // Get group members
-        $members = groups_get_members($group->id, 'u.id');
+        if ($group->id == 0) {
+            // All participants
+            $context = context_course::instance($gestionprojet->course);
+            $members = get_enrolled_users($context);
+        } else {
+            $members = groups_get_members($group->id, 'u.id');
+        }
 
         if (empty($members)) {
             continue;
