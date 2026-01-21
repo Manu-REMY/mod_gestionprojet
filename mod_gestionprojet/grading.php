@@ -157,7 +157,7 @@ $PAGE->set_context($context);
 echo $OUTPUT->header();
 
 // Display step selector and group navigation
-echo "<div style='background:red;color:white;padding:10px;text-align:center;'>DEBUG: ROOT GRADING LOADED</div>";
+
 ?>
 
 <style>
@@ -362,8 +362,11 @@ echo "<div style='background:red;color:white;padding:10px;text-align:center;'>DE
         </div>
 
         <div class="group-navigation">
-            <?php if ($prevgroupid): ?>
-                <a href="?id=<?php echo $id; ?>&step=<?php echo $step; ?>&groupid=<?php echo $prevgroupid; ?>"
+            <?php
+            $paramName = $isGroupSubmission ? 'groupid' : 'userid';
+            ?>
+            <?php if ($prevId !== null): ?>
+                <a href="?id=<?php echo $id; ?>&step=<?php echo $step; ?>&<?php echo $paramName; ?>=<?php echo $prevId; ?>"
                     class="group-nav-btn">
                     ← <?php echo get_string('grading_previous', 'gestionprojet'); ?>
                 </a>
@@ -374,12 +377,12 @@ echo "<div style='background:red;color:white;padding:10px;text-align:center;'>DE
             <?php endif; ?>
 
             <div class="group-info">
-                👥 <?php echo $groups[$groupid]->name; ?>
-                (<?php echo ($currentindex + 1) . '/' . count($groups); ?>)
+                👥 <?php echo $navItems[$navId]->name; ?>
+                (<?php echo ($currentindex + 1) . '/' . count($navItems); ?>)
             </div>
 
-            <?php if ($nextgroupid): ?>
-                <a href="?id=<?php echo $id; ?>&step=<?php echo $step; ?>&groupid=<?php echo $nextgroupid; ?>"
+            <?php if ($nextId !== null): ?>
+                <a href="?id=<?php echo $id; ?>&step=<?php echo $step; ?>&<?php echo $paramName; ?>=<?php echo $nextId; ?>"
                     class="group-nav-btn">
                     <?php echo get_string('grading_next', 'gestionprojet'); ?> →
                 </a>

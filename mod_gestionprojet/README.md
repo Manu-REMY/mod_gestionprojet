@@ -488,7 +488,18 @@ SOFTWARE.
 
 ## 📅 Historique des versions
 
-### Version 1.1.2 (2026-01-21)
+### Version 1.0 (2026-01-21) - Première version stable 🚀
+- **Note de version** : Première version pleinement opérationnelle pour la production.
+- **Fonctionnalités complètes** :
+  - Support complet des soumissions de groupe et individuelles.
+  - Interface de correction optimisée pour les enseignants avec navigation fluide.
+  - Accès étudiant en lecture seule aux consignes (étapes 1-3) et édition (étapes 4-6).
+  - Sauvegarde automatique robuste.
+  - Intégration complète au carnet de notes Moodle.
+
+### Versions de développement (Alpha/Beta)
+
+#### Version 1.1.2 (2026-01-21)
 - **Nouveautй** : Interface de correction pour les enseignants (pages/grading.php) avec saisie de notes et feedback
 - **Correctif** : Rйsolution de l'erreur "Too few arguments" sur l'accиs йtudiant/groupe
 - **Amйlioration** : Mise а jour de la base de donnйes pour supporter les notes et feedbacks par йtape
