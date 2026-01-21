@@ -162,13 +162,13 @@ function gestionprojet_create_teacher_pages($gestionprojetid)
 /**
  * Get user's group for this activity.
  *
- * @param int $cmid Course module ID
+ * @param stdClass $cm Course module object
  * @param int $userid User ID
  * @return int|false Group ID or false if no group
  */
-function gestionprojet_get_user_group($cmid, $userid)
+function gestionprojet_get_user_group($cm, $userid)
 {
-    $groups = groups_get_activity_allowed_groups($cmid, $userid);
+    $groups = groups_get_activity_allowed_groups($cm, $userid);
 
     if (empty($groups)) {
         return 0; // No groups mode or user not in any group
@@ -512,6 +512,54 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
             continue;
         }
 
+        // Check if we are in individual submission mode
+        $isGroupSubmission = $gestionprojet->group_submission;
+
+        if (!$isGroupSubmission) {
+            // Individual grading logic
+            foreach ($members as $member) {
+                // Get submissions for this user
+                $cdcf = $DB->get_record('gestionprojet_cdcf', [
+                    'gestionprojetid' => $gestionprojet->id,
+                    'userid' => $member->id
+                ]);
+                $essai = $DB->get_record('gestionprojet_essai', [
+                    'gestionprojetid' => $gestionprojet->id,
+                    'userid' => $member->id
+                ]);
+                $rapport = $DB->get_record('gestionprojet_rapport', [
+                    'gestionprojetid' => $gestionprojet->id,
+                    'userid' => $member->id
+                ]);
+
+                // Calculate grade for this user
+                $totalgrade = 0;
+                $count = 0;
+
+                if ($cdcf && $cdcf->grade !== null) {
+                    $totalgrade += $cdcf->grade;
+                    $count++;
+                }
+                if ($essai && $essai->grade !== null) {
+                    $totalgrade += $essai->grade;
+                    $count++;
+                }
+                if ($rapport && $rapport->grade !== null) {
+                    $totalgrade += $rapport->grade;
+                    $count++;
+                }
+
+                if ($count > 0 && ($userid == 0 || $userid == $member->id)) {
+                    $avggrade = $totalgrade / $count;
+                    $grades[$member->id] = new stdClass();
+                    $grades[$member->id]->userid = $member->id;
+                    $grades[$member->id]->rawgrade = $avggrade;
+                }
+            }
+            continue; // Skip the group grading logic below
+        }
+
+        // Group grading logic (existing)
         // Get grades for this group
         $cdcf = $DB->get_record('gestionprojet_cdcf', [
             'gestionprojetid' => $gestionprojet->id,

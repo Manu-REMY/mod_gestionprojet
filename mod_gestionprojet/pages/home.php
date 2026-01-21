@@ -280,7 +280,8 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             <div class="grading-card">
                                 <div class="card-icon"><?php echo $step['icon']; ?></div>
                                 <h4><?php echo $step['title']; ?></h4>
-                                <a href="grading.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="btn btn-primary">
+                                <a href="<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/grading.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>"
+                                    class="btn btn-primary">
                                     Corriger
                                 </a>
                             </div>

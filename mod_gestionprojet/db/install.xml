@@ -141,6 +141,7 @@
         <FIELD NAME="conclusion" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2"/>
         <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="User ID for individual submission"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -150,7 +151,7 @@
         <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="gestionprojet_group_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid"/>
+        <INDEX NAME="gestionprojet_submission_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid, userid"/>
       </INDEXES>
     </TABLE>
 
@@ -174,6 +175,7 @@
         <FIELD NAME="perspectives" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2"/>
         <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="User ID for individual submission"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -183,7 +185,7 @@
         <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="gestionprojet_group_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid"/>
+        <INDEX NAME="gestionprojet_submission_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid, userid"/>
       </INDEXES>
     </TABLE>
 

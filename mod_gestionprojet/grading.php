@@ -25,31 +25,76 @@ $cm = get_coursemodule_from_id('gestionprojet', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
 
+
+
 require_login($course, true, $cm);
 
 $context = context_module::instance($cm->id);
 require_capability('mod/gestionprojet:grade', $context);
 
-// Get all groups
-$groups = groups_get_all_groups($course->id);
+// Check if we are in individual submission mode
+$isGroupSubmission = $gestionprojet->group_submission;
 
-if (empty($groups)) {
-    // If no groups, create a virtual group for "All participants"
-    $groups = [0 => (object) ['id' => 0, 'name' => get_string('allparticipants')]];
+// Handling navigation items (Groups or Users)
+$navItems = [];
+$navId = 0; // Current item ID (groupid or userid)
+
+if ($isGroupSubmission) {
+    // Get all groups
+    $groups = groups_get_all_groups($course->id);
+    if (empty($groups)) {
+        // If no groups, create a virtual group for "All participants"
+        $groups = [0 => (object) ['id' => 0, 'name' => get_string('allparticipants')]];
+    }
+
+    // Convert to simplified array for navigation
+    foreach ($groups as $g) {
+        $navItems[$g->id] = (object) ['id' => $g->id, 'name' => $g->name];
+    }
+
+    // Determine current ID
+    $groupid = optional_param('groupid', 0, PARAM_INT);
+    if (!$groupid && !empty($navItems)) {
+        $groupid = array_key_first($navItems);
+    }
+    $navId = $groupid;
+    $userid = 0; // Not relevant for group submission
+
+} else {
+    // Get all enrolled users who can submit
+    // Equivalent to get_enrolled_users with capability check
+    $context = context_module::instance($cm->id);
+    $users = get_enrolled_users($context, 'mod/gestionprojet:submit');
+
+    foreach ($users as $u) {
+        $navItems[$u->id] = (object) ['id' => $u->id, 'name' => fullname($u)];
+    }
+
+    if (empty($navItems)) {
+        $navItems[0] = (object) ['id' => 0, 'name' => get_string('nousers', 'gestionprojet')];
+    }
+
+    // Determine current ID
+    $userid = optional_param('userid', 0, PARAM_INT);
+    if (!$userid && !empty($navItems)) {
+        $userid = array_key_first($navItems);
+    }
+    $navId = $userid;
+    $groupid = 0; // Not used as primary key, but might be useful for context
+
+    // Try to find group for this user if needed
+    if ($userid) {
+        $groupid = gestionprojet_get_user_group($cm, $userid);
+    }
 }
 
-// If no group specified, use first group
-if (!$groupid) {
-    $groupid = array_key_first($groups);
-}
+// Navigation logic
+$allIds = array_keys($navItems);
+$currentindex = array_search($navId, $allIds);
 
-// Get group submissions
-$allgroups = array_values($groups);
-$currentindex = array_search($groupid, array_column($allgroups, 'id'));
-
-// Get previous and next group IDs
-$prevgroupid = ($currentindex > 0) ? $allgroups[$currentindex - 1]->id : null;
-$nextgroupid = ($currentindex < count($allgroups) - 1) ? $allgroups[$currentindex + 1]->id : null;
+// Get previous and next IDs
+$prevId = ($currentindex > 0) ? $allIds[$currentindex - 1] : null;
+$nextId = ($currentindex < count($allIds) - 1) ? $allIds[$currentindex + 1] : null;
 
 // Handle form submission
 if (optional_param('savegrading', false, PARAM_BOOL) && confirm_sesskey()) {
@@ -70,10 +115,16 @@ if (optional_param('savegrading', false, PARAM_BOOL) && confirm_sesskey()) {
     }
 
     if ($table) {
-        $record = $DB->get_record($table, [
-            'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $groupid
-        ]);
+        // Construct search params based on submission mode
+        $params = ['gestionprojetid' => $gestionprojet->id];
+        if ($isGroupSubmission) {
+            $params['groupid'] = $groupid;
+            // Ensure unique constraint logic matches lib.php
+        } else {
+            $params['userid'] = $userid;
+        }
+
+        $record = $DB->get_record($table, $params);
 
         if ($record) {
             $record->grade = $grade;
@@ -82,13 +133,17 @@ if (optional_param('savegrading', false, PARAM_BOOL) && confirm_sesskey()) {
             $DB->update_record($table, $record);
 
             // Update gradebook
-            gestionprojet_update_grades($gestionprojet);
+            gestionprojet_update_grades($gestionprojet, ($isGroupSubmission ? 0 : $userid));
 
-            redirect(new moodle_url('/mod/gestionprojet/grading.php', [
-                'id' => $id,
-                'step' => $step,
-                'groupid' => $nextgroupid ?: $groupid
-            ]), get_string('grading_save', 'gestionprojet'), null, \core\output\notification::NOTIFY_SUCCESS);
+            // Redirect parameters
+            $redirectParams = ['id' => $id, 'step' => $step];
+            if ($isGroupSubmission) {
+                $redirectParams['groupid'] = $nextId ?: $groupid;
+            } else {
+                $redirectParams['userid'] = $nextId ?: $userid;
+            }
+
+            redirect(new moodle_url('/mod/gestionprojet/grading.php', $redirectParams), get_string('grading_save', 'gestionprojet'), null, \core\output\notification::NOTIFY_SUCCESS);
         }
     }
 }
@@ -102,6 +157,7 @@ $PAGE->set_context($context);
 echo $OUTPUT->header();
 
 // Display step selector and group navigation
+echo "<div style='background:red;color:white;padding:10px;text-align:center;'>DEBUG: ROOT GRADING LOADED</div>";
 ?>
 
 <style>
@@ -347,45 +403,50 @@ echo $OUTPUT->header();
 $submission = null;
 $tablename = '';
 
+// Construct search params based on submission mode
+$params = ['gestionprojetid' => $gestionprojet->id];
+if ($isGroupSubmission) {
+    $params['groupid'] = $groupid;
+} else {
+    $params['userid'] = $userid;
+}
+
 switch ($step) {
     case 1:
         $tablename = 'gestionprojet_description';
+        // Description is always by teacher (no group or user distinction in retrieval, locked by teacher)
         $submission = $DB->get_record($tablename, [
             'gestionprojetid' => $gestionprojet->id
         ]);
         break;
     case 2:
         $tablename = 'gestionprojet_besoin';
+        // Besoin is always by teacher
         $submission = $DB->get_record($tablename, [
             'gestionprojetid' => $gestionprojet->id
         ]);
         break;
     case 3:
         $tablename = 'gestionprojet_planning';
+        // Planning is always by teacher
         $submission = $DB->get_record($tablename, [
             'gestionprojetid' => $gestionprojet->id
         ]);
         break;
     case 4:
         $tablename = 'gestionprojet_cdcf';
-        $submission = $DB->get_record($tablename, [
-            'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $groupid
-        ]);
+        // Student submission (group or individual)
+        $submission = $DB->get_record($tablename, $params);
         break;
     case 5:
         $tablename = 'gestionprojet_essai';
-        $submission = $DB->get_record($tablename, [
-            'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $groupid
-        ]);
+        // Student submission (group or individual)
+        $submission = $DB->get_record($tablename, $params);
         break;
     case 6:
         $tablename = 'gestionprojet_rapport';
-        $submission = $DB->get_record($tablename, [
-            'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $groupid
-        ]);
+        // Student submission (group or individual)
+        $submission = $DB->get_record($tablename, $params);
         break;
 }
 
@@ -662,4 +723,4 @@ if (!$submission): ?>
 
 <?php
 echo $OUTPUT->footer();
-?>
+?>?>
