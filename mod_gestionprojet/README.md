@@ -488,6 +488,11 @@ SOFTWARE.
 
 ## 📅 Historique des versions
 
+### Version 1.1.2 (2026-01-21)
+- **Nouveautй** : Interface de correction pour les enseignants (pages/grading.php) avec saisie de notes et feedback
+- **Correctif** : Rйsolution de l'erreur "Too few arguments" sur l'accиs йtudiant/groupe
+- **Amйlioration** : Mise а jour de la base de donnйes pour supporter les notes et feedbacks par йtape
+
 ### Version 1.1.1 (2026-01-21)
 - **Correctif** : Résolution du plantage lors de l'accès étudiant aux étapes 4, 5 et 6 (erreur de récupération du groupe)
 - **Correctif** : Amélioration de la robustesse de l'accès aux groupes

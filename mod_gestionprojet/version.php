@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_gestionprojet';
-$plugin->version = 2026012100;  // YYYYMMDDXX format
+$plugin->version = 2026012103;  // YYYYMMDDXX format
 $plugin->requires = 2024100700; // Moodle 5.0+
 $plugin->maturity = MATURITY_ALPHA;
 $plugin->release = '1.1.0';

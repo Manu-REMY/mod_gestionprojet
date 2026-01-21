@@ -21,12 +21,14 @@ require_once($CFG->dirroot . '/course/moodleform_mod.php');
 /**
  * Module instance settings form.
  */
-class mod_gestionprojet_mod_form extends moodleform_mod {
+class mod_gestionprojet_mod_form extends moodleform_mod
+{
 
     /**
      * Defines forms elements
      */
-    public function definition() {
+    public function definition()
+    {
         global $CFG;
 
         $mform = $this->_form;
@@ -56,11 +58,26 @@ class mod_gestionprojet_mod_form extends moodleform_mod {
             60 => '60 ' . get_string('seconds'),
             120 => '120 ' . get_string('seconds'),
         ];
-        $mform->addElement('select', 'autosave_interval',
-                          get_string('autosave_interval', 'gestionprojet'),
-                          $options);
+        $mform->addElement(
+            'select',
+            'autosave_interval',
+            get_string('autosave_interval', 'gestionprojet'),
+            $options
+        );
+        $mform->setDefault('autosave_interval', 30);
         $mform->setDefault('autosave_interval', 30);
         $mform->addHelpButton('autosave_interval', 'autosave_interval', 'gestionprojet');
+
+        // Submission settings
+        $mform->addElement('header', 'submissionsettings', get_string('submissionsettings', 'gestionprojet'));
+
+        $mform->addElement('selectyesno', 'group_submission', get_string('groupsubmission', 'gestionprojet'));
+        $mform->setDefault('group_submission', 1);
+        $mform->addHelpButton('group_submission', 'groupsubmission', 'gestionprojet');
+
+        $mform->addElement('selectyesno', 'enable_submission', get_string('enable_submission', 'gestionprojet'));
+        $mform->setDefault('enable_submission', 1);
+        $mform->addHelpButton('enable_submission', 'enable_submission', 'gestionprojet');
 
         // Add standard grading elements.
         $this->standard_grading_coursemodule_elements();
@@ -79,7 +96,8 @@ class mod_gestionprojet_mod_form extends moodleform_mod {
      * @param array $files array of uploaded files "element_name"=>tmp_file_path
      * @return array of "element_name"=>"error_description" if there are errors
      */
-    public function validation($data, $files) {
+    public function validation($data, $files)
+    {
         $errors = parent::validation($data, $files);
 
         return $errors;

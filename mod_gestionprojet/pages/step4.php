@@ -40,15 +40,28 @@ if (!defined('MOODLE_INTERNAL')) {
 // Variables are set - continue with page logic
 require_capability('mod/gestionprojet:submit', $context);
 
-// Get user's group
-$groupid = gestionprojet_get_user_group($cm, $USER->id);
+// Get user's group or requested group (for teachers)
+$groupid = optional_param('groupid', 0, PARAM_INT);
+if ($groupid) {
+    // Only teachers can view other groups
+    require_capability('mod/gestionprojet:grade', $context);
+} else {
+    $groupid = gestionprojet_get_user_group($cm, $USER->id);
+}
 
-if (!$groupid) {
+// If group submission is enabled, user must be in a group
+if ($gestionprojet->group_submission && !$groupid) {
     throw new \moodle_exception('not_in_group', 'gestionprojet');
 }
 
 // Get or create submission
-$submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'cdcf');
+$submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'cdcf');
+
+// Check if submitted
+$isSubmitted = $submission->status == 1;
+$isLocked = $isSubmitted; // Lock if submitted
+$canSubmit = $gestionprojet->enable_submission && !$isSubmitted;
+$canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
 // Autosave handled inline at bottom of file
 // $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
@@ -58,6 +71,13 @@ $submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupi
 // ]]);
 
 echo $OUTPUT->header();
+
+// Status display
+if ($isSubmitted) {
+    echo $OUTPUT->notification(get_string('submitted_on', 'gestionprojet', userdate($submission->timesubmitted)), 'success');
+}
+
+$disabled = $isLocked ? 'disabled readonly' : '';
 
 // Get group info
 $group = groups_get_group($groupid);
@@ -517,20 +537,20 @@ if (empty($interacteurs)) {
                 <div class="project-name">
                     <label for="produit"><?php echo get_string('produit', 'gestionprojet'); ?></label>
                     <input type="text" id="produit" name="produit" value="<?php echo s($submission->produit ?? ''); ?>"
-                        placeholder="Nom du produit">
+                        placeholder="Nom du produit" <?php echo $disabled; ?>>
                 </div>
 
                 <div class="fp-container">
                     <label class="fp-label">FP (Fonction Principale)</label>
                     <textarea id="fp" name="fp" class="fp-input"
-                        placeholder="Décrivez la fonction principale du produit..."><?php echo s($submission->fp ?? ''); ?></textarea>
+                        placeholder="Décrivez la fonction principale du produit..." <?php echo $disabled; ?>><?php echo s($submission->fp ?? ''); ?></textarea>
                 </div>
             </div>
 
             <div class="project-name">
                 <label for="milieu"><?php echo get_string('milieu', 'gestionprojet'); ?></label>
                 <input type="text" id="milieu" name="milieu" value="<?php echo s($submission->milieu ?? ''); ?>"
-                    placeholder="Milieu d'utilisation">
+                    placeholder="Milieu d'utilisation" <?php echo $disabled; ?>>
             </div>
         </div>
 
@@ -538,7 +558,9 @@ if (empty($interacteurs)) {
         <div class="interactors-section">
             <h3 class="section-title">⚙️ Interacteurs et Fonctions Contraintes</h3>
             <div id="interactorsContainer"></div>
-            <button type="button" class="btn-add" onclick="addInteractor()">+ Ajouter un interacteur</button>
+            <?php if (!$isLocked): ?>
+                <button type="button" class="btn-add" onclick="addInteractor()">+ Ajouter un interacteur</button>
+            <?php endif; ?>
         </div>
 
         <!-- Diagram -->
@@ -547,11 +569,25 @@ if (empty($interacteurs)) {
             <svg id="interactorDiagram" viewBox="0 0 800 500"></svg>
         </div>
 
-        <!-- Export section -->
-        <div class="export-section">
-            <button type="button" class="btn-export" onclick="exportPDF()">
+        <!-- Actions section -->
+        <div class="export-section" style="margin-top: 40px; text-align: center;">
+            <?php if ($canSubmit): ?>
+                <button type="button" class="btn btn-primary btn-lg" id="submitButton"
+                    style="padding: 15px 40px; font-size: 18px; border-radius: 50px;">
+                    📤 <?php echo get_string('submit', 'gestionprojet'); ?>
+                </button>
+            <?php endif; ?>
+
+            <?php if ($canRevert): ?>
+                <button type="button" class="btn btn-warning" id="revertButton">
+                    ↩️ <?php echo get_string('revert_to_draft', 'gestionprojet'); ?>
+                </button>
+            <?php endif; ?>
+
+            <button type="button" class="btn-export" onclick="exportPDF()" style="margin-left: 20px;">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
             </button>
+
             <p style="margin-top: 15px; color: #6c757d; font-size: 0.9em;">
                 ℹ️ <?php echo get_string('export_pdf_notice', 'gestionprojet'); ?>
             </p>
@@ -602,15 +638,67 @@ $PAGE->requires->jquery();
                 // console.log('Step 4 saved', response);
             };
 
-            Autosave.init({
-                cmid: cmid,
-                step: step,
-                groupid: groupid,
-                interval: autosaveInterval,
-                formSelector: '#cdcfForm',
-                serialize: serializeData,
-                onSave: onSave
+            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
+
+            // Handle Submission
+            $('#submitButton').on('click', function () {
+                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
+                    $.ajax({
+                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'submit',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function (response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error submitting');
+                            }
+                        }
+                    });
+                }
             });
+
+            // Handle Revert
+            $('#revertButton').on('click', function () {
+                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
+                    $.ajax({
+                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'revert',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function (response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error reverting');
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (!isLocked) {
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
+                    interval: autosaveInterval,
+                    formSelector: '#cdcfForm',
+                    serialize: serializeData,
+                    onSave: onSave
+                });
+            }
         });
     })();
 

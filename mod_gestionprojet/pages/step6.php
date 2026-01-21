@@ -41,15 +41,28 @@ if (!defined('MOODLE_INTERNAL')) {
 // Variables are set - continue with page logic
 require_capability('mod/gestionprojet:submit', $context);
 
-// Get user's group
-$groupid = gestionprojet_get_user_group($cm, $USER->id);
+// Get user's group or requested group (for teachers)
+$groupid = optional_param('groupid', 0, PARAM_INT);
+if ($groupid) {
+    // Only teachers can view other groups
+    require_capability('mod/gestionprojet:grade', $context);
+} else {
+    $groupid = gestionprojet_get_user_group($cm, $USER->id);
+}
 
-if (!$groupid) {
+// If group submission is enabled, user must be in a group
+if ($gestionprojet->group_submission && !$groupid) {
     throw new \moodle_exception('not_in_group', 'gestionprojet');
 }
 
 // Get or create submission
-$submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'rapport');
+$submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'rapport');
+
+// Check if submitted
+$isSubmitted = $submission->status == 1;
+$isLocked = $isSubmitted; // Lock if submitted
+$canSubmit = $gestionprojet->enable_submission && !$isSubmitted;
+$canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
 // Autosave handled inline at bottom of file
 // $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
@@ -59,6 +72,13 @@ $submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupi
 // ]]);
 
 echo $OUTPUT->header();
+
+// Status display
+if ($isSubmitted) {
+    echo $OUTPUT->notification(get_string('submitted_on', 'gestionprojet', userdate($submission->timesubmitted)), 'success');
+}
+
+$disabled = $isLocked ? 'disabled readonly' : '';
 
 // Get group info
 $group = groups_get_group($groupid);
@@ -395,7 +415,7 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="titre_projet"><?php echo get_string('titre_projet', 'gestionprojet'); ?></label>
                 <input type="text" id="titre_projet" name="titre_projet"
-                    value="<?php echo s($submission->titre_projet ?? ''); ?>" placeholder="Nom de votre projet">
+                    value="<?php echo s($submission->titre_projet ?? ''); ?>" placeholder="Nom de votre projet" <?php echo $disabled; ?>>
             </div>
 
             <div class="form-group">
@@ -413,13 +433,13 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="besoin_projet"><?php echo get_string('besoin_projet', 'gestionprojet'); ?></label>
                 <textarea id="besoin_projet" name="besoin_projet"
-                    placeholder="Décrivez le besoin auquel répond votre projet..."><?php echo s($submission->besoin_projet ?? ''); ?></textarea>
+                    placeholder="Décrivez le besoin auquel répond votre projet..." <?php echo $disabled; ?>><?php echo s($submission->besoin_projet ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="imperatifs"><?php echo get_string('imperatifs', 'gestionprojet'); ?></label>
                 <textarea id="imperatifs" name="imperatifs"
-                    placeholder="Listez les contraintes et impératifs du projet..."><?php echo s($submission->imperatifs ?? ''); ?></textarea>
+                    placeholder="Listez les contraintes et impératifs du projet..." <?php echo $disabled; ?>><?php echo s($submission->imperatifs ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -429,14 +449,13 @@ if ($submission->auteurs) {
 
             <div class="form-group">
                 <label for="solutions"><?php echo get_string('solutions', 'gestionprojet'); ?></label>
-                <textarea id="solutions" name="solutions"
-                    placeholder="Décrivez les solutions retenues..."><?php echo s($submission->solutions ?? ''); ?></textarea>
+                <textarea id="solutions" name="solutions" placeholder="Décrivez les solutions retenues..." <?php echo $disabled; ?>><?php echo s($submission->solutions ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="justification"><?php echo get_string('justification', 'gestionprojet'); ?></label>
                 <textarea id="justification" name="justification"
-                    placeholder="Justifiez vos choix techniques et stratégiques..."><?php echo s($submission->justification ?? ''); ?></textarea>
+                    placeholder="Justifiez vos choix techniques et stratégiques..." <?php echo $disabled; ?>><?php echo s($submission->justification ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -446,14 +465,14 @@ if ($submission->auteurs) {
 
             <div class="form-group">
                 <label for="realisation"><?php echo get_string('realisation', 'gestionprojet'); ?></label>
-                <textarea id="realisation" name="realisation"
-                    placeholder="Comment avez-vous réalisé votre projet ?"><?php echo s($submission->realisation ?? ''); ?></textarea>
+                <textarea id="realisation" name="realisation" placeholder="Comment avez-vous réalisé votre projet ?"
+                    <?php echo $disabled; ?>><?php echo s($submission->realisation ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="difficultes"><?php echo get_string('difficultes', 'gestionprojet'); ?></label>
                 <textarea id="difficultes" name="difficultes"
-                    placeholder="Quelles difficultés avez-vous rencontrées et comment les avez-vous surmontées ?"><?php echo s($submission->difficultes ?? ''); ?></textarea>
+                    placeholder="Quelles difficultés avez-vous rencontrées et comment les avez-vous surmontées ?" <?php echo $disabled; ?>><?php echo s($submission->difficultes ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -464,13 +483,13 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="validation"><?php echo get_string('validation', 'gestionprojet'); ?></label>
                 <textarea id="validation" name="validation"
-                    placeholder="Décrivez les résultats de vos tests et essais..."><?php echo s($submission->validation ?? ''); ?></textarea>
+                    placeholder="Décrivez les résultats de vos tests et essais..." <?php echo $disabled; ?>><?php echo s($submission->validation ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="ameliorations"><?php echo get_string('ameliorations', 'gestionprojet'); ?></label>
                 <textarea id="ameliorations" name="ameliorations"
-                    placeholder="Quelles améliorations pourriez-vous apporter au projet ?"><?php echo s($submission->ameliorations ?? ''); ?></textarea>
+                    placeholder="Quelles améliorations pourriez-vous apporter au projet ?" <?php echo $disabled; ?>><?php echo s($submission->ameliorations ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -481,19 +500,32 @@ if ($submission->auteurs) {
             <div class="form-group">
                 <label for="bilan"><?php echo get_string('bilan', 'gestionprojet'); ?></label>
                 <textarea id="bilan" name="bilan"
-                    placeholder="Quel est votre bilan global du projet ? Qu'avez-vous appris ?"><?php echo s($submission->bilan ?? ''); ?></textarea>
+                    placeholder="Quel est votre bilan global du projet ? Qu'avez-vous appris ?" <?php echo $disabled; ?>><?php echo s($submission->bilan ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="perspectives"><?php echo get_string('perspectives', 'gestionprojet'); ?></label>
                 <textarea id="perspectives" name="perspectives"
-                    placeholder="Quelles sont les perspectives d'évolution du projet ?"><?php echo s($submission->perspectives ?? ''); ?></textarea>
+                    placeholder="Quelles sont les perspectives d'évolution du projet ?" <?php echo $disabled; ?>><?php echo s($submission->perspectives ?? ''); ?></textarea>
             </div>
         </div>
 
-        <!-- Export section -->
-        <div class="export-section">
-            <button type="button" class="btn-export" onclick="exportPDF()">
+        <!-- Actions section -->
+        <div class="export-section" style="margin-top: 40px; text-align: center;">
+            <?php if ($canSubmit): ?>
+                <button type="button" class="btn btn-primary btn-lg" id="submitButton"
+                    style="padding: 15px 40px; font-size: 18px; border-radius: 50px;">
+                    📤 <?php echo get_string('submit', 'gestionprojet'); ?>
+                </button>
+            <?php endif; ?>
+
+            <?php if ($canRevert): ?>
+                <button type="button" class="btn btn-warning" id="revertButton">
+                    ↩️ <?php echo get_string('revert_to_draft', 'gestionprojet'); ?>
+                </button>
+            <?php endif; ?>
+
+            <button type="button" class="btn-export" onclick="exportPDF()" style="margin-left: 20px;">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
             </button>
             <p style="margin-top: 15px; color: #6c757d; font-size: 0.9em;">
@@ -547,23 +579,76 @@ $PAGE->requires->jquery();
                 return formData;
             };
 
-            Autosave.init({
-                cmid: cmid,
-                step: step,
-                groupid: groupid,
-                interval: autosaveInterval,
-                formSelector: '#rapportForm',
-                serialize: serializeData
+            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
+
+            // Handle Submission
+            $('#submitButton').on('click', function () {
+                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
+                    $.ajax({
+                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'submit',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function (response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error submitting');
+                            }
+                        }
+                    });
+                }
             });
 
-            // We need to trigger autosave when members change, which is handled in renderMembers
-            // by dispatching a change event to the form.
-            // The Autosave module listens for 'change input' on the form, so this should work automatically.
+            // Handle Revert
+            $('#revertButton').on('click', function () {
+                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
+                    $.ajax({
+                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'revert',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function (response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error reverting');
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (!isLocked) {
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
+                    interval: autosaveInterval,
+                    formSelector: '#rapportForm',
+                    serialize: serializeData
+                });
+            }
+
+            // We need to trigger autosave when members change
+            // The Autosave module listens for 'change input' on the form, so this should work automatically if not locked.
         });
     })();
 
     // Members management
     let members = <?php echo json_encode($auteurs); ?>;
+    let isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
+
     if (members.length === 0) {
         members = [''];
     }
@@ -580,39 +665,46 @@ $PAGE->requires->jquery();
             input.type = 'text';
             input.placeholder = 'Nom et prénom';
             input.value = member;
-            input.onchange = (e) => {
-                members[index] = e.target.value;
-                // Trigger auto-save
-                const event = new Event('change', { bubbles: true });
-                document.getElementById('rapportForm').dispatchEvent(event);
-            };
+            if (isLocked) {
+                input.disabled = true;
+                input.readOnly = true;
+            } else {
+                input.onchange = (e) => {
+                    members[index] = e.target.value;
+                    // Trigger auto-save
+                    const event = new Event('change', { bubbles: true });
+                    document.getElementById('rapportForm').dispatchEvent(event);
+                };
+            }
 
             memberGroup.appendChild(input);
 
-            if (index === members.length - 1) {
-                const addBtn = document.createElement('button');
-                addBtn.type = 'button';
-                addBtn.className = 'btn-add';
-                addBtn.innerHTML = '+';
-                addBtn.title = 'Ajouter un membre';
-                addBtn.onclick = () => {
-                    members.push('');
-                    renderMembers();
-                };
-                memberGroup.appendChild(addBtn);
-            } else {
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'btn-remove';
-                removeBtn.innerHTML = '✕';
-                removeBtn.title = 'Retirer ce membre';
-                removeBtn.onclick = () => {
-                    if (members.length > 1) {
-                        members.splice(index, 1);
+            if (!isLocked) {
+                if (index === members.length - 1) {
+                    const addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'btn-add';
+                    addBtn.innerHTML = '+';
+                    addBtn.title = 'Ajouter un membre';
+                    addBtn.onclick = () => {
+                        members.push('');
                         renderMembers();
-                    }
-                };
-                memberGroup.appendChild(removeBtn);
+                    };
+                    memberGroup.appendChild(addBtn);
+                } else {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn-remove';
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.title = 'Retirer ce membre';
+                    removeBtn.onclick = () => {
+                        if (members.length > 1) {
+                            members.splice(index, 1);
+                            renderMembers();
+                        }
+                    };
+                    memberGroup.appendChild(removeBtn);
+                }
             }
 
             container.appendChild(memberGroup);

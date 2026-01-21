@@ -41,15 +41,28 @@ if (!defined('MOODLE_INTERNAL')) {
 // Variables are set - continue with page logic
 require_capability('mod/gestionprojet:submit', $context);
 
-// Get user's group
-$groupid = gestionprojet_get_user_group($cm, $USER->id);
+// Get user's group or requested group (for teachers)
+$groupid = optional_param('groupid', 0, PARAM_INT);
+if ($groupid) {
+    // Only teachers can view other groups
+    require_capability('mod/gestionprojet:grade', $context);
+} else {
+    $groupid = gestionprojet_get_user_group($cm, $USER->id);
+}
 
-if (!$groupid) {
+// If group submission is enabled, user must be in a group
+if ($gestionprojet->group_submission && !$groupid) {
     throw new \moodle_exception('not_in_group', 'gestionprojet');
 }
 
 // Get or create submission
-$submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'essai');
+$submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'essai');
+
+// Check if submitted
+$isSubmitted = $submission->status == 1;
+$isLocked = $isSubmitted; // Lock if submitted
+$canSubmit = $gestionprojet->enable_submission && !$isSubmitted;
+$canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
 // Autosave handled inline at bottom of file
 // $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
@@ -59,6 +72,13 @@ $submission = gestionprojet_get_or_create_submission($gestionprojet->id, $groupi
 // ]]);
 
 echo $OUTPUT->header();
+
+// Status display
+if ($isSubmitted) {
+    echo $OUTPUT->notification(get_string('submitted_on', 'gestionprojet', userdate($submission->timesubmitted)), 'success');
+}
+
+$disabled = $isLocked ? 'disabled readonly' : '';
 
 // Get group info
 $group = groups_get_group($groupid);
@@ -474,19 +494,19 @@ if ($submission->precautions) {
                     <label for="nom_essai"><?php echo get_string('nom_essai', 'gestionprojet'); ?> :</label>
                     <input type="text" id="nom_essai" name="nom_essai"
                         value="<?php echo s($submission->nom_essai ?? ''); ?>"
-                        placeholder="<?php echo get_string('nom_essai_placeholder', 'gestionprojet'); ?>">
+                        placeholder="<?php echo get_string('nom_essai_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>>
                 </div>
                 <div class="info-group">
                     <label for="date_essai"><?php echo get_string('date', 'gestionprojet'); ?> :</label>
                     <input type="date" id="date_essai" name="date_essai"
-                        value="<?php echo s($submission->date_essai ?? date('Y-m-d')); ?>">
+                        value="<?php echo s($submission->date_essai ?? date('Y-m-d')); ?>" <?php echo $disabled; ?>>
                 </div>
             </div>
 
             <div class="info-group">
                 <label for="groupe_eleves"><?php echo get_string('groupe_eleves', 'gestionprojet'); ?> :</label>
                 <textarea id="groupe_eleves" name="groupe_eleves" rows="2"
-                    placeholder="<?php echo get_string('groupe_eleves_placeholder', 'gestionprojet'); ?>"><?php echo s($submission->groupe_eleves ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('groupe_eleves_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->groupe_eleves ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -502,7 +522,7 @@ if ($submission->precautions) {
                         Quelle est la fonction de service/contrainte que doit satisfaire le système ?
                     </label>
                     <textarea id="fonction_service" name="fonction_service"
-                        placeholder="Décrivez la fonction de service ou la contrainte à satisfaire..."><?php echo s($submission->fonction_service ?? ''); ?></textarea>
+                        placeholder="Décrivez la fonction de service ou la contrainte à satisfaire..." <?php echo $disabled; ?>><?php echo s($submission->fonction_service ?? ''); ?></textarea>
                 </div>
 
                 <div class="question-block">
@@ -510,7 +530,7 @@ if ($submission->precautions) {
                         Quelles sont les niveaux (valeurs et unité) que définissent la réussite du test ?
                     </label>
                     <textarea id="niveaux_reussite" name="niveaux_reussite"
-                        placeholder="Précisez les valeurs attendues et les unités de mesure..."><?php echo s($submission->niveaux_reussite ?? ''); ?></textarea>
+                        placeholder="Précisez les valeurs attendues et les unités de mesure..." <?php echo $disabled; ?>><?php echo s($submission->niveaux_reussite ?? ''); ?></textarea>
                 </div>
             </div>
         </div>
@@ -527,7 +547,7 @@ if ($submission->precautions) {
                         Quelles sont les étapes de votre protocole ?
                     </label>
                     <textarea id="etapes_protocole" name="etapes_protocole"
-                        placeholder="Listez les étapes de votre protocole expérimental..."><?php echo s($submission->etapes_protocole ?? ''); ?></textarea>
+                        placeholder="Listez les étapes de votre protocole expérimental..." <?php echo $disabled; ?>><?php echo s($submission->etapes_protocole ?? ''); ?></textarea>
                 </div>
 
                 <div class="question-block">
@@ -535,7 +555,7 @@ if ($submission->precautions) {
                         Quel matériel et quels outils allez-vous utiliser ?
                     </label>
                     <textarea id="materiel_outils" name="materiel_outils"
-                        placeholder="Listez le matériel et les outils nécessaires..."><?php echo s($submission->materiel_outils ?? ''); ?></textarea>
+                        placeholder="Listez le matériel et les outils nécessaires..." <?php echo $disabled; ?>><?php echo s($submission->materiel_outils ?? ''); ?></textarea>
                 </div>
 
                 <div class="question-block">
@@ -547,29 +567,29 @@ if ($submission->precautions) {
                             <tr>
                                 <td>
                                     <textarea id="precaution_1" name="precaution_1"
-                                        placeholder="Précaution 1..."><?php echo s($precautions[0] ?? ''); ?></textarea>
+                                        placeholder="Précaution 1..." <?php echo $disabled; ?>><?php echo s($precautions[0] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <textarea id="precaution_2" name="precaution_2"
-                                        placeholder="Précaution 2..."><?php echo s($precautions[1] ?? ''); ?></textarea>
+                                        placeholder="Précaution 2..." <?php echo $disabled; ?>><?php echo s($precautions[1] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <textarea id="precaution_3" name="precaution_3"
-                                        placeholder="Précaution 3..."><?php echo s($precautions[2] ?? ''); ?></textarea>
+                                        placeholder="Précaution 3..." <?php echo $disabled; ?>><?php echo s($precautions[2] ?? ''); ?></textarea>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
                                     <textarea id="precaution_4" name="precaution_4"
-                                        placeholder="Précaution 4..."><?php echo s($precautions[3] ?? ''); ?></textarea>
+                                        placeholder="Précaution 4..." <?php echo $disabled; ?>><?php echo s($precautions[3] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <textarea id="precaution_5" name="precaution_5"
-                                        placeholder="Précaution 5..."><?php echo s($precautions[4] ?? ''); ?></textarea>
+                                        placeholder="Précaution 5..." <?php echo $disabled; ?>><?php echo s($precautions[4] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <textarea id="precaution_6" name="precaution_6"
-                                        placeholder="Précaution 6..."><?php echo s($precautions[5] ?? ''); ?></textarea>
+                                        placeholder="Précaution 6..." <?php echo $disabled; ?>><?php echo s($precautions[5] ?? ''); ?></textarea>
                                 </td>
                             </tr>
                         </tbody>
@@ -590,7 +610,7 @@ if ($submission->precautions) {
                         Résultats obtenus :
                     </label>
                     <textarea id="resultats_obtenus" name="resultats_obtenus"
-                        placeholder="Décrivez les résultats de l'essai..."><?php echo s($submission->resultats_obtenus ?? ''); ?></textarea>
+                        placeholder="Décrivez les résultats de l'essai..." <?php echo $disabled; ?>><?php echo s($submission->resultats_obtenus ?? ''); ?></textarea>
                 </div>
 
                 <div class="question-block">
@@ -598,7 +618,7 @@ if ($submission->precautions) {
                         Observations et remarques :
                     </label>
                     <textarea id="observations_remarques" name="observations_remarques"
-                        placeholder="Notez vos observations et remarques..."><?php echo s($submission->observations_remarques ?? ''); ?></textarea>
+                        placeholder="Notez vos observations et remarques..." <?php echo $disabled; ?>><?php echo s($submission->observations_remarques ?? ''); ?></textarea>
                 </div>
             </div>
         </div>
@@ -615,14 +635,26 @@ if ($submission->precautions) {
                         Le test est-il concluant ? Pourquoi ?
                     </label>
                     <textarea id="conclusion" name="conclusion"
-                        placeholder="Rédigez votre conclusion..."><?php echo s($submission->conclusion ?? ''); ?></textarea>
+                        placeholder="Rédigez votre conclusion..." <?php echo $disabled; ?>><?php echo s($submission->conclusion ?? ''); ?></textarea>
                 </div>
             </div>
         </div>
 
-        <!-- Export section -->
-        <div class="export-section">
-            <button type="button" class="btn-export" onclick="exportPDF()">
+        <!-- Actions section -->
+        <div class="export-section" style="margin-top: 40px; text-align: center;">
+            <?php if ($canSubmit): ?>
+                <button type="button" class="btn btn-primary btn-lg" id="submitButton" style="padding: 15px 40px; font-size: 18px; border-radius: 50px;">
+                    📤 <?php echo get_string('submit', 'gestionprojet'); ?>
+                </button>
+            <?php endif; ?>
+
+            <?php if ($canRevert): ?>
+                <button type="button" class="btn btn-warning" id="revertButton">
+                    ↩️ <?php echo get_string('revert_to_draft', 'gestionprojet'); ?>
+                </button>
+            <?php endif; ?>
+
+            <button type="button" class="btn-export" onclick="exportPDF()" style="margin-left: 20px;">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?> (2 pages)
             </button>
             <p style="margin-top: 15px; color: #6c757d; font-size: 0.9em;">
@@ -677,14 +709,66 @@ $PAGE->requires->jquery();
                 return formData;
             };
 
-            Autosave.init({
-                cmid: cmid,
-                step: step,
-                groupid: groupid,
-                interval: autosaveInterval,
-                formSelector: '#essaiForm',
-                serialize: serializeData
+            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
+
+            // Handle Submission
+            $('#submitButton').on('click', function() {
+                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
+                    $.ajax({
+                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'submit',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function(response) {
+                             var res = JSON.parse(response);
+                             if (res.success) {
+                                 window.location.reload();
+                             } else {
+                                 alert('Error submitting');
+                             }
+                        }
+                    });
+                }
             });
+
+            // Handle Revert
+            $('#revertButton').on('click', function() {
+                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
+                    $.ajax({
+                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'revert',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function(response) {
+                             var res = JSON.parse(response);
+                             if (res.success) {
+                                 window.location.reload();
+                             } else {
+                                 alert('Error reverting');
+                             }
+                        }
+                    });
+                }
+            });
+
+            if (!isLocked) {
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
+                    interval: autosaveInterval,
+                    formSelector: '#essaiForm',
+                    serialize: serializeData
+                });
+            }
         });
     })();
 

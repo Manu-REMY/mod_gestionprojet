@@ -174,41 +174,110 @@ function gestionprojet_get_user_group($cmid, $userid)
         return 0; // No groups mode or user not in any group
     }
 
-    // Return first group (students should only be in one group per activity)
-    return array_key_first($groups);
+    return $groups ? array_key_first($groups) : 0;
 }
 
 /**
  * Get or create student submission record.
  *
- * @param int $gestionprojetid
+ * @param stdClass $gestionprojet The activity record
  * @param int $groupid
+ * @param int $userid
  * @param string $table Table name (cdcf, essai, or rapport)
  * @return stdClass
  */
-function gestionprojet_get_or_create_submission($gestionprojetid, $groupid, $table)
+function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $userid, $table)
 {
     global $DB;
 
     $tablename = 'gestionprojet_' . $table;
+    $isGroupSubmission = $gestionprojet->group_submission;
 
-    $params = [
-        'gestionprojetid' => $gestionprojetid,
-        'groupid' => $groupid
-    ];
+    $params = ['gestionprojetid' => $gestionprojet->id];
+
+    // Logic: 
+    // If group mode enabled: submission is linked to groupid, userid is ignored (or set to 0 to normalize DB unique key)
+    // If individual mode: submission is linked to userid, groupid is stored for reference but uniqueness is on userid.
+    // Wait, DB unique index is (gestionprojetid, groupid, userid).
+
+    if ($isGroupSubmission) {
+        $params['groupid'] = $groupid;
+        $params['userid'] = 0; // Use 0 for group submissions to ensure uniqueness
+    } else {
+        $params['userid'] = $userid;
+        $params['groupid'] = $groupid; // Still store groupid for filtering but not for uniqueness by itself
+    }
 
     $record = $DB->get_record($tablename, $params);
 
     if (!$record) {
         $record = new stdClass();
-        $record->gestionprojetid = $gestionprojetid;
-        $record->groupid = $groupid;
+        $record->gestionprojetid = $gestionprojet->id;
+        $record->groupid = $params['groupid'];
+        $record->userid = $params['userid'];
+        $record->status = 0; // Draft
         $record->timecreated = time();
         $record->timemodified = time();
+
         $record->id = $DB->insert_record($tablename, $record);
     }
 
     return $record;
+}
+
+/**
+ * Submit a specific step.
+ *
+ * @param stdClass $gestionprojet
+ * @param int $groupid
+ * @param int $userid
+ * @param string $stepname (cdcf, essai, or rapport)
+ * @return bool
+ */
+function gestionprojet_submit_step($gestionprojet, $groupid, $userid, $stepname)
+{
+    global $DB;
+
+    $submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $userid, $stepname);
+
+    if (!$submission) {
+        return false;
+    }
+
+    $tablename = 'gestionprojet_' . $stepname;
+
+    $submission->status = 1; // Submitted
+    $submission->timesubmitted = time();
+    $submission->timemodified = time();
+
+    return $DB->update_record($tablename, $submission);
+}
+
+/**
+ * Revert a submission to draft.
+ *
+ * @param stdClass $gestionprojet
+ * @param int $groupid
+ * @param int $userid
+ * @param string $stepname
+ * @return bool
+ */
+function gestionprojet_revert_to_draft($gestionprojet, $groupid, $userid, $stepname)
+{
+    global $DB;
+
+    $submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $userid, $stepname);
+
+    if (!$submission) {
+        return false;
+    }
+
+    $tablename = 'gestionprojet_' . $stepname;
+
+    $submission->status = 0; // Draft
+    $submission->timemodified = time();
+
+    return $DB->update_record($tablename, $submission);
 }
 
 /**

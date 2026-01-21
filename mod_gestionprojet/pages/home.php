@@ -375,9 +375,9 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
 
                     <?php
                     // Get student submissions
-                    $cdcf = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'cdcf');
-                    $essai = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'essai');
-                    $rapport = gestionprojet_get_or_create_submission($gestionprojet->id, $usergroup, 'rapport');
+                    $cdcf = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'cdcf');
+                    $essai = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'essai');
+                    $rapport = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'rapport');
 
                     $steps = [
                         4 => [

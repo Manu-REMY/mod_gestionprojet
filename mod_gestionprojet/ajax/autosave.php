@@ -39,10 +39,12 @@ $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', 
 require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 
+// Check sesskey
+require_sesskey();
+
 // Decode JSON data
 $formdata = json_decode($data, true);
 @file_put_contents($debug_log, "Data received: " . $data . "\n", FILE_APPEND);
-@file_put_contents($debug_log, "Decoded: " . print_r($formdata, true) . "\n", FILE_APPEND);
 
 if (!$formdata) {
     @file_put_contents($debug_log, "ERROR: Invalid JSON\n", FILE_APPEND);
@@ -125,10 +127,8 @@ try {
             $record->timemodified = $time;
 
             if (isset($record->id)) {
-                @file_put_contents($debug_log, "STEP 2 UPDATE: " . print_r($record, true) . "\n", FILE_APPEND);
                 $DB->update_record('gestionprojet_besoin', $record);
             } else {
-                @file_put_contents($debug_log, "STEP 2 INSERT: " . print_r($record, true) . "\n", FILE_APPEND);
                 $record->id = $DB->insert_record('gestionprojet_besoin', $record);
             }
 
@@ -177,17 +177,28 @@ try {
                 throw new moodle_exception('nopermission');
             }
 
-            $record = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'cdcf');
+            // Get or create submission using 'cdcf' type
+            $record = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'cdcf');
+
+            // Check if locked
+            if ($record->status == 1) {
+                throw new moodle_exception('submissionlocked', 'gestionprojet');
+            }
 
             // List of valid fields for cdcf table
-            $validfields = ['produit', 'milieu', 'fp', 'interacteurs_data', 'grade', 'feedback'];
+            // Note: 'interacteurs_data' is the field name in DB for JSON data
+            $validfields = ['produit', 'milieu', 'fp', 'interacteurs_data'];
 
             foreach ($formdata as $key => $value) {
                 if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
-                    $record->$key = is_array($value) ? json_encode($value) : $value;
+                    // Note: step4.php handles JSON encoding/decoding before sending/receiving if needed,
+                    // but here we just store what we get as string (input values) or JSON if JS sends object?
+                    // JS serializeData in step4 sends strings for text inputs, and JSON string for interacteurs.
+                    // So we treat everything as string/value to store.
+                    $record->$key = $value;
 
-                    gestionprojet_log_change($gestionprojet->id, 'cdcf', $record->id, $key, $oldvalue, $record->$key, $USER->id, $groupid);
+                    gestionprojet_log_change($gestionprojet->id, 'cdcf', $record->id, $key, $oldvalue, $value, $USER->id, $groupid);
                 }
             }
 
@@ -202,10 +213,15 @@ try {
                 throw new moodle_exception('nopermission');
             }
 
-            $record = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'essai');
+            $record = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'essai');
+
+            // Check if locked
+            if ($record->status == 1) {
+                throw new moodle_exception('submissionlocked', 'gestionprojet');
+            }
 
             // List of valid fields for essai table
-            $validfields = ['nom_essai', 'date_essai', 'groupe_eleves', 'fonction_service', 'niveaux_reussite', 'etapes_protocole', 'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion', 'grade', 'feedback'];
+            $validfields = ['nom_essai', 'date_essai', 'groupe_eleves', 'fonction_service', 'niveaux_reussite', 'etapes_protocole', 'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion'];
 
             foreach ($formdata as $key => $value) {
                 if ($key !== 'id' && in_array($key, $validfields)) {
@@ -227,10 +243,15 @@ try {
                 throw new moodle_exception('nopermission');
             }
 
-            $record = gestionprojet_get_or_create_submission($gestionprojet->id, $groupid, 'rapport');
+            $record = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'rapport');
+
+            // Check if locked
+            if ($record->status == 1) {
+                throw new moodle_exception('submissionlocked', 'gestionprojet');
+            }
 
             // List of valid fields for rapport table
-            $validfields = ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions', 'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives', 'grade', 'feedback'];
+            $validfields = ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions', 'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives'];
 
             foreach ($formdata as $key => $value) {
                 if ($key !== 'id' && in_array($key, $validfields)) {
