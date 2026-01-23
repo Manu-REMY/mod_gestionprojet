@@ -82,11 +82,11 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         // Active steps settings
         $mform->addElement('header', 'activesteps', get_string('activesteps', 'gestionprojet'));
 
-        for ($i = 1; $i <= 7; $i++) {
+        $steps_order = [1, 3, 2, 7, 4, 5, 6];
+        foreach ($steps_order as $i) {
             $mform->addElement('advcheckbox', 'enable_step' . $i, get_string('step' . $i, 'gestionprojet'));
             $default = ($i == 7) ? 0 : 1;
             $mform->setDefault('enable_step' . $i, $default);
-            // $mform->addHelpButton('enable_step' . $i, 'enable_step' . $i, 'gestionprojet'); // Optional: Add help strings if needed
         }
 
         // Add standard grading elements.

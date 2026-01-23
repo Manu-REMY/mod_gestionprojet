@@ -345,10 +345,10 @@ echo $OUTPUT->header();
         <div class="step-selector">
             <?php
             $steps = [
+                7 => ['icon' => '🦏', 'name' => 'Expression Besoin'],
                 4 => ['icon' => '📋', 'name' => 'CDCF'],
                 5 => ['icon' => '🔬', 'name' => 'Essai'],
-                6 => ['icon' => '📝', 'name' => 'Rapport'],
-                7 => ['icon' => '🦏', 'name' => 'Expression Besoin']
+                6 => ['icon' => '📝', 'name' => 'Rapport']
             ];
 
             // Filter enabled steps

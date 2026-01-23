@@ -209,19 +209,19 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                     'data' => $description,
                     'complete' => $description && !empty($description->intitule)
                 ],
-                2 => [
-                    'icon' => '🦏',
-                    'title' => get_string('step2', 'gestionprojet'),
-                    'desc' => get_string('step2_desc', 'gestionprojet'),
-                    'data' => $besoin,
-                    'complete' => $besoin && !empty($besoin->aqui)
-                ],
                 3 => [
                     'icon' => '📅',
                     'title' => get_string('step3', 'gestionprojet'),
                     'desc' => get_string('step3_desc', 'gestionprojet'),
                     'data' => $planning,
                     'complete' => $planning && !empty($planning->projectname)
+                ],
+                2 => [
+                    'icon' => '🦏',
+                    'title' => get_string('step2', 'gestionprojet'),
+                    'desc' => get_string('step2_desc', 'gestionprojet'),
+                    'data' => $besoin,
+                    'complete' => $besoin && !empty($besoin->aqui)
                 ]
             ];
 
@@ -270,10 +270,10 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                     <div class="grading-cards">
                         <?php
                         $studentsteps = [
+                            7 => ['icon' => '🦏', 'title' => get_string('step7', 'gestionprojet')],
                             4 => ['icon' => '📋', 'title' => get_string('step4', 'gestionprojet')],
                             5 => ['icon' => '🔬', 'title' => get_string('step5', 'gestionprojet')],
-                            6 => ['icon' => '📝', 'title' => get_string('step6', 'gestionprojet')],
-                            7 => ['icon' => '🦏', 'title' => get_string('step7', 'gestionprojet')]
+                            6 => ['icon' => '📝', 'title' => get_string('step6', 'gestionprojet')]
                         ];
 
                         // Filter enabled steps
@@ -349,19 +349,19 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             'data' => $description,
                             'complete' => $description && !empty($description->intitule)
                         ],
-                        2 => [
-                            'icon' => '🦏',
-                            'title' => get_string('step2', 'gestionprojet'),
-                            'desc' => get_string('step2_desc', 'gestionprojet'),
-                            'data' => $besoin,
-                            'complete' => $besoin && !empty($besoin->aqui)
-                        ],
                         3 => [
                             'icon' => '📅',
                             'title' => get_string('step3', 'gestionprojet'),
                             'desc' => get_string('step3_desc', 'gestionprojet'),
                             'data' => $planning,
                             'complete' => $planning && !empty($planning->projectname)
+                        ],
+                        2 => [
+                            'icon' => '🦏',
+                            'title' => get_string('step2', 'gestionprojet'),
+                            'desc' => get_string('step2_desc', 'gestionprojet'),
+                            'data' => $besoin,
+                            'complete' => $besoin && !empty($besoin->aqui)
                         ]
                     ];
 
@@ -399,6 +399,13 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                     $besoin_eleve = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'besoin_eleve');
 
                     $steps = [
+                        7 => [
+                            'icon' => '🦏',
+                            'title' => get_string('step7', 'gestionprojet'),
+                            'desc' => get_string('step7_desc', 'gestionprojet'),
+                            'data' => $besoin_eleve,
+                            'complete' => $besoin_eleve && !empty($besoin_eleve->aqui)
+                        ],
                         4 => [
                             'icon' => '📋',
                             'title' => get_string('step4', 'gestionprojet'),
@@ -419,13 +426,6 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             'desc' => get_string('step6_desc', 'gestionprojet'),
                             'data' => $rapport,
                             'complete' => $rapport && !empty($rapport->besoins)
-                        ],
-                        7 => [
-                            'icon' => '🦏',
-                            'title' => get_string('step7', 'gestionprojet'),
-                            'desc' => get_string('step7_desc', 'gestionprojet'),
-                            'data' => $besoin_eleve,
-                            'complete' => $besoin_eleve && !empty($besoin_eleve->aqui)
                         ]
                     ];
 
