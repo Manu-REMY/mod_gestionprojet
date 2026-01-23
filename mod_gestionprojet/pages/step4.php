@@ -554,34 +554,35 @@ if (empty($interacteurs)) {
             </div>
         </div>
 
-        <!-- Interactors section -->
-        <div class="interactors-section">
-            <h3 class="section-title">⚙️ Interacteurs et Fonctions Contraintes</h3>
-            <div id="interactorsContainer"></div>
-            <?php if (!$isLocked): ?>
-                <button type="button" class="btn-add" onclick="addInteractor()">+ Ajouter un interacteur</button>
-            <?php endif; ?>
-        </div>
-
         <!-- Diagram -->
         <div class="diagram-container">
             <h3 class="diagram-title">📊 Diagramme des Interacteurs</h3>
             <svg id="interactorDiagram" viewBox="0 0 800 500"></svg>
         </div>
 
+              <!-- Interactors section -->
+        <div class="interactors-section">
+            <h3 class="section-title">⚙️ Interacteurs et Fonctions Contraintes</h3>
+
+                                <div id="interactorsContainer"></div>
+            <?php if (!$isLocked): ?>
+                        <button type="button" class="btn-add" onclick="addInteractor()">+ Ajouter un interacteur</button>
+            <?php endif; ?>
+        </div>
+
         <!-- Actions section -->
         <div class="export-section" style="margin-top: 40px; text-align: center;">
-            <?php if ($canSubmit): ?>
+        <?php if ($canSubmit): ?>
                 <button type="button" class="btn btn-primary btn-lg" id="submitButton"
                     style="padding: 15px 40px; font-size: 18px; border-radius: 50px;">
                     📤 <?php echo get_string('submit', 'gestionprojet'); ?>
-                </button>
+                    </button>
             <?php endif; ?>
 
-            <?php if ($canRevert): ?>
+        <?php if ($canRevert): ?>
                 <button type="button" class="btn btn-warning" id="revertButton">
                     ↩️ <?php echo get_string('revert_to_draft', 'gestionprojet'); ?>
-                </button>
+                    </button>
             <?php endif; ?>
 
             <button type="button" class="btn-export" onclick="exportPDF()" style="margin-left: 20px;">
