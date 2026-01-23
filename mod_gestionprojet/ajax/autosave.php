@@ -22,11 +22,6 @@ require_once(__DIR__ . '/../lib.php');
 // Ensure JSON headers
 header('Content-Type: application/json');
 
-// Debug logging
-$debug_log = __DIR__ . '/../../../moodledata/temp/autosave_debug.log';
-@file_put_contents($debug_log, "\n=== " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
-@file_put_contents($debug_log, "POST: " . print_r($_POST, true), FILE_APPEND);
-
 $cmid = required_param('cmid', PARAM_INT);
 $step = required_param('step', PARAM_INT);
 $data = required_param('data', PARAM_RAW);
@@ -44,10 +39,8 @@ require_sesskey();
 
 // Decode JSON data
 $formdata = json_decode($data, true);
-@file_put_contents($debug_log, "Data received: " . $data . "\n", FILE_APPEND);
 
 if (!$formdata) {
-    @file_put_contents($debug_log, "ERROR: Invalid JSON\n", FILE_APPEND);
     echo json_encode(['success' => false, 'message' => 'Invalid data']);
     exit;
 }

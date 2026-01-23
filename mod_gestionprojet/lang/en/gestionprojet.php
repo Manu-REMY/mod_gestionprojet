@@ -166,6 +166,7 @@ $string['grading_feedback'] = 'Comments';
 $string['grading_grade'] = 'Grade / 20';
 $string['grading_save'] = 'Save grade';
 $string['grading_context_maintained'] = 'Grading context is maintained';
+$string['grading_description'] = 'Grade group work step by step';
 
 // Actions
 $string['next'] = 'Next';
@@ -179,6 +180,11 @@ $string['saved'] = 'Auto-saved';
 $string['export_pdf'] = 'Export to PDF';
 $string['export_all'] = 'Export all projects';
 $string['view_history'] = 'View history';
+$string['consultation_mode'] = 'Consultation';
+$string['consult_button'] = 'View';
+$string['work_button'] = 'Work';
+$string['upload_feature_pending'] = 'Image upload to be implemented';
+$string['pdf_export_pending'] = 'PDF Export will be implemented with TCPDF server-side';
 
 // Messages
 $string['autosave_success'] = 'Auto-save completed';
@@ -188,6 +194,11 @@ $string['no_submission'] = 'No submission for this group';
 $string['submission_saved'] = 'Your work has been saved';
 $string['teacher_pages_locked'] = 'Teacher pages are locked. You cannot modify them.';
 $string['must_complete_teacher_pages'] = 'The teacher must first complete the first 3 steps.';
+$string['group_not_found_error'] = 'Error: Group not found (ID: {$a})';
+$string['working_in_group_info'] = 'You are working in group:';
+$string['student_description'] = 'Complete your project in 3 steps';
+$string['image_optional'] = 'Representative project image (optional)';
+$string['no_image_available'] = 'No image';
 
 // Privacy
 $string['privacy:metadata:gestionprojet_description'] = 'Information about the descriptive sheet configured by the teacher';

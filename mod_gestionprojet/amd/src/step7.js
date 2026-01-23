@@ -1,203 +1,101 @@
-<?php
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-/**
- * Step 2: Expression du Besoin (Bête à Corne) - Teacher configuration page
+/*
+ * This file is part of Moodle - http://moodle.org/
+ *
+ * Moodle is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Check if this file is included by view.php or accessed directly
-if (!defined('MOODLE_INTERNAL')) {
-    // Standalone mode - requires config
-    require_once(__DIR__ . '/../../../config.php');
-    require_once(__DIR__ . '/../lib.php');
-
-    $cmid = required_param('cmid', PARAM_INT);
-    $cm = get_coursemodule_from_id('gestionprojet', $cmid, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
-    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
-    $context = context_module::instance($cm->id);
-    $PAGE->set_context($context);
-    
-    // Check capability for standalone
-    $isteacher = has_capability('mod/gestionprojet:configureteacherpages', $context);
-    if (!$isteacher) {
-        require_capability('mod/gestionprojet:view', $context);
-    } else {
-        require_capability('mod/gestionprojet:configureteacherpages', $context);
-    }
-} else {
-    // Included mode - variables already set by view.php
-    // Check capability
-    $isteacher = has_capability('mod/gestionprojet:configureteacherpages', $context);
-    if (!$isteacher) {
-        require_capability('mod/gestionprojet:view', $context);
-    } else {
-        require_capability('mod/gestionprojet:configureteacherpages', $context);
-    }
-}
-
-$readonly = !$isteacher;
-
-// Get existing data
-$besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]);
-
-// Display grade and feedback if available (for teachers viewing their own work)
-$showGrade = false;
-
-echo $OUTPUT->header();
-
-// Navigation buttons
-echo '<div class="navigation-container" style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">';
-echo '<div>';
-if (defined('MOODLE_INTERNAL')) {
-    // Included from view.php
-    echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 1]) . '" class="btn btn-secondary">← ' . get_string('back') . '</a>';
-} else {
-    // Direct access
-    echo '<a href="../view.php?id=' . $cm->id . '&step=1" class="btn btn-secondary">← ' . get_string('back') . '</a>';
-}
-echo '</div>';
-echo '<div>';
-if (defined('MOODLE_INTERNAL')) {
-    // Included from view.php
-    echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 3]) . '" class="btn btn-primary">' . get_string('next') . ' →</a>';
-} else {
-    // Direct access
-    echo '<a href="../view.php?id=' . $cm->id . '&step=3" class="btn btn-primary">' . get_string('next') . ' →</a>';
-}
-echo '</div>';
-echo '</div>';
-
-echo '<h2>🦏 ' . get_string('step2', 'gestionprojet') . '</h2>';
-
-// Description
-echo '<div class="alert alert-info">';
-echo '<h4>' . get_string('bete_a_corne_title', 'gestionprojet') . '</h4>';
-echo '<p>' . get_string('bete_a_corne_description', 'gestionprojet') . '</p>';
-echo '<ul>';
-echo '<li><strong>' . get_string('aqui', 'gestionprojet') . '</strong> - ' . get_string('aqui_help', 'gestionprojet') . '</li>';
-echo '<li><strong>' . get_string('surquoi', 'gestionprojet') . '</strong> - ' . get_string('surquoi_help', 'gestionprojet') . '</li>';
-echo '<li><strong>' . get_string('dansquelbut', 'gestionprojet') . '</strong> - ' . get_string('dansquelbut_help', 'gestionprojet') . '</li>';
-echo '</ul>';
-echo '</div>';
-
-if ($showGrade && isset($besoin->grade)): ?>
-    <div class="alert alert-success">
-        <h4><?php echo get_string('grade'); ?>: <?php echo number_format($besoin->grade, 2); ?>/20</h4>
-        <?php if (!empty($besoin->feedback)): ?>
-            <p><strong><?php echo get_string('feedback'); ?>:</strong><br><?php echo format_text($besoin->feedback, FORMAT_HTML); ?></p>
-        <?php endif; ?>
-    </div>
-<?php endif;
-
-// Lock status (teacher can lock their own configuration)
-// Lock status removed (always unlocked)
-$locked = 0;
-?>
-
-<div class="card mb-3">
-    <div class="card-body">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h4 style="margin: 0;"><?php echo get_string('bete_a_corne_diagram', 'gestionprojet'); ?></h4>
-            <!-- Lock toggle removed -->
-
-        </div>
-
-        <div id="diagramContainer" style="background: #fafbfc; padding: 20px; border-radius: 10px; border: 2px solid #e9ecef; margin-bottom: 30px;">
-            <svg id="beteACorneCanvas" style="width: 100%; height: 500px;"></svg>
-        </div>
-
-        <form id="besoinForm">
-            <div class="form-group mb-3">
-                <label for="aqui" style="font-weight: 600; color: #667eea;"><?php echo get_string('aqui', 'gestionprojet'); ?></label>
-                <small class="form-text text-muted"><?php echo get_string('aqui_help', 'gestionprojet'); ?></small>
-                <textarea class="form-control" id="aqui" name="aqui" rows="3"
-                    <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->aqui) : ''; ?></textarea>
-            </div>
-
-            <div class="form-group mb-3">
-                <label for="surquoi" style="font-weight: 600; color: #667eea;"><?php echo get_string('surquoi', 'gestionprojet'); ?></label>
-                <small class="form-text text-muted"><?php echo get_string('surquoi_help', 'gestionprojet'); ?></small>
-                <textarea class="form-control" id="surquoi" name="surquoi" rows="3"
-                    <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->surquoi) : ''; ?></textarea>
-            </div>
-
-            <div class="form-group mb-3">
-                <label for="dansquelbut" style="font-weight: 600; color: #667eea;"><?php echo get_string('dansquelbut', 'gestionprojet'); ?></label>
-                <small class="form-text text-muted"><?php echo get_string('dansquelbut_help', 'gestionprojet'); ?></small>
-                <textarea class="form-control" id="dansquelbut" name="dansquelbut" rows="3"
-                    <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->dansquelbut) : ''; ?></textarea>
-            </div>
-        </form>
-
-        <div id="autosaveIndicator" class="text-muted small" style="margin-top: 10px;"></div>
-    </div>
-</div>
-
-
-
-<?php
-// Ensure jQuery is loaded
-$PAGE->requires->jquery();
-?>
-
-<script>
-// Wait for jQuery to be loaded
-// Wait for RequireJS and jQuery
-(function waitRequire() {
-    if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
-        setTimeout(waitRequire, 50);
-        return;
-    }
-
-    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
-        $(document).ready(function() {
-            var cmid = <?php echo $cm->id; ?>;
-            var step = 2;
-            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-            // Lock toggle logic removed
-
+define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification'], function ($, Autosave, Str, Notification) {
+    return {
+        init: function (config) {
+            var cmid = config.cmid;
+            var step = 7;
+            var autosaveInterval = config.autosaveInterval;
+            var groupid = config.groupid;
+            var isLocked = config.isLocked;
+            var STRINGS = config.strings || {};
 
             // Update diagram when text changes
-            $('#besoinForm textarea').on('input', function() {
+            $('#besoinEleveForm textarea').on('input', function () {
                 updateDiagram();
             });
 
-            // Custom serialization for step 2
-            var serializeData = function() {
+            // Custom serialization
+            var serializeData = function () {
                 var formData = {};
-                $('#besoinForm textarea').each(function() {
+                $('#besoinEleveForm textarea').each(function () {
                     if (this.name) {
                         formData[this.name] = this.value;
                     }
                 });
-                formData['locked'] = 0; // Always unlocked
-
                 return formData;
             };
 
-            // Initialize Autosave if not readonly
-            <?php if (!$readonly): ?>
-            Autosave.init({
-                cmid: cmid,
-                step: step,
-                groupid: 0,
-                interval: autosaveInterval,
-                formSelector: '#besoinForm',
-                serialize: serializeData
+            // Handle Submission
+            $('#submitButton').on('click', function () {
+                if (confirm(STRINGS.confirm_submission)) {
+                    $.ajax({
+                        url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'submit',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function (response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error submitting');
+                            }
+                        }
+                    });
+                }
             });
-            <?php endif; ?>
+
+            // Handle Revert
+            $('#revertButton').on('click', function () {
+                if (confirm(STRINGS.confirm_revert)) {
+                    $.ajax({
+                        url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'revert',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function (response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error reverting');
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Initialize Autosave if not readonly
+            if (!isLocked) {
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: groupid,
+                    interval: autosaveInterval,
+                    formSelector: '#besoinEleveForm',
+                    serialize: serializeData
+                });
+            }
 
             // Simplified Bête à Corne SVG diagram
             function wrapText(text, maxLength) {
@@ -220,12 +118,14 @@ $PAGE->requires->jquery();
 
             function updateDiagram() {
                 const svg = document.getElementById('beteACorneCanvas');
-                const width = svg.clientWidth;
+                if (!svg) return;
+
+                const width = svg.clientWidth || 800; // Fallback width
                 const height = 500;
 
                 // Clear SVG
                 svg.innerHTML = '';
-                svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
 
                 // Define arrow marker
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -255,9 +155,9 @@ $PAGE->requires->jquery();
                 const spacing = 160;
 
                 // Get values
-                const aquiText = document.getElementById('aqui').value || '';
-                const surquoiText = document.getElementById('surquoi').value || '';
-                const dansquelbutText = document.getElementById('dansquelbut').value || '';
+                const aquiText = $('#aqui').val() || '';
+                const surquoiText = $('#surquoi').val() || '';
+                const dansquelbutText = $('#dansquelbut').val() || '';
 
                 // Left ellipse - À qui rend-il service ?
                 const leftBoxX = centerX - spacing - boxWidth / 2;
@@ -453,7 +353,7 @@ $PAGE->requires->jquery();
                 const topCurveControlY = centerY - 50;
 
                 const topCurve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                topCurve.setAttribute('d', `M ${topCurveStartX} ${topCurveStartY} Q ${topCurveControlX} ${topCurveControlY} ${topCurveEndX} ${topCurveEndY}`);
+                topCurve.setAttribute('d', 'M ' + topCurveStartX + ' ' + topCurveStartY + ' Q ' + topCurveControlX + ' ' + topCurveControlY + ' ' + topCurveEndX + ' ' + topCurveEndY);
                 topCurve.setAttribute('stroke', '#e91e63');
                 topCurve.setAttribute('stroke-width', '3');
                 topCurve.setAttribute('fill', 'none');
@@ -485,7 +385,7 @@ $PAGE->requires->jquery();
                 const bottomCurveControl2Y = bottomBoxY - 40;
 
                 const bottomCurve = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                bottomCurve.setAttribute('d', `M ${bottomCurveStartX} ${bottomCurveStartY} C ${bottomCurveControl1X} ${bottomCurveControl1Y}, ${bottomCurveControl2X} ${bottomCurveControl2Y}, ${bottomCurveEndX} ${bottomCurveEndY}`);
+                bottomCurve.setAttribute('d', 'M ' + bottomCurveStartX + ' ' + bottomCurveStartY + ' C ' + bottomCurveControl1X + ' ' + bottomCurveControl1Y + ', ' + bottomCurveControl2X + ' ' + bottomCurveControl2Y + ', ' + bottomCurveEndX + ' ' + bottomCurveEndY);
                 bottomCurve.setAttribute('stroke', '#e91e63');
                 bottomCurve.setAttribute('stroke-width', '3');
                 bottomCurve.setAttribute('fill', 'none');
@@ -503,10 +403,6 @@ $PAGE->requires->jquery();
 
             // Initial diagram render
             updateDiagram();
-        });
-    });
-})();
-</script>
-
-<?php
-echo $OUTPUT->footer();
+        }
+    };
+});
