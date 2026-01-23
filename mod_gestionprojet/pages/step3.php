@@ -60,8 +60,8 @@ echo $OUTPUT->header();
 // Navigation buttons
 $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step3');
 
-echo '<div class="navigation-container" style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">';
-echo '<div style="display: flex; gap: 10px;">';
+echo '<div class="navigation-container-flex">';
+echo '<div class="nav-group">';
 echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="btn btn-secondary">🏠 ' . get_string('home', 'gestionprojet') . '</a>';
 if ($nav_links['prev']) {
     echo '<a href="' . $nav_links['prev'] . '" class="btn btn-secondary">← ' . get_string('previous', 'gestionprojet') . '</a>';
@@ -104,8 +104,8 @@ $locked = 0;
 
 <div class="card mb-3">
     <div class="card-body">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h4 style="margin: 0;">
+        <div class="card-header-flex">
+            <h4>
                 <?php echo get_string('project_planning', 'gestionprojet'); ?>
             </h4>
             <!-- Lock toggle removed -->
@@ -180,30 +180,28 @@ $locked = 0;
                 $fieldName = 'task' . $i . '_hours';
                 $value = $planning ? $planning->$fieldName : 0;
                 ?>
-                <div class="task-input mb-3"
-                    style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                    <div
-                        style="width: 30px; height: 30px; background-color: <?php echo $taskColors[$i - 1]; ?>; border-radius: 5px; margin-right: 15px;">
+                <div class="task-input-item">
+                    <div class="task-color-indicator"
+                        style="background-color: <?php echo $taskColors[$i - 1]; ?>;">
                     </div>
-                    <div style="flex: 1; font-weight: 500;">
+                    <div class="task-label">
                         <?php echo get_string('task' . $i, 'gestionprojet'); ?>
                     </div>
-                    <input type="number" class="form-control" id="task<?php echo $i; ?>_hours"
+                    <input type="number" class="form-control task-hours-input" id="task<?php echo $i; ?>_hours"
                         name="task<?php echo $i; ?>_hours" min="0" step="0.5" value="<?php echo $value; ?>"
-                        style="width: 100px;" <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>>
+                        <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>>
                     <span class="ml-2">
                         <?php echo get_string('hours', 'gestionprojet'); ?>
                     </span>
                 </div>
             <?php endfor; ?>
 
-            <div class="mt-4 p-3" style="background: #f8f9fa; border-radius: 10px;">
+            <div class="timeline-preview-section">
                 <h5 class="mb-3">
                     <?php echo get_string('timeline_preview', 'gestionprojet'); ?>
                 </h5>
-                <div id="timelineContainer"
-                    style="background: #e9ecef; height: 60px; border-radius: 10px; position: relative;">
-                    <svg id="timelineSVG" style="width: 100%; height: 60px;"></svg>
+                <div id="timelineContainer" class="timeline-box">
+                    <svg id="timelineSVG" class="timeline-svg"></svg>
                 </div>
                 <div id="totalInfo" class="mt-2 text-muted small"></div>
             </div>
@@ -213,38 +211,7 @@ $locked = 0;
     </div>
 </div>
 
-<style>
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
 
-    .slider:before {
-        position: absolute;
-        content: "🔓";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: 0.4s;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-    }
-
-    input:checked+.slider {
-        background-color: #667eea;
-    }
-
-    input:checked+.slider:before {
-        transform: translateX(26px);
-        content: "🔒";
-    }
-</style>
 
 <?php
 // Ensure jQuery is loaded

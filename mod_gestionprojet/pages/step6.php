@@ -94,269 +94,9 @@ if ($submission->auteurs) {
 }
 ?>
 
-<style>
-    .step6-container {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
 
-    /* Navigation */
-    .navigation-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
 
-    .nav-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 50px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        transition: all 0.3s;
-        text-decoration: none;
-    }
-
-    .nav-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        color: white;
-        text-decoration: none;
-    }
-
-    .nav-button-prev {
-        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-    }
-
-    /* Header */
-    .header-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 30px;
-        border-radius: 15px;
-        margin-bottom: 30px;
-    }
-
-    .header-section h2 {
-        font-size: 2em;
-        margin-bottom: 10px;
-    }
-
-    .header-section p {
-        font-size: 1em;
-        opacity: 0.9;
-    }
-
-    /* Group info */
-    .group-info {
-        background: #d1ecf1;
-        border: 2px solid #bee5eb;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 30px;
-        color: #0c5460;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .info-box {
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
-        padding: 15px 20px;
-        border-radius: 10px;
-        margin-bottom: 30px;
-        color: #1565c0;
-    }
-
-    .info-box p {
-        margin: 5px 0;
-        font-size: 14px;
-    }
-
-    /* Sections */
-    .section {
-        background: #f8f9fa;
-        padding: 25px;
-        border-radius: 10px;
-        margin-bottom: 25px;
-        border-left: 5px solid #667eea;
-    }
-
-    .section-title {
-        color: #667eea;
-        font-size: 1.3em;
-        font-weight: 700;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #667eea;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        color: #333;
-        font-weight: 600;
-        font-size: 15px;
-    }
-
-    .form-group input[type="text"],
-    .form-group textarea {
-        width: 100%;
-        padding: 12px;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: inherit;
-        transition: border-color 0.3s;
-    }
-
-    .form-group input[type="text"]:focus,
-    .form-group textarea:focus {
-        outline: none;
-        border-color: #667eea;
-        background: #f0f3ff;
-    }
-
-    .form-group textarea {
-        min-height: 100px;
-        resize: vertical;
-    }
-
-    /* Members list */
-    .member-group {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-        align-items: center;
-    }
-
-    .member-group input {
-        flex: 1;
-    }
-
-    .btn-add,
-    .btn-remove {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        font-size: 18px;
-        font-weight: bold;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-add {
-        background: #48bb78;
-        color: white;
-    }
-
-    .btn-add:hover {
-        background: #38a169;
-        transform: scale(1.1);
-    }
-
-    .btn-remove {
-        background: #dc3545;
-        color: white;
-        font-size: 16px;
-    }
-
-    .btn-remove:hover {
-        background: #c82333;
-        transform: scale(1.1);
-    }
-
-    /* Export section */
-    .export-section {
-        text-align: center;
-        margin-top: 40px;
-        padding: 30px;
-        background: #f8f9fa;
-        border-radius: 15px;
-    }
-
-    .btn-export {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 15px 40px;
-        border-radius: 50px;
-        font-size: 18px;
-        font-weight: 600;
-        cursor: pointer;
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        transition: all 0.3s;
-    }
-
-    .btn-export:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
-    }
-
-    /* Grade display */
-    .grade-display {
-        background: #d4edda;
-        border: 2px solid #c3e6cb;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 20px;
-        color: #155724;
-    }
-
-    .grade-display strong {
-        font-size: 1.1em;
-    }
-
-    .feedback-display {
-        background: #fff3cd;
-        border: 2px solid #ffeaa7;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-top: 15px;
-        color: #856404;
-    }
-
-    .feedback-display h4 {
-        margin: 0 0 10px 0;
-        font-size: 1em;
-    }
-
-    .feedback-display p {
-        margin: 0;
-        white-space: pre-wrap;
-    }
-
-    @media (max-width: 768px) {
-        .header-section {
-            padding: 20px;
-        }
-
-        .section {
-            padding: 15px;
-        }
-    }
-</style>
-
-<div class="step6-container">
+<div class="step-container">
     <!-- Navigation -->
     <?php
     $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step6');
@@ -419,8 +159,8 @@ if ($submission->auteurs) {
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
 
         <!-- Section 1: Informations Générales -->
-        <div class="section">
-            <h2 class="section-title">1. INFORMATIONS GÉNÉRALES</h2>
+        <div class="report-section">
+            <h2 class="report-section-title">1. INFORMATIONS GÉNÉRALES</h2>
 
             <div class="form-group">
                 <label for="titre_projet"><?php echo get_string('titre_projet', 'gestionprojet'); ?></label>
@@ -437,8 +177,8 @@ if ($submission->auteurs) {
         </div>
 
         <!-- Section 2: Le Projet -->
-        <div class="section">
-            <h2 class="section-title">2. LE PROJET</h2>
+        <div class="report-section">
+            <h2 class="report-section-title">2. LE PROJET</h2>
 
             <div class="form-group">
                 <label for="besoin_projet"><?php echo get_string('besoin_projet', 'gestionprojet'); ?></label>
@@ -454,8 +194,8 @@ if ($submission->auteurs) {
         </div>
 
         <!-- Section 3: Solutions Choisies -->
-        <div class="section">
-            <h2 class="section-title">3. SOLUTIONS CHOISIES</h2>
+        <div class="report-section">
+            <h2 class="report-section-title">3. SOLUTIONS CHOISIES</h2>
 
             <div class="form-group">
                 <label for="solutions"><?php echo get_string('solutions', 'gestionprojet'); ?></label>
@@ -470,8 +210,8 @@ if ($submission->auteurs) {
         </div>
 
         <!-- Section 4: Réalisation -->
-        <div class="section">
-            <h2 class="section-title">4. RÉALISATION</h2>
+        <div class="report-section">
+            <h2 class="report-section-title">4. RÉALISATION</h2>
 
             <div class="form-group">
                 <label for="realisation"><?php echo get_string('realisation', 'gestionprojet'); ?></label>
@@ -487,8 +227,8 @@ if ($submission->auteurs) {
         </div>
 
         <!-- Section 5: Validation et Résultats -->
-        <div class="section">
-            <h2 class="section-title">5. VALIDATION ET RÉSULTATS</h2>
+        <div class="report-section">
+            <h2 class="report-section-title">5. VALIDATION ET RÉSULTATS</h2>
 
             <div class="form-group">
                 <label for="validation"><?php echo get_string('validation', 'gestionprojet'); ?></label>
@@ -504,8 +244,8 @@ if ($submission->auteurs) {
         </div>
 
         <!-- Section 6: Conclusion -->
-        <div class="section">
-            <h2 class="section-title">6. CONCLUSION</h2>
+        <div class="report-section">
+            <h2 class="report-section-title">6. CONCLUSION</h2>
 
             <div class="form-group">
                 <label for="bilan"><?php echo get_string('bilan', 'gestionprojet'); ?></label>
@@ -521,10 +261,9 @@ if ($submission->auteurs) {
         </div>
 
         <!-- Actions section -->
-        <div class="export-section" style="margin-top: 40px; text-align: center;">
+        <div class="export-section">
             <?php if ($canSubmit): ?>
-                <button type="button" class="btn btn-primary btn-lg" id="submitButton"
-                    style="padding: 15px 40px; font-size: 18px; border-radius: 50px;">
+                <button type="button" class="btn btn-primary btn-lg btn-submit-large" id="submitButton">
                     📤 <?php echo get_string('submit', 'gestionprojet'); ?>
                 </button>
             <?php endif; ?>
@@ -535,10 +274,10 @@ if ($submission->auteurs) {
                 </button>
             <?php endif; ?>
 
-            <button type="button" class="btn-export" onclick="exportPDF()" style="margin-left: 20px;">
+            <button type="button" class="btn-export btn-export-margin" onclick="exportPDF()">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
             </button>
-            <p style="margin-top: 15px; color: #6c757d; font-size: 0.9em;">
+            <p class="export-notice">
                 ℹ️ <?php echo get_string('export_pdf_notice', 'gestionprojet'); ?>
             </p>
         </div>
@@ -693,7 +432,7 @@ $PAGE->requires->jquery();
                 if (index === members.length - 1) {
                     const addBtn = document.createElement('button');
                     addBtn.type = 'button';
-                    addBtn.className = 'btn-add';
+                    addBtn.className = 'btn-circle btn-add-circle';
                     addBtn.innerHTML = '+';
                     addBtn.title = 'Ajouter un membre';
                     addBtn.onclick = () => {
@@ -704,7 +443,7 @@ $PAGE->requires->jquery();
                 } else {
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
-                    removeBtn.className = 'btn-remove';
+                    removeBtn.className = 'btn-circle btn-remove-circle';
                     removeBtn.innerHTML = '✕';
                     removeBtn.title = 'Retirer ce membre';
                     removeBtn.onclick = () => {

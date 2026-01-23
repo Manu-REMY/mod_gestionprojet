@@ -59,7 +59,7 @@ echo $OUTPUT->header();
 
 // Navigation buttons
 // Navigation buttons
-echo '<div class="navigation-container" style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">';
+echo '<div class="navigation-container-flex">';
 $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step2');
 
 echo '<div>';
@@ -107,33 +107,33 @@ $locked = 0;
 
 <div class="card mb-3">
     <div class="card-body">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h4 style="margin: 0;"><?php echo get_string('bete_a_corne_diagram', 'gestionprojet'); ?></h4>
+        <div class="card-header-flex">
+            <h4><?php echo get_string('bete_a_corne_diagram', 'gestionprojet'); ?></h4>
             <!-- Lock toggle removed -->
 
         </div>
 
-        <div id="diagramContainer" style="background: #fafbfc; padding: 20px; border-radius: 10px; border: 2px solid #e9ecef; margin-bottom: 30px;">
-            <svg id="beteACorneCanvas" style="width: 100%; height: 500px;"></svg>
+        <div id="diagramContainer" class="diagram-box">
+            <svg id="beteACorneCanvas" class="diagram-svg"></svg>
         </div>
 
         <form id="besoinForm">
             <div class="form-group mb-3">
-                <label for="aqui" style="font-weight: 600; color: #667eea;"><?php echo get_string('aqui', 'gestionprojet'); ?></label>
+                <label for="aqui" class="label-highlight"><?php echo get_string('aqui', 'gestionprojet'); ?></label>
                 <small class="form-text text-muted"><?php echo get_string('aqui_help', 'gestionprojet'); ?></small>
                 <textarea class="form-control" id="aqui" name="aqui" rows="3"
                     <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->aqui) : ''; ?></textarea>
             </div>
 
             <div class="form-group mb-3">
-                <label for="surquoi" style="font-weight: 600; color: #667eea;"><?php echo get_string('surquoi', 'gestionprojet'); ?></label>
+                <label for="surquoi" class="label-highlight"><?php echo get_string('surquoi', 'gestionprojet'); ?></label>
                 <small class="form-text text-muted"><?php echo get_string('surquoi_help', 'gestionprojet'); ?></small>
                 <textarea class="form-control" id="surquoi" name="surquoi" rows="3"
                     <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->surquoi) : ''; ?></textarea>
             </div>
 
             <div class="form-group mb-3">
-                <label for="dansquelbut" style="font-weight: 600; color: #667eea;"><?php echo get_string('dansquelbut', 'gestionprojet'); ?></label>
+                <label for="dansquelbut" class="label-highlight"><?php echo get_string('dansquelbut', 'gestionprojet'); ?></label>
                 <small class="form-text text-muted"><?php echo get_string('dansquelbut_help', 'gestionprojet'); ?></small>
                 <textarea class="form-control" id="dansquelbut" name="dansquelbut" rows="3"
                     <?php echo ($locked || $readonly) ? 'readonly' : ''; ?>><?php echo $besoin ? s($besoin->dansquelbut) : ''; ?></textarea>
@@ -144,38 +144,7 @@ $locked = 0;
     </div>
 </div>
 
-<style>
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
 
-.slider:before {
-    position: absolute;
-    content: "🔓";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: 0.4s;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-}
-
-input:checked + .slider {
-    background-color: #667eea;
-}
-
-input:checked + .slider:before {
-    transform: translateX(26px);
-    content: "🔒";
-}
-</style>
 
 <?php
 // Ensure jQuery is loaded

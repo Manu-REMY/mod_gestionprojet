@@ -79,16 +79,16 @@ if ($isSubmitted) {
 // Navigation buttons
 $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step7');
 
-echo '<div class="navigation-container" style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">';
-echo '<div style="display: flex; gap: 10px;">';
-echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="btn btn-secondary">🏠 ' . get_string('home', 'gestionprojet') . '</a>';
+echo '<div class="navigation-container-flex">';
+echo '<div class="nav-group">';
+echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="nav-button nav-button-prev">🏠 ' . get_string('home', 'gestionprojet') . '</a>';
 if ($nav_links['prev']) {
-    echo '<a href="' . $nav_links['prev'] . '" class="btn btn-secondary">← ' . get_string('previous', 'gestionprojet') . '</a>';
+    echo '<a href="' . $nav_links['prev'] . '" class="nav-button nav-button-prev">← ' . get_string('previous', 'gestionprojet') . '</a>';
 }
 echo '</div>';
 
 if ($nav_links['next']) {
-    echo '<a href="' . $nav_links['next'] . '" class="btn btn-primary">' . get_string('next', 'gestionprojet') . ' →</a>';
+    echo '<a href="' . $nav_links['next'] . '" class="nav-button">' . get_string('next', 'gestionprojet') . ' →</a>';
 }
 echo '</div>';
 
@@ -125,14 +125,13 @@ if (isset($submission->grade) && $submission->grade !== null) {
             </h4>
         </div>
 
-        <div id="diagramContainer"
-            style="background: #fafbfc; padding: 20px; border-radius: 10px; border: 2px solid #e9ecef; margin-bottom: 30px;">
-            <svg id="beteACorneCanvas" style="width: 100%; height: 500px;"></svg>
+        <div id="diagramContainer" class="diagram-box">
+            <svg id="beteACorneCanvas" class="diagram-svg"></svg>
         </div>
 
         <form id="besoinEleveForm">
             <div class="form-group mb-3">
-                <label for="aqui" style="font-weight: 600; color: #667eea;">
+                <label for="aqui" class="label-highlight">
                     <?php echo get_string('aqui', 'gestionprojet'); ?>
                 </label>
                 <small class="form-text text-muted">
@@ -142,7 +141,7 @@ if (isset($submission->grade) && $submission->grade !== null) {
             </div>
 
             <div class="form-group mb-3">
-                <label for="surquoi" style="font-weight: 600; color: #667eea;">
+                <label for="surquoi" class="label-highlight">
                     <?php echo get_string('surquoi', 'gestionprojet'); ?>
                 </label>
                 <small class="form-text text-muted">
@@ -152,7 +151,7 @@ if (isset($submission->grade) && $submission->grade !== null) {
             </div>
 
             <div class="form-group mb-3">
-                <label for="dansquelbut" style="font-weight: 600; color: #667eea;">
+                <label for="dansquelbut" class="label-highlight">
                     <?php echo get_string('dansquelbut', 'gestionprojet'); ?>
                 </label>
                 <small class="form-text text-muted">
@@ -161,10 +160,9 @@ if (isset($submission->grade) && $submission->grade !== null) {
                 <textarea class="form-control" id="dansquelbut" name="dansquelbut" rows="3" <?php echo ($readonly) ? 'readonly' : ''; ?>><?php echo $submission ? s($submission->dansquelbut) : ''; ?></textarea>
             </div>
 
-            <div class="export-section" style="margin-top: 40px; text-align: center;">
+            <div class="export-section">
                 <?php if ($canSubmit): ?>
-                    <button type="button" class="btn btn-primary btn-lg" id="submitButton"
-                        style="padding: 15px 40px; font-size: 18px; border-radius: 50px;">
+                    <button type="button" class="btn btn-primary btn-lg btn-submit-large" id="submitButton">
                         📤
                         <?php echo get_string('submit', 'gestionprojet'); ?>
                     </button>
