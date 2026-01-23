@@ -546,19 +546,19 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
                 $totalgrade = 0;
                 $count = 0;
 
-                if ($cdcf && $cdcf->grade !== null) {
+                if ($cdcf && $cdcf->grade !== null && (!isset($gestionprojet->enable_step4) || $gestionprojet->enable_step4)) {
                     $totalgrade += $cdcf->grade;
                     $count++;
                 }
-                if ($essai && $essai->grade !== null) {
+                if ($essai && $essai->grade !== null && (!isset($gestionprojet->enable_step5) || $gestionprojet->enable_step5)) {
                     $totalgrade += $essai->grade;
                     $count++;
                 }
-                if ($rapport && $rapport->grade !== null) {
+                if ($rapport && $rapport->grade !== null && (!isset($gestionprojet->enable_step6) || $gestionprojet->enable_step6)) {
                     $totalgrade += $rapport->grade;
                     $count++;
                 }
-                if ($besoin_eleve && $besoin_eleve->grade !== null) {
+                if ($besoin_eleve && $besoin_eleve->grade !== null && (!isset($gestionprojet->enable_step7) || $gestionprojet->enable_step7)) {
                     $totalgrade += $besoin_eleve->grade;
                     $count++;
                 }
@@ -596,19 +596,19 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
         $totalgrade = 0;
         $count = 0;
 
-        if ($cdcf && $cdcf->grade !== null) {
+        if ($cdcf && $cdcf->grade !== null && (!isset($gestionprojet->enable_step4) || $gestionprojet->enable_step4)) {
             $totalgrade += $cdcf->grade;
             $count++;
         }
-        if ($essai && $essai->grade !== null) {
+        if ($essai && $essai->grade !== null && (!isset($gestionprojet->enable_step5) || $gestionprojet->enable_step5)) {
             $totalgrade += $essai->grade;
             $count++;
         }
-        if ($rapport && $rapport->grade !== null) {
+        if ($rapport && $rapport->grade !== null && (!isset($gestionprojet->enable_step6) || $gestionprojet->enable_step6)) {
             $totalgrade += $rapport->grade;
             $count++;
         }
-        if ($besoin_eleve && $besoin_eleve->grade !== null) {
+        if ($besoin_eleve && $besoin_eleve->grade !== null && (!isset($gestionprojet->enable_step7) || $gestionprojet->enable_step7)) {
             $totalgrade += $besoin_eleve->grade;
             $count++;
         }

@@ -87,6 +87,15 @@ if ($cansubmit && !$isteacher) {
 
 // Determine which view to show
 if ($step > 0) {
+    // Check if step is enabled
+    $stepfield = 'enable_step' . $step;
+    $enabled = isset($gestionprojet->$stepfield) ? $gestionprojet->$stepfield : 1;
+
+    // Check availability
+    if (!$isteacher && !$enabled) {
+        throw new \moodle_exception('stepdisabled', 'gestionprojet');
+    }
+
     // Show specific step
     require_once(__DIR__ . '/pages/step' . $step . '.php');
     exit;

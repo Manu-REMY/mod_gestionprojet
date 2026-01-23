@@ -112,6 +112,9 @@ if (optional_param('savegrading', false, PARAM_BOOL) && confirm_sesskey()) {
         case 6:
             $table = 'gestionprojet_rapport';
             break;
+        case 7:
+            $table = 'gestionprojet_besoin_eleve';
+            break;
     }
 
     if ($table) {
@@ -344,8 +347,27 @@ echo $OUTPUT->header();
             $steps = [
                 4 => ['icon' => '📋', 'name' => 'CDCF'],
                 5 => ['icon' => '🔬', 'name' => 'Essai'],
-                6 => ['icon' => '📝', 'name' => 'Rapport']
+                6 => ['icon' => '📝', 'name' => 'Rapport'],
+                7 => ['icon' => '🦏', 'name' => 'Expression Besoin']
             ];
+
+            // Filter enabled steps
+            foreach ($steps as $k => $stepinfo) {
+                $field = 'enable_step' . $k;
+                if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
+                    unset($steps[$k]);
+                }
+            }
+
+            // Ensure current step is valid/enabled, otherwise redirect to first available
+            if (!array_key_exists($step, $steps) && !empty($steps)) {
+                $firststep = array_key_first($steps);
+                redirect(new moodle_url('/mod/gestionprojet/grading.php', [
+                    'id' => $id,
+                    'step' => $firststep,
+                    'groupid' => $groupid
+                ]));
+            }
 
             foreach ($steps as $stepnum => $stepinfo):
                 $active = ($stepnum == $step) ? 'active' : '';
@@ -448,6 +470,11 @@ switch ($step) {
         break;
     case 6:
         $tablename = 'gestionprojet_rapport';
+        // Student submission (group or individual)
+        $submission = $DB->get_record($tablename, $params);
+        break;
+    case 7:
+        $tablename = 'gestionprojet_besoin_eleve';
         // Student submission (group or individual)
         $submission = $DB->get_record($tablename, $params);
         break;
@@ -694,6 +721,21 @@ if (!$submission): ?>
             <div class="field-display">
                 <h4><?php echo get_string('bilan', 'gestionprojet'); ?></h4>
                 <p><?php echo s($submission->bilan ?? ''); ?></p>
+            </div>
+        <?php elseif ($step == 7): // Besoin Eleve ?>
+            <div class="field-display">
+                <h4><?php echo get_string('aqui', 'gestionprojet'); ?></h4>
+                <p><?php echo format_text($submission->aqui ?? '', FORMAT_PLAIN); ?></p>
+            </div>
+
+            <div class="field-display">
+                <h4><?php echo get_string('surquoi', 'gestionprojet'); ?></h4>
+                <p><?php echo format_text($submission->surquoi ?? '', FORMAT_PLAIN); ?></p>
+            </div>
+
+            <div class="field-display">
+                <h4><?php echo get_string('dansquelbut', 'gestionprojet'); ?></h4>
+                <p><?php echo format_text($submission->dansquelbut ?? '', FORMAT_PLAIN); ?></p>
             </div>
         <?php endif; ?>
 

@@ -139,5 +139,21 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012105, 'gestionprojet');
     }
 
+    if ($oldversion < 2026012106) {
+        $table = new xmldb_table('gestionprojet');
+
+        // Add enable_step1 to enable_step7
+        for ($i = 1; $i <= 7; $i++) {
+            $default = ($i == 7) ? '0' : '1';
+            $field = new xmldb_field("enable_step{$i}", XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, $default, "autosave_interval");
+
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2026012106, 'gestionprojet');
+    }
+
     return true;
 }

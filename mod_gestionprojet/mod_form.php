@@ -79,6 +79,16 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->setDefault('enable_submission', 1);
         $mform->addHelpButton('enable_submission', 'enable_submission', 'gestionprojet');
 
+        // Active steps settings
+        $mform->addElement('header', 'activesteps', get_string('activesteps', 'gestionprojet'));
+
+        for ($i = 1; $i <= 7; $i++) {
+            $mform->addElement('advcheckbox', 'enable_step' . $i, get_string('step' . $i, 'gestionprojet'));
+            $default = ($i == 7) ? 0 : 1;
+            $mform->setDefault('enable_step' . $i, $default);
+            // $mform->addHelpButton('enable_step' . $i, 'enable_step' . $i, 'gestionprojet'); // Optional: Add help strings if needed
+        }
+
         // Add standard grading elements.
         $this->standard_grading_coursemodule_elements();
 

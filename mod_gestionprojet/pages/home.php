@@ -276,6 +276,14 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             7 => ['icon' => '🦏', 'title' => get_string('step7', 'gestionprojet')]
                         ];
 
+                        // Filter enabled steps
+                        foreach ($studentsteps as $k => $v) {
+                            $field = 'enable_step' . $k;
+                            if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
+                                unset($studentsteps[$k]);
+                            }
+                        }
+
                         foreach ($studentsteps as $stepnum => $step):
                             ?>
                             <div class="grading-card">
@@ -357,6 +365,14 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                         ]
                     ];
 
+                    // Filter enabled steps
+                    foreach ($consultationsteps as $k => $v) {
+                        $field = 'enable_step' . $k;
+                        if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
+                            unset($consultationsteps[$k]);
+                        }
+                    }
+
                     foreach ($consultationsteps as $stepnum => $step):
                         ?>
                         <div class="gestionprojet-card student" style="border-top-color: #667eea; opacity: 0.9;">
@@ -412,6 +428,14 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             'complete' => $besoin_eleve && !empty($besoin_eleve->aqui)
                         ]
                     ];
+
+                    // Filter enabled steps
+                    foreach ($steps as $k => $v) {
+                        $field = 'enable_step' . $k;
+                        if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
+                            unset($steps[$k]);
+                        }
+                    }
 
                     foreach ($steps as $stepnum => $step):
                         ?>
