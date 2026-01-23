@@ -85,23 +85,16 @@ if ($showGrade && isset($planning->grade)): ?>
 <?php endif;
 
 // Lock status (teacher can lock their own configuration)
-$locked = $planning ? $planning->locked : 0;
+// Lock status removed (always unlocked)
+$locked = 0;
 ?>
 
 <div class="card mb-3">
     <div class="card-body">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h4 style="margin: 0;"><?php echo get_string('project_planning', 'gestionprojet'); ?></h4>
-            <?php if (!$readonly): ?>
-                <div>
-                    <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-                        <input type="checkbox" id="lockToggle" <?php echo $locked ? 'checked' : ''; ?>>
-                        <span class="slider"
-                            style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.4s; border-radius: 34px;"></span>
-                    </label>
-                    <span style="margin-left: 10px;"><?php echo get_string('lock_page', 'gestionprojet'); ?></span>
-                </div>
-            <?php endif; ?>
+            <!-- Lock toggle removed -->
+
         </div>
 
         <form id="planningForm">
@@ -238,21 +231,8 @@ $PAGE->requires->jquery();
                 var taskColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
                 var HOURS_PER_WEEK = 1.5;
 
-                // Lock toggle
-                $('#lockToggle').on('change', function () {
-                    isLocked = this.checked;
-                    updateFormLockState();
-                    // Manually trigger save when lock changes
-                    Autosave.save();
-                });
+                // Lock toggle logic removed
 
-                function updateFormLockState() {
-                    if (isLocked) {
-                        $('#planningForm input, #planningForm select').attr('readonly', true).attr('disabled', true);
-                    } else {
-                        $('#planningForm input, #planningForm select').attr('readonly', false).attr('disabled', false);
-                    }
-                }
 
                 // Update timeline when values change
                 $('#planningForm input, #planningForm select').on('input change', function () {
@@ -275,7 +255,8 @@ $PAGE->requires->jquery();
                         formData['task' + i + '_hours'] = parseFloat($('#task' + i + '_hours').val()) || 0;
                     }
 
-                    formData['locked'] = isLocked ? 1 : 0;
+                    formData['locked'] = 0; // Always unlocked
+
 
                     return formData;
                 };

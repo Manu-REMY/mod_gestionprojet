@@ -47,6 +47,7 @@ $string['step3'] = 'Planning';
 $string['step4'] = 'Requirements Specification';
 $string['step5'] = 'Test Sheet';
 $string['step6'] = 'Project Report';
+$string['step7'] = 'Needs Expression (Student)';
 
 $string['step1_desc'] = 'Define the project framework (teacher)';
 $string['step2_desc'] = 'Horn Diagram (teacher)';
@@ -54,6 +55,7 @@ $string['step3_desc'] = 'Planning and timeline (teacher)';
 $string['step4_desc'] = 'Stakeholder diagram (students)';
 $string['step5_desc'] = 'Tests and validation (students)';
 $string['step6_desc'] = 'Final report (students)';
+$string['step7_desc'] = 'Horn Diagram (students)';
 
 // Configuration form
 $string['autosave_interval'] = 'Auto-save interval';

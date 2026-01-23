@@ -272,7 +272,8 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                         $studentsteps = [
                             4 => ['icon' => '📋', 'title' => get_string('step4', 'gestionprojet')],
                             5 => ['icon' => '🔬', 'title' => get_string('step5', 'gestionprojet')],
-                            6 => ['icon' => '📝', 'title' => get_string('step6', 'gestionprojet')]
+                            6 => ['icon' => '📝', 'title' => get_string('step6', 'gestionprojet')],
+                            7 => ['icon' => '🦏', 'title' => get_string('step7', 'gestionprojet')]
                         ];
 
                         foreach ($studentsteps as $stepnum => $step):
@@ -379,6 +380,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                     $cdcf = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'cdcf');
                     $essai = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'essai');
                     $rapport = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'rapport');
+                    $besoin_eleve = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'besoin_eleve');
 
                     $steps = [
                         4 => [
@@ -401,6 +403,13 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             'desc' => get_string('step6_desc', 'gestionprojet'),
                             'data' => $rapport,
                             'complete' => $rapport && !empty($rapport->besoins)
+                        ],
+                        7 => [
+                            'icon' => '🦏',
+                            'title' => get_string('step7', 'gestionprojet'),
+                            'desc' => get_string('step7_desc', 'gestionprojet'),
+                            'data' => $besoin_eleve,
+                            'complete' => $besoin_eleve && !empty($besoin_eleve->aqui)
                         ]
                     ];
 

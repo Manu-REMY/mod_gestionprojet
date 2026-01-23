@@ -52,13 +52,8 @@ if (!empty($description->competences)) {
 }
 
 // Handle lock/unlock
-if (optional_param('togglelock', false, PARAM_BOOL) && confirm_sesskey()) {
-    require_capability('mod/gestionprojet:lock', $context);
-    $description->locked = $description->locked ? 0 : 1;
-    $description->timemodified = time();
-    $DB->update_record('gestionprojet_description', $description);
-    redirect($PAGE->url);
-}
+// Lock toggle removed
+
 
 // Autosave handled inline at bottom of file
 // $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [
@@ -367,31 +362,20 @@ input:checked + .lock-slider:before {
     <div class="title-container">
         <h2>📋 <?php echo get_string('step1', 'gestionprojet'); ?></h2>
 
-        <?php if (!$readonly && has_capability('mod/gestionprojet:lock', $context)): ?>
-            <form method="post" action="">
-                <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
-                <input type="hidden" name="togglelock" value="1">
-                <label class="lock-switch">
-                    <input type="checkbox" <?php echo $description->locked ? 'checked' : ''; ?>
-                           onchange="this.form.submit()">
-                    <span class="lock-slider"></span>
-                </label>
-            </form>
-        <?php endif; ?>
+        <!-- Lock toggle removed -->
+
     </div>
 
-    <?php if ($description->locked): ?>
-        <div class="alert alert-info">
-            🔒 <?php echo get_string('teacher_pages_locked', 'gestionprojet'); ?>
-        </div>
-    <?php endif; ?>
+    <!-- Locked alert removed -->
+
 
     <div class="description-info">
         <h3>Objectif</h3>
         <p>La fiche descriptive permet de cadrer le projet en définissant son intitulé, son niveau, les compétences travaillées et les modalités d'évaluation.</p>
     </div>
 
-    <form id="descriptionForm" class="locked-overlay <?php echo ($description->locked || $readonly) ? 'locked' : ''; ?>">
+    <form id="descriptionForm" class="locked-overlay">
+
         <div class="form-layout">
             <div class="form-main">
                 <div class="form-row">
@@ -630,10 +614,8 @@ $PAGE->requires->jquery();
             formData['competences'] = JSON.stringify(competences);
 
             // Include lock state if present
-            var lockInput = document.querySelector('input[name="togglelock"]');
-            if (lockInput) {
-                 // Lock state is handled separately via form submission but consistent data collection is good practice
-            }
+            // Lock state removed
+
             
             return formData;
         };

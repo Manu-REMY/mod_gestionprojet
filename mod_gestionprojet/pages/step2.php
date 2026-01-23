@@ -102,22 +102,16 @@ if ($showGrade && isset($besoin->grade)): ?>
 <?php endif;
 
 // Lock status (teacher can lock their own configuration)
-$locked = $besoin ? $besoin->locked : 0;
+// Lock status removed (always unlocked)
+$locked = 0;
 ?>
 
 <div class="card mb-3">
     <div class="card-body">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h4 style="margin: 0;"><?php echo get_string('bete_a_corne_diagram', 'gestionprojet'); ?></h4>
-            <?php if (!$readonly): ?>
-            <div>
-                <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-                    <input type="checkbox" id="lockToggle" <?php echo $locked ? 'checked' : ''; ?>>
-                    <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.4s; border-radius: 34px;"></span>
-                </label>
-                <span style="margin-left: 10px;"><?php echo get_string('lock_page', 'gestionprojet'); ?></span>
-            </div>
-            <?php endif; ?>
+            <!-- Lock toggle removed -->
+
         </div>
 
         <div id="diagramContainer" style="background: #fafbfc; padding: 20px; border-radius: 10px; border: 2px solid #e9ecef; margin-bottom: 30px;">
@@ -203,23 +197,8 @@ $PAGE->requires->jquery();
             var cmid = <?php echo $cm->id; ?>;
             var step = 2;
             var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-            var isLocked = <?php echo $locked ? 'true' : 'false'; ?>;
+            // Lock toggle logic removed
 
-            // Lock toggle
-            $('#lockToggle').on('change', function() {
-                isLocked = this.checked;
-                updateFormLockState();
-                // Manually trigger save when lock changes
-                Autosave.save();
-            });
-
-            function updateFormLockState() {
-                if (isLocked) {
-                    $('#besoinForm textarea').attr('readonly', true);
-                } else {
-                    $('#besoinForm textarea').attr('readonly', false);
-                }
-            }
 
             // Update diagram when text changes
             $('#besoinForm textarea').on('input', function() {
@@ -234,7 +213,8 @@ $PAGE->requires->jquery();
                         formData[this.name] = this.value;
                     }
                 });
-                formData['locked'] = isLocked ? 1 : 0;
+                formData['locked'] = 0; // Always unlocked
+
                 return formData;
             };
 

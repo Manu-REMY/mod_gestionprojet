@@ -110,6 +110,7 @@ function gestionprojet_delete_instance($id)
     $DB->delete_records('gestionprojet_cdcf', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_essai', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_rapport', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_besoin_eleve', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
 
     // Delete the instance
@@ -381,13 +382,18 @@ function gestionprojet_get_groups_for_grading($gestionprojetid, $courseid)
             'gestionprojetid' => $gestionprojetid,
             'groupid' => $group->id
         ]);
+        $besoin_eleve = $DB->get_record('gestionprojet_besoin_eleve', [
+            'gestionprojetid' => $gestionprojetid,
+            'groupid' => $group->id
+        ]);
 
         $result[] = [
             'group' => $group,
             'cdcf' => $cdcf,
             'essai' => $essai,
             'rapport' => $rapport,
-            'has_submission' => ($cdcf || $essai || $rapport)
+            'besoin_eleve' => $besoin_eleve,
+            'has_submission' => ($cdcf || $essai || $rapport || $besoin_eleve)
         ];
     }
 
@@ -531,6 +537,10 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
                     'gestionprojetid' => $gestionprojet->id,
                     'userid' => $member->id
                 ]);
+                $besoin_eleve = $DB->get_record('gestionprojet_besoin_eleve', [
+                    'gestionprojetid' => $gestionprojet->id,
+                    'userid' => $member->id
+                ]);
 
                 // Calculate grade for this user
                 $totalgrade = 0;
@@ -546,6 +556,10 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
                 }
                 if ($rapport && $rapport->grade !== null) {
                     $totalgrade += $rapport->grade;
+                    $count++;
+                }
+                if ($besoin_eleve && $besoin_eleve->grade !== null) {
+                    $totalgrade += $besoin_eleve->grade;
                     $count++;
                 }
 
@@ -573,6 +587,10 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
             'gestionprojetid' => $gestionprojet->id,
             'groupid' => $group->id
         ]);
+        $besoin_eleve = $DB->get_record('gestionprojet_besoin_eleve', [
+            'gestionprojetid' => $gestionprojet->id,
+            'groupid' => $group->id
+        ]);
 
         // Calculate average grade
         $totalgrade = 0;
@@ -588,6 +606,10 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
         }
         if ($rapport && $rapport->grade !== null) {
             $totalgrade += $rapport->grade;
+            $count++;
+        }
+        if ($besoin_eleve && $besoin_eleve->grade !== null) {
+            $totalgrade += $besoin_eleve->grade;
             $count++;
         }
 

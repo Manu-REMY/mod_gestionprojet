@@ -47,6 +47,7 @@ $string['step3'] = 'Planification';
 $string['step4'] = 'Cahier des Charges';
 $string['step5'] = 'Fiche Essai';
 $string['step6'] = 'Rapport de Projet';
+$string['step7'] = 'Expression du Besoin (Élève)';
 
 $string['step1_desc'] = 'Définir le cadre du projet (enseignant)';
 $string['step2_desc'] = 'Diagramme Bête à Corne (enseignant)';
@@ -54,6 +55,7 @@ $string['step3_desc'] = 'Planning et timeline (enseignant)';
 $string['step4_desc'] = 'Diagramme des interacteurs (élèves)';
 $string['step5_desc'] = 'Tests et validation (élèves)';
 $string['step6_desc'] = 'Rapport final (élèves)';
+$string['step7_desc'] = 'Diagramme Bête à Corne (élèves)';
 
 // Formulaire de configuration
 $string['autosave_interval'] = 'Intervalle de sauvegarde automatique';
