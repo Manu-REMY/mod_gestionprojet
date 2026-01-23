@@ -145,7 +145,38 @@ $locked = 0;
     </div>
 </div>
 
+<style>
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
 
+.slider:before {
+    position: absolute;
+    content: "🔓";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+input:checked + .slider {
+    background-color: #667eea;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+    content: "🔒";
+}
+</style>
 
 <?php
 // Ensure jQuery is loaded

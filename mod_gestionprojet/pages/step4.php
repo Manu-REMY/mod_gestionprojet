@@ -101,7 +101,381 @@ if (empty($interacteurs)) {
 }
 ?>
 
+<style>
+    .step4-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
 
+    /* Navigation */
+    .navigation-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .nav-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+
+    .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        color: white;
+        text-decoration: none;
+    }
+
+    .nav-button-prev {
+        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    }
+
+    /* Header */
+    .header-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+
+    .header-section h2 {
+        font-size: 2em;
+        margin-bottom: 10px;
+    }
+
+    /* Group info */
+    .group-info {
+        background: #d1ecf1;
+        border: 2px solid #bee5eb;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 30px;
+        color: #0c5460;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Description */
+    .description {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border-left: 4px solid #667eea;
+    }
+
+    .description h3 {
+        color: #667eea;
+        margin-bottom: 10px;
+    }
+
+    .description p {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 8px;
+    }
+
+    /* Project section */
+    .project-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .project-name-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
+        align-items: start;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+    }
+
+    .project-name label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+    .project-name input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        transition: border-color 0.3s;
+    }
+
+    .project-name input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .fp-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .fp-label {
+        font-weight: 600;
+        color: #667eea;
+        font-size: 16px;
+    }
+
+    .fp-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #f0f3ff;
+        min-height: 80px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .fp-input:focus {
+        outline: none;
+        border-color: #764ba2;
+        background: white;
+    }
+
+    /* Interactors */
+    .interactors-section {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        color: #667eea;
+        font-size: 1.3em;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    #interactorsContainer {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .interactor-item {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+    }
+
+    .interactor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .interactor-name-input {
+        flex: 1;
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .btn-delete-interactor {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-delete-interactor:hover {
+        background: #c82333;
+    }
+
+    .fc-list {
+        margin-top: 15px;
+    }
+
+    .fc-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border: 2px solid #ffd6d6;
+    }
+
+    .fc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .fc-label {
+        font-weight: 600;
+        color: #ff6b6b;
+        font-size: 14px;
+    }
+
+    .fc-value-input {
+        width: 100%;
+        padding: 8px;
+        border: 2px solid #ffd6d6;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #fff5f5;
+        margin-bottom: 10px;
+    }
+
+    .criteres-list {
+        padding-left: 20px;
+    }
+
+    .critere-item {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 10px;
+        margin-bottom: 8px;
+        align-items: center;
+    }
+
+    .critere-input {
+        padding: 6px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .btn-add {
+        background: #48bb78;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+        margin-top: 10px;
+    }
+
+    .btn-add:hover {
+        background: #38a169;
+    }
+
+    .btn-remove {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .btn-remove:hover {
+        background: #c82333;
+    }
+
+    /* Diagram */
+    .diagram-container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .diagram-title {
+        text-align: center;
+        color: #667eea;
+        font-size: 1.2em;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    #interactorDiagram {
+        width: 100%;
+        height: 500px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        background: #fafbfc;
+    }
+
+    /* Grade display */
+    .grade-display {
+        background: #d4edda;
+        border: 2px solid #c3e6cb;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        color: #155724;
+    }
+
+    .feedback-display {
+        background: #fff3cd;
+        border: 2px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-top: 15px;
+        color: #856404;
+    }
+
+    /* Export section */
+    .export-section {
+        text-align: center;
+        margin-top: 40px;
+        padding: 30px;
+        background: #f8f9fa;
+        border-radius: 15px;
+    }
+
+    .btn-export {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s;
+    }
+
+    .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+    }
+</style>
 
 <div class="step4-container">
     <!-- Navigation -->
@@ -186,32 +560,32 @@ if (empty($interacteurs)) {
             <svg id="interactorDiagram" viewBox="0 0 800 500"></svg>
         </div>
 
-        <!-- Interactors section -->
+              <!-- Interactors section -->
         <div class="interactors-section">
             <h3 class="section-title">⚙️ Interacteurs et Fonctions Contraintes</h3>
 
-            <div id="interactorsContainer"></div>
+                                <div id="interactorsContainer"></div>
             <?php if (!$isLocked): ?>
-                <button type="button" class="btn-add" id="addInteractorBtn">+ Ajouter un interacteur</button>
+                        <button type="button" class="btn-add" onclick="addInteractor()">+ Ajouter un interacteur</button>
             <?php endif; ?>
         </div>
 
         <!-- Actions section -->
         <div class="export-section" style="margin-top: 40px; text-align: center;">
-            <?php if ($canSubmit): ?>
+        <?php if ($canSubmit): ?>
                 <button type="button" class="btn btn-primary btn-lg" id="submitButton"
                     style="padding: 15px 40px; font-size: 18px; border-radius: 50px;">
                     📤 <?php echo get_string('submit', 'gestionprojet'); ?>
-                </button>
+                    </button>
             <?php endif; ?>
 
-            <?php if ($canRevert): ?>
+        <?php if ($canRevert): ?>
                 <button type="button" class="btn btn-warning" id="revertButton">
                     ↩️ <?php echo get_string('revert_to_draft', 'gestionprojet'); ?>
-                </button>
+                    </button>
             <?php endif; ?>
 
-            <button type="button" class="btn-export" id="exportPdfBtn" style="margin-left: 20px;">
+            <button type="button" class="btn-export" onclick="exportPDF()" style="margin-left: 20px;">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
             </button>
 
@@ -225,24 +599,389 @@ if (empty($interacteurs)) {
 <?php
 // Ensure jQuery is loaded
 $PAGE->requires->jquery();
-
-// Call AMD module
-$PAGE->requires->js_call_amd('mod_gestionprojet/step4', 'init', [
-    [
-        'cmid' => $cm->id,
-        'step' => 4,
-        'groupid' => $groupid,
-        'autosaveInterval' => $gestionprojet->autosave_interval * 1000,
-        'isLocked' => $readonly,
-        'interacteurs' => $interacteurs,
-        'strings' => [
-            'confirm_submission' => get_string('confirm_submission', 'gestionprojet'),
-            'confirm_revert' => get_string('confirm_revert', 'gestionprojet'),
-            'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet')
-        ]
-    ]
-]);
 ?>
+
+<script>
+    // Wait for jQuery to be loaded
+    // Wait for jQuery to be loaded
+    // Wait for RequireJS and jQuery
+    (function waitRequire() {
+        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
+            setTimeout(waitRequire, 50);
+            return;
+        }
+
+        require(['jquery', 'mod_gestionprojet/autosave'], function ($, Autosave) {
+            var cmid = <?php echo $cm->id; ?>;
+            var step = 4;
+            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+            var groupid = <?php echo $groupid; ?>;
+
+            // Custom serialization for step 4
+            var serializeData = function () {
+                var formData = {};
+
+                // Collect standard fields (produit, milieu, fp)
+                $('#cdcfForm').find('input, textarea').each(function () {
+                    if (this.name && this.name !== 'sesskey') {
+                        formData[this.name] = this.value;
+                    }
+                });
+
+                // Add complex interacteurs data
+                formData['interacteurs_data'] = JSON.stringify(interacteurs);
+
+                return formData;
+            };
+
+            // Callback after save to ensure diagram is in sync (optional, but good practice)
+            var onSave = function (response) {
+                // console.log('Step 4 saved', response);
+            };
+
+            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
+
+            // Handle Submission
+            $('#submitButton').on('click', function () {
+                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
+                    $.ajax({
+                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'submit',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function (response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error submitting');
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Handle Revert
+            $('#revertButton').on('click', function () {
+                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
+                    $.ajax({
+                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
+                        method: 'POST',
+                        data: {
+                            id: cmid,
+                            step: step,
+                            action: 'revert',
+                            sesskey: M.cfg.sesskey
+                        },
+                        success: function (response) {
+                            var res = JSON.parse(response);
+                            if (res.success) {
+                                window.location.reload();
+                            } else {
+                                alert('Error reverting');
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (!isLocked) {
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
+                    interval: autosaveInterval,
+                    formSelector: '#cdcfForm',
+                    serialize: serializeData,
+                    onSave: onSave
+                });
+            }
+        });
+    })();
+
+    // Interacteurs data
+    let interacteurs = <?php echo json_encode($interacteurs); ?>;
+
+    function renderInteractors() {
+        const container = document.getElementById('interactorsContainer');
+        container.innerHTML = '';
+
+        interacteurs.forEach((interactor, iIndex) => {
+            const item = document.createElement('div');
+            item.className = 'interactor-item';
+
+            const header = document.createElement('div');
+            header.className = 'interactor-header';
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.className = 'interactor-name-input';
+            nameInput.value = interactor.name;
+            nameInput.placeholder = 'Nom de l\'interacteur';
+            nameInput.onchange = () => {
+                interacteurs[iIndex].name = nameInput.value;
+                updateDiagram();
+            };
+            header.appendChild(nameInput);
+
+            if (iIndex >= 2) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'btn-delete-interactor';
+                deleteBtn.innerHTML = '🗑️ Supprimer';
+                deleteBtn.onclick = () => {
+                    interacteurs.splice(iIndex, 1);
+                    renderInteractors();
+                    updateDiagram();
+                };
+                header.appendChild(deleteBtn);
+            }
+
+            item.appendChild(header);
+
+            // FC list
+            const fcList = document.createElement('div');
+            fcList.className = 'fc-list';
+
+            interactor.fcs.forEach((fc, fcIndex) => {
+                const fcItem = document.createElement('div');
+                fcItem.className = 'fc-item';
+
+                const fcHeader = document.createElement('div');
+                fcHeader.className = 'fc-header';
+                fcHeader.innerHTML = `<span class="fc-label">FC${fcIndex + 1}</span>`;
+                fcItem.appendChild(fcHeader);
+
+                const fcValueInput = document.createElement('input');
+                fcValueInput.type = 'text';
+                fcValueInput.className = 'fc-value-input';
+                fcValueInput.value = fc.value;
+                fcValueInput.placeholder = 'Description de la fonction contrainte';
+                fcValueInput.onchange = () => {
+                    interacteurs[iIndex].fcs[fcIndex].value = fcValueInput.value;
+                    updateDiagram();
+                };
+                fcItem.appendChild(fcValueInput);
+
+                // Criteres
+                const criteresList = document.createElement('div');
+                criteresList.className = 'criteres-list';
+
+                fc.criteres.forEach((critere, cIndex) => {
+                    const critereItem = document.createElement('div');
+                    critereItem.className = 'critere-item';
+
+                    const critereInput = document.createElement('input');
+                    critereInput.type = 'text';
+                    critereInput.className = 'critere-input';
+                    critereInput.value = critere.critere;
+                    critereInput.placeholder = 'Critère d\'appréciation';
+                    critereInput.onchange = () => {
+                        interacteurs[iIndex].fcs[fcIndex].criteres[cIndex].critere = critereInput.value;
+                    };
+
+                    const niveauInput = document.createElement('input');
+                    niveauInput.type = 'text';
+                    niveauInput.className = 'critere-input';
+                    niveauInput.value = critere.niveau;
+                    niveauInput.placeholder = 'Niveau';
+                    niveauInput.onchange = () => {
+                        interacteurs[iIndex].fcs[fcIndex].criteres[cIndex].niveau = niveauInput.value;
+                    };
+
+                    const uniteInput = document.createElement('input');
+                    uniteInput.type = 'text';
+                    uniteInput.className = 'critere-input';
+                    uniteInput.value = critere.unite;
+                    uniteInput.placeholder = 'Unité';
+                    uniteInput.onchange = () => {
+                        interacteurs[iIndex].fcs[fcIndex].criteres[cIndex].unite = uniteInput.value;
+                    };
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn-remove';
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.onclick = () => {
+                        if (fc.criteres.length > 1) {
+                            interacteurs[iIndex].fcs[fcIndex].criteres.splice(cIndex, 1);
+                            renderInteractors();
+                        }
+                    };
+
+                    critereItem.appendChild(critereInput);
+                    critereItem.appendChild(niveauInput);
+                    critereItem.appendChild(uniteInput);
+                    critereItem.appendChild(removeBtn);
+                    criteresList.appendChild(critereItem);
+                });
+
+                fcItem.appendChild(criteresList);
+
+                const addCritereBtn = document.createElement('button');
+                addCritereBtn.type = 'button';
+                addCritereBtn.className = 'btn-add';
+                addCritereBtn.innerHTML = '+ Critère';
+                addCritereBtn.onclick = () => {
+                    interacteurs[iIndex].fcs[fcIndex].criteres.push({ critere: '', niveau: '', unite: '' });
+                    renderInteractors();
+                };
+                fcItem.appendChild(addCritereBtn);
+
+                fcList.appendChild(fcItem);
+            });
+
+            item.appendChild(fcList);
+
+            const addFCBtn = document.createElement('button');
+            addFCBtn.type = 'button';
+            addFCBtn.className = 'btn-add';
+            addFCBtn.innerHTML = '+ Fonction Contrainte';
+            addFCBtn.onclick = () => {
+                interacteurs[iIndex].fcs.push({ value: '', criteres: [{ critere: '', niveau: '', unite: '' }] });
+                renderInteractors();
+                updateDiagram();
+            };
+            item.appendChild(addFCBtn);
+
+            container.appendChild(item);
+        });
+    }
+
+    function addInteractor() {
+        interacteurs.push({
+            name: `Interacteur ${interacteurs.length + 1}`,
+            fcs: [{ value: '', criteres: [{ critere: '', niveau: '', unite: '' }] }]
+        });
+        renderInteractors();
+        updateDiagram();
+    }
+
+    function updateDiagram() {
+        const svg = document.getElementById('interactorDiagram');
+        const width = 800;
+        const height = 500;
+        svg.innerHTML = '';
+
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const productRadius = 60;
+
+        // Draw interactors in circle
+        const validInteractors = interacteurs.filter(i => i.name.trim() !== '');
+        const angleStep = (2 * Math.PI) / validInteractors.length;
+
+        validInteractors.forEach((interactor, index) => {
+            const angle = (index * angleStep) - Math.PI / 2;
+            const distance = 200;
+            const x = centerX + distance * Math.cos(angle);
+            const y = centerY + distance * Math.sin(angle);
+
+            // Draw line to center
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x);
+            line.setAttribute('y1', y);
+            line.setAttribute('x2', centerX);
+            line.setAttribute('y2', centerY);
+            line.setAttribute('stroke', index < 2 ? '#667eea' : '#ff6b6b');
+            line.setAttribute('stroke-width', index < 2 ? '3' : '2');
+            svg.appendChild(line);
+
+            // Draw interactor circle
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '40');
+            circle.setAttribute('fill', '#f0f3ff');
+            circle.setAttribute('stroke', '#667eea');
+            circle.setAttribute('stroke-width', '2');
+            svg.appendChild(circle);
+
+            // Draw interactor name
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.setAttribute('font-size', '12');
+            text.setAttribute('fill', '#333');
+            text.textContent = interactor.name;
+            svg.appendChild(text);
+
+            // Draw FC label if exists
+            if (index >= 2 && interactor.fcs[0]?.value) {
+                const fcLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                fcLabel.setAttribute('x', (x + centerX) / 2);
+                fcLabel.setAttribute('y', (y + centerY) / 2 - 10);
+                fcLabel.setAttribute('text-anchor', 'middle');
+                fcLabel.setAttribute('font-size', '11');
+                fcLabel.setAttribute('fill', '#ff6b6b');
+                fcLabel.setAttribute('font-weight', 'bold');
+                fcLabel.textContent = 'FC' + (index - 1);
+                svg.appendChild(fcLabel);
+            }
+        });
+
+        // Draw product circle (on top)
+        const productCircle = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        productCircle.setAttribute('cx', centerX);
+        productCircle.setAttribute('cy', centerY);
+        productCircle.setAttribute('rx', productRadius * 1.5);
+        productCircle.setAttribute('ry', productRadius);
+        productCircle.setAttribute('fill', '#667eea');
+        productCircle.setAttribute('stroke', '#764ba2');
+        productCircle.setAttribute('stroke-width', '3');
+        svg.appendChild(productCircle);
+
+        // Draw product name
+        const productName = document.getElementById('produit').value || 'Produit';
+        const productText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        productText.setAttribute('x', centerX);
+        productText.setAttribute('y', centerY);
+        productText.setAttribute('text-anchor', 'middle');
+        productText.setAttribute('dominant-baseline', 'middle');
+        productText.setAttribute('font-size', '16');
+        productText.setAttribute('font-weight', 'bold');
+        productText.setAttribute('fill', 'white');
+        productText.textContent = productName;
+        svg.appendChild(productText);
+    }
+
+    // Custom data collection for auto-save
+    window.collectFormData = function () {
+        const formData = {};
+        const form = document.getElementById('cdcfForm');
+
+        // Regular fields
+        form.querySelectorAll('input[type="text"], textarea').forEach(field => {
+            if (field.name) {
+                formData[field.name] = field.value;
+            }
+        });
+
+        // Interacteurs as JSON
+        formData['interacteurs_data'] = JSON.stringify(interacteurs);
+
+        return formData;
+    };
+
+    function exportPDF() {
+        alert('<?php echo get_string('export_pdf_coming_soon', 'gestionprojet'); ?>');
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function () {
+        renderInteractors();
+        updateDiagram();
+
+        // Update diagram when product name changes
+        document.getElementById('produit').addEventListener('change', updateDiagram);
+    });
+</script>
 
 <?php
 echo $OUTPUT->footer();

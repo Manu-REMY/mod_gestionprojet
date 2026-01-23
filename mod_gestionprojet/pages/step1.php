@@ -66,7 +66,288 @@ if (!empty($description->competences)) {
 echo $OUTPUT->header();
 ?>
 
+<style>
+.step1-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
 
+.title-container {
+    position: relative;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.lock-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.lock-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.lock-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.lock-slider:before {
+    position: absolute;
+    content: "🔓";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+input:checked + .lock-slider {
+    background-color: #667eea;
+}
+
+input:checked + .lock-slider:before {
+    transform: translateX(26px);
+    content: "🔒";
+}
+
+.locked-overlay.locked {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.navigation-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    color: white;
+    text-decoration: none;
+}
+
+.nav-btn-back {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
+
+.description-info {
+    background: #f0f4ff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    border-left: 4px solid #667eea;
+}
+
+.description-info h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.form-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.form-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-sidebar {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px dashed #ddd;
+    text-align: center;
+}
+
+.image-preview {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.form-group {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 600;
+}
+
+.form-group input[type="text"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.competences-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.competences-section h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.competences-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.competences-column h4 {
+    color: #667eea;
+    text-align: center;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    border: 2px solid #667eea;
+    margin-bottom: 10px;
+}
+
+.competence-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.competence-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.competence-item input[type="checkbox"] {
+    margin-top: 3px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.competence-content {
+    flex: 1;
+}
+
+.competence-code {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.competence-text {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #555;
+}
+
+.button-container {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.btn-export {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s;
+}
+
+.btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+}
+
+@media (max-width: 992px) {
+    .form-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .competences-list {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 
 <div class="step1-container">
     <div class="navigation-buttons">
@@ -151,7 +432,7 @@ echo $OUTPUT->header();
 
             <div class="form-sidebar">
                 <h4><?php echo get_string('image', 'gestionprojet'); ?></h4>
-                <p style="font-size: 14px; color: #666; margin: 10px 0;"><?php echo get_string('image_optional', 'gestionprojet'); ?></p>
+                <p style="font-size: 14px; color: #666; margin: 10px 0;">Image représentative du projet (optionnel)</p>
 
                 <?php if ($description->imageid): ?>
                     <div id="imagePreview">
@@ -167,19 +448,19 @@ echo $OUTPUT->header();
                                 $file->get_filepath(),
                                 $file->get_filename()
                             );
-                            echo html_writer::img($url, get_string('image', 'gestionprojet'), ['class' => 'image-preview']);
+                            echo html_writer::img($url, 'Project image', ['class' => 'image-preview']);
                         }
                         ?>
                     </div>
                 <?php else: ?>
                     <div style="padding: 40px; color: #999; font-style: italic;">
-                        <?php echo get_string('no_image_available', 'gestionprojet'); ?>
+                        Aucune image
                     </div>
                 <?php endif; ?>
 
                 <!-- TODO: Implement file upload with Moodle file API -->
                 <p style="font-size: 12px; color: #999; margin-top: 10px;">
-                    <?php echo get_string('upload_feature_pending', 'gestionprojet'); ?>
+                    Upload d'image à implémenter
                 </p>
             </div>
         </div>
@@ -359,7 +640,7 @@ $PAGE->requires->jquery();
 
 // Export PDF functionality (to be implemented with TCPDF)
 function exportToPDF() {
-    alert('<?php echo get_string('pdf_export_pending', 'gestionprojet'); ?>');
+    alert('Export PDF sera implémenté avec TCPDF côté serveur');
     // TODO: Implement server-side PDF generation
     window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/export_pdf.php?id=<?php echo $cm->id; ?>&step=1';
 }

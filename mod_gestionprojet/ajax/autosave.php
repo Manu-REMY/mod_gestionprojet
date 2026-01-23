@@ -22,6 +22,11 @@ require_once(__DIR__ . '/../lib.php');
 // Ensure JSON headers
 header('Content-Type: application/json');
 
+// Debug logging
+$debug_log = __DIR__ . '/../../../moodledata/temp/autosave_debug.log';
+@file_put_contents($debug_log, "\n=== " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
+@file_put_contents($debug_log, "POST: " . print_r($_POST, true), FILE_APPEND);
+
 $cmid = required_param('cmid', PARAM_INT);
 $step = required_param('step', PARAM_INT);
 $data = required_param('data', PARAM_RAW);
@@ -39,8 +44,10 @@ require_sesskey();
 
 // Decode JSON data
 $formdata = json_decode($data, true);
+@file_put_contents($debug_log, "Data received: " . $data . "\n", FILE_APPEND);
 
 if (!$formdata) {
+    @file_put_contents($debug_log, "ERROR: Invalid JSON\n", FILE_APPEND);
     echo json_encode(['success' => false, 'message' => 'Invalid data']);
     exit;
 }
@@ -257,6 +264,36 @@ try {
 
             $record->timemodified = $time;
             $DB->update_record('gestionprojet_rapport', $record);
+
+            $success = true;
+            break;
+
+        case 7: // Besoin Eleve
+            if (!has_capability('mod/gestionprojet:submit', $context)) {
+                throw new moodle_exception('nopermission');
+            }
+
+            $record = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'besoin_eleve');
+
+            // Check if locked
+            if ($record->status == 1) {
+                throw new moodle_exception('submissionlocked', 'gestionprojet');
+            }
+
+            // List of valid fields for besoin_eleve table
+            $validfields = ['aqui', 'surquoi', 'dansquelbut'];
+
+            foreach ($formdata as $key => $value) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
+                    $oldvalue = isset($record->$key) ? $record->$key : null;
+                    $record->$key = $value;
+
+                    gestionprojet_log_change($gestionprojet->id, 'besoin_eleve', $record->id, $key, $oldvalue, $value, $USER->id, $groupid);
+                }
+            }
+
+            $record->timemodified = $time;
+            $DB->update_record('gestionprojet_besoin_eleve', $record);
 
             $success = true;
             break;

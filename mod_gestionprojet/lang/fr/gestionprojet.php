@@ -156,11 +156,21 @@ $string['auteurs'] = 'Auteurs';
 $string['besoins'] = 'Besoins';
 $string['contraintes'] = 'Contraintes';
 
-// Fiche Essai (Step 5 - duplication partielle corrigée, voir ci-dessus)
-// ...
+// Fiche Essai
+$string['objectif'] = 'Objectif de l\'essai';
+$string['protocole'] = 'Protocole expérimental';
+$string['precautions'] = 'Précautions';
+$string['resultats'] = 'Résultats et observations';
+$string['conclusion'] = 'Conclusion';
 
-// Rapport (Step 6 - duplication partielle corrigée, voir ci-dessus)
-// ...
+// Rapport
+$string['auteurs'] = 'Auteurs';
+$string['besoins'] = 'Besoins et contraintes';
+$string['contraintes'] = 'Contraintes identifiées';
+$string['solutions'] = 'Solutions choisies';
+$string['realisation'] = 'Réalisation';
+$string['difficultes'] = 'Difficultés rencontrées';
+$string['validation'] = 'Validation';
 
 // Interface de correction
 $string['grading_navigation'] = 'Navigation correction';
@@ -172,7 +182,6 @@ $string['grading_feedback'] = 'Commentaires';
 $string['grading_grade'] = 'Note / 20';
 $string['grading_save'] = 'Enregistrer la note';
 $string['grading_context_maintained'] = 'Le contexte de correction est conservé';
-$string['grading_description'] = 'Corrigez les travaux des groupes par étape';
 
 // Actions
 $string['next'] = 'Suivant';
@@ -186,11 +195,6 @@ $string['saved'] = 'Sauvegardé automatiquement';
 $string['export_pdf'] = 'Exporter en PDF';
 $string['export_all'] = 'Exporter tous les projets';
 $string['view_history'] = 'Voir l\'historique';
-$string['consultation_mode'] = 'Consultation';
-$string['consult_button'] = 'Consulter';
-$string['work_button'] = 'Travailler';
-$string['upload_feature_pending'] = 'Upload d\'image à implémenter';
-$string['pdf_export_pending'] = 'Export PDF sera implémenté avec TCPDF côté serveur';
 
 // Messages
 $string['autosave_success'] = 'Sauvegarde automatique effectuée';
@@ -200,11 +204,6 @@ $string['no_submission'] = 'Aucune soumission pour ce groupe';
 $string['submission_saved'] = 'Votre travail a été sauvegardé';
 $string['teacher_pages_locked'] = 'Les pages enseignant sont verrouillées. Vous ne pouvez pas les modifier.';
 $string['must_complete_teacher_pages'] = 'L\'enseignant doit d\'abord compléter les 3 premières étapes.';
-$string['group_not_found_error'] = 'Erreur : Groupe introuvable (ID : {$a})';
-$string['working_in_group_info'] = 'Vous travaillez en groupe :';
-$string['student_description'] = 'Complétez votre projet en 3 étapes';
-$string['image_optional'] = 'Image représentative du projet (optionnel)';
-$string['no_image_available'] = 'Aucune image';
 
 // Privacy
 $string['privacy:metadata:gestionprojet_description'] = 'Informations sur la fiche descriptive configurée par l\'enseignant';

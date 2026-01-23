@@ -21,7 +21,167 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
 
 ?>
 
+<style>
+    .gestionprojet-home {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
 
+    .gestionprojet-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin: 30px 0;
+    }
+
+    .gestionprojet-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border-top: 5px solid;
+        position: relative;
+    }
+
+    .gestionprojet-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .gestionprojet-card.teacher {
+        border-top-color: #667eea;
+    }
+
+    .gestionprojet-card.student {
+        border-top-color: #48bb78;
+    }
+
+    .gestionprojet-card.locked {
+        opacity: 0.7;
+    }
+
+    .card-icon {
+        font-size: 48px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .card-title {
+        font-size: 22px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .card-description {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .card-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    .card-status.complete {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .card-status.incomplete {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .card-status.locked {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .card-button {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .card-button:hover {
+        transform: scale(1.02);
+        color: white;
+        text-decoration: none;
+    }
+
+    .card-button:disabled,
+    .card-button.disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .section-header {
+        margin: 40px 0 20px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #667eea;
+    }
+
+    .section-header h2 {
+        color: #667eea;
+        font-size: 28px;
+        margin: 0;
+    }
+
+    .section-header p {
+        color: #666;
+        margin: 5px 0 0;
+    }
+
+    .grading-section {
+        margin-top: 40px;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+
+    .grading-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .grading-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .grading-card h4 {
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+
+    .alert-warning {
+        margin: 20px 0;
+    }
+</style>
 
 <div class="gestionprojet-home">
 
@@ -99,7 +259,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
             <div class="grading-section">
                 <div class="section-header">
                     <h2>✏️ <?php echo get_string('navigation_grading', 'gestionprojet'); ?></h2>
-                    <p><?php echo get_string('grading_description', 'gestionprojet'); ?></p>
+                    <p>Corrigez les travaux des groupes par étape</p>
                 </div>
 
                 <?php if (!$teacherpagescomplete): ?>
@@ -144,7 +304,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
         <!-- Section Élève -->
         <div class="section-header">
             <h2>🎯 <?php echo get_string('navigation_student', 'gestionprojet'); ?></h2>
-            <p><?php echo get_string('student_description', 'gestionprojet'); ?></p>
+            <p>Complétez votre projet en 3 étapes</p>
         </div>
 
         <?php if (!$teacherpagescomplete): ?>
@@ -167,12 +327,11 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
             if (!$groupinfo) {
                 ?>
                 <div class="alert alert-danger">
-                    <?php echo get_string('group_not_found_error', 'gestionprojet', $usergroup); ?>
+                    ❌ Erreur : Groupe introuvable (ID: <?php echo $usergroup; ?>)
                 </div>
             <?php } else { ?>
                 <div class="alert alert-info">
-                    <?php echo get_string('working_in_group_info', 'gestionprojet'); ?>
-                    <strong><?php echo $groupinfo->name; ?></strong>
+                    👥 Vous travaillez en groupe: <strong><?php echo $groupinfo->name; ?></strong>
                 </div>
 
                 <div class="gestionprojet-cards">
@@ -222,12 +381,12 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             <p class="card-description"><?php echo $step['desc']; ?></p>
 
                             <div class="card-status locked" style="background: #e2e8f0; color: #4a5568;">
-                                👁️ <?php echo get_string('consultation_mode', 'gestionprojet'); ?>
+                                👁️ Consultation
                             </div>
 
                             <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="card-button"
                                 style="background: #667eea;">
-                                <?php echo get_string('consult_button', 'gestionprojet'); ?>
+                                Consulter
                             </a>
                         </div>
                     <?php endforeach; ?>
@@ -302,7 +461,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             <?php endif; ?>
 
                             <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="card-button">
-                                <?php echo get_string('work_button', 'gestionprojet'); ?>
+                                Travailler
                             </a>
                         </div>
                     <?php endforeach; ?>
