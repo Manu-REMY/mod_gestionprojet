@@ -58,6 +58,10 @@ $string['step6_desc'] = 'Final report (students)';
 $string['step7_desc'] = 'Horn Diagram (students)';
 
 // Configuration form
+$string['activesteps'] = 'Active Steps';
+$string['submissionsettings'] = 'Submission Settings';
+$string['groupsubmission'] = 'Group submission';
+$string['enable_submission'] = 'Enable submission';
 $string['autosave_interval'] = 'Auto-save interval';
 $string['autosave_interval_help'] = 'Automatic save frequency in seconds (recommended: 30s)';
 
@@ -164,6 +168,8 @@ $string['grading_save'] = 'Save grade';
 $string['grading_context_maintained'] = 'Grading context is maintained';
 
 // Actions
+$string['next'] = 'Next';
+$string['previous'] = 'Previous';
 $string['lock'] = 'Lock';
 $string['unlock'] = 'Unlock';
 $string['locked'] = 'Locked by teacher';

@@ -58,6 +58,10 @@ $string['step6_desc'] = 'Rapport final (élèves)';
 $string['step7_desc'] = 'Diagramme Bête à Corne (élèves)';
 
 // Formulaire de configuration
+$string['activesteps'] = 'Étapes actives';
+$string['submissionsettings'] = 'Paramètres de soumission';
+$string['groupsubmission'] = 'Soumission de groupe';
+$string['enable_submission'] = 'Activer la soumission';
 $string['autosave_interval'] = 'Intervalle de sauvegarde automatique';
 $string['autosave_interval_help'] = 'Fréquence de sauvegarde automatique en secondes (recommandé: 30s)';
 
@@ -180,6 +184,8 @@ $string['grading_save'] = 'Enregistrer la note';
 $string['grading_context_maintained'] = 'Le contexte de correction est conservé';
 
 // Actions
+$string['next'] = 'Suivant';
+$string['previous'] = 'Précédent';
 $string['lock'] = 'Verrouiller';
 $string['unlock'] = 'Déverrouiller';
 $string['locked'] = 'Verrouillé par l\'enseignant';
