@@ -479,6 +479,9 @@ if (empty($interacteurs)) {
 
 <div class="step4-container">
     <!-- Navigation -->
+    <?php
+    $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step4');
+    ?>
     <div class="navigation-top">
         <div style="display: flex; gap: 10px;">
             <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>"
@@ -486,12 +489,19 @@ if (empty($interacteurs)) {
                 <span>🏠</span>
                 <span><?php echo get_string('home', 'gestionprojet'); ?></span>
             </a>
+            <?php if ($nav_links['prev']): ?>
+                <a href="<?php echo $nav_links['prev']; ?>" class="nav-button nav-button-prev">
+                    <span>←</span>
+                    <span><?php echo get_string('previous', 'gestionprojet'); ?></span>
+                </a>
+            <?php endif; ?>
         </div>
-        <a href="<?php echo new moodle_url('/mod/gestionprojet/pages/step5.php', ['id' => $cm->id]); ?>"
-            class="nav-button">
-            <span><?php echo get_string('next', 'gestionprojet'); ?></span>
-            <span>→</span>
-        </a>
+        <?php if ($nav_links['next']): ?>
+            <a href="<?php echo $nav_links['next']; ?>" class="nav-button">
+                <span><?php echo get_string('next', 'gestionprojet'); ?></span>
+                <span>→</span>
+            </a>
+        <?php endif; ?>
     </div>
 
     <!-- Header -->
@@ -560,29 +570,29 @@ if (empty($interacteurs)) {
             <svg id="interactorDiagram" viewBox="0 0 800 500"></svg>
         </div>
 
-              <!-- Interactors section -->
+        <!-- Interactors section -->
         <div class="interactors-section">
             <h3 class="section-title">⚙️ Interacteurs et Fonctions Contraintes</h3>
 
-                                <div id="interactorsContainer"></div>
+            <div id="interactorsContainer"></div>
             <?php if (!$isLocked): ?>
-                        <button type="button" class="btn-add" onclick="addInteractor()">+ Ajouter un interacteur</button>
+                <button type="button" class="btn-add" onclick="addInteractor()">+ Ajouter un interacteur</button>
             <?php endif; ?>
         </div>
 
         <!-- Actions section -->
         <div class="export-section" style="margin-top: 40px; text-align: center;">
-        <?php if ($canSubmit): ?>
+            <?php if ($canSubmit): ?>
                 <button type="button" class="btn btn-primary btn-lg" id="submitButton"
                     style="padding: 15px 40px; font-size: 18px; border-radius: 50px;">
                     📤 <?php echo get_string('submit', 'gestionprojet'); ?>
-                    </button>
+                </button>
             <?php endif; ?>
 
-        <?php if ($canRevert): ?>
+            <?php if ($canRevert): ?>
                 <button type="button" class="btn btn-warning" id="revertButton">
                     ↩️ <?php echo get_string('revert_to_draft', 'gestionprojet'); ?>
-                    </button>
+                </button>
             <?php endif; ?>
 
             <button type="button" class="btn-export" onclick="exportPDF()" style="margin-left: 20px;">

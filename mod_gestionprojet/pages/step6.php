@@ -358,6 +358,9 @@ if ($submission->auteurs) {
 
 <div class="step6-container">
     <!-- Navigation -->
+    <?php
+    $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step6');
+    ?>
     <div class="navigation-top">
         <div style="display: flex; gap: 10px;">
             <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>"
@@ -365,12 +368,19 @@ if ($submission->auteurs) {
                 <span>🏠</span>
                 <span><?php echo get_string('home', 'gestionprojet'); ?></span>
             </a>
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/pages/step5.php', ['id' => $cm->id]); ?>"
-                class="nav-button nav-button-prev">
-                <span>←</span>
-                <span><?php echo get_string('previous', 'gestionprojet'); ?></span>
-            </a>
+            <?php if ($nav_links['prev']): ?>
+                <a href="<?php echo $nav_links['prev']; ?>" class="nav-button nav-button-prev">
+                    <span>←</span>
+                    <span><?php echo get_string('previous', 'gestionprojet'); ?></span>
+                </a>
+            <?php endif; ?>
         </div>
+        <?php if ($nav_links['next']): ?>
+            <a href="<?php echo $nav_links['next']; ?>" class="nav-button">
+                <span><?php echo get_string('next', 'gestionprojet'); ?></span>
+                <span>→</span>
+            </a>
+        <?php endif; ?>
     </div>
 
     <!-- Header -->

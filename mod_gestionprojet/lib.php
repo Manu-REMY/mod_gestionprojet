@@ -629,3 +629,59 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
 
     return $grades;
 }
+
+/**
+ * Get navigation links for student pages based on enabled steps.
+ *
+ * @param stdClass $gestionprojet
+ * @param int $cmid
+ * @param string $current_step Name of the current step (e.g., 'step4')
+ * @return array Array with 'prev' and 'next' moodle_url objects or null
+ */
+function gestionprojet_get_navigation_links($gestionprojet, $cmid, $current_step)
+{
+    // Define steps in order: Teacher steps (1, 3, 2) -> Student steps (7, 4, 5, 6)
+    $steps = ['step1', 'step3', 'step2', 'step7', 'step4', 'step5', 'step6'];
+    $current_index = array_search($current_step, $steps);
+
+    if ($current_index === false) {
+        return ['prev' => null, 'next' => null];
+    }
+
+    $prev_url = null;
+    $next_url = null;
+
+    // Find previous enabled step
+    for ($i = $current_index - 1; $i >= 0; $i--) {
+        $step = $steps[$i];
+        $enable_prop = 'enable_' . $step;
+        if (!isset($gestionprojet->$enable_prop) || $gestionprojet->$enable_prop) {
+            $prev_url = new moodle_url('/mod/gestionprojet/view.php', ['id' => $cmid, 'step' => (int) substr($step, 4)]);
+            break;
+        }
+    }
+
+    // Find next enabled step
+    for ($i = $current_index + 1; $i < count($steps); $i++) {
+        $step = $steps[$i];
+        $enable_prop = 'enable_' . $step;
+        if (!isset($gestionprojet->$enable_prop) || $gestionprojet->$enable_prop) {
+            $next_url = new moodle_url('/mod/gestionprojet/view.php', ['id' => $cmid, 'step' => (int) substr($step, 4)]);
+            break;
+        }
+    }
+
+    // Special case for step pages (stepX.php) vs view.php usage
+    // The view.php handles redirection, but specific pages might be accessed directly.
+    // Ideally we should use view.php for all links to ensure proper context setup if needed, 
+    // but the current pages use view.php?step=X.
+
+    // Note: The previous implementation returned full URLs to pages/stepX.php for students.
+    // Teacher pages use view.php?step=X usually.
+    // To be consistent and robust, let's check where the user is.
+    // But sticking to view.php?step=X is safer as it handles both teacher and student routing if view.php is set up correctly.
+    // However, existing student pages used direct links.
+    // Let's change strictly to view.php?step=X for consistency across the module.
+
+    return ['prev' => $prev_url, 'next' => $next_url];
+}

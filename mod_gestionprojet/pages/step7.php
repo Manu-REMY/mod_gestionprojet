@@ -76,10 +76,20 @@ if ($isSubmitted) {
 }
 
 // Navigation buttons
+// Navigation buttons
+$nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step7');
+
 echo '<div class="navigation-container" style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">';
-echo '<div>';
+echo '<div style="display: flex; gap: 10px;">';
 echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="btn btn-secondary">🏠 ' . get_string('home', 'gestionprojet') . '</a>';
+if ($nav_links['prev']) {
+    echo '<a href="' . $nav_links['prev'] . '" class="btn btn-secondary">← ' . get_string('previous', 'gestionprojet') . '</a>';
+}
 echo '</div>';
+
+if ($nav_links['next']) {
+    echo '<a href="' . $nav_links['next'] . '" class="btn btn-primary">' . get_string('next', 'gestionprojet') . ' →</a>';
+}
 echo '</div>';
 
 

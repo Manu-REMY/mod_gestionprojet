@@ -58,23 +58,22 @@ $showGrade = false;
 echo $OUTPUT->header();
 
 // Navigation buttons
+// Navigation buttons
 echo '<div class="navigation-container" style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">';
+$nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step2');
+
 echo '<div>';
-if (defined('MOODLE_INTERNAL')) {
-    // Included from view.php
-    echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 1]) . '" class="btn btn-secondary">← ' . get_string('back') . '</a>';
+if ($nav_links['prev']) {
+    echo '<a href="' . $nav_links['prev'] . '" class="btn btn-secondary">← ' . get_string('previous', 'gestionprojet') . '</a>';
 } else {
-    // Direct access
-    echo '<a href="../view.php?id=' . $cm->id . '&step=1" class="btn btn-secondary">← ' . get_string('back') . '</a>';
+    // Fallback to home if no prev (should theoretically be Step 3 or 1)
+    echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="btn btn-secondary">🏠 ' . get_string('home', 'gestionprojet') . '</a>';
 }
 echo '</div>';
+
 echo '<div>';
-if (defined('MOODLE_INTERNAL')) {
-    // Included from view.php
-    echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 3]) . '" class="btn btn-primary">' . get_string('next') . ' →</a>';
-} else {
-    // Direct access
-    echo '<a href="../view.php?id=' . $cm->id . '&step=3" class="btn btn-primary">' . get_string('next') . ' →</a>';
+if ($nav_links['next']) {
+    echo '<a href="' . $nav_links['next'] . '" class="btn btn-primary">' . get_string('next', 'gestionprojet') . ' →</a>';
 }
 echo '</div>';
 echo '</div>';

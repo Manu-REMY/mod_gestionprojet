@@ -433,6 +433,9 @@ if ($submission->precautions) {
 
 <div class="step5-container">
     <!-- Navigation -->
+<?php
+    $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step5');
+    ?>
     <div class="navigation-top">
         <div style="display: flex; gap: 10px;">
             <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>"
@@ -440,17 +443,21 @@ if ($submission->precautions) {
                 <span>🏠</span>
                 <span><?php echo get_string('home', 'gestionprojet'); ?></span>
             </a>
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/pages/step4.php', ['id' => $cm->id]); ?>"
+            <?php if ($nav_links['prev']): ?>
+            <a href="<?php echo $nav_links['prev']; ?>"
                 class="nav-button nav-button-prev">
                 <span>←</span>
                 <span><?php echo get_string('previous', 'gestionprojet'); ?></span>
             </a>
+            <?php endif; ?>
         </div>
-        <a href="<?php echo new moodle_url('/mod/gestionprojet/pages/step6.php', ['id' => $cm->id]); ?>"
+        <?php if ($nav_links['next']): ?>
+        <a href="<?php echo $nav_links['next']; ?>"
             class="nav-button">
             <span><?php echo get_string('next', 'gestionprojet'); ?></span>
             <span>→</span>
         </a>
+        <?php endif; ?>
     </div>
 
     <!-- Header -->

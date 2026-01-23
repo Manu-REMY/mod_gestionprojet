@@ -351,12 +351,17 @@ input:checked + .lock-slider:before {
 
 <div class="step1-container">
     <div class="navigation-buttons">
+        <?php
+        $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step1');
+        ?>
         <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>" class="nav-btn nav-btn-back">
             ← <?php echo get_string('home', 'gestionprojet'); ?>
         </a>
-        <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 2]); ?>" class="nav-btn">
-            <?php echo get_string('step2', 'gestionprojet'); ?> →
+        <?php if ($nav_links['next']): ?>
+        <a href="<?php echo $nav_links['next']; ?>" class="nav-btn">
+            <?php echo get_string('next', 'gestionprojet'); ?> →
         </a>
+        <?php endif; ?>
     </div>
 
     <div class="title-container">
