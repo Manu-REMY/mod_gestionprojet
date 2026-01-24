@@ -308,7 +308,7 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     text-align: center;
-    border-radius: 8px;
+    border-radius: 50px;
     text-decoration: none;
     font-weight: 600;
     transition: all 0.3s;
@@ -403,7 +403,7 @@
 
 .path-mod-gestionprojet .nav-btn {
     padding: 10px 20px;
-    border-radius: 8px;
+    border-radius: 50px;
     border: none;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -919,6 +919,7 @@
     border-radius: 10px;
     margin-bottom: 30px;
 }
+
 /* =========================================
    Step 4 Helper Styles
    ========================================= */
@@ -1084,18 +1085,18 @@
     .path-mod-gestionprojet .info-row {
         grid-template-columns: 1fr;
     }
-    
+
     .path-mod-gestionprojet .precautions-table {
         display: block;
     }
-    
+
     .path-mod-gestionprojet .precautions-table tbody,
     .path-mod-gestionprojet .precautions-table tr,
     .path-mod-gestionprojet .precautions-table td {
         display: block;
         width: 100%;
     }
-    
+
     .path-mod-gestionprojet .precautions-table td {
         margin-bottom: 10px;
     }
@@ -1301,7 +1302,7 @@
 }
 
 .path-mod-gestionprojet .competence-item:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .path-mod-gestionprojet .competence-item input[type="checkbox"] {
@@ -1345,4 +1346,158 @@
     .path-mod-gestionprojet .competences-list {
         grid-template-columns: 1fr;
     }
+}
+
+/* =========================================
+   Grading Interface Styles
+   ========================================= */
+
+.path-mod-gestionprojet .grading-navigation {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.path-mod-gestionprojet .grading-nav-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.path-mod-gestionprojet .step-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.path-mod-gestionprojet .step-btn {
+    padding: 10px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+    border: 2px solid #dee2e6;
+    background: white;
+    color: #495057;
+}
+
+.path-mod-gestionprojet .step-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+.path-mod-gestionprojet .step-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.path-mod-gestionprojet .group-navigation {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.path-mod-gestionprojet .group-nav-btn {
+    padding: 8px 16px;
+    border-radius: 50px;
+    background: white;
+    border: 2px solid #667eea;
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.path-mod-gestionprojet .group-nav-btn:hover:not(:disabled) {
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+}
+
+.path-mod-gestionprojet .group-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.path-mod-gestionprojet .group-info {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    padding: 8px 16px;
+    background: white;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+}
+
+.path-mod-gestionprojet .submission-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.path-mod-gestionprojet .grading-form {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-top: 30px;
+}
+
+.path-mod-gestionprojet .btn-save-grade {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.path-mod-gestionprojet .btn-save-grade:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.path-mod-gestionprojet .context-indicator {
+    background: #d1ecf1;
+    border: 2px solid #bee5eb;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    color: #0c5460;
+}
+
+.path-mod-gestionprojet .no-submission {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.path-mod-gestionprojet .field-display {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.path-mod-gestionprojet .field-display h4 {
+    margin: 0 0 10px 0;
+    color: #667eea;
+    font-size: 16px;
+}
+
+.path-mod-gestionprojet .field-display p {
+    margin: 0;
+    color: #333;
+    white-space: pre-wrap;
 }

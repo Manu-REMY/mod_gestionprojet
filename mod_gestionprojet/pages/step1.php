@@ -72,13 +72,15 @@ echo $OUTPUT->header();
     <div class="navigation-container-flex">
         <div class="nav-group">
             <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>" class="nav-button nav-button-prev">
-                ← <?php echo get_string('home', 'gestionprojet'); ?>
+                <span>🏠</span>
+                <span><?php echo get_string('home', 'gestionprojet'); ?></span>
             </a>
         </div>
         <div>
             <?php if ($nav_links['next']): ?>
             <a href="<?php echo $nav_links['next']; ?>" class="nav-button">
-                <?php echo get_string('next', 'gestionprojet'); ?> →
+                <span><?php echo get_string('next', 'gestionprojet'); ?></span>
+                <span>→</span>
             </a>
             <?php endif; ?>
         </div>
