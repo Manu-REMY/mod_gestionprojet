@@ -96,6 +96,9 @@ if ($step > 0) {
         throw new \moodle_exception('stepdisabled', 'gestionprojet');
     }
 
+    // Calculate navigation links
+    $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step' . $step);
+
     // Show specific step
     require_once(__DIR__ . '/pages/step' . $step . '.php');
     exit;
