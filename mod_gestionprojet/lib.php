@@ -198,16 +198,15 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
     $params = ['gestionprojetid' => $gestionprojet->id];
 
     // Logic: 
-    // If group mode enabled: submission is linked to groupid, userid is ignored (or set to 0 to normalize DB unique key)
-    // If individual mode: submission is linked to userid, groupid is stored for reference but uniqueness is on userid.
-    // Wait, DB unique index is (gestionprojetid, groupid, userid).
+    // If group mode enabled AND groupid is not 0: submission is linked to groupid, userid is ignored (or set to 0)
+    // If individual mode OR groupid is 0 (Teacher/Solo): submission is linked to userid.
 
-    if ($isGroupSubmission) {
+    if ($isGroupSubmission && $groupid != 0) {
         $params['groupid'] = $groupid;
         $params['userid'] = 0; // Use 0 for group submissions to ensure uniqueness
     } else {
         $params['userid'] = $userid;
-        $params['groupid'] = $groupid; // Still store groupid for filtering but not for uniqueness by itself
+        $params['groupid'] = $groupid; // Likely 0
     }
 
     $record = $DB->get_record($tablename, $params);

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test AJAX Autosave</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        textarea {
+            min-height: 80px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test AJAX Autosave - Step 2 (Besoin)</h1>
+
+    <div class="form-group">
+        <label for="cmid">Course Module ID:</label>
+        <input type="number" id="cmid" value="" placeholder="Entrez le cmid">
+    </div>
+
+    <div class="form-group">
+        <label for="aqui">À qui rend-il service ?</label>
+        <textarea id="aqui" placeholder="Ex: Aux élèves du collège">Utilisateurs du système</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="surquoi">Sur quoi agit-il ?</label>
+        <textarea id="surquoi" placeholder="Ex: Sur les données de projet">Les informations de projet</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="dansquelbut">Dans quel but ?</label>
+        <textarea id="dansquelbut" placeholder="Ex: Pour gérer les projets efficacement">Pour faciliter la gestion de projets</textarea>
+    </div>
+
+    <button onclick="testAutosave()">Envoyer Test Autosave</button>
+
+    <div id="result"></div>
+
+    <script>
+        function testAutosave() {
+            const cmid = document.getElementById('cmid').value;
+
+            if (!cmid) {
+                showResult('error', 'Veuillez entrer un Course Module ID');
+                return;
+            }
+
+            const formData = {
+                aqui: document.getElementById('aqui').value,
+                surquoi: document.getElementById('surquoi').value,
+                dansquelbut: document.getElementById('dansquelbut').value,
+                locked: 0
+            };
+
+            console.log('Données à envoyer:', formData);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'mod/gestionprojet/ajax/autosave.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        console.log('Réponse serveur:', response);
+
+                        if (response.success) {
+                            showResult('success', 'Sauvegarde réussie ! Message: ' + (response.message || 'OK'));
+                        } else {
+                            showResult('error', 'Échec de la sauvegarde. Erreur: ' + (response.error || response.message || 'Inconnu'));
+                        }
+                    } catch (e) {
+                        showResult('error', 'Erreur de parsing JSON: ' + e.message + '\nRéponse brute: ' + xhr.responseText);
+                    }
+                } else {
+                    showResult('error', 'Erreur HTTP: ' + xhr.status + ' - ' + xhr.statusText);
+                }
+            };
+
+            xhr.onerror = function() {
+                showResult('error', 'Erreur réseau lors de la requête');
+            };
+
+            const params = new URLSearchParams();
+            params.append('cmid', cmid);
+            params.append('step', 2);
+            params.append('data', JSON.stringify(formData));
+            params.append('sesskey', M.cfg.sesskey || ''); // Si disponible
+
+            console.log('Paramètres envoyés:', params.toString());
+            xhr.send(params.toString());
+        }
+
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = type;
+            resultDiv.innerHTML = '<strong>' + (type === 'success' ? '✓ Succès' : '✗ Erreur') + ':</strong> ' + message;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+
+    <hr style="margin-top: 40px;">
+
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Connectez-vous d'abord à votre Moodle dans un autre onglet</li>
+        <li>Trouvez le Course Module ID (cmid) de votre activité Gestion de Projet</li>
+        <li>Entrez ce cmid dans le champ ci-dessus</li>
+        <li>Modifiez les champs de texte si vous voulez</li>
+        <li>Cliquez sur "Envoyer Test Autosave"</li>
+        <li>Vérifiez le résultat affiché</li>
+        <li>Vérifiez dans la base de données si les données sont enregistrées</li>
+        <li>Consultez le fichier de log: <code>moodledata/temp/autosave_debug.log</code></li>
+    </ol>
+
+    <h3>Vérification dans la BDD:</h3>
+    <pre>SELECT * FROM mdl_gestionprojet_besoin WHERE gestionprojetid = (
+    SELECT instance FROM mdl_course_modules WHERE id = VOTRE_CMID
+);</pre>
+</body>
+</html>

@@ -47,12 +47,19 @@ if ($step == 4) {
 }
 
 // Get group
-$groupid = 0;
+$groupid = optional_param('groupid', 0, PARAM_INT);
+
 if ($gestionprojet->group_submission) {
-    $groupid = gestionprojet_get_user_group($cm, $USER->id);
-    if (!$groupid) {
-        echo json_encode(['success' => false, 'message' => 'Not in group']);
-        die();
+    // If teacher, respect the passed groupid (0 or specific group)
+    if (has_capability('mod/gestionprojet:grade', $context)) {
+        // Keep $groupid as passed
+    } else {
+        // Student: Force their assigned group
+        $groupid = gestionprojet_get_user_group($cm, $USER->id);
+        if (!$groupid) {
+            echo json_encode(['success' => false, 'message' => 'Not in group']);
+            die();
+        }
     }
 }
 

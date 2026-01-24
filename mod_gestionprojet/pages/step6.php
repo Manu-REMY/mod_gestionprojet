@@ -47,11 +47,19 @@ if ($groupid) {
     // Only teachers can view other groups
     require_capability('mod/gestionprojet:grade', $context);
 } else {
-    $groupid = gestionprojet_get_user_group($cm, $USER->id);
+    // If not showing a specific group...
+    // If teacher, they start with groupid=0 (Teacher Workspace)
+    if (has_capability('mod/gestionprojet:grade', $context)) {
+        $groupid = 0;
+    } else {
+        // Students get their assigned group
+        $groupid = gestionprojet_get_user_group($cm, $USER->id);
+    }
 }
 
-// If group submission is enabled, user must be in a group
-if ($gestionprojet->group_submission && !$groupid) {
+// If group submission is enabled, user must be in a group (unless teacher)
+// Teachers with groupid=0 are allowed (handled by lib.php as individual submission)
+if ($gestionprojet->group_submission && !$groupid && !has_capability('mod/gestionprojet:grade', $context)) {
     throw new \moodle_exception('not_in_group', 'gestionprojet');
 }
 
@@ -339,6 +347,7 @@ $PAGE->requires->jquery();
                         data: {
                             id: cmid,
                             step: step,
+                            groupid: groupid,
                             action: 'submit',
                             sesskey: M.cfg.sesskey
                         },
@@ -363,6 +372,7 @@ $PAGE->requires->jquery();
                         data: {
                             id: cmid,
                             step: step,
+                            groupid: groupid,
                             action: 'revert',
                             sesskey: M.cfg.sesskey
                         },

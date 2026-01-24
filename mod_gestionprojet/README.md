@@ -499,6 +499,10 @@ SOFTWARE.
 
 ### Versions de développement (Alpha/Beta)
 
+#### Version 1.1.3 (2026-01-24)
+- **Nouveauté** : L'enseignant peut désormais remplir les étapes 4, 5, 6, 7 et 8 pour créer une correction modèle (sans affecter les groupes d'élèves).
+- **Amélioration** : Gestion améliorée de l'ID de groupe (0 pour l'espace enseignant).
+
 #### Version 1.1.2 (2026-01-21)
 - **Nouveautй** : Interface de correction pour les enseignants (pages/grading.php) avec saisie de notes et feedback
 - **Correctif** : Rйsolution de l'erreur "Too few arguments" sur l'accиs йtudiant/groupe
