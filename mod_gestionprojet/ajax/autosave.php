@@ -298,6 +298,36 @@ try {
             $success = true;
             break;
 
+        case 8: // Carnet de bord
+            if (!has_capability('mod/gestionprojet:submit', $context)) {
+                throw new moodle_exception('nopermission');
+            }
+
+            $record = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'carnet');
+
+            // Check if locked
+            if ($record->status == 1) {
+                throw new moodle_exception('submissionlocked', 'gestionprojet');
+            }
+
+            // List of valid fields for carnet table
+            $validfields = ['tasks_data'];
+
+            foreach ($formdata as $key => $value) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
+                    $oldvalue = isset($record->$key) ? $record->$key : null;
+                    $record->$key = $value;
+
+                    gestionprojet_log_change($gestionprojet->id, 'carnet', $record->id, $key, $oldvalue, $value, $USER->id, $groupid);
+                }
+            }
+
+            $record->timemodified = $time;
+            $DB->update_record('gestionprojet_carnet', $record);
+
+            $success = true;
+            break;
+
         default:
             throw new moodle_exception('invalidstep');
     }

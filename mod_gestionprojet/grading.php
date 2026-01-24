@@ -115,6 +115,9 @@ if (optional_param('savegrading', false, PARAM_BOOL) && confirm_sesskey()) {
         case 7:
             $table = 'gestionprojet_besoin_eleve';
             break;
+        case 8:
+            $table = 'gestionprojet_carnet';
+            break;
     }
 
     if ($table) {
@@ -173,6 +176,7 @@ echo $OUTPUT->header();
                 7 => ['icon' => '🦏', 'name' => 'Expression Besoin'],
                 4 => ['icon' => '📋', 'name' => 'CDCF'],
                 5 => ['icon' => '🔬', 'name' => 'Essai'],
+                8 => ['icon' => '📓', 'name' => 'Carnet de bord'],
                 6 => ['icon' => '📝', 'name' => 'Rapport']
             ];
 
@@ -300,6 +304,11 @@ switch ($step) {
         break;
     case 7:
         $tablename = 'gestionprojet_besoin_eleve';
+        // Student submission (group or individual)
+        $submission = $DB->get_record($tablename, $params);
+        break;
+    case 8:
+        $tablename = 'gestionprojet_carnet';
         // Student submission (group or individual)
         $submission = $DB->get_record($tablename, $params);
         break;
@@ -561,6 +570,106 @@ if (!$submission): ?>
             <div class="field-display">
                 <h4><?php echo get_string('dansquelbut', 'gestionprojet'); ?></h4>
                 <p><?php echo format_text($submission->dansquelbut ?? '', FORMAT_PLAIN); ?></p>
+            </div>
+        <?php elseif ($step == 8): // Carnet de bord ?>
+            <?php
+            $tasks_data = [];
+            if ($submission->tasks_data) {
+                $tasks_data = json_decode($submission->tasks_data, true) ?? [];
+            }
+            ?>
+            <div class="field-display">
+                <h4><?php echo get_string('step8', 'gestionprojet'); ?></h4>
+
+                <?php if (empty($tasks_data)): ?>
+                    <p><em>Aucune entrée dans le carnet de bord.</em></p>
+                <?php else: ?>
+                    <style>
+                        .grading-logbook-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 10px;
+                        }
+
+                        .grading-logbook-table th,
+                        .grading-logbook-table td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                            text-align: left;
+                        }
+
+                        .grading-logbook-table th {
+                            background-color: #f2f2f2;
+                        }
+
+                        .status-badge {
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            font-size: 0.9em;
+                            display: inline-block;
+                        }
+
+                        .status-ahead {
+                            background-color: #d1fae5;
+                            color: #065f46;
+                        }
+
+                        .status-ontime {
+                            background-color: #fee2e2;
+                            color: #991b1b;
+                        }
+
+                        /* Wait, ontime usually green? ontime -> blue/gray? late -> red */
+                        /* Fixing colors based on intent */
+                        .status-ontime-fixed {
+                            background-color: #dbeafe;
+                            color: #1e40af;
+                        }
+
+                        .status-late {
+                            background-color: #fee2e2;
+                            color: #991b1b;
+                        }
+                    </style>
+                    <table class="grading-logbook-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Tâches du jour</th>
+                                <th>Tâches à venir</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($tasks_data as $task): ?>
+                                <?php
+                                $statusClass = '';
+                                $statusLabel = '';
+                                if (($task['status'] ?? '') === 'ahead') {
+                                    $statusClass = 'status-ahead';
+                                    $statusLabel = 'En avance';
+                                } elseif (($task['status'] ?? '') === 'ontime') {
+                                    $statusClass = 'status-ontime-fixed';
+                                    $statusLabel = 'À l\'heure';
+                                } elseif (($task['status'] ?? '') === 'late') {
+                                    $statusClass = 'status-late';
+                                    $statusLabel = 'En retard';
+                                }
+                                ?>
+                                <tr>
+                                    <td><?php echo s($task['date'] ?? ''); ?></td>
+                                    <td><?php echo s($task['tasks_today'] ?? ''); ?></td>
+                                    <td><?php echo s($task['tasks_future'] ?? ''); ?></td>
+                                    <td>
+                                        <span class="status-badge <?php echo $statusClass; ?>">
+                                            <?php echo s($statusLabel); ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 

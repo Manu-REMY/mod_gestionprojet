@@ -273,6 +273,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             7 => ['icon' => '🦏', 'title' => get_string('step7', 'gestionprojet')],
                             4 => ['icon' => '📋', 'title' => get_string('step4', 'gestionprojet')],
                             5 => ['icon' => '🔬', 'title' => get_string('step5', 'gestionprojet')],
+                            8 => ['icon' => '📓', 'title' => get_string('step8', 'gestionprojet')],
                             6 => ['icon' => '📝', 'title' => get_string('step6', 'gestionprojet')]
                         ];
 
@@ -397,6 +398,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                     $essai = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'essai');
                     $rapport = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'rapport');
                     $besoin_eleve = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'besoin_eleve');
+                    $carnet = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'carnet');
 
                     $steps = [
                         7 => [
@@ -419,6 +421,13 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                             'desc' => get_string('step5_desc', 'gestionprojet'),
                             'data' => $essai,
                             'complete' => $essai && !empty($essai->objectif)
+                        ],
+                        8 => [
+                            'icon' => '📓',
+                            'title' => get_string('step8', 'gestionprojet'),
+                            'desc' => get_string('step8_desc', 'gestionprojet'),
+                            'data' => $carnet,
+                            'complete' => $carnet && !empty($carnet->tasks_data)
                         ],
                         6 => [
                             'icon' => '📝',

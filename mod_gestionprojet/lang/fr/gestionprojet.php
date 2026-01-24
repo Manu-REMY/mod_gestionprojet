@@ -56,6 +56,8 @@ $string['step4_desc'] = 'Diagramme des interacteurs (élèves)';
 $string['step5_desc'] = 'Tests et validation (élèves)';
 $string['step6_desc'] = 'Rapport final (élèves)';
 $string['step7_desc'] = 'Diagramme Bête à Corne (élèves)';
+$string['step8'] = 'Carnet de bord';
+$string['step8_desc'] = 'Journal de bord du projet (élèves)';
 
 // Formulaire de configuration
 $string['activesteps'] = 'Étapes actives';
@@ -216,6 +218,17 @@ $string['privacy:metadata:gestionprojet_history:timecreated'] = 'Date et heure d
 $string['privacy:metadata:groupid'] = 'Le groupe auquel appartient la soumission';
 $string['privacy:metadata:grade'] = 'La note attribuée par l\'enseignant';
 $string['privacy:metadata:feedback'] = 'Les commentaires de l\'enseignant';
+
+// Carnet de bord (Step 8)
+$string['logbook_date'] = 'Date';
+$string['logbook_tasks_today'] = 'Tâches du jour';
+$string['logbook_tasks_future'] = 'Tâches à venir';
+$string['logbook_status'] = 'Statut';
+$string['logbook_status_ahead'] = 'En avance';
+$string['logbook_status_ontime'] = 'À l\'heure';
+$string['logbook_status_late'] = 'En retard';
+$string['logbook_add_line'] = 'Ajouter une ligne';
+$string['logbook_remove_line'] = 'Supprimer la ligne';
 
 // Erreurs
 $string['error_nosuchinstance'] = 'Instance de Gestion de Projet introuvable';

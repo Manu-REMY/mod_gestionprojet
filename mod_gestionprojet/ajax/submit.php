@@ -37,6 +37,10 @@ if ($step == 4) {
     $type = 'essai';
 } elseif ($step == 6) {
     $type = 'rapport';
+} elseif ($step == 7) {
+    $type = 'besoin_eleve';
+} elseif ($step == 8) {
+    $type = 'carnet';
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid step']);
     die();

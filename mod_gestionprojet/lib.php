@@ -111,6 +111,7 @@ function gestionprojet_delete_instance($id)
     $DB->delete_records('gestionprojet_essai', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_rapport', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_besoin_eleve', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_carnet', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
 
     // Delete the instance
@@ -562,6 +563,14 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
                     $totalgrade += $besoin_eleve->grade;
                     $count++;
                 }
+                $carnet = $DB->get_record('gestionprojet_carnet', [
+                    'gestionprojetid' => $gestionprojet->id,
+                    'userid' => $member->id
+                ]);
+                if ($carnet && $carnet->grade !== null && (!isset($gestionprojet->enable_step8) || $gestionprojet->enable_step8)) {
+                    $totalgrade += $carnet->grade;
+                    $count++;
+                }
 
                 if ($count > 0 && ($userid == 0 || $userid == $member->id)) {
                     $avggrade = $totalgrade / $count;
@@ -612,6 +621,14 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
             $totalgrade += $besoin_eleve->grade;
             $count++;
         }
+        $carnet = $DB->get_record('gestionprojet_carnet', [
+            'gestionprojetid' => $gestionprojet->id,
+            'groupid' => $group->id
+        ]);
+        if ($carnet && $carnet->grade !== null && (!isset($gestionprojet->enable_step8) || $gestionprojet->enable_step8)) {
+            $totalgrade += $carnet->grade;
+            $count++;
+        }
 
         if ($count > 0) {
             $avggrade = $totalgrade / $count;
@@ -640,8 +657,8 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
  */
 function gestionprojet_get_navigation_links($gestionprojet, $cmid, $current_step)
 {
-    // Define steps in order: Teacher steps (1, 3, 2) -> Student steps (7, 4, 5, 6)
-    $steps = ['step1', 'step3', 'step2', 'step7', 'step4', 'step5', 'step6'];
+    // Define steps in order: Teacher steps (1, 3, 2) -> Student steps (7, 4, 5, 8, 6)
+    $steps = ['step1', 'step3', 'step2', 'step7', 'step4', 'step5', 'step8', 'step6'];
     $current_index = array_search($current_step, $steps);
 
     if ($current_index === false) {

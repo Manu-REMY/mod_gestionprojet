@@ -56,6 +56,8 @@ $string['step4_desc'] = 'Stakeholder diagram (students)';
 $string['step5_desc'] = 'Tests and validation (students)';
 $string['step6_desc'] = 'Final report (students)';
 $string['step7_desc'] = 'Horn Diagram (students)';
+$string['step8'] = 'Logbook';
+$string['step8_desc'] = 'Daily project log (students)';
 
 // Configuration form
 $string['activesteps'] = 'Active Steps';
@@ -200,6 +202,17 @@ $string['privacy:metadata:gestionprojet_history:timecreated'] = 'Date and time o
 $string['privacy:metadata:groupid'] = 'The group to which the submission belongs';
 $string['privacy:metadata:grade'] = 'The grade given by the teacher';
 $string['privacy:metadata:feedback'] = 'The teacher\'s comments';
+
+// Logbook (Step 8)
+$string['logbook_date'] = 'Date';
+$string['logbook_tasks_today'] = 'Tasks of the day';
+$string['logbook_tasks_future'] = 'Upcoming tasks';
+$string['logbook_status'] = 'Status';
+$string['logbook_status_ahead'] = 'Ahead';
+$string['logbook_status_ontime'] = 'On time';
+$string['logbook_status_late'] = 'Late';
+$string['logbook_add_line'] = 'Add a line';
+$string['logbook_remove_line'] = 'Remove line';
 
 // Errors
 $string['error_nosuchinstance'] = 'Project Management instance not found';
