@@ -106,9 +106,9 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($gestionprojet->name));
 
 // Display intro
-if ($gestionprojet->intro) {
-    echo $OUTPUT->box(format_module_intro('gestionprojet', $gestionprojet, $cm->id), 'generalbox', 'intro');
-}
+// if ($gestionprojet->intro) {
+//     echo $OUTPUT->box(format_module_intro('gestionprojet', $gestionprojet, $cm->id), 'generalbox', 'intro');
+// }
 
 // Include home page template
 require_once(__DIR__ . '/pages/home.php');
