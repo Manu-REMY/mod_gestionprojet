@@ -59,20 +59,19 @@ echo $OUTPUT->header();
 
 // Navigation buttons
 // Navigation buttons
-echo '<div>';
-echo '<div class="nav-group">';
-echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="nav-button nav-button-prev"><span>🏠</span><span>' . get_string('home', 'gestionprojet') . '</span></a>';
-if ($nav_links['prev']) {
-    echo '<a href="' . $nav_links['prev'] . '" class="nav-button nav-button-prev"><span>←</span><span>' . get_string('previous', 'gestionprojet') . '</span></a>';
-}
-echo '</div>';
-echo '</div>';
+echo '<div class="navigation-container-flex">';
+    echo '<div class="nav-group">';
+        echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="nav-button nav-button-prev"><span>🏠</span><span>' . get_string('home', 'gestionprojet') . '</span></a>';
+        if ($nav_links['prev']) {
+            echo '<a href="' . $nav_links['prev'] . '" class="nav-button nav-button-prev"><span>←</span><span>' . get_string('previous', 'gestionprojet') . '</span></a>';
+        }
+    echo '</div>';
 
-echo '<div>';
-if ($nav_links['next']) {
-    echo '<a href="' . $nav_links['next'] . '" class="nav-button"><span>' . get_string('next', 'gestionprojet') . '</span><span>→</span></a>';
-}
-echo '</div>';
+    echo '<div>';
+        if ($nav_links['next']) {
+            echo '<a href="' . $nav_links['next'] . '" class="nav-button"><span>' . get_string('next', 'gestionprojet') . '</span><span>→</span></a>';
+        }
+    echo '</div>';
 echo '</div>';
 
 echo '<h2>🦏 ' . get_string('step2', 'gestionprojet') . '</h2>';
