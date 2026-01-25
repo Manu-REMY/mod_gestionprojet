@@ -25,6 +25,9 @@
         <FIELD NAME="enable_step6" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="enable_step7" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="enable_step8" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="ai_provider" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="AI provider: openai, anthropic, mistral"/>
+        <FIELD NAME="ai_api_key" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Encrypted API key for AI evaluation"/>
+        <FIELD NAME="ai_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=AI evaluation enabled"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

@@ -221,3 +221,20 @@ $string['error_nosuchinstance'] = 'Project Management instance not found';
 $string['error_nopermission'] = 'You do not have permission to perform this action';
 $string['error_notingroup'] = 'You must be part of a group to submit';
 $string['error_invaliddata'] = 'Invalid data';
+
+// AI Configuration
+$string['ai_settings'] = 'AI Evaluation';
+$string['ai_enabled'] = 'Enable AI evaluation';
+$string['ai_enabled_help'] = 'If enabled, student submissions will be automatically evaluated by AI by comparing them to the correction models provided by the teacher.';
+$string['ai_provider'] = 'AI Provider';
+$string['ai_provider_help'] = 'Select the AI provider to use for automatic evaluation. Each provider requires a valid API key.';
+$string['ai_provider_select'] = '-- Select a provider --';
+$string['ai_api_key'] = 'API Key';
+$string['ai_api_key_help'] = 'Enter your API key for the selected provider. The key will be encrypted before storage for security reasons.';
+$string['ai_test_connection'] = 'Test connection';
+$string['ai_test_success'] = 'Connection successful! The API key is valid.';
+$string['ai_test_failed'] = 'Connection test failed.';
+$string['ai_connection_error'] = 'Unable to connect to the API server.';
+$string['ai_provider_invalid'] = 'Invalid AI provider.';
+$string['ai_provider_required'] = 'Please select an AI provider.';
+$string['ai_api_key_required'] = 'Please enter an API key.';

@@ -64,5 +64,32 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012400, 'gestionprojet');
     }
 
+    if ($oldversion < 2026012500) {
+
+        // Define field ai_provider to be added to gestionprojet.
+        $table = new xmldb_table('gestionprojet');
+
+        // Add ai_provider field.
+        $field = new xmldb_field('ai_provider', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'enable_step8');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add ai_api_key field.
+        $field = new xmldb_field('ai_api_key', XMLDB_TYPE_TEXT, null, null, null, null, null, 'ai_provider');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add ai_enabled field.
+        $field = new xmldb_field('ai_enabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'ai_api_key');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026012500, 'gestionprojet');
+    }
+
     return true;
 }

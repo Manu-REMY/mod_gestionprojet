@@ -64,6 +64,11 @@ function gestionprojet_add_instance($data, $mform = null)
         $data->autosave_interval = 30;
     }
 
+    // Encrypt API key if provided.
+    if (!empty($data->ai_api_key)) {
+        $data->ai_api_key = \mod_gestionprojet\ai_config::encrypt_api_key($data->ai_api_key);
+    }
+
     $data->id = $DB->insert_record('gestionprojet', $data);
 
     // Create empty teacher pages
@@ -85,6 +90,15 @@ function gestionprojet_update_instance($data, $mform = null)
 
     $data->timemodified = time();
     $data->id = $data->instance;
+
+    // Encrypt API key if provided and changed.
+    if (!empty($data->ai_api_key)) {
+        // Only encrypt if the key has changed (not already encrypted).
+        $existing = $DB->get_field('gestionprojet', 'ai_api_key', ['id' => $data->id]);
+        if ($data->ai_api_key !== $existing) {
+            $data->ai_api_key = \mod_gestionprojet\ai_config::encrypt_api_key($data->ai_api_key);
+        }
+    }
 
     return $DB->update_record('gestionprojet', $data);
 }

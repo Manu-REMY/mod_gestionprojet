@@ -60,7 +60,7 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ---
 
-## État Actuel (v1.1.3)
+## État Actuel (v1.2.0)
 
 ### Fonctionnel
 - [x] 8 phases implémentées avec UI complète
@@ -73,10 +73,10 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 - [x] Historique des modifications
 - [x] Support français/anglais
 - [x] Modèles de correction enseignant pour Steps 4-8
+- [x] **Configuration flexible pilotage/élève par phase (Phase 1 ✓)**
+- [x] **Stockage sécurisé clé API par activité (Phase 2 ✓)**
 
 ### Manquant
-- [ ] Configuration flexible pilotage/élève par phase
-- [ ] Stockage clé API par activité
 - [ ] Système d'évaluation IA automatique
 - [ ] Évaluation par compétences
 - [ ] Notes individuelles par phase dans Moodle
@@ -86,57 +86,40 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ## Plan d'Action en Phases
 
-### PHASE 1 : Flexibilité de Configuration des Phases
+### PHASE 1 : Flexibilité de Configuration des Phases ✅ TERMINÉE
 **Objectif** : Permettre à l'enseignant de définir qui remplit chaque phase
 
-**Tâches :**
-1. **Modifier le schéma de base de données**
-   - Ajouter champ `step_X_mode` (enum: 'teacher', 'student', 'disabled')
-   - Remplacer les booléens `enable_stepX` actuels
-   - Script de migration des données existantes
-
-2. **Modifier `mod_form.php`**
-   - Remplacer les checkboxes par des sélecteurs à 3 options
-   - "Piloté par l'enseignant" / "Réalisé par les élèves" / "Désactivé"
-   - Regroupement logique des options
-
-3. **Adapter la logique de navigation**
-   - `lib.php` : Nouvelles fonctions pour récupérer le mode de chaque phase
-   - `view.php` : Router selon le mode configuré
-   - `pages/stepX.php` : Affichage lecture/écriture selon le mode
-
-4. **Adapter l'interface utilisateur**
-   - Indicateurs visuels du mode actuel (badges)
-   - Verrouillage automatique pour les élèves sur phases pilotées
-
-**Fichiers impactés :** `db/install.xml`, `db/upgrade.php`, `mod_form.php`, `lib.php`, `view.php`, `pages/*.php`, `lang/*.php`
+**Statut** : Implémentée et opérationnelle (v1.1.3)
 
 ---
 
-### PHASE 2 : Configuration et Stockage de la Clé API
+### PHASE 2 : Configuration et Stockage de la Clé API ✅ TERMINÉE
 **Objectif** : Permettre la configuration sécurisée de l'API IA
 
-**Tâches :**
-1. **Ajouter le champ clé API**
-   - Table `gestionprojet` : champ `ai_api_key` (TEXT, chiffré)
-   - Table `gestionprojet` : champ `ai_provider` (enum: 'openai', 'anthropic', 'mistral')
+**Statut** : Implémentée (v1.2.0)
+
+**Réalisations :**
+1. **Champs base de données**
+   - [x] `ai_api_key` (TEXT, chiffré via Moodle encryption API)
+   - [x] `ai_provider` (CHAR: openai, anthropic, mistral)
+   - [x] `ai_enabled` (INT: 0/1)
 
 2. **Interface de configuration**
-   - Section dédiée dans `mod_form.php`
-   - Champ password pour la clé
-   - Sélecteur de fournisseur IA
-   - Option de test de connexion
+   - [x] Section "Évaluation par IA" dans `mod_form.php`
+   - [x] Champ password avec toggle visibilité
+   - [x] Sélecteur de fournisseur IA
+   - [x] Bouton de test de connexion
 
 3. **Sécurisation**
-   - Chiffrement de la clé en base (Moodle encryption API)
-   - Vérification des permissions avant affichage
-   - Logs d'accès à la clé
+   - [x] Classe `ai_config.php` avec chiffrement/déchiffrement
+   - [x] Logs d'accès à la clé API (audit trail)
+   - [x] Vérification des permissions (configureteacherpages)
 
 4. **Validation**
-   - Endpoint de test de la clé API
-   - Message d'erreur explicite si clé invalide
+   - [x] Endpoint `ajax/test_api.php`
+   - [x] Test de connexion aux 3 providers (OpenAI, Anthropic, Mistral)
 
-**Fichiers impactés :** `db/install.xml`, `db/upgrade.php`, `mod_form.php`, `classes/ai_config.php` (nouveau), `ajax/test_api.php` (nouveau)
+**Fichiers créés/modifiés :** `db/install.xml`, `db/upgrade.php`, `mod_form.php`, `lib.php`, `classes/ai_config.php`, `ajax/test_api.php`, `lang/*.php`
 
 ---
 
@@ -295,14 +278,14 @@ PHASE 2 ──────────────────┼──── PH
 
 ## Estimation et Jalons
 
-| Phase | Complexité | Jalon |
-|-------|------------|-------|
-| Phase 1 | Moyenne | Configuration flexible opérationnelle |
-| Phase 2 | Faible | Clé API stockée et testable |
-| Phase 3 | Moyenne | Modèles de correction complets |
-| Phase 4 | Élevée | Première évaluation IA fonctionnelle |
-| Phase 5 | Moyenne | Notes par phase dans carnet Moodle |
-| Phase 6 | Variable | Version production |
+| Phase | Complexité | Jalon | Statut |
+|-------|------------|-------|--------|
+| Phase 1 | Moyenne | Configuration flexible opérationnelle | ✅ Terminée |
+| Phase 2 | Faible | Clé API stockée et testable | ✅ Terminée |
+| Phase 3 | Moyenne | Modèles de correction complets | ⏳ À venir |
+| Phase 4 | Élevée | Première évaluation IA fonctionnelle | ⏳ À venir |
+| Phase 5 | Moyenne | Notes par phase dans carnet Moodle | ⏳ À venir |
+| Phase 6 | Variable | Version production | ⏳ À venir |
 
 ---
 

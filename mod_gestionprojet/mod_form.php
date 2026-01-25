@@ -29,9 +29,13 @@ class mod_gestionprojet_mod_form extends moodleform_mod
      */
     public function definition()
     {
-        global $CFG;
+        global $CFG, $PAGE;
 
         $mform = $this->_form;
+
+        // Load test API JavaScript module.
+        $cmid = $this->_cm ? $this->_cm->id : 0;
+        $PAGE->requires->js_call_amd('mod_gestionprojet/test_api', 'init', [$cmid]);
 
         // Adding the "general" fieldset, where all the common settings are shown.
         $mform->addElement('header', 'general', get_string('general', 'form'));
@@ -89,6 +93,39 @@ class mod_gestionprojet_mod_form extends moodleform_mod
             $mform->setDefault('enable_step' . $i, $default);
         }
 
+        // AI Evaluation settings.
+        $mform->addElement('header', 'ai_settings', get_string('ai_settings', 'gestionprojet'));
+        $mform->setExpanded('ai_settings', false);
+
+        $mform->addElement('selectyesno', 'ai_enabled', get_string('ai_enabled', 'gestionprojet'));
+        $mform->setDefault('ai_enabled', 0);
+        $mform->addHelpButton('ai_enabled', 'ai_enabled', 'gestionprojet');
+
+        $providers = [
+            '' => get_string('ai_provider_select', 'gestionprojet'),
+            'openai' => 'OpenAI (GPT-4)',
+            'anthropic' => 'Anthropic (Claude)',
+            'mistral' => 'Mistral AI',
+        ];
+        $mform->addElement('select', 'ai_provider', get_string('ai_provider', 'gestionprojet'), $providers);
+        $mform->setDefault('ai_provider', '');
+        $mform->addHelpButton('ai_provider', 'ai_provider', 'gestionprojet');
+        $mform->hideIf('ai_provider', 'ai_enabled', 'eq', 0);
+
+        $mform->addElement('passwordunmask', 'ai_api_key', get_string('ai_api_key', 'gestionprojet'));
+        $mform->setType('ai_api_key', PARAM_RAW);
+        $mform->addHelpButton('ai_api_key', 'ai_api_key', 'gestionprojet');
+        $mform->hideIf('ai_api_key', 'ai_enabled', 'eq', 0);
+
+        // Test API button (will be handled by JavaScript).
+        $mform->addElement(
+            'button',
+            'test_api_btn',
+            get_string('ai_test_connection', 'gestionprojet'),
+            ['id' => 'id_test_api_btn']
+        );
+        $mform->hideIf('test_api_btn', 'ai_enabled', 'eq', 0);
+
         // Add standard grading elements.
         $this->standard_grading_coursemodule_elements();
 
@@ -109,6 +146,16 @@ class mod_gestionprojet_mod_form extends moodleform_mod
     public function validation($data, $files)
     {
         $errors = parent::validation($data, $files);
+
+        // Validate AI settings.
+        if (!empty($data['ai_enabled'])) {
+            if (empty($data['ai_provider'])) {
+                $errors['ai_provider'] = get_string('ai_provider_required', 'gestionprojet');
+            }
+            if (empty($data['ai_api_key'])) {
+                $errors['ai_api_key'] = get_string('ai_api_key_required', 'gestionprojet');
+            }
+        }
 
         return $errors;
     }

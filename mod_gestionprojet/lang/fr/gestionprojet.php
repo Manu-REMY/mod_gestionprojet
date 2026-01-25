@@ -237,3 +237,20 @@ $string['error_nosuchinstance'] = 'Instance de Gestion de Projet introuvable';
 $string['error_nopermission'] = 'Vous n\'avez pas la permission d\'effectuer cette action';
 $string['error_notingroup'] = 'Vous devez faire partie d\'un groupe pour soumettre';
 $string['error_invaliddata'] = 'Données invalides';
+
+// Configuration IA
+$string['ai_settings'] = 'Évaluation par IA';
+$string['ai_enabled'] = 'Activer l\'évaluation IA';
+$string['ai_enabled_help'] = 'Si activé, les productions élèves seront évaluées automatiquement par l\'IA en les comparant aux modèles de correction fournis par l\'enseignant.';
+$string['ai_provider'] = 'Fournisseur IA';
+$string['ai_provider_help'] = 'Sélectionnez le fournisseur d\'IA à utiliser pour l\'évaluation automatique. Chaque fournisseur nécessite une clé API valide.';
+$string['ai_provider_select'] = '-- Sélectionnez un fournisseur --';
+$string['ai_api_key'] = 'Clé API';
+$string['ai_api_key_help'] = 'Entrez votre clé API pour le fournisseur sélectionné. La clé sera chiffrée avant stockage pour des raisons de sécurité.';
+$string['ai_test_connection'] = 'Tester la connexion';
+$string['ai_test_success'] = 'Connexion réussie ! La clé API est valide.';
+$string['ai_test_failed'] = 'Échec du test de connexion.';
+$string['ai_connection_error'] = 'Impossible de se connecter au serveur API.';
+$string['ai_provider_invalid'] = 'Fournisseur IA invalide.';
+$string['ai_provider_required'] = 'Veuillez sélectionner un fournisseur IA.';
+$string['ai_api_key_required'] = 'Veuillez entrer une clé API.';

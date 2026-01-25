@@ -1,0 +1,77 @@
+/**
+ * Test API connection module for mod_gestionprojet.
+ *
+ * @module     mod_gestionprojet/test_api
+ * @copyright  2026 Emmanuel REMY
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Ajax, Notification, Str) {
+
+    /**
+     * Initialize the test API button handler.
+     *
+     * @param {number} cmid Course module ID (0 for new activity)
+     */
+    var init = function(cmid) {
+        var testBtn = $('#id_test_api_btn');
+
+        if (!testBtn.length) {
+            return;
+        }
+
+        testBtn.on('click', function(e) {
+            e.preventDefault();
+
+            var provider = $('#id_ai_provider').val();
+            var apiKey = $('#id_ai_api_key').val();
+
+            // Validate inputs
+            if (!provider) {
+                Str.get_string('ai_provider_required', 'mod_gestionprojet').then(function(str) {
+                    Notification.alert('Error', str);
+                }).catch(Notification.exception);
+                return;
+            }
+
+            if (!apiKey) {
+                Str.get_string('ai_api_key_required', 'mod_gestionprojet').then(function(str) {
+                    Notification.alert('Error', str);
+                }).catch(Notification.exception);
+                return;
+            }
+
+            // Show loading state
+            var originalText = testBtn.text();
+            testBtn.prop('disabled', true).text('Testing...');
+
+            // Make AJAX request
+            $.ajax({
+                url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/test_api.php',
+                method: 'POST',
+                data: {
+                    sesskey: M.cfg.sesskey,
+                    cmid: cmid,
+                    provider: provider,
+                    apikey: apiKey
+                },
+                dataType: 'json'
+            }).done(function(response) {
+                if (response.success) {
+                    Notification.alert('Success', response.message, 'OK');
+                } else {
+                    Notification.alert('Error', response.message, 'OK');
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                Notification.alert('Error', 'Connection failed: ' + errorThrown, 'OK');
+            }).always(function() {
+                // Restore button state
+                testBtn.prop('disabled', false).text(originalText);
+            });
+        });
+    };
+
+    return {
+        init: init
+    };
+});
