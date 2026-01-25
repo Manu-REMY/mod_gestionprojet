@@ -79,7 +79,10 @@ mod/gestionprojet/
 │   └── fr/gestionprojet.php
 ├── pages/                   # Step pages
 │   ├── home.php            # Navigation hub
-│   └── step1.php - step8.php
+│   ├── step1.php - step8.php
+│   ├── step4_teacher.php - step8_teacher.php  # Teacher correction models
+│   ├── correction_models.php  # Correction models hub
+│   └── teacher_model_styles.php  # Shared styles for teacher pages
 ├── templates/               # Mustache templates
 ├── lib.php                  # Core functions
 ├── mod_form.php            # Activity settings form
@@ -92,7 +95,7 @@ mod/gestionprojet/
 
 ---
 
-## Database Tables (9 tables)
+## Database Tables (15 tables)
 
 | Table | Purpose |
 |-------|---------|
@@ -105,6 +108,11 @@ mod/gestionprojet/
 | `gestionprojet_rapport` | Step 6 - Student |
 | `gestionprojet_besoin_eleve` | Step 7 - Student |
 | `gestionprojet_carnet` | Step 8 - Student |
+| `gestionprojet_cdcf_teacher` | Step 4 - Teacher correction model |
+| `gestionprojet_essai_teacher` | Step 5 - Teacher correction model |
+| `gestionprojet_rapport_teacher` | Step 6 - Teacher correction model |
+| `gestionprojet_besoin_eleve_teacher` | Step 7 - Teacher correction model |
+| `gestionprojet_carnet_teacher` | Step 8 - Teacher correction model |
 | `gestionprojet_history` | Audit trail |
 
 ### Submission Pattern
@@ -233,20 +241,21 @@ php admin/cli/upgrade.php
 
 ## Current Status
 
-**Version**: 1.1.3 (2026012401)
+**Version**: 1.3.1 (2026012502)
 
 **Implemented**:
 - All 8 phases with full UI
-- Autosave system (10-120s intervals)
+- Autosave system (10-120s intervals) - student + teacher pages
 - Group/individual submission modes
 - Manual grading interface (0-20 scale)
-- Teacher model corrections (Steps 4-8)
+- Teacher correction models for Steps 4-8 (with AI instructions)
+- Correction models hub page with completion indicators
 - Audit trail
+- AI configuration fields (provider, API key, enabled)
+- All steps enabled by default (step7, step8 included)
 
 **In Progress** (see ROADMAP.md):
-- Phase 1: Flexible step configuration
-- Phase 2: API key storage
-- Phase 3: Teacher correction models enhancement
+- Phase 3.5: Planning improvements & submission system per step
 - Phase 4: AI evaluation engine
 - Phase 5: Moodle gradebook integration per step
 - Phase 6: Quality & documentation

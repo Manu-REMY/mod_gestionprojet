@@ -238,3 +238,21 @@ $string['ai_connection_error'] = 'Unable to connect to the API server.';
 $string['ai_provider_invalid'] = 'Invalid AI provider.';
 $string['ai_provider_required'] = 'Please select an AI provider.';
 $string['ai_api_key_required'] = 'Please enter an API key.';
+
+// Correction models (Phase 3)
+$string['correction_models'] = 'Correction Models';
+$string['correction_models_desc'] = 'Define expected answers for AI evaluation';
+$string['correction_models_info'] = 'For automatic evaluation';
+$string['correction_models_configure'] = 'Configure';
+$string['correction_models_hub_title'] = 'Correction Models Hub';
+$string['correction_models_hub_desc'] = 'Define model answers for each student step here. These models will serve as reference for automatic AI evaluation. You can also add specific instructions to guide the evaluation.';
+$string['correction_model_complete'] = 'Model defined';
+$string['correction_model_incomplete'] = 'To be defined';
+$string['correction_model_configure'] = 'Configure model';
+$string['ai_evaluation_enabled'] = 'AI evaluation enabled for this activity';
+$string['ai_evaluation_disabled_hint'] = 'AI evaluation is not enabled. You can enable it in the activity settings.';
+$string['ai_instructions_set'] = 'AI instructions set';
+$string['no_student_steps_enabled'] = 'No student steps are enabled for this activity.';
+$string['ai_instructions'] = 'AI Correction Instructions';
+$string['ai_instructions_help'] = 'Provide specific instructions to guide automatic AI evaluation. For example: grading criteria, key points, mandatory or bonus elements.';
+$string['ai_instructions_placeholder'] = 'E.g.: Check for the presence of 3 key elements. Award bonus points if student mentions concrete examples. Penalize off-topic answers...';

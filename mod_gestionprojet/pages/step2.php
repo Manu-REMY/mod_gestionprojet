@@ -68,9 +68,8 @@ echo '<div class="navigation-container-flex">';
     echo '</div>';
 
     echo '<div>';
-        if ($nav_links['next']) {
-            echo '<a href="' . $nav_links['next'] . '" class="nav-button"><span>' . get_string('next', 'gestionprojet') . '</span><span>→</span></a>';
-        }
+        // Step 2 is the last teacher step - link back to home instead of next student step.
+        echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="nav-button"><span>' . get_string('home', 'gestionprojet') . '</span><span>🏠</span></a>';
     echo '</div>';
 echo '</div>';
 

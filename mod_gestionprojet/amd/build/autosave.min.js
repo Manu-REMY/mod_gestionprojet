@@ -19,6 +19,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
         cmid: 0,
         step: 0,
         groupid: 0,
+        mode: '', // 'teacher' for correction models
         interval: 30000,
         debounceDelay: 2000, // Delay after input before saving
         debounceTimer: null,
@@ -38,6 +39,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
             this.cmid = config.cmid;
             this.step = config.step || 0;
             this.groupid = config.groupid || 0;
+            this.mode = config.mode || '';
             this.interval = config.interval || 30000;
             this.formSelector = config.formSelector || 'form';
 
@@ -228,17 +230,25 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
                 });
             }
 
+            // Build request data
+            var requestData = {
+                cmid: this.cmid,
+                step: this.step,
+                groupid: this.groupid,
+                data: JSON.stringify(formData),
+                sesskey: M.cfg.sesskey
+            };
+
+            // Add mode if set (for teacher correction models)
+            if (this.mode) {
+                requestData.mode = this.mode;
+            }
+
             // Make AJAX request
             $.ajax({
                 url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/autosave.php',
                 method: 'POST',
-                data: {
-                    cmid: this.cmid,
-                    step: this.step,
-                    groupid: this.groupid,
-                    data: JSON.stringify(formData),
-                    sesskey: M.cfg.sesskey
-                },
+                data: requestData,
                 dataType: 'json',
                 success: function (response) {
                     if (response.success) {

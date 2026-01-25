@@ -91,5 +91,125 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012500, 'gestionprojet');
     }
 
+    if ($oldversion < 2026012501) {
+
+        // Create teacher correction model tables for steps 4-8.
+
+        // Table: gestionprojet_cdcf_teacher (Step 4).
+        $table = new xmldb_table('gestionprojet_cdcf_teacher');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('produit', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('milieu', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('fp', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('interacteurs_data', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('ai_instructions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Table: gestionprojet_essai_teacher (Step 5).
+        $table = new xmldb_table('gestionprojet_essai_teacher');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('nom_essai', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('date_essai', XMLDB_TYPE_CHAR, '20', null, null, null, null);
+        $table->add_field('groupe_eleves', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('fonction_service', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('niveaux_reussite', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('etapes_protocole', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('materiel_outils', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('precautions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('resultats_obtenus', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('observations_remarques', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('conclusion', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('objectif', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('ai_instructions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Table: gestionprojet_rapport_teacher (Step 6).
+        $table = new xmldb_table('gestionprojet_rapport_teacher');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('titre_projet', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('auteurs', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('besoin_projet', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('imperatifs', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('solutions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('justification', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('realisation', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('difficultes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('validation', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('ameliorations', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('bilan', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('perspectives', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('besoins', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('ai_instructions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Table: gestionprojet_besoin_eleve_teacher (Step 7).
+        $table = new xmldb_table('gestionprojet_besoin_eleve_teacher');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('aqui', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('surquoi', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('dansquelbut', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('ai_instructions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Table: gestionprojet_carnet_teacher (Step 8).
+        $table = new xmldb_table('gestionprojet_carnet_teacher');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('tasks_data', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('ai_instructions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026012501, 'gestionprojet');
+    }
+
+    if ($oldversion < 2026012502) {
+        // Enable step7 and step8 by default for all existing instances.
+        $DB->execute("UPDATE {gestionprojet} SET enable_step7 = 1 WHERE enable_step7 = 0");
+        $DB->execute("UPDATE {gestionprojet} SET enable_step8 = 1 WHERE enable_step8 = 0");
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026012502, 'gestionprojet');
+    }
+
     return true;
 }

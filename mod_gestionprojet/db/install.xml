@@ -23,8 +23,8 @@
         <FIELD NAME="enable_step4" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="enable_step5" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="enable_step6" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
-        <FIELD NAME="enable_step7" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="enable_step8" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="enable_step7" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="enable_step8" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="ai_provider" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="AI provider: openai, anthropic, mistral"/>
         <FIELD NAME="ai_api_key" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Encrypted API key for AI evaluation"/>
         <FIELD NAME="ai_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=AI evaluation enabled"/>
@@ -250,6 +250,114 @@
       <INDEXES>
         <INDEX NAME="gestionprojet_submission_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid, userid"/>
       </INDEXES>
+    </TABLE>
+
+    <!-- Table: Modèle de correction CDCF (enseignant) - Step 4 -->
+    <TABLE NAME="gestionprojet_cdcf_teacher" COMMENT="Teacher correction model for CDCF">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="produit" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="milieu" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="fp" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Fonction Principale"/>
+        <FIELD NAME="interacteurs_data" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of interactors"/>
+        <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign-unique" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- Table: Modèle de correction Essai (enseignant) - Step 5 -->
+    <TABLE NAME="gestionprojet_essai_teacher" COMMENT="Teacher correction model for Essai">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="nom_essai" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="date_essai" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="groupe_eleves" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="fonction_service" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="niveaux_reussite" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="etapes_protocole" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="materiel_outils" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="precautions" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="resultats_obtenus" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="observations_remarques" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="conclusion" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="objectif" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign-unique" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- Table: Modèle de correction Rapport (enseignant) - Step 6 -->
+    <TABLE NAME="gestionprojet_rapport_teacher" COMMENT="Teacher correction model for Rapport">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="titre_projet" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="auteurs" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="besoin_projet" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="imperatifs" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="solutions" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="justification" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="realisation" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="difficultes" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="validation" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ameliorations" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="bilan" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="perspectives" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="besoins" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign-unique" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- Table: Modèle de correction Besoin Élève (enseignant) - Step 7 -->
+    <TABLE NAME="gestionprojet_besoin_eleve_teacher" COMMENT="Teacher correction model for Besoin Eleve">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="aqui" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="surquoi" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="dansquelbut" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign-unique" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- Table: Modèle de correction Carnet (enseignant) - Step 8 -->
+    <TABLE NAME="gestionprojet_carnet_teacher" COMMENT="Teacher correction model for Carnet">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="tasks_data" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of expected log entries"/>
+        <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign-unique" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
     </TABLE>
 
     <!-- Table: Historique des modifications (audit trail) -->

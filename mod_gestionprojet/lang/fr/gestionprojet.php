@@ -254,3 +254,21 @@ $string['ai_connection_error'] = 'Impossible de se connecter au serveur API.';
 $string['ai_provider_invalid'] = 'Fournisseur IA invalide.';
 $string['ai_provider_required'] = 'Veuillez sélectionner un fournisseur IA.';
 $string['ai_api_key_required'] = 'Veuillez entrer une clé API.';
+
+// Modèles de correction (Phase 3)
+$string['correction_models'] = 'Modèles de correction';
+$string['correction_models_desc'] = 'Définir les réponses attendues pour l\'évaluation IA';
+$string['correction_models_info'] = 'Pour l\'évaluation automatique';
+$string['correction_models_configure'] = 'Configurer';
+$string['correction_models_hub_title'] = 'Hub des modèles de correction';
+$string['correction_models_hub_desc'] = 'Définissez ici les réponses modèles pour chaque étape élève. Ces modèles serviront de référence pour l\'évaluation automatique par IA. Vous pouvez également ajouter des instructions spécifiques pour guider l\'évaluation.';
+$string['correction_model_complete'] = 'Modèle défini';
+$string['correction_model_incomplete'] = 'À définir';
+$string['correction_model_configure'] = 'Configurer le modèle';
+$string['ai_evaluation_enabled'] = 'Évaluation IA activée pour cette activité';
+$string['ai_evaluation_disabled_hint'] = 'L\'évaluation IA n\'est pas activée. Vous pouvez l\'activer dans les paramètres de l\'activité.';
+$string['ai_instructions_set'] = 'Instructions IA définies';
+$string['no_student_steps_enabled'] = 'Aucune étape élève n\'est activée pour cette activité.';
+$string['ai_instructions'] = 'Instructions de correction IA';
+$string['ai_instructions_help'] = 'Fournissez des instructions spécifiques pour guider l\'évaluation automatique par IA. Par exemple : critères de notation, points d\'attention, éléments obligatoires ou bonus.';
+$string['ai_instructions_placeholder'] = 'Ex: Vérifier la présence des 3 éléments clés. Accorder des points bonus si l\'élève mentionne des exemples concrets. Pénaliser les réponses hors sujet...';

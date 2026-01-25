@@ -60,21 +60,23 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ---
 
-## État Actuel (v1.2.0)
+## État Actuel (v1.3.1)
 
 ### Fonctionnel
 - [x] 8 phases implémentées avec UI complète
 - [x] Configuration enseignant (Steps 1-3)
 - [x] Soumissions élèves (Steps 4-8)
-- [x] Système d'autosave AJAX
+- [x] Système d'autosave AJAX (student + teacher pages)
 - [x] Mode groupe/individuel
 - [x] Interface de notation manuelle (0-20)
 - [x] Intégration carnet de notes Moodle (moyenne des phases)
 - [x] Historique des modifications
 - [x] Support français/anglais
-- [x] Modèles de correction enseignant pour Steps 4-8
 - [x] **Configuration flexible pilotage/élève par phase (Phase 1 ✓)**
 - [x] **Stockage sécurisé clé API par activité (Phase 2 ✓)**
+- [x] **Modèles de correction enseignant Steps 4-8 avec autosave (Phase 3 ✓)**
+- [x] **Hub des modèles de correction**
+- [x] **Instructions IA par step**
 
 ### Manquant
 - [ ] Système d'évaluation IA automatique
@@ -123,37 +125,83 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ---
 
-### PHASE 3 : Modèles de Correction Enseignant
+### PHASE 3 : Modèles de Correction Enseignant ✅ TERMINÉE
 **Objectif** : Interface pour que l'enseignant définisse les corrections attendues
 
-**Note :** Les tables `_teacher` existent déjà pour Steps 4-8. Il faut :
+**Statut** : Implémentée (v1.3.1)
+
+**Réalisations :**
+
+1. **Navigation**
+   - [x] Bouton "Modèles de correction" sur la page d'accueil enseignant
+   - [x] Hub listant les modèles pour Steps 4, 5, 6, 7, 8
+   - [x] Indicateurs de complétion par step
+
+2. **Pages modèles de correction (Steps 4-8)**
+   - [x] 5 pages teacher (step4_teacher.php à step8_teacher.php)
+   - [x] Formulaires identiques aux versions élèves
+   - [x] Champ "Instructions de correction IA" en bas de chaque page
+   - [x] Autosave activé sur toutes les pages teacher (mode='teacher')
+
+3. **Structure des données**
+   - [x] Tables `gestionprojet_*_teacher` créées (5 tables)
+   - [x] Champ `ai_instructions` (TEXT) dans chaque table
+   - [x] Champs identiques aux tables élèves
+
+4. **Améliorations supplémentaires**
+   - [x] Navigation step2 corrigée (retour accueil au lieu de step élève)
+   - [x] Steps 7 et 8 activés par défaut
+   - [x] Styles partagés (teacher_model_styles.php)
+
+**Fichiers créés/modifiés :**
+- `pages/correction_models.php` (hub)
+- `pages/step4_teacher.php` à `pages/step8_teacher.php`
+- `pages/teacher_model_styles.php`
+- `amd/src/autosave.js` (support mode teacher)
+- `db/install.xml`, `db/upgrade.php`
+- `lang/*.php`
+
+---
+
+### PHASE 3.5 : Améliorations Planification & Système de Soumission ⏳ À VENIR
+**Objectif** : Enrichir le Step 3 (planification) et ajouter un système de soumission par step
 
 **Tâches :**
-1. **Compléter les interfaces enseignant**
-   - Réutiliser les formulaires élèves en mode "modèle"
-   - Ajouter champs spécifiques : points clés, critères d'évaluation, pondération
-   - Permettre plusieurs réponses acceptables
 
-2. **Structure des modèles**
-   ```
-   Pour chaque champ du formulaire élève :
-   ├─ Réponse modèle (texte attendu)
-   ├─ Mots-clés obligatoires (JSON array)
-   ├─ Mots-clés bonus (JSON array)
-   ├─ Pondération (pourcentage du total)
-   └─ Instructions IA (guide pour l'évaluation)
-   ```
+1. **Amélioration du Step 3 (Planification)**
+   - [ ] Mise à jour automatique des durées des étapes du projet
+   - [ ] Prise en compte des vacances scolaires dans la visualisation (zones A/B/C)
+   - [ ] Synchronisation avec les fonctionnalités de `gestion-projet.html`
+   - [ ] Timeline interactive avec jalons
 
-3. **Interface de saisie**
-   - Édition inline ou formulaire dédié
-   - Prévisualisation du modèle
-   - Indication de complétion
+2. **Dates de soumission dans les steps élèves**
+   - [ ] Afficher la date de soumission normale (provenant des jalons du Step 3)
+   - [ ] Indicateur visuel de la deadline pour chaque step
+   - [ ] Alerte si proche de la date limite
 
-4. **Validation**
-   - Vérifier que le modèle est complet avant activation élève
-   - Alertes si modèle incomplet
+3. **Configuration des dates dans les modèles de correction**
+   - [ ] Champ date "soumission normale" (auto-rempli depuis Step 3)
+   - [ ] Champ date "soumission limite" (configurable par l'enseignant)
+   - [ ] Soumission automatique des productions élèves passé la date limite
+   - [ ] Positionnement : au-dessus du champ "Instructions IA"
 
-**Fichiers impactés :** `pages/step*_teacher.php` (modification), `classes/teacher_model.php` (nouveau), tables `gestionprojet_*_teacher`
+4. **Bouton de soumission par step**
+   - [ ] Ajouter un bouton "Soumettre" sur chaque page élève (Steps 4-8)
+   - [ ] Les élèves peuvent soumettre chaque step indépendamment
+   - [ ] Verrouillage de l'édition après soumission
+   - [ ] Possibilité de déverrouiller (enseignant uniquement)
+
+**Tables impactées :**
+- `gestionprojet_*_teacher` : Ajout `submission_date`, `deadline_date`
+- `gestionprojet_cdcf`, `_essai`, `_rapport`, `_besoin_eleve`, `_carnet` : Ajout `submitted`, `timesubmitted`
+
+**Fichiers impactés :**
+- `pages/step3.php` (timeline améliorée)
+- `pages/step4.php` à `pages/step8.php` (boutons soumission, dates)
+- `pages/step*_teacher.php` (champs dates)
+- `ajax/submit_step.php` (nouveau - soumission individuelle par step)
+- `db/install.xml`, `db/upgrade.php`
+- `lang/*.php`
 
 ---
 
@@ -282,7 +330,8 @@ PHASE 2 ──────────────────┼──── PH
 |-------|------------|-------|--------|
 | Phase 1 | Moyenne | Configuration flexible opérationnelle | ✅ Terminée |
 | Phase 2 | Faible | Clé API stockée et testable | ✅ Terminée |
-| Phase 3 | Moyenne | Modèles de correction complets | ⏳ À venir |
+| Phase 3 | Moyenne | Modèles de correction complets | ✅ Terminée |
+| Phase 3.5 | Moyenne | Améliorations planification & soumissions | ⏳ À venir |
 | Phase 4 | Élevée | Première évaluation IA fonctionnelle | ⏳ À venir |
 | Phase 5 | Moyenne | Notes par phase dans carnet Moodle | ⏳ À venir |
 | Phase 6 | Variable | Version production | ⏳ À venir |
@@ -326,4 +375,4 @@ PHASE 2 ──────────────────┼──── PH
 
 ---
 
-*Document créé le 24/01/2026 - À maintenir à jour au fil du développement*
+*Document créé le 24/01/2026 - Dernière mise à jour 25/01/2026*

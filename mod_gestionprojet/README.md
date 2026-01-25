@@ -400,26 +400,25 @@ php vendor/bin/behat --tags=@mod_gestionprojet
 
 ## 📝 TODO / Feuille de route
 
-### Version 1.1 (Court terme)
-- [ ] Migration complète des 6 pages HTML
-- [ ] Génération PDF côté serveur (TCPDF)
-- [ ] Export global multi-PDF
-- [ ] Intégration API vacances scolaires
-- [ ] Canvas HTML5 pour les diagrammes
+### Version 1.4 (Court terme) - Phase 3.5
+- [ ] Amélioration Step 3 : timeline avec vacances scolaires, mise à jour auto des durées
+- [ ] Dates de soumission dans les steps élèves (depuis jalons Step 3)
+- [ ] Champs dates dans les modèles de correction (normale + limite)
+- [ ] Soumission automatique après date limite
+- [ ] Bouton de soumission par step pour les élèves
 
-### Version 1.2 (Moyen terme)
-- [ ] Mode hors ligne (PWA)
-- [ ] Collaboration temps réel (WebSocket)
-- [ ] Templates de projets prédéfinis
-- [ ] Notifications push
-- [ ] Application mobile (Moodle App)
+### Version 1.5 (Moyen terme) - Phase 4
+- [ ] Moteur d'évaluation IA automatique
+- [ ] Prompts d'évaluation par phase
+- [ ] Stockage des résultats IA
+- [ ] Interface de révision enseignant
 
-### Version 2.0 (Long terme)
-- [ ] Intelligence artificielle (suggestions)
-- [ ] Analyse de données (analytics)
-- [ ] Intégration avec d'autres LMS
-- [ ] API REST publique
-- [ ] Marketplace de templates
+### Version 2.0 (Long terme) - Phases 5 & 6
+- [ ] Notes par phase dans carnet Moodle
+- [ ] Support des compétences Moodle
+- [ ] Export PDF complet
+- [ ] Tests automatisés (PHPUnit, Behat)
+- [ ] Documentation complète
 
 ## 🤝 Contribution
 
@@ -488,6 +487,29 @@ SOFTWARE.
 
 ## 📅 Historique des versions
 
+### Version 1.3.1 (2026-01-25) - Modèles de correction complets 🎓
+- **Phase 3 terminée** : Système de modèles de correction enseignant opérationnel
+- **Nouveautés** :
+  - Hub des modèles de correction avec indicateurs de complétion
+  - Pages de correction enseignant pour Steps 4, 5, 6, 7 et 8
+  - Champ "Instructions IA" pour chaque modèle de correction
+  - Autosave activé sur les pages enseignant (mode teacher)
+  - Steps 7 et 8 activés par défaut
+- **Corrections** :
+  - Navigation Step 2 corrigée (retour accueil au lieu de step élève)
+
+### Version 1.2.0 (2026-01-24) - Configuration IA
+- **Phase 2 terminée** : Stockage sécurisé de la clé API
+- **Nouveautés** :
+  - Configuration du provider IA (OpenAI, Anthropic, Mistral)
+  - Champ API key avec chiffrement Moodle
+  - Test de connexion API
+  - Activation/désactivation de l'évaluation IA
+
+### Version 1.1.3 (2026-01-24)
+- **Nouveauté** : L'enseignant peut désormais remplir les étapes 4, 5, 6, 7 et 8 pour créer une correction modèle (sans affecter les groupes d'élèves).
+- **Amélioration** : Gestion améliorée de l'ID de groupe (0 pour l'espace enseignant).
+
 ### Version 1.0 (2026-01-21) - Première version stable 🚀
 - **Note de version** : Première version pleinement opérationnelle pour la production.
 - **Fonctionnalités complètes** :
@@ -497,28 +519,19 @@ SOFTWARE.
   - Sauvegarde automatique robuste.
   - Intégration complète au carnet de notes Moodle.
 
-### Versions de développement (Alpha/Beta)
-
-#### Version 1.1.3 (2026-01-24)
-- **Nouveauté** : L'enseignant peut désormais remplir les étapes 4, 5, 6, 7 et 8 pour créer une correction modèle (sans affecter les groupes d'élèves).
-- **Amélioration** : Gestion améliorée de l'ID de groupe (0 pour l'espace enseignant).
+### Versions antérieures
 
 #### Version 1.1.2 (2026-01-21)
-- **Nouveautй** : Interface de correction pour les enseignants (pages/grading.php) avec saisie de notes et feedback
-- **Correctif** : Rйsolution de l'erreur "Too few arguments" sur l'accиs йtudiant/groupe
-- **Amйlioration** : Mise а jour de la base de donnйes pour supporter les notes et feedbacks par йtape
+- Interface de correction pour les enseignants avec saisie de notes et feedback
 
-### Version 1.1.1 (2026-01-21)
-- **Correctif** : Résolution du plantage lors de l'accès étudiant aux étapes 4, 5 et 6 (erreur de récupération du groupe)
-- **Correctif** : Amélioration de la robustesse de l'accès aux groupes
+#### Version 1.1.1 (2026-01-21)
+- Correctifs d'accès aux groupes pour les étudiants
 
-### Version 1.1.0 (2026-01-21)
-- **Nouveauté** : Accès en lecture seule pour les élèves aux étapes 1, 2 et 3 (Fiche Descriptive, Expression du Besoin, Planification)
-- **Amélioration** : Interface de consultation adaptée pour les élèves
-- **Correctif** : Désactivation de la sauvegarde automatique en mode lecture seule
+#### Version 1.1.0 (2026-01-21)
+- Accès en lecture seule pour les élèves aux étapes 1-3
 
-### Version 1.0.5 (2026-01-20)
-- **Correctif** : Problèmes de chargement RequireJS et Autosave
+#### Version 1.0.5 (2026-01-20)
+- Correctifs chargement RequireJS et Autosave
 
 ---
 

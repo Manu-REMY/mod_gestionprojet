@@ -27,10 +27,15 @@ $debug_log = __DIR__ . '/../../../moodledata/temp/autosave_debug.log';
 @file_put_contents($debug_log, "\n=== " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
 @file_put_contents($debug_log, "POST: " . print_r($_POST, true), FILE_APPEND);
 
-$cmid = required_param('cmid', PARAM_INT);
+// Support both 'cmid' and 'id' parameter names for compatibility.
+$cmid = optional_param('cmid', 0, PARAM_INT);
+if (!$cmid) {
+    $cmid = required_param('id', PARAM_INT);
+}
 $step = required_param('step', PARAM_INT);
 $data = required_param('data', PARAM_RAW);
 $groupid = optional_param('groupid', 0, PARAM_INT);
+$mode = optional_param('mode', '', PARAM_ALPHA); // 'teacher' for correction models
 
 $cm = get_coursemodule_from_id('gestionprojet', $cmid, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
@@ -57,6 +62,60 @@ $message = '';
 
 try {
     $time = time();
+
+    // Handle teacher correction model mode.
+    if ($mode === 'teacher') {
+        if (!has_capability('mod/gestionprojet:configureteacherpages', $context)) {
+            throw new moodle_exception('nopermission');
+        }
+
+        // Map step to teacher table.
+        $teachertables = [
+            4 => ['table' => 'gestionprojet_cdcf_teacher', 'fields' => ['produit', 'milieu', 'fp', 'interacteurs_data', 'ai_instructions']],
+            5 => ['table' => 'gestionprojet_essai_teacher', 'fields' => ['nom_essai', 'date_essai', 'groupe_eleves', 'fonction_service', 'niveaux_reussite', 'etapes_protocole', 'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion', 'objectif', 'ai_instructions']],
+            6 => ['table' => 'gestionprojet_rapport_teacher', 'fields' => ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions', 'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives', 'besoins', 'ai_instructions']],
+            7 => ['table' => 'gestionprojet_besoin_eleve_teacher', 'fields' => ['aqui', 'surquoi', 'dansquelbut', 'ai_instructions']],
+            8 => ['table' => 'gestionprojet_carnet_teacher', 'fields' => ['tasks_data', 'ai_instructions']],
+        ];
+
+        if (!isset($teachertables[$step])) {
+            throw new moodle_exception('invalidstep');
+        }
+
+        $tableinfo = $teachertables[$step];
+        $tablename = $tableinfo['table'];
+        $validfields = $tableinfo['fields'];
+
+        $record = $DB->get_record($tablename, ['gestionprojetid' => $gestionprojet->id]);
+        if (!$record) {
+            $record = new stdClass();
+            $record->gestionprojetid = $gestionprojet->id;
+            $record->timecreated = $time;
+        }
+
+        foreach ($formdata as $key => $value) {
+            if ($key !== 'id' && in_array($key, $validfields)) {
+                $record->$key = $value;
+            }
+        }
+
+        $record->timemodified = $time;
+
+        if (isset($record->id)) {
+            $DB->update_record($tablename, $record);
+        } else {
+            $record->id = $DB->insert_record($tablename, $record);
+        }
+
+        $success = true;
+        $message = get_string('autosave_success', 'gestionprojet');
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'timestamp' => time()
+        ]);
+        exit;
+    }
 
     // Determine which table to update based on step
     switch ($step) {

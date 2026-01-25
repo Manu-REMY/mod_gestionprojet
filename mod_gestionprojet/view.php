@@ -19,7 +19,9 @@ require_once(__DIR__ . '/lib.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course module ID
 $a = optional_param('a', 0, PARAM_INT);  // Gestionprojet instance ID
-$step = optional_param('step', 0, PARAM_INT); // Step number (1-6)
+$step = optional_param('step', 0, PARAM_INT); // Step number (1-8)
+$page = optional_param('page', '', PARAM_ALPHA); // Special pages (correction_models, etc.)
+$mode = optional_param('mode', '', PARAM_ALPHA); // Mode: teacher for correction models
 $groupid = optional_param('groupid', 0, PARAM_INT); // For grading navigation
 
 $cm = false;
@@ -86,6 +88,21 @@ if ($cansubmit && !$isteacher) {
 }
 
 // Determine which view to show
+
+// Handle special pages (correction_models, etc.)
+if ($page !== '') {
+    switch ($page) {
+        case 'correctionmodels':
+            // Teacher correction models hub - requires teacher capability.
+            require_capability('mod/gestionprojet:configureteacherpages', $context);
+            require_once(__DIR__ . '/pages/correction_models.php');
+            exit;
+
+        default:
+            throw new \moodle_exception('invalidpage', 'gestionprojet');
+    }
+}
+
 if ($step > 0) {
     // Check if step is enabled
     $stepfield = 'enable_step' . $step;
@@ -94,6 +111,13 @@ if ($step > 0) {
     // Check availability
     if (!$isteacher && !$enabled) {
         throw new \moodle_exception('stepdisabled', 'gestionprojet');
+    }
+
+    // Handle teacher correction model mode for steps 4-8.
+    if ($mode === 'teacher' && in_array($step, [4, 5, 6, 7, 8])) {
+        require_capability('mod/gestionprojet:configureteacherpages', $context);
+        require_once(__DIR__ . '/pages/step' . $step . '_teacher.php');
+        exit;
     }
 
     // Calculate navigation links

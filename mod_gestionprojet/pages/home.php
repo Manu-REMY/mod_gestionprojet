@@ -108,6 +108,15 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
         color: #721c24;
     }
 
+    .card-status.info {
+        background: #e7f3ff;
+        color: #0056b3;
+    }
+
+    .correction-models-card {
+        border-top-color: #17a2b8 !important;
+    }
+
     .card-button {
         display: block;
         width: 100%;
@@ -252,6 +261,21 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                     </a>
                 </div>
             <?php endforeach; ?>
+
+            <!-- Bouton Modèles de correction -->
+            <div class="gestionprojet-card teacher correction-models-card">
+                <div class="card-icon">📝</div>
+                <h3 class="card-title"><?php echo get_string('correction_models', 'gestionprojet'); ?></h3>
+                <p class="card-description"><?php echo get_string('correction_models_desc', 'gestionprojet'); ?></p>
+
+                <div class="card-status info">
+                    🤖 <?php echo get_string('correction_models_info', 'gestionprojet'); ?>
+                </div>
+
+                <a href="view.php?id=<?php echo $cm->id; ?>&page=correctionmodels" class="card-button">
+                    <?php echo get_string('correction_models_configure', 'gestionprojet'); ?>
+                </a>
+            </div>
         </div>
 
         <!-- Section Correction -->
