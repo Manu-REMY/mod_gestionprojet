@@ -195,6 +195,8 @@ $string['save'] = 'Enregistrer';
 $string['saving'] = 'Sauvegarde en cours...';
 $string['saved'] = 'Sauvegardé automatiquement';
 $string['export_pdf'] = 'Exporter en PDF';
+$string['export_pdf_notice'] = 'L\'export PDF génère un document avec toutes les informations saisies.';
+$string['your_group'] = 'Vous travaillez en groupe';
 $string['export_all'] = 'Exporter tous les projets';
 $string['view_history'] = 'Voir l\'historique';
 

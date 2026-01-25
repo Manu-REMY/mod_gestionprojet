@@ -179,6 +179,8 @@ $string['save'] = 'Save';
 $string['saving'] = 'Saving...';
 $string['saved'] = 'Auto-saved';
 $string['export_pdf'] = 'Export to PDF';
+$string['export_pdf_notice'] = 'The PDF export generates a document with all entered information.';
+$string['your_group'] = 'You are working in group';
 $string['export_all'] = 'Export all projects';
 $string['view_history'] = 'View history';
 
