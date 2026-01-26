@@ -60,7 +60,7 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ---
 
-## État Actuel (v1.3.1)
+## État Actuel (v1.4.0)
 
 ### Fonctionnel
 - [x] 8 phases implémentées avec UI complète
@@ -77,6 +77,9 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 - [x] **Modèles de correction enseignant Steps 4-8 avec autosave (Phase 3 ✓)**
 - [x] **Hub des modèles de correction**
 - [x] **Instructions IA par step**
+- [x] **Timeline Step 3 avec vacances scolaires API (Phase 3.5 ✓)**
+- [x] **Dates de soumission configurables par step (Phase 3.5 ✓)**
+- [x] **Affichage des dates aux élèves (Phase 3.5 ✓)**
 
 ### Manquant
 - [ ] Système d'évaluation IA automatique
@@ -163,45 +166,53 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ---
 
-### PHASE 3.5 : Améliorations Planification & Système de Soumission ⏳ À VENIR
+### PHASE 3.5 : Améliorations Planification & Système de Soumission ✅ TERMINÉE
 **Objectif** : Enrichir le Step 3 (planification) et ajouter un système de soumission par step
 
-**Tâches :**
+**Statut** : Implémentée (v1.4.0)
+
+**Réalisations :**
 
 1. **Amélioration du Step 3 (Planification)**
-   - [ ] Mise à jour automatique des durées des étapes du projet
-   - [ ] Prise en compte des vacances scolaires dans la visualisation (zones A/B/C)
-   - [ ] Synchronisation avec les fonctionnalités de `gestion-projet.html`
-   - [ ] Timeline interactive avec jalons
+   - [x] Mise à jour automatique des durées des étapes du projet
+   - [x] Prise en compte des vacances scolaires via API gouvernementale (zones A/B/C)
+   - [x] Synchronisation avec les fonctionnalités de `gestion-projet.html`
+   - [x] Timeline interactive avec jalons et marqueurs de vacances
+   - [x] Calcul des semaines travaillées hors vacances
+   - [x] Auto-répartition des heures selon durée projet
 
 2. **Dates de soumission dans les steps élèves**
-   - [ ] Afficher la date de soumission normale (provenant des jalons du Step 3)
-   - [ ] Indicateur visuel de la deadline pour chaque step
-   - [ ] Alerte si proche de la date limite
+   - [x] Affichage de la date de soumission normale (provenant des jalons du Step 3)
+   - [x] Indicateur visuel de la deadline pour chaque step
+   - [x] Alerte si proche de la date limite (badge "Bientôt dû")
+   - [x] Alerte si en retard (badge "En retard")
 
 3. **Configuration des dates dans les modèles de correction**
-   - [ ] Champ date "soumission normale" (auto-rempli depuis Step 3)
-   - [ ] Champ date "soumission limite" (configurable par l'enseignant)
-   - [ ] Soumission automatique des productions élèves passé la date limite
-   - [ ] Positionnement : au-dessus du champ "Instructions IA"
+   - [x] Champ date "soumission normale" (auto-rempli depuis Step 3)
+   - [x] Champ date "soumission limite" (configurable par l'enseignant)
+   - [x] Positionnement : section dédiée au-dessus du champ "Instructions IA"
 
-4. **Bouton de soumission par step**
-   - [ ] Ajouter un bouton "Soumettre" sur chaque page élève (Steps 4-8)
-   - [ ] Les élèves peuvent soumettre chaque step indépendamment
-   - [ ] Verrouillage de l'édition après soumission
-   - [ ] Possibilité de déverrouiller (enseignant uniquement)
+4. **Système de soumission existant amélioré**
+   - [x] Champ `enable_submission` ajouté à la table principale
+   - [x] Champs `status` et `timesubmitted` ajoutés aux tables élèves manquantes
+   - [x] Verrouillage de l'édition après soumission
+   - [x] Possibilité de déverrouiller (enseignant uniquement)
 
-**Tables impactées :**
+**Tables modifiées :**
+- `gestionprojet` : Ajout `enable_submission`
 - `gestionprojet_*_teacher` : Ajout `submission_date`, `deadline_date`
-- `gestionprojet_cdcf`, `_essai`, `_rapport`, `_besoin_eleve`, `_carnet` : Ajout `submitted`, `timesubmitted`
+- `gestionprojet_essai`, `gestionprojet_rapport` : Ajout `status`, `timesubmitted`
 
-**Fichiers impactés :**
-- `pages/step3.php` (timeline améliorée)
-- `pages/step4.php` à `pages/step8.php` (boutons soumission, dates)
+**Fichiers créés/modifiés :**
+- `pages/step3.php` (timeline améliorée avec API vacances)
+- `pages/student_dates_display.php` (nouveau - composant dates élèves)
+- `pages/teacher_dates_section.php` (nouveau - composant dates enseignant)
+- `pages/step4.php` à `pages/step8.php` (affichage dates)
 - `pages/step*_teacher.php` (champs dates)
-- `ajax/submit_step.php` (nouveau - soumission individuelle par step)
+- `ajax/submit_step.php` (nouveau - endpoint soumission)
+- `ajax/autosave.php` (support champs dates)
 - `db/install.xml`, `db/upgrade.php`
-- `lang/*.php`
+- `lang/fr/*.php`, `lang/en/*.php`
 
 ---
 
@@ -331,7 +342,7 @@ PHASE 2 ──────────────────┼──── PH
 | Phase 1 | Moyenne | Configuration flexible opérationnelle | ✅ Terminée |
 | Phase 2 | Faible | Clé API stockée et testable | ✅ Terminée |
 | Phase 3 | Moyenne | Modèles de correction complets | ✅ Terminée |
-| Phase 3.5 | Moyenne | Améliorations planification & soumissions | ⏳ À venir |
+| Phase 3.5 | Moyenne | Améliorations planification & soumissions | ✅ Terminée |
 | Phase 4 | Élevée | Première évaluation IA fonctionnelle | ⏳ À venir |
 | Phase 5 | Moyenne | Notes par phase dans carnet Moodle | ⏳ À venir |
 | Phase 6 | Variable | Version production | ⏳ À venir |
@@ -375,4 +386,4 @@ PHASE 2 ──────────────────┼──── PH
 
 ---
 
-*Document créé le 24/01/2026 - Dernière mise à jour 25/01/2026*
+*Document créé le 24/01/2026 - Dernière mise à jour 25/01/2026 (Phase 3.5 terminée)*

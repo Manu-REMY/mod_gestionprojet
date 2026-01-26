@@ -28,6 +28,7 @@
         <FIELD NAME="ai_provider" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="AI provider: openai, anthropic, mistral"/>
         <FIELD NAME="ai_api_key" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Encrypted API key for AI evaluation"/>
         <FIELD NAME="ai_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=AI evaluation enabled"/>
+        <FIELD NAME="enable_submission" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=student submission enabled"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -153,6 +154,8 @@
         <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2"/>
         <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="User ID for individual submission"/>
+        <FIELD NAME="status" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=draft, 1=submitted"/>
+        <FIELD NAME="timesubmitted" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -187,6 +190,8 @@
         <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2"/>
         <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="User ID for individual submission"/>
+        <FIELD NAME="status" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=draft, 1=submitted"/>
+        <FIELD NAME="timesubmitted" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -262,6 +267,8 @@
         <FIELD NAME="fp" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Fonction Principale"/>
         <FIELD NAME="interacteurs_data" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of interactors"/>
         <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="submission_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Expected submission date (Unix timestamp)"/>
+        <FIELD NAME="deadline_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Deadline date (Unix timestamp) - auto-submit after this"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -289,6 +296,8 @@
         <FIELD NAME="conclusion" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="objectif" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="submission_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Expected submission date (Unix timestamp)"/>
+        <FIELD NAME="deadline_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Deadline date (Unix timestamp) - auto-submit after this"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -317,6 +326,8 @@
         <FIELD NAME="perspectives" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="besoins" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="submission_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Expected submission date (Unix timestamp)"/>
+        <FIELD NAME="deadline_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Deadline date (Unix timestamp) - auto-submit after this"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -335,6 +346,8 @@
         <FIELD NAME="surquoi" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="dansquelbut" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="submission_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Expected submission date (Unix timestamp)"/>
+        <FIELD NAME="deadline_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Deadline date (Unix timestamp) - auto-submit after this"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -351,6 +364,8 @@
         <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="tasks_data" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of expected log entries"/>
         <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
+        <FIELD NAME="submission_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Expected submission date (Unix timestamp)"/>
+        <FIELD NAME="deadline_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Deadline date (Unix timestamp) - auto-submit after this"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

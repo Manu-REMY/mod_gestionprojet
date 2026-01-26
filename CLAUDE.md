@@ -241,7 +241,7 @@ php admin/cli/upgrade.php
 
 ## Current Status
 
-**Version**: 1.3.1 (2026012502)
+**Version**: 1.4.0 (2026012600)
 
 **Implemented**:
 - All 8 phases with full UI
@@ -253,9 +253,11 @@ php admin/cli/upgrade.php
 - Audit trail
 - AI configuration fields (provider, API key, enabled)
 - All steps enabled by default (step7, step8 included)
+- Step 3 timeline with school holidays API (zones A/B/C)
+- Submission dates configuration in teacher models
+- Dates display for students (with overdue/due soon indicators)
 
 **In Progress** (see ROADMAP.md):
-- Phase 3.5: Planning improvements & submission system per step
 - Phase 4: AI evaluation engine
 - Phase 5: Moodle gradebook integration per step
 - Phase 6: Quality & documentation

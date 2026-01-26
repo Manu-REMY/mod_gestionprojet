@@ -256,3 +256,36 @@ $string['no_student_steps_enabled'] = 'No student steps are enabled for this act
 $string['ai_instructions'] = 'AI Correction Instructions';
 $string['ai_instructions_help'] = 'Provide specific instructions to guide automatic AI evaluation. For example: grading criteria, key points, mandatory or bonus elements.';
 $string['ai_instructions_placeholder'] = 'E.g.: Check for the presence of 3 key elements. Award bonus points if student mentions concrete examples. Penalize off-topic answers...';
+
+// Phase 3.5: Submission dates and timeline
+$string['submission_dates'] = 'Submission Dates';
+$string['submission_date'] = 'Expected submission date';
+$string['submission_date_help'] = 'Date when students should submit this work. This date is automatically calculated from the planning if defined.';
+$string['deadline_date'] = 'Deadline';
+$string['deadline_date_help'] = 'Final submission deadline. After this date, the work will be automatically locked.';
+$string['date_from_planning'] = 'Date calculated from planning';
+$string['expected_submission'] = 'Expected submission';
+$string['deadline'] = 'Deadline';
+$string['overdue'] = 'Overdue';
+$string['due_soon'] = 'Due soon';
+$string['submission_section_title'] = 'Submission';
+$string['submit_step'] = 'Submit this work';
+$string['confirm_submit'] = 'Are you sure you want to submit this work? You will not be able to modify it after submission.';
+$string['submitting'] = 'Submitting...';
+$string['submissionsuccess'] = 'Work submitted successfully';
+$string['submissionerror'] = 'Error during submission';
+$string['already_submitted'] = 'Work already submitted';
+$string['submitted_at'] = 'Submitted on';
+$string['submissiondisabled'] = 'Submission is not enabled for this activity';
+$string['alreadysubmitted'] = 'This work has already been submitted';
+$string['submissionunlocked'] = 'Submission unlocked';
+$string['submissionnotfound'] = 'Submission not found';
+
+// Step 3 Timeline
+$string['vacation_zone'] = 'Vacation zone';
+$string['vacation_zone_help'] = 'Select the school vacation zone to correctly display vacation periods in the timeline.';
+$string['working_weeks'] = 'Working weeks';
+$string['total_hours'] = 'Total hours';
+$string['hours_exceeded'] = 'Total hours exceed available time';
+$string['auto_distribute'] = 'Auto-distribute';
+$string['vacation_overlay'] = 'School holidays';

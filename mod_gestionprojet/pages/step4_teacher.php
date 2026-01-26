@@ -181,6 +181,11 @@ require_once(__DIR__ . '/teacher_model_styles.php');
             <button type="button" class="btn-add" onclick="addInteractor()">+ Ajouter un interacteur</button>
         </div>
 
+        <?php
+        $step = 4;
+        require_once(__DIR__ . '/teacher_dates_section.php');
+        ?>
+
         <div class="ai-instructions-section">
             <h3>&#129302; <?php echo get_string('ai_instructions', 'gestionprojet'); ?></h3>
             <textarea id="ai_instructions" name="ai_instructions"
@@ -356,12 +361,15 @@ function addInteractor() {
 
             // Custom serialization for step 4 teacher model
             var serializeData = function() {
+                var dates = getDateValues();
                 return {
                     produit: document.getElementById('produit').value,
                     milieu: document.getElementById('milieu').value,
                     fp: document.getElementById('fp').value,
                     interacteurs_data: JSON.stringify(interacteurs),
-                    ai_instructions: document.getElementById('ai_instructions').value
+                    ai_instructions: document.getElementById('ai_instructions').value,
+                    submission_date: dates.submission_date,
+                    deadline_date: dates.deadline_date
                 };
             };
 

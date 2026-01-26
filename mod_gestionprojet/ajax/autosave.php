@@ -71,11 +71,11 @@ try {
 
         // Map step to teacher table.
         $teachertables = [
-            4 => ['table' => 'gestionprojet_cdcf_teacher', 'fields' => ['produit', 'milieu', 'fp', 'interacteurs_data', 'ai_instructions']],
-            5 => ['table' => 'gestionprojet_essai_teacher', 'fields' => ['nom_essai', 'date_essai', 'groupe_eleves', 'fonction_service', 'niveaux_reussite', 'etapes_protocole', 'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion', 'objectif', 'ai_instructions']],
-            6 => ['table' => 'gestionprojet_rapport_teacher', 'fields' => ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions', 'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives', 'besoins', 'ai_instructions']],
-            7 => ['table' => 'gestionprojet_besoin_eleve_teacher', 'fields' => ['aqui', 'surquoi', 'dansquelbut', 'ai_instructions']],
-            8 => ['table' => 'gestionprojet_carnet_teacher', 'fields' => ['tasks_data', 'ai_instructions']],
+            4 => ['table' => 'gestionprojet_cdcf_teacher', 'fields' => ['produit', 'milieu', 'fp', 'interacteurs_data', 'ai_instructions', 'submission_date', 'deadline_date']],
+            5 => ['table' => 'gestionprojet_essai_teacher', 'fields' => ['nom_essai', 'date_essai', 'groupe_eleves', 'fonction_service', 'niveaux_reussite', 'etapes_protocole', 'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion', 'objectif', 'ai_instructions', 'submission_date', 'deadline_date']],
+            6 => ['table' => 'gestionprojet_rapport_teacher', 'fields' => ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions', 'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives', 'besoins', 'ai_instructions', 'submission_date', 'deadline_date']],
+            7 => ['table' => 'gestionprojet_besoin_eleve_teacher', 'fields' => ['aqui', 'surquoi', 'dansquelbut', 'ai_instructions', 'submission_date', 'deadline_date']],
+            8 => ['table' => 'gestionprojet_carnet_teacher', 'fields' => ['tasks_data', 'ai_instructions', 'submission_date', 'deadline_date']],
         ];
 
         if (!isset($teachertables[$step])) {

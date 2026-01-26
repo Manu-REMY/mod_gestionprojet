@@ -85,6 +85,10 @@ if ($isSubmitted) {
     echo $OUTPUT->notification(get_string('submitted_on', 'gestionprojet', userdate($submission->timesubmitted)), 'success');
 }
 
+// Display submission dates
+$step = 4;
+require_once(__DIR__ . '/student_dates_display.php');
+
 $disabled = $isLocked ? 'disabled readonly' : '';
 
 // Get group info

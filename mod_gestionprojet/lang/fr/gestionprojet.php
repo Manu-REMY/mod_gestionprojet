@@ -272,3 +272,36 @@ $string['no_student_steps_enabled'] = 'Aucune étape élève n\'est activée pou
 $string['ai_instructions'] = 'Instructions de correction IA';
 $string['ai_instructions_help'] = 'Fournissez des instructions spécifiques pour guider l\'évaluation automatique par IA. Par exemple : critères de notation, points d\'attention, éléments obligatoires ou bonus.';
 $string['ai_instructions_placeholder'] = 'Ex: Vérifier la présence des 3 éléments clés. Accorder des points bonus si l\'élève mentionne des exemples concrets. Pénaliser les réponses hors sujet...';
+
+// Phase 3.5: Dates de soumission et timeline
+$string['submission_dates'] = 'Dates de soumission';
+$string['submission_date'] = 'Date de soumission prévue';
+$string['submission_date_help'] = 'Date à laquelle les élèves doivent soumettre ce travail. Cette date est automatiquement calculée depuis la planification si définie.';
+$string['deadline_date'] = 'Date limite';
+$string['deadline_date_help'] = 'Date limite de soumission. Après cette date, le travail sera automatiquement verrouillé.';
+$string['date_from_planning'] = 'Date calculée depuis la planification';
+$string['expected_submission'] = 'Soumission attendue';
+$string['deadline'] = 'Date limite';
+$string['overdue'] = 'En retard';
+$string['due_soon'] = 'Bientôt dû';
+$string['submission_section_title'] = 'Soumission';
+$string['submit_step'] = 'Soumettre ce travail';
+$string['confirm_submit'] = 'Êtes-vous sûr de vouloir soumettre ce travail ? Vous ne pourrez plus le modifier après la soumission.';
+$string['submitting'] = 'Soumission en cours...';
+$string['submissionsuccess'] = 'Travail soumis avec succès';
+$string['submissionerror'] = 'Erreur lors de la soumission';
+$string['already_submitted'] = 'Travail déjà soumis';
+$string['submitted_at'] = 'Soumis le';
+$string['submissiondisabled'] = 'La soumission n\'est pas activée pour cette activité';
+$string['alreadysubmitted'] = 'Ce travail a déjà été soumis';
+$string['submissionunlocked'] = 'Soumission déverrouillée';
+$string['submissionnotfound'] = 'Soumission introuvable';
+
+// Step 3 Timeline
+$string['vacation_zone'] = 'Zone de vacances';
+$string['vacation_zone_help'] = 'Sélectionnez la zone de vacances scolaires pour afficher correctement les périodes de vacances dans la timeline.';
+$string['working_weeks'] = 'Semaines travaillées';
+$string['total_hours'] = 'Total heures';
+$string['hours_exceeded'] = 'Le total des heures dépasse le temps disponible';
+$string['auto_distribute'] = 'Répartir automatiquement';
+$string['vacation_overlay'] = 'Vacances scolaires';

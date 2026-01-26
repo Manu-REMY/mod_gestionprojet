@@ -83,6 +83,10 @@ if ($isSubmitted) {
     echo $OUTPUT->notification(get_string('submitted_on', 'gestionprojet', userdate($submission->timesubmitted)), 'success');
 }
 
+// Display submission dates
+$step = 7;
+require_once(__DIR__ . '/student_dates_display.php');
+
 // Navigation buttons
 // Navigation buttons
 $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step7');

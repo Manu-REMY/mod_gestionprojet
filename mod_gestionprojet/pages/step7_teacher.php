@@ -69,6 +69,11 @@ require_once(__DIR__ . '/teacher_model_styles.php');
             </div>
         </div>
 
+        <?php
+        $step = 7;
+        require_once(__DIR__ . '/teacher_dates_section.php');
+        ?>
+
         <div class="ai-instructions-section">
             <h3>&#129302; <?php echo get_string('ai_instructions', 'gestionprojet'); ?></h3>
             <textarea id="ai_instructions" name="ai_instructions"
@@ -97,11 +102,14 @@ require_once(__DIR__ . '/teacher_model_styles.php');
 
             // Custom serialization for step 7 teacher model
             var serializeData = function() {
+                var dates = getDateValues();
                 return {
                     aqui: document.getElementById('aqui').value,
                     surquoi: document.getElementById('surquoi').value,
                     dansquelbut: document.getElementById('dansquelbut').value,
-                    ai_instructions: document.getElementById('ai_instructions').value
+                    ai_instructions: document.getElementById('ai_instructions').value,
+                    submission_date: dates.submission_date,
+                    deadline_date: dates.deadline_date
                 };
             };
 

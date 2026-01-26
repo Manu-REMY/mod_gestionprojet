@@ -102,14 +102,159 @@ if ($showGrade && isset($planning->grade)): ?>
 $locked = 0;
 ?>
 
+<style>
+    .timeline-box {
+        background: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        height: 60px;
+    }
+
+    .timeline-svg {
+        width: 100%;
+        height: 60px;
+    }
+
+    .vacation-overlay {
+        position: absolute;
+        top: 0;
+        height: 60px;
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(150, 150, 150, 0.3),
+            rgba(150, 150, 150, 0.3) 10px,
+            rgba(180, 180, 180, 0.3) 10px,
+            rgba(180, 180, 180, 0.3) 20px
+        );
+        border-left: 2px solid #999;
+        border-right: 2px solid #999;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .current-day-marker {
+        position: absolute;
+        top: 0;
+        height: 60px;
+        width: 2px;
+        background: #dc3545;
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    .current-day-marker::before {
+        content: attr(data-date);
+        position: absolute;
+        top: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        color: #dc3545;
+        font-weight: bold;
+        white-space: nowrap;
+        background: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .milestones-container {
+        margin-top: 10px;
+        padding: 10px 0;
+        position: relative;
+        height: 30px;
+    }
+
+    .milestone-marker {
+        position: absolute;
+        font-size: 9px;
+        color: #0056b3;
+        font-weight: 500;
+        text-align: center;
+        transform: translateX(-50%);
+    }
+
+    .milestone-marker::before {
+        content: '';
+        display: block;
+        width: 2px;
+        height: 8px;
+        background: #0056b3;
+        margin: 0 auto 2px;
+    }
+
+    .task-input-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .task-color-indicator {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .task-label {
+        flex: 1;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .task-hours-input {
+        width: 100px !important;
+        margin-right: 5px;
+    }
+
+    .total-info-box {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .vacation-info {
+        margin-top: 10px;
+        font-style: italic;
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .vacation-info span {
+        display: inline-block;
+        margin-right: 15px;
+    }
+
+    .timeline-preview-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .card-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+</style>
+
 <div class="card mb-3">
     <div class="card-body">
         <div class="card-header-flex">
             <h4>
                 <?php echo get_string('project_planning', 'gestionprojet'); ?>
             </h4>
-            <!-- Lock toggle removed -->
-
         </div>
 
         <form id="planningForm">
@@ -203,7 +348,9 @@ $locked = 0;
                 <div id="timelineContainer" class="timeline-box">
                     <svg id="timelineSVG" class="timeline-svg"></svg>
                 </div>
-                <div id="totalInfo" class="mt-2 text-muted small"></div>
+                <div id="milestonesContainer" class="milestones-container"></div>
+                <div id="totalInfo" class="total-info-box"></div>
+                <div id="vacationInfo" class="vacation-info"></div>
             </div>
         </form>
 
@@ -211,15 +358,12 @@ $locked = 0;
     </div>
 </div>
 
-
-
 <?php
 // Ensure jQuery is loaded
 $PAGE->requires->jquery();
 ?>
 
 <script>
-    // Wait for jQuery to be loaded
     // Wait for RequireJS and jQuery
     (function waitRequire() {
         if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
@@ -236,12 +380,432 @@ $PAGE->requires->jquery();
 
                 var taskColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
                 var HOURS_PER_WEEK = 1.5;
+                var schoolHolidays = [];
 
-                // Lock toggle logic removed
+                // Fetch school holidays from French government API
+                async function fetchSchoolHolidays(zone) {
+                    if (!zone) {
+                        schoolHolidays = [];
+                        updateTimeline();
+                        return;
+                    }
 
+                    try {
+                        // API query for 2025-2027 period
+                        const response = await fetch(`https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records?where=zones%20like%20%22%25${zone}%25%22%20AND%20(start_date%20>=%20%222025-01-01%22%20AND%20start_date%20<=%20%222027-12-31%22)&limit=100`);
+                        const data = await response.json();
 
-                // Update timeline when values change
+                        if (data.error_code) {
+                            console.error('API Error:', data.message);
+                            schoolHolidays = [];
+                            updateTimeline();
+                            return;
+                        }
+
+                        schoolHolidays = data.results
+                            .filter(record => {
+                                const isVacation = record.description && record.description.toLowerCase().includes('vacances');
+                                if (!isVacation) return false;
+
+                                if (!record.zones) return false;
+                                const zonesStr = typeof record.zones === 'string' ? record.zones : record.zones.join(' ');
+                                const hasZone = zonesStr.toLowerCase().includes(zone.toLowerCase()) ||
+                                               zonesStr.toLowerCase().includes('zone ' + zone.toLowerCase()) ||
+                                               zonesStr.includes(zone);
+                                return hasZone;
+                            })
+                            .map(record => ({
+                                description: record.description,
+                                start: new Date(record.start_date),
+                                end: new Date(record.end_date)
+                            }))
+                            .sort((a, b) => a.start - b.start);
+
+                        // Deduplicate holidays with same start/end dates
+                        const uniqueHolidays = [];
+                        schoolHolidays.forEach(holiday => {
+                            const isDuplicate = uniqueHolidays.some(h =>
+                                h.start.getTime() === holiday.start.getTime() &&
+                                h.end.getTime() === holiday.end.getTime() &&
+                                h.description === holiday.description
+                            );
+                            if (!isDuplicate) {
+                                uniqueHolidays.push(holiday);
+                            }
+                        });
+                        schoolHolidays = uniqueHolidays;
+
+                        updateTimeline();
+                    } catch (error) {
+                        console.error('Error fetching holidays:', error);
+                        schoolHolidays = [];
+                        updateTimeline();
+                    }
+                }
+
+                // Calculate working weeks excluding holidays
+                function calculateWorkingWeeks(startDate, endDate) {
+                    if (!startDate || !endDate || startDate >= endDate) {
+                        return 0;
+                    }
+
+                    let totalDays = 0;
+                    let currentDate = new Date(startDate);
+
+                    while (currentDate <= endDate) {
+                        const isHoliday = schoolHolidays.some(holiday =>
+                            currentDate >= holiday.start && currentDate <= holiday.end
+                        );
+
+                        if (!isHoliday) {
+                            totalDays++;
+                        }
+
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+
+                    return totalDays / 7;
+                }
+
+                function calculateTotalHours() {
+                    const startDate = new Date($('#startdate').val());
+                    const endDate = new Date($('#enddate').val());
+
+                    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate >= endDate) {
+                        return 0;
+                    }
+
+                    const weeks = calculateWorkingWeeks(startDate, endDate);
+                    return weeks * HOURS_PER_WEEK;
+                }
+
+                // Add working days excluding holidays
+                function addWorkingDays(startDate, daysToAdd) {
+                    let currentDate = new Date(startDate);
+                    let daysAdded = 0;
+
+                    while (daysAdded < daysToAdd) {
+                        currentDate.setDate(currentDate.getDate() + 1);
+
+                        const isHoliday = schoolHolidays.some(holiday =>
+                            currentDate >= holiday.start && currentDate <= holiday.end
+                        );
+
+                        if (!isHoliday) {
+                            daysAdded++;
+                        }
+                    }
+
+                    return currentDate;
+                }
+
+                function initializeTaskDurations() {
+                    const totalHours = calculateTotalHours();
+                    if (totalHours <= 0) return;
+
+                    // Check if all tasks are at 0 (initial state)
+                    let currentTotal = 0;
+                    for (let i = 1; i <= 5; i++) {
+                        currentTotal += parseFloat($('#task' + i + '_hours').val()) || 0;
+                    }
+
+                    // Only auto-distribute if all tasks are at 0
+                    if (currentTotal === 0) {
+                        const hoursPerTask = totalHours / 5;
+                        for (let i = 1; i <= 5; i++) {
+                            $('#task' + i + '_hours').val(hoursPerTask.toFixed(1));
+                        }
+                    }
+
+                    updateTimeline();
+                }
+
+                function updateTimeline() {
+                    const svg = document.getElementById('timelineSVG');
+                    const container = document.getElementById('timelineContainer');
+                    const milestonesContainer = document.getElementById('milestonesContainer');
+                    svg.innerHTML = '';
+                    milestonesContainer.innerHTML = '';
+
+                    // Remove existing overlays
+                    container.querySelectorAll('.vacation-overlay, .current-day-marker').forEach(el => el.remove());
+
+                    const startDateVal = $('#startdate').val();
+                    const endDateVal = $('#enddate').val();
+
+                    if (!startDateVal || !endDateVal) {
+                        $('#totalInfo').html('<strong><?php echo get_string('startdate', 'gestionprojet'); ?> / <?php echo get_string('enddate', 'gestionprojet'); ?></strong>');
+                        return;
+                    }
+
+                    const start = new Date(startDateVal);
+                    const end = new Date(endDateVal);
+
+                    if (end <= start) {
+                        $('#totalInfo').html('<span class="text-danger">La date de fin doit être après la date de début</span>');
+                        return;
+                    }
+
+                    // Calculate total hours
+                    let totalHours = 0;
+                    const taskHours = [];
+                    for (let i = 1; i <= 5; i++) {
+                        const hours = parseFloat($('#task' + i + '_hours').val()) || 0;
+                        taskHours.push(hours);
+                        totalHours += hours;
+                    }
+
+                    if (totalHours === 0) {
+                        $('#totalInfo').html('<span class="text-muted">Définissez les durées des tâches</span>');
+                        return;
+                    }
+
+                    const svgWidth = svg.clientWidth || container.clientWidth;
+                    const totalProjectDays = (end - start) / (1000 * 60 * 60 * 24);
+
+                    // Draw timeline segments accounting for holidays
+                    let currentDate = new Date(start);
+                    const allSegments = [];
+
+                    taskHours.forEach((hours, taskIndex) => {
+                        if (hours <= 0) return;
+
+                        const taskWeeks = hours / HOURS_PER_WEEK;
+                        const taskDays = taskWeeks * 7;
+                        let remainingDays = taskDays;
+
+                        while (remainingDays > 0) {
+                            // Find next holiday
+                            let nextHoliday = null;
+                            let daysUntilHoliday = Infinity;
+
+                            schoolHolidays.forEach(holiday => {
+                                if (holiday.start > currentDate) {
+                                    const daysToHoliday = (holiday.start - currentDate) / (1000 * 60 * 60 * 24);
+                                    if (daysToHoliday < daysUntilHoliday) {
+                                        daysUntilHoliday = daysToHoliday;
+                                        nextHoliday = holiday;
+                                    }
+                                }
+                            });
+
+                            // Check if currently in holiday
+                            const currentHoliday = schoolHolidays.find(h =>
+                                currentDate >= h.start && currentDate <= h.end
+                            );
+
+                            if (currentHoliday) {
+                                currentDate = new Date(currentHoliday.end);
+                                currentDate.setDate(currentDate.getDate() + 1);
+                                continue;
+                            }
+
+                            let segmentDays;
+                            if (nextHoliday && daysUntilHoliday < remainingDays) {
+                                segmentDays = daysUntilHoliday;
+                            } else {
+                                segmentDays = remainingDays;
+                            }
+
+                            const segmentStart = new Date(currentDate);
+                            currentDate.setDate(currentDate.getDate() + segmentDays);
+                            const segmentEnd = new Date(currentDate);
+
+                            const segmentStartDays = (segmentStart - start) / (1000 * 60 * 60 * 24);
+                            const segmentPercent = (segmentStartDays / totalProjectDays) * 100;
+                            const segmentWidth = (segmentDays / totalProjectDays) * 100;
+
+                            allSegments.push({
+                                taskIndex: taskIndex,
+                                left: segmentPercent,
+                                width: segmentWidth,
+                                hours: (segmentDays / taskDays) * hours
+                            });
+
+                            remainingDays -= segmentDays;
+
+                            if (nextHoliday && daysUntilHoliday <= segmentDays) {
+                                currentDate = new Date(nextHoliday.end);
+                                currentDate.setDate(currentDate.getDate() + 1);
+                            }
+                        }
+                    });
+
+                    // Sort and draw segments
+                    allSegments.sort((a, b) => a.left - b.left);
+
+                    allSegments.forEach(segment => {
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', (segment.left / 100) * svgWidth);
+                        rect.setAttribute('y', 0);
+                        rect.setAttribute('width', (segment.width / 100) * svgWidth);
+                        rect.setAttribute('height', 60);
+                        rect.setAttribute('fill', taskColors[segment.taskIndex]);
+                        svg.appendChild(rect);
+
+                        // Add text if segment is wide enough
+                        if ((segment.width / 100) * svgWidth > 40) {
+                            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                            text.setAttribute('x', ((segment.left + segment.width / 2) / 100) * svgWidth);
+                            text.setAttribute('y', 35);
+                            text.setAttribute('text-anchor', 'middle');
+                            text.setAttribute('fill', 'white');
+                            text.setAttribute('font-weight', 'bold');
+                            text.setAttribute('font-size', '12');
+                            text.textContent = segment.hours.toFixed(1) + 'h';
+                            svg.appendChild(text);
+                        }
+                    });
+
+                    // Draw vacation overlays
+                    schoolHolidays.forEach(holiday => {
+                        if (holiday.start <= end && holiday.end >= start) {
+                            const holidayStart = holiday.start > start ? holiday.start : start;
+                            const holidayEnd = holiday.end < end ? holiday.end : end;
+
+                            const daysFromStart = (holidayStart - start) / (1000 * 60 * 60 * 24);
+                            const holidayDuration = (holidayEnd - holidayStart) / (1000 * 60 * 60 * 24);
+
+                            const leftPercent = (daysFromStart / totalProjectDays) * 100;
+                            const widthPercent = (holidayDuration / totalProjectDays) * 100;
+
+                            const vacationOverlay = document.createElement('div');
+                            vacationOverlay.className = 'vacation-overlay';
+                            vacationOverlay.style.left = leftPercent + '%';
+                            vacationOverlay.style.width = widthPercent + '%';
+                            vacationOverlay.title = holiday.description;
+                            container.appendChild(vacationOverlay);
+                        }
+                    });
+
+                    // Draw current day marker
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    if (today >= start && today <= end) {
+                        const daysFromStart = (today - start) / (1000 * 60 * 60 * 24);
+                        const todayPercent = (daysFromStart / totalProjectDays) * 100;
+
+                        const todayMarker = document.createElement('div');
+                        todayMarker.className = 'current-day-marker';
+                        todayMarker.style.left = todayPercent + '%';
+
+                        const day = String(today.getDate()).padStart(2, '0');
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const year = today.getFullYear();
+                        todayMarker.setAttribute('data-date', `${day}/${month}/${year}`);
+                        container.appendChild(todayMarker);
+                    }
+
+                    // Draw milestones
+                    let cumulativeHours = 0;
+                    taskHours.forEach((hours, index) => {
+                        if (hours > 0) {
+                            cumulativeHours += hours;
+
+                            const weeksNeeded = cumulativeHours / HOURS_PER_WEEK;
+                            const daysToAdd = Math.round(weeksNeeded * 7);
+                            const milestoneDate = addWorkingDays(start, daysToAdd);
+
+                            const daysFromStart = (milestoneDate - start) / (1000 * 60 * 60 * 24);
+                            const milestonePercent = (daysFromStart / totalProjectDays) * 100;
+
+                            const dateStr = `${String(milestoneDate.getDate()).padStart(2, '0')}/${String(milestoneDate.getMonth() + 1).padStart(2, '0')}`;
+
+                            const marker = document.createElement('div');
+                            marker.className = 'milestone-marker';
+                            marker.style.left = milestonePercent + '%';
+                            marker.textContent = dateStr;
+                            milestonesContainer.appendChild(marker);
+                        }
+                    });
+
+                    // Update total info
+                    const totalWeeks = (totalHours / HOURS_PER_WEEK).toFixed(1);
+                    const availableHours = calculateTotalHours();
+                    let infoHTML = `<strong>Total: ${totalHours.toFixed(1)} heures</strong> (${totalWeeks} semaines à ${HOURS_PER_WEEK}h/semaine)`;
+
+                    if (availableHours > 0 && Math.abs(totalHours - availableHours) > 0.5) {
+                        const diff = (availableHours - totalHours).toFixed(1);
+                        if (diff > 0) {
+                            infoHTML += `<br><span class="text-info">${diff}h disponibles</span>`;
+                        } else {
+                            infoHTML += `<br><span class="text-warning">${Math.abs(diff)}h au-dessus de la capacité</span>`;
+                        }
+                    }
+
+                    $('#totalInfo').html(infoHTML);
+
+                    // Update vacation info
+                    if (schoolHolidays.length > 0) {
+                        const relevantHolidays = schoolHolidays.filter(h => h.start <= end && h.end >= start);
+                        if (relevantHolidays.length > 0) {
+                            let vacationHTML = '📅 ' + relevantHolidays.length + ' période(s) de vacances : ';
+                            vacationHTML += relevantHolidays.map(h => {
+                                const startStr = h.start.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+                                const endStr = h.end.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+                                return `<span>${h.description.replace('Vacances ', '')} (${startStr}-${endStr})</span>`;
+                            }).join(' ');
+                            $('#vacationInfo').html(vacationHTML);
+                        } else {
+                            $('#vacationInfo').html('');
+                        }
+                    } else {
+                        $('#vacationInfo').html('');
+                    }
+                }
+
+                // Event listeners
                 $('#planningForm input, #planningForm select').on('input change', function () {
+                    updateTimeline();
+                });
+
+                $('#startdate, #enddate').on('change', function() {
+                    initializeTaskDurations();
+                });
+
+                $('#vacationzone').on('change', async function() {
+                    const zone = this.value;
+                    await fetchSchoolHolidays(zone);
+                    initializeTaskDurations();
+                });
+
+                // Auto-adjust other tasks when one is modified
+                $('.task-hours-input').on('input', function() {
+                    const changedTaskId = $(this).attr('id');
+                    const newValue = parseFloat($(this).val()) || 0;
+                    const totalHours = calculateTotalHours();
+
+                    if (totalHours <= 0) {
+                        updateTimeline();
+                        return;
+                    }
+
+                    let currentTotal = 0;
+                    const currentValues = {};
+                    for (let i = 1; i <= 5; i++) {
+                        const val = parseFloat($('#task' + i + '_hours').val()) || 0;
+                        currentValues['task' + i + '_hours'] = val;
+                        currentTotal += val;
+                    }
+
+                    if (currentTotal > totalHours) {
+                        const excess = currentTotal - totalHours;
+                        const otherTasksTotal = currentTotal - newValue;
+
+                        if (otherTasksTotal > 0) {
+                            for (let i = 1; i <= 5; i++) {
+                                const id = 'task' + i + '_hours';
+                                if (id !== changedTaskId) {
+                                    const currentVal = currentValues[id];
+                                    const reduction = (currentVal / otherTasksTotal) * excess;
+                                    const newVal = Math.max(0, currentVal - reduction);
+                                    $('#' + id).val(newVal.toFixed(1));
+                                }
+                            }
+                        }
+                    }
+
                     updateTimeline();
                 });
 
@@ -261,94 +825,30 @@ $PAGE->requires->jquery();
                         formData['task' + i + '_hours'] = parseFloat($('#task' + i + '_hours').val()) || 0;
                     }
 
-                    formData['locked'] = 0; // Always unlocked
-
+                    formData['locked'] = 0;
 
                     return formData;
                 };
 
                 // Initialize Autosave if not readonly
                 <?php if (!$readonly): ?>
-                        Autosave.init({
-                            cmid: cmid,
-                            step: step,
-                            groupid: 0,
-                            interval: autosaveInterval,
-                            formSelector: '#planningForm',
-                            serialize: serializeData
-                        });
+                    Autosave.init({
+                        cmid: cmid,
+                        step: step,
+                        groupid: 0,
+                        interval: autosaveInterval,
+                        formSelector: '#planningForm',
+                        serialize: serializeData
+                    });
                 <?php endif; ?>
 
-                    function updateTimeline() {
-                        const svg = document.getElementById('timelineSVG');
-                        svg.innerHTML = '';
-
-                        const startDate = $('#startdate').val();
-                        const endDate = $('#enddate').val();
-
-                        if (!startDate || !endDate) {
-                            $('#totalInfo').html('Veuillez sélectionner les dates de début et de fin');
-                            return;
-                        }
-
-                        const start = new Date(startDate);
-                        const end = new Date(endDate);
-
-                        if (end <= start) {
-                            $('#totalInfo').html('La date de fin doit être après la date de début');
-                            return;
-                        }
-
-                        // Calculate total hours and weeks
-                        let totalHours = 0;
-                        const taskHours = [];
-                        for (let i = 1; i <= 5; i++) {
-                            const hours = parseFloat($('#task' + i + '_hours').val()) || 0;
-                            taskHours.push(hours);
-                            totalHours += hours;
-                        }
-
-                        const totalWeeks = Math.ceil(totalHours / HOURS_PER_WEEK);
-
-                        // Display total info
-                        $('#totalInfo').html(`Total: ${totalHours.toFixed(1)}h sur ${totalWeeks} semaines (${HOURS_PER_WEEK}h/semaine)`);
-
-                        // Draw timeline
-                        const svgWidth = svg.clientWidth;
-                        let currentX = 0;
-
-                        taskHours.forEach((hours, index) => {
-                            if (hours > 0) {
-                                const weeks = hours / HOURS_PER_WEEK;
-                                const width = (weeks / totalWeeks) * svgWidth;
-
-                                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                                rect.setAttribute('x', currentX);
-                                rect.setAttribute('y', 0);
-                                rect.setAttribute('width', width);
-                                rect.setAttribute('height', 60);
-                                rect.setAttribute('fill', taskColors[index]);
-                                svg.appendChild(rect);
-
-                                if (width > 40) {
-                                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                                    text.setAttribute('x', currentX + width / 2);
-                                    text.setAttribute('y', 35);
-                                    text.setAttribute('text-anchor', 'middle');
-                                    text.setAttribute('fill', 'white');
-                                    text.setAttribute('font-weight', 'bold');
-                                    text.setAttribute('font-size', '14');
-                                    text.textContent = hours.toFixed(1) + 'h';
-                                    svg.appendChild(text);
-                                }
-
-                                currentX += width;
-                            }
-                        });
-                    }
-
-                // Initial timeline render
-                updateTimeline();
+                // Initial load
+                const initialZone = $('#vacationzone').val();
+                if (initialZone) {
+                    fetchSchoolHolidays(initialZone);
+                } else {
+                    updateTimeline();
+                }
             });
         });
     })();

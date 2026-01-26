@@ -211,5 +211,64 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012502, 'gestionprojet');
     }
 
+    if ($oldversion < 2026012600) {
+        // Phase 3.5: Add submission system fields.
+
+        // Add enable_submission to main table.
+        $table = new xmldb_table('gestionprojet');
+        $field = new xmldb_field('enable_submission', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'ai_enabled');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add status and timesubmitted to gestionprojet_essai (missing fields).
+        $table = new xmldb_table('gestionprojet_essai');
+        $field = new xmldb_field('status', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'userid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $field = new xmldb_field('timesubmitted', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'status');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add status and timesubmitted to gestionprojet_rapport (missing fields).
+        $table = new xmldb_table('gestionprojet_rapport');
+        $field = new xmldb_field('status', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'userid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $field = new xmldb_field('timesubmitted', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'status');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add submission_date and deadline_date to teacher tables.
+        $teachertables = [
+            'gestionprojet_cdcf_teacher',
+            'gestionprojet_essai_teacher',
+            'gestionprojet_rapport_teacher',
+            'gestionprojet_besoin_eleve_teacher',
+            'gestionprojet_carnet_teacher',
+        ];
+
+        foreach ($teachertables as $tablename) {
+            $table = new xmldb_table($tablename);
+
+            $field = new xmldb_field('submission_date', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'ai_instructions');
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+
+            $field = new xmldb_field('deadline_date', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'submission_date');
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026012600, 'gestionprojet');
+    }
+
     return true;
 }
