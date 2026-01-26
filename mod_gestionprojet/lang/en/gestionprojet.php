@@ -238,6 +238,9 @@ $string['ai_connection_error'] = 'Unable to connect to the API server.';
 $string['ai_provider_invalid'] = 'Invalid AI provider.';
 $string['ai_provider_required'] = 'Please select an AI provider.';
 $string['ai_api_key_required'] = 'Please enter an API key.';
+$string['ai_api_key_builtin'] = 'Built-in API key';
+$string['ai_api_key_builtin_notice'] = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> This provider uses a built-in API key. No additional configuration is needed.</div>';
+$string['ai_provider_builtin'] = 'Built-in key';
 
 // Correction models (Phase 3)
 $string['correction_models'] = 'Correction Models';

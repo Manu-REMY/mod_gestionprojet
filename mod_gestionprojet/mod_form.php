@@ -103,6 +103,7 @@ class mod_gestionprojet_mod_form extends moodleform_mod
 
         $providers = [
             '' => get_string('ai_provider_select', 'gestionprojet'),
+            'albert' => 'Albert (Etalab) - ' . get_string('ai_provider_builtin', 'gestionprojet'),
             'openai' => 'OpenAI (GPT-4)',
             'anthropic' => 'Anthropic (Claude)',
             'mistral' => 'Mistral AI',
@@ -112,10 +113,17 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->addHelpButton('ai_provider', 'ai_provider', 'gestionprojet');
         $mform->hideIf('ai_provider', 'ai_enabled', 'eq', 0);
 
+        // Notice for Albert (built-in key).
+        $mform->addElement('static', 'ai_api_key_notice', '', get_string('ai_api_key_builtin_notice', 'gestionprojet'));
+        $mform->hideIf('ai_api_key_notice', 'ai_enabled', 'eq', 0);
+        $mform->hideIf('ai_api_key_notice', 'ai_provider', 'neq', 'albert');
+
+        // API key field (hidden for providers with built-in keys).
         $mform->addElement('passwordunmask', 'ai_api_key', get_string('ai_api_key', 'gestionprojet'));
         $mform->setType('ai_api_key', PARAM_RAW);
         $mform->addHelpButton('ai_api_key', 'ai_api_key', 'gestionprojet');
         $mform->hideIf('ai_api_key', 'ai_enabled', 'eq', 0);
+        $mform->hideIf('ai_api_key', 'ai_provider', 'eq', 'albert');
 
         // Test API button (will be handled by JavaScript).
         $mform->addElement(
@@ -169,8 +177,12 @@ class mod_gestionprojet_mod_form extends moodleform_mod
             if (empty($data['ai_provider'])) {
                 $errors['ai_provider'] = get_string('ai_provider_required', 'gestionprojet');
             }
-            if (empty($data['ai_api_key'])) {
-                $errors['ai_api_key'] = get_string('ai_api_key_required', 'gestionprojet');
+            // API key is only required for providers without built-in keys.
+            if (empty($data['ai_api_key']) && !empty($data['ai_provider'])) {
+                require_once($CFG->dirroot . '/mod/gestionprojet/classes/ai_config.php');
+                if (\mod_gestionprojet\ai_config::requires_user_api_key($data['ai_provider'])) {
+                    $errors['ai_api_key'] = get_string('ai_api_key_required', 'gestionprojet');
+                }
             }
         }
 

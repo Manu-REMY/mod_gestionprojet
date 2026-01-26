@@ -19,11 +19,33 @@ defined('MOODLE_INTERNAL') || die();
 $PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 7, 'mode' => 'teacher']);
 $PAGE->set_title(get_string('step7', 'gestionprojet') . ' - ' . get_string('correction_models', 'gestionprojet'));
 
+// Default AI instructions for needs expression (Bête à Cornes).
+$defaultaiinstructions = 'Rôle : Tu es un professeur de technologie expérimenté au collège.
+
+Objectif : Corriger un diagramme d\'expression du besoin (type Bête à cornes ou Pieuvre) réalisé par un élève de 3ème.
+
+Consignes de correction :
+
+Analyse de la Bête à cornes : Vérifie que l\'élève a correctement répondu aux trois questions :
+
+À qui le produit rend-il service ? (Utilisateur)
+
+Sur quoi le produit agit-il ? (Matière d\'œuvre / Élément extérieur)
+
+Dans quel but ? (Fonction d\'usage commençant par un verbe à l\'infinitif).
+
+Rigueur de la formulation : La fonction globale doit être précise. Évite les formulations vagues comme "Ça sert à aider".
+
+Pédagogie : Ne donne pas la correction brute. Si une réponse est fausse, pose une question de guidage pour que l\'élève trouve l\'erreur (ex: "Est-ce que l\'objet agit vraiment sur l\'utilisateur ou sur l\'objet qu\'il manipule ?").
+
+Ton : Encourageant, clair et adapté à un niveau 14-15 ans.';
+
 // Get or create teacher model.
 $model = $DB->get_record('gestionprojet_besoin_eleve_teacher', ['gestionprojetid' => $gestionprojet->id]);
 if (!$model) {
     $model = new stdClass();
     $model->gestionprojetid = $gestionprojet->id;
+    $model->ai_instructions = $defaultaiinstructions;
     $model->timecreated = time();
     $model->timemodified = time();
     $model->id = $DB->insert_record('gestionprojet_besoin_eleve_teacher', $model);

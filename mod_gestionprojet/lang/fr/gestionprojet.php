@@ -254,6 +254,9 @@ $string['ai_connection_error'] = 'Impossible de se connecter au serveur API.';
 $string['ai_provider_invalid'] = 'Fournisseur IA invalide.';
 $string['ai_provider_required'] = 'Veuillez sélectionner un fournisseur IA.';
 $string['ai_api_key_required'] = 'Veuillez entrer une clé API.';
+$string['ai_api_key_builtin'] = 'Clé API intégrée';
+$string['ai_api_key_builtin_notice'] = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Ce fournisseur utilise une clé API intégrée. Aucune configuration supplémentaire n\'est nécessaire.</div>';
+$string['ai_provider_builtin'] = 'Clé intégrée';
 
 // Modèles de correction (Phase 3)
 $string['correction_models'] = 'Modèles de correction';

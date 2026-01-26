@@ -20,6 +20,43 @@ defined('MOODLE_INTERNAL') || die();
 $PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'teacher']);
 $PAGE->set_title(get_string('step4', 'gestionprojet') . ' - ' . get_string('correction_models', 'gestionprojet'));
 
+// Default AI instructions for CdCF (Cahier des Charges Fonctionnel).
+$defaultaiinstructions = 'Rôle : Tu es un professeur de Technologie au collège expérimenté et bienveillant. Tu dois évaluer des élèves de niveau 3ème (14-15 ans) sur la rédaction d\'un Cahier des Charges Fonctionnel (CdCF). Tu disposes du modèle rempli par l\'enseignant ci-joint.
+
+Contexte pédagogique : Les élèves doivent passer du "besoin" à la "fonction". Ils confondent souvent la fonction (ce que l\'objet doit faire) avec la solution technique (comment il est fait). Ton but est de corriger cette erreur fréquente tout en validant la structure du CdCF.
+
+Tes critères d\'évaluation sont les suivants :
+
+L\'Analyse Fonctionnelle (Diagramme Pieuvre / Fonctions)
+
+Verbes : Chaque fonction doit commencer par un verbe à l\'infinitif.
+
+Fonction Principale (FP) : Relie-t-elle bien l\'utilisateur et la matière d\'œuvre ?
+
+Fonctions Contraintes (FC) : Sont-elles pertinentes (Énergie, Esthétique, Sécurité, Budget, Environnement) ?
+
+Erreur fatale à surveiller : L\'élève ne doit pas citer de solution technique (Exemple : dire "Doit avoir des roues" est une erreur, il faut dire "Doit permettre de se déplacer").
+
+3. Caractérisation (Critères et Niveaux)
+
+Critères : Sont-ils observables ou mesurables ?
+
+Niveaux : Y a-t-il une valeur cible (ex: "Moins de 20€", "Autonomie > 2h") ? L\'unité utilisée pour le niveau est-elle en concordance avec la fonction mesurée?
+
+4. Forme et Orthographe
+
+La syntaxe est-elle correcte et le vocabulaire technique précis ?
+
+Format de ta réponse : Pour chaque élève, fournis une réponse structurée ainsi :
+
+Note globale indicative (sur 20) ou appréciation générale (Acquis / En cours / Non acquis).
+
+Points forts : Ce qui est bien réussi.
+
+Tableau d\'analyse : Un tableau rapide vérifiant les 3 piliers (Besoin, Fonctions, Critères).
+
+Conseils d\'amélioration : Explique comment transformer une solution en fonction si l\'élève s\'est trompé. Sois encourageant.';
+
 // Get or create teacher model.
 $model = $DB->get_record('gestionprojet_cdcf_teacher', ['gestionprojetid' => $gestionprojet->id]);
 if (!$model) {
@@ -29,7 +66,7 @@ if (!$model) {
     $model->milieu = '';
     $model->fp = '';
     $model->interacteurs_data = '';
-    $model->ai_instructions = '';
+    $model->ai_instructions = $defaultaiinstructions;
     $model->timecreated = time();
     $model->timemodified = time();
     $model->id = $DB->insert_record('gestionprojet_cdcf_teacher', $model);

@@ -70,7 +70,13 @@ class ai_evaluator {
 
         // Get AI config.
         $aiconfig = ai_config::get_config($gestionprojetid);
-        if (!$aiconfig || empty($aiconfig->api_key)) {
+        if (!$aiconfig) {
+            throw new \Exception(get_string('ai_not_enabled', 'gestionprojet'));
+        }
+
+        // Check for effective API key (built-in or user-provided).
+        $apikey = ai_config::get_effective_api_key($aiconfig->provider, $aiconfig->api_key);
+        if (empty($apikey)) {
             throw new \Exception(get_string('ai_api_key_required', 'gestionprojet'));
         }
 
@@ -143,7 +149,13 @@ class ai_evaluator {
 
             // Get AI config.
             $aiconfig = ai_config::get_config($evaluation->gestionprojetid);
-            if (!$aiconfig || empty($aiconfig->api_key)) {
+            if (!$aiconfig) {
+                throw new \Exception(get_string('ai_not_enabled', 'gestionprojet'));
+            }
+
+            // Get effective API key (built-in or user-provided).
+            $apikey = ai_config::get_effective_api_key($aiconfig->provider, $aiconfig->api_key);
+            if (empty($apikey)) {
                 throw new \Exception(get_string('ai_api_key_required', 'gestionprojet'));
             }
 
@@ -169,7 +181,7 @@ class ai_evaluator {
             $prompts = $promptbuilder->build_prompt($evaluation->step, $submission, $teachermodel);
 
             // Get AI provider.
-            $provider = self::get_provider($aiconfig->provider, $aiconfig->api_key);
+            $provider = self::get_provider($aiconfig->provider, $apikey);
 
             // Call AI.
             $response = $provider->evaluate(
@@ -375,6 +387,8 @@ class ai_evaluator {
                 return new ai_provider\anthropic_provider($apikey);
             case 'mistral':
                 return new ai_provider\mistral_provider($apikey);
+            case 'albert':
+                return new ai_provider\albert_provider($apikey);
             default:
                 throw new \Exception(get_string('ai_provider_invalid', 'gestionprojet'));
         }
@@ -394,6 +408,8 @@ class ai_evaluator {
                 return ai_provider\anthropic_provider::DEFAULT_MODEL;
             case 'mistral':
                 return ai_provider\mistral_provider::DEFAULT_MODEL;
+            case 'albert':
+                return ai_provider\albert_provider::DEFAULT_MODEL;
             default:
                 return 'gpt-4o-mini';
         }

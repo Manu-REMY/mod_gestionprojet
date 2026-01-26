@@ -27,7 +27,12 @@ require_sesskey();
 // Get parameters.
 $cmid = required_param('cmid', PARAM_INT);
 $provider = required_param('provider', PARAM_ALPHA);
-$apikey = required_param('apikey', PARAM_RAW);
+$apikey = optional_param('apikey', '', PARAM_RAW);
+
+// For providers with built-in keys, use the built-in key.
+if (ai_config::has_builtin_key($provider)) {
+    $apikey = ai_config::get_builtin_api_key($provider);
+}
 
 // Set up context - handle both new activity (cmid=0) and existing activity.
 if ($cmid > 0) {

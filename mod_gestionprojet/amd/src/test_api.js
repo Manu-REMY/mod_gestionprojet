@@ -26,6 +26,10 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
             var provider = $('#id_ai_provider').val();
             var apiKey = $('#id_ai_api_key').val();
 
+            // Providers with built-in API keys
+            var builtinKeyProviders = ['albert'];
+            var hasBuiltinKey = builtinKeyProviders.indexOf(provider) !== -1;
+
             // Validate inputs
             if (!provider) {
                 Str.get_string('ai_provider_required', 'mod_gestionprojet').then(function(str) {
@@ -34,7 +38,8 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
                 return;
             }
 
-            if (!apiKey) {
+            // Only require API key for providers without built-in keys
+            if (!apiKey && !hasBuiltinKey) {
                 Str.get_string('ai_api_key_required', 'mod_gestionprojet').then(function(str) {
                     Notification.alert('Error', str);
                 }).catch(Notification.exception);
@@ -45,16 +50,20 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
             var originalText = testBtn.text();
             testBtn.prop('disabled', true).text('Testing...');
 
-            // Make AJAX request
+            // Make AJAX request (don't send apikey for built-in providers)
+            var requestData = {
+                sesskey: M.cfg.sesskey,
+                cmid: cmid,
+                provider: provider
+            };
+            if (!hasBuiltinKey) {
+                requestData.apikey = apiKey;
+            }
+
             $.ajax({
                 url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/test_api.php',
                 method: 'POST',
-                data: {
-                    sesskey: M.cfg.sesskey,
-                    cmid: cmid,
-                    provider: provider,
-                    apikey: apiKey
-                },
+                data: requestData,
                 dataType: 'json'
             }).done(function(response) {
                 if (response.success) {

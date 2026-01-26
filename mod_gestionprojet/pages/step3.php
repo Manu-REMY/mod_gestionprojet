@@ -312,6 +312,18 @@ $locked = 0;
                 </div>
             </div>
 
+            <div class="timeline-preview-section mt-4 mb-4">
+                <h5 class="mb-3">
+                    <?php echo get_string('timeline_preview', 'gestionprojet'); ?>
+                </h5>
+                <div id="timelineContainer" class="timeline-box">
+                    <svg id="timelineSVG" class="timeline-svg"></svg>
+                </div>
+                <div id="milestonesContainer" class="milestones-container"></div>
+                <div id="totalInfo" class="total-info-box"></div>
+                <div id="vacationInfo" class="vacation-info"></div>
+            </div>
+
             <h5 class="mt-4 mb-3">
                 <?php echo get_string('task_durations', 'gestionprojet'); ?>
             </h5>
@@ -340,18 +352,6 @@ $locked = 0;
                     </span>
                 </div>
             <?php endfor; ?>
-
-            <div class="timeline-preview-section">
-                <h5 class="mb-3">
-                    <?php echo get_string('timeline_preview', 'gestionprojet'); ?>
-                </h5>
-                <div id="timelineContainer" class="timeline-box">
-                    <svg id="timelineSVG" class="timeline-svg"></svg>
-                </div>
-                <div id="milestonesContainer" class="milestones-container"></div>
-                <div id="totalInfo" class="total-info-box"></div>
-                <div id="vacationInfo" class="vacation-info"></div>
-            </div>
         </form>
 
         <div id="autosaveIndicator" class="text-muted small" style="margin-top: 10px;"></div>
