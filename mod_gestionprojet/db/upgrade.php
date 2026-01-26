@@ -270,5 +270,56 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012600, 'gestionprojet');
     }
 
+    if ($oldversion < 2026012700) {
+        // Phase 4: AI Evaluation Engine.
+
+        // Add ai_auto_apply field to main table.
+        $table = new xmldb_table('gestionprojet');
+        $field = new xmldb_field('ai_auto_apply', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'ai_enabled');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Create gestionprojet_ai_evaluations table.
+        $table = new xmldb_table('gestionprojet_ai_evaluations');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('step', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('submissionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('groupid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('provider', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('model', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('prompt_tokens', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('completion_tokens', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('raw_response', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('parsed_grade', XMLDB_TYPE_NUMBER, '10', null, null, null, null);
+        $table->add_field('parsed_feedback', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('criteria_json', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('keywords_found', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('keywords_missing', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('suggestions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('status', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'pending');
+        $table->add_field('error_message', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('applied_by', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('applied_at', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN, ['gestionprojetid'], 'gestionprojet', ['id']);
+
+        $table->add_index('submission_idx', XMLDB_INDEX_NOTUNIQUE, ['step', 'submissionid']);
+        $table->add_index('status_idx', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026012700, 'gestionprojet');
+    }
+
     return true;
 }

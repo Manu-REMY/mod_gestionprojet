@@ -12,6 +12,8 @@ define('AJAX_SCRIPT', true);
 require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../lib.php');
 
+global $CFG;
+
 $id = required_param('id', PARAM_INT); // CM ID
 $step = required_param('step', PARAM_INT); // Step number (4, 5, or 6)
 $action = required_param('action', PARAM_ALPHA); // 'submit' or 'revert'
@@ -86,7 +88,30 @@ if ($action === 'submit') {
     // Trigger event
     // \mod_gestionprojet\event\assessable_submitted::create(...) (If we had events)
 
-    echo json_encode(['success' => true, 'status' => 'submitted']);
+    // Trigger AI evaluation if enabled.
+    $aievaluationid = null;
+    if (!empty($gestionprojet->ai_enabled)) {
+        try {
+            require_once($CFG->dirroot . '/mod/gestionprojet/classes/ai_evaluator.php');
+            $aievaluationid = \mod_gestionprojet\ai_evaluator::queue_evaluation(
+                $gestionprojet->id,
+                $step,
+                $submission->id,
+                $groupid,
+                $gestionprojet->group_submission ? 0 : $USER->id
+            );
+        } catch (\Exception $e) {
+            // Log error but don't fail submission.
+            debugging('AI evaluation queue failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+    }
+
+    $response = ['success' => true, 'status' => 'submitted'];
+    if ($aievaluationid) {
+        $response['ai_evaluation_id'] = $aievaluationid;
+        $response['ai_evaluation_status'] = 'pending';
+    }
+    echo json_encode($response);
 
 } elseif ($action === 'revert') {
     // Only teacher can revert? Or student if enabled?

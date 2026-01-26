@@ -126,6 +126,12 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         );
         $mform->hideIf('test_api_btn', 'ai_enabled', 'eq', 0);
 
+        // Auto-apply AI grades option.
+        $mform->addElement('selectyesno', 'ai_auto_apply', get_string('ai_auto_apply', 'gestionprojet'));
+        $mform->setDefault('ai_auto_apply', 0);
+        $mform->addHelpButton('ai_auto_apply', 'ai_auto_apply', 'gestionprojet');
+        $mform->hideIf('ai_auto_apply', 'ai_enabled', 'eq', 0);
+
         // Add standard grading elements.
         $this->standard_grading_coursemodule_elements();
 

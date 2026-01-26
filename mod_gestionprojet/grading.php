@@ -673,6 +673,314 @@ if (!$submission): ?>
             </div>
         <?php endif; ?>
 
+        <?php
+        // ============================================
+        // AI Evaluation Section (Phase 4)
+        // ============================================
+        // Only show for student steps (4-8) when AI is enabled
+        if (in_array($step, [4, 5, 6, 7, 8]) && !empty($gestionprojet->ai_enabled)):
+            require_once(__DIR__ . '/classes/ai_evaluator.php');
+            require_once(__DIR__ . '/classes/ai_response_parser.php');
+
+            $aievaluation = \mod_gestionprojet\ai_evaluator::get_evaluation(
+                $gestionprojet->id,
+                $step,
+                $submission->id
+            );
+        ?>
+        <div class="ai-evaluation-section" style="margin: 20px 0; padding: 15px; background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%); border-radius: 8px; border: 1px solid #c2d6ff;">
+            <h3 style="margin-top: 0; color: #1a56db; display: flex; align-items: center; gap: 10px;">
+                🤖 <?php echo get_string('ai_evaluation_section', 'gestionprojet'); ?>
+            </h3>
+
+            <?php if (!$aievaluation): ?>
+                <!-- No evaluation yet -->
+                <div style="padding: 15px; background: #fff; border-radius: 6px; text-align: center;">
+                    <p style="color: #6b7280; margin-bottom: 15px;">
+                        <?php echo get_string('no_ai_evaluation', 'gestionprojet'); ?>
+                    </p>
+                    <?php if ($submission->is_submitted): ?>
+                        <button type="button" class="btn btn-primary" id="btn-trigger-ai-eval"
+                            data-cmid="<?php echo $cm->id; ?>"
+                            data-step="<?php echo $step; ?>"
+                            data-submissionid="<?php echo $submission->id; ?>">
+                            🚀 <?php echo get_string('trigger_ai_evaluation', 'gestionprojet'); ?>
+                        </button>
+                    <?php else: ?>
+                        <p style="color: #9ca3af; font-style: italic;">
+                            (La soumission doit être validée pour lancer l'évaluation IA)
+                        </p>
+                    <?php endif; ?>
+                </div>
+
+            <?php elseif ($aievaluation->status === 'pending' || $aievaluation->status === 'processing'): ?>
+                <!-- Evaluation in progress -->
+                <div style="padding: 15px; background: #fff; border-radius: 6px; text-align: center;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <div class="spinner-border text-primary" role="status" style="width: 24px; height: 24px;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span style="color: #1a56db; font-weight: 500;">
+                            <?php echo get_string('ai_evaluating', 'gestionprojet'); ?>
+                        </span>
+                    </div>
+                    <p style="color: #6b7280; margin-top: 10px; font-size: 0.9em;">
+                        Statut: <?php echo $aievaluation->status; ?> | ID: <?php echo $aievaluation->id; ?>
+                    </p>
+                </div>
+                <script>
+                    // Auto-refresh to check status
+                    setTimeout(function() { location.reload(); }, 10000);
+                </script>
+
+            <?php elseif ($aievaluation->status === 'failed'): ?>
+                <!-- Evaluation failed -->
+                <div style="padding: 15px; background: #fef2f2; border-radius: 6px; border: 1px solid #fecaca;">
+                    <div style="display: flex; align-items: center; gap: 10px; color: #dc2626;">
+                        <span style="font-size: 1.5em;">⚠️</span>
+                        <strong><?php echo get_string('ai_evaluation_failed', 'gestionprojet'); ?></strong>
+                    </div>
+                    <?php if ($aievaluation->error_message): ?>
+                        <p style="color: #991b1b; margin: 10px 0; padding: 10px; background: #fff; border-radius: 4px; font-family: monospace; font-size: 0.85em;">
+                            <?php echo s($aievaluation->error_message); ?>
+                        </p>
+                    <?php endif; ?>
+                    <button type="button" class="btn btn-warning" id="btn-retry-ai-eval"
+                        data-cmid="<?php echo $cm->id; ?>"
+                        data-evaluationid="<?php echo $aievaluation->id; ?>">
+                        🔄 <?php echo get_string('retry_evaluation', 'gestionprojet'); ?>
+                    </button>
+                </div>
+
+            <?php elseif ($aievaluation->status === 'completed' || $aievaluation->status === 'applied'): ?>
+                <!-- Evaluation completed - show results -->
+                <?php
+                $parser = new \mod_gestionprojet\ai_response_parser();
+                $result = new \stdClass();
+                $result->grade = $aievaluation->parsed_grade;
+                $result->max_grade = 20;
+                $result->feedback = $aievaluation->parsed_feedback;
+                $result->criteria = json_decode($aievaluation->criteria_json, true) ?? [];
+                $result->keywords_found = json_decode($aievaluation->keywords_found, true) ?? [];
+                $result->keywords_missing = json_decode($aievaluation->keywords_missing, true) ?? [];
+                $result->suggestions = json_decode($aievaluation->suggestions, true) ?? [];
+                ?>
+
+                <?php if ($aievaluation->status === 'applied'): ?>
+                    <div style="padding: 8px 12px; background: #d1fae5; border-radius: 4px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <span>✅</span>
+                        <span style="color: #065f46;">
+                            <?php echo get_string('ai_evaluation_applied', 'gestionprojet'); ?>
+                            <?php if ($aievaluation->applied_at): ?>
+                                (<?php echo userdate($aievaluation->applied_at, get_string('strftimedatetime')); ?>)
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
+
+                <!-- AI Grade Display -->
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 20px; padding: 15px; background: #fff; border-radius: 6px; margin-bottom: 15px;">
+                    <div style="text-align: center; padding: 15px; background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%); border-radius: 8px; color: white; min-width: 100px;">
+                        <div style="font-size: 2em; font-weight: bold;"><?php echo number_format($aievaluation->parsed_grade, 1); ?></div>
+                        <div style="font-size: 0.85em; opacity: 0.9;">/20</div>
+                        <div style="font-size: 0.75em; margin-top: 5px;"><?php echo get_string('ai_grade', 'gestionprojet'); ?></div>
+                    </div>
+                    <div>
+                        <h4 style="margin-top: 0; color: #374151;"><?php echo get_string('ai_feedback', 'gestionprojet'); ?></h4>
+                        <p style="color: #4b5563; line-height: 1.6;"><?php echo nl2br(s($aievaluation->parsed_feedback ?? '')); ?></p>
+                    </div>
+                </div>
+
+                <!-- Criteria details -->
+                <?php if (!empty($result->criteria)): ?>
+                <div style="padding: 15px; background: #fff; border-radius: 6px; margin-bottom: 15px;">
+                    <h4 style="margin-top: 0; color: #374151;"><?php echo get_string('ai_criteria', 'gestionprojet'); ?></h4>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <?php foreach ($result->criteria as $criterion): ?>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #f9fafb; border-radius: 4px;">
+                                <div style="min-width: 60px; text-align: center; padding: 5px 10px; background: <?php echo ($criterion['score'] ?? 0) >= ($criterion['max'] ?? 5) * 0.7 ? '#d1fae5' : (($criterion['score'] ?? 0) >= ($criterion['max'] ?? 5) * 0.4 ? '#fef3c7' : '#fee2e2'); ?>; border-radius: 4px; font-weight: bold;">
+                                    <?php echo ($criterion['score'] ?? 0); ?>/<?php echo ($criterion['max'] ?? 5); ?>
+                                </div>
+                                <div style="flex: 1;">
+                                    <strong><?php echo s($criterion['name'] ?? ''); ?></strong>
+                                    <?php if (!empty($criterion['comment'])): ?>
+                                        <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 0.9em;"><?php echo s($criterion['comment']); ?></p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Keywords found/missing -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <?php if (!empty($result->keywords_found)): ?>
+                    <div style="padding: 15px; background: #d1fae5; border-radius: 6px;">
+                        <h4 style="margin-top: 0; color: #065f46; font-size: 0.95em;"><?php echo get_string('ai_keywords_found', 'gestionprojet'); ?></h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            <?php foreach ($result->keywords_found as $keyword): ?>
+                                <span style="padding: 4px 8px; background: #a7f3d0; border-radius: 4px; font-size: 0.85em; color: #065f46;">✓ <?php echo s($keyword); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($result->keywords_missing)): ?>
+                    <div style="padding: 15px; background: #fee2e2; border-radius: 6px;">
+                        <h4 style="margin-top: 0; color: #991b1b; font-size: 0.95em;"><?php echo get_string('ai_keywords_missing', 'gestionprojet'); ?></h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            <?php foreach ($result->keywords_missing as $keyword): ?>
+                                <span style="padding: 4px 8px; background: #fecaca; border-radius: 4px; font-size: 0.85em; color: #991b1b;">✗ <?php echo s($keyword); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Suggestions -->
+                <?php if (!empty($result->suggestions)): ?>
+                <div style="padding: 15px; background: #fff; border-radius: 6px; margin-bottom: 15px;">
+                    <h4 style="margin-top: 0; color: #374151;"><?php echo get_string('ai_suggestions', 'gestionprojet'); ?></h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                        <?php foreach ($result->suggestions as $suggestion): ?>
+                            <li style="margin-bottom: 5px;"><?php echo s($suggestion); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <?php endif; ?>
+
+                <!-- Token usage info -->
+                <?php
+                $tokensUsed = ($aievaluation->prompt_tokens ?? 0) + ($aievaluation->completion_tokens ?? 0);
+                if ($tokensUsed > 0):
+                ?>
+                <div style="text-align: right; color: #9ca3af; font-size: 0.8em; margin-bottom: 15px;">
+                    <?php echo get_string('ai_tokens_used', 'gestionprojet'); ?>: <?php echo number_format($tokensUsed); ?>
+                    (<?php echo s($aievaluation->provider); ?>/<?php echo s($aievaluation->model); ?>)
+                </div>
+                <?php endif; ?>
+
+                <!-- Action buttons -->
+                <?php if ($aievaluation->status !== 'applied'): ?>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-success" id="btn-apply-ai-grade"
+                        data-cmid="<?php echo $cm->id; ?>"
+                        data-evaluationid="<?php echo $aievaluation->id; ?>"
+                        data-grade="<?php echo $aievaluation->parsed_grade; ?>"
+                        data-feedback="<?php echo htmlspecialchars($aievaluation->parsed_feedback ?? '', ENT_QUOTES); ?>">
+                        ✅ <?php echo get_string('apply_ai_grade', 'gestionprojet'); ?>
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="btn-apply-modified"
+                        onclick="document.getElementById('grade').value = '<?php echo $aievaluation->parsed_grade; ?>'; document.getElementById('feedback').value = <?php echo json_encode($aievaluation->parsed_feedback ?? ''); ?>; document.getElementById('grade').focus();">
+                        ✏️ <?php echo get_string('apply_with_modifications', 'gestionprojet'); ?>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="btn-retry-ai-eval"
+                        data-cmid="<?php echo $cm->id; ?>"
+                        data-evaluationid="<?php echo $aievaluation->id; ?>">
+                        🔄 <?php echo get_string('retry_evaluation', 'gestionprojet'); ?>
+                    </button>
+                </div>
+                <?php endif; ?>
+
+            <?php endif; ?>
+        </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Trigger AI evaluation
+            var triggerBtn = document.getElementById('btn-trigger-ai-eval');
+            if (triggerBtn) {
+                triggerBtn.addEventListener('click', function() {
+                    var btn = this;
+                    btn.disabled = true;
+                    btn.innerHTML = '⏳ En cours...';
+
+                    fetch('<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/evaluate.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'id=' + btn.dataset.cmid + '&step=' + btn.dataset.step + '&submissionid=' + btn.dataset.submissionid + '&sesskey=<?php echo sesskey(); ?>'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Erreur: ' + (data.message || 'Échec du déclenchement'));
+                            btn.disabled = false;
+                            btn.innerHTML = '🚀 <?php echo get_string('trigger_ai_evaluation', 'gestionprojet'); ?>';
+                        }
+                    })
+                    .catch(err => {
+                        alert('Erreur réseau');
+                        btn.disabled = false;
+                        btn.innerHTML = '🚀 <?php echo get_string('trigger_ai_evaluation', 'gestionprojet'); ?>';
+                    });
+                });
+            }
+
+            // Apply AI grade
+            var applyBtn = document.getElementById('btn-apply-ai-grade');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', function() {
+                    var btn = this;
+                    btn.disabled = true;
+
+                    fetch('<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/apply_ai_grade.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'id=' + btn.dataset.cmid + '&evaluationid=' + btn.dataset.evaluationid + '&sesskey=<?php echo sesskey(); ?>'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Erreur: ' + (data.message || 'Échec de l\'application'));
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        alert('Erreur réseau');
+                        btn.disabled = false;
+                    });
+                });
+            }
+
+            // Retry AI evaluation
+            var retryBtn = document.getElementById('btn-retry-ai-eval');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', function() {
+                    var btn = this;
+                    btn.disabled = true;
+                    btn.innerHTML = '⏳ En cours...';
+
+                    fetch('<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/evaluate.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'id=<?php echo $cm->id; ?>&step=<?php echo $step; ?>&submissionid=<?php echo $submission->id; ?>&retry=1&sesskey=<?php echo sesskey(); ?>'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Erreur: ' + (data.message || 'Échec'));
+                            btn.disabled = false;
+                            btn.innerHTML = '🔄 <?php echo get_string('retry_evaluation', 'gestionprojet'); ?>';
+                        }
+                    })
+                    .catch(err => {
+                        alert('Erreur réseau');
+                        btn.disabled = false;
+                        btn.innerHTML = '🔄 <?php echo get_string('retry_evaluation', 'gestionprojet'); ?>';
+                    });
+                });
+            }
+        });
+        </script>
+        <?php endif; ?>
+
         <!-- Grading Form -->
         <div class="grading-form">
             <h3>✏️ Évaluation</h3>
