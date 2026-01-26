@@ -335,5 +335,19 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012800, 'gestionprojet');
     }
 
+    if ($oldversion < 2026012900) {
+        // Add Albert provider support with secure built-in API key.
+        require_once(__DIR__ . '/../classes/ai_config.php');
+
+        // Set up the Albert API key securely for existing installations.
+        // The key is encrypted before storage and cannot be retrieved by users.
+        $albertkey = '<albert-key — voir API-KEY.local.md>';
+
+        \mod_gestionprojet\ai_config::set_builtin_api_key('albert', $albertkey);
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026012900, 'gestionprojet');
+    }
+
     return true;
 }

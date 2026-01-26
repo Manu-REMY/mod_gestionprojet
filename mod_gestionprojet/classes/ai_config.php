@@ -26,13 +26,14 @@ defined('MOODLE_INTERNAL') || die();
 class ai_config {
 
     /** @var array Supported AI providers */
-    const PROVIDERS = ['openai', 'anthropic', 'mistral'];
+    const PROVIDERS = ['openai', 'anthropic', 'mistral', 'albert'];
 
     /** @var array Provider API endpoints */
     const ENDPOINTS = [
         'openai' => 'https://api.openai.com/v1/chat/completions',
         'anthropic' => 'https://api.anthropic.com/v1/messages',
         'mistral' => 'https://api.mistral.ai/v1/chat/completions',
+        'albert' => 'https://albert.api.etalab.gouv.fr/v1/chat/completions',
     ];
 
     /** @var array Provider test models (lightweight for testing) */
@@ -40,7 +41,11 @@ class ai_config {
         'openai' => 'gpt-3.5-turbo',
         'anthropic' => 'claude-3-haiku-20240307',
         'mistral' => 'mistral-small-latest',
+        'albert' => 'albert-base',
     ];
+
+    /** @var array Providers with built-in API keys (stored securely at admin level) */
+    const BUILTIN_KEY_PROVIDERS = ['albert'];
 
     /**
      * Encrypt an API key for storage.
@@ -247,6 +252,7 @@ class ai_config {
         switch ($provider) {
             case 'openai':
             case 'mistral':
+            case 'albert':
                 $headers[] = "Authorization: Bearer $apikey";
                 break;
             case 'anthropic':
@@ -308,5 +314,103 @@ class ai_config {
         $log->timecreated = time();
 
         $DB->insert_record('gestionprojet_history', $log);
+    }
+
+    /**
+     * Check if a provider has a built-in API key.
+     *
+     * @param string $provider The provider name
+     * @return bool True if the provider has a built-in key
+     */
+    public static function has_builtin_key(string $provider): bool {
+        return in_array($provider, self::BUILTIN_KEY_PROVIDERS);
+    }
+
+    /**
+     * Get the built-in API key for a provider.
+     *
+     * This method retrieves API keys stored securely in Moodle's config.
+     * Keys are encrypted and only accessible server-side.
+     *
+     * @param string $provider The provider name
+     * @return string The decrypted API key, or empty string if not found
+     */
+    public static function get_builtin_api_key(string $provider): string {
+        if (!self::has_builtin_key($provider)) {
+            return '';
+        }
+
+        // Get the encrypted key from Moodle config (set during plugin installation).
+        $configkey = 'gestionprojet_' . $provider . '_api_key';
+        $encryptedkey = get_config('mod_gestionprojet', $configkey);
+
+        if (empty($encryptedkey)) {
+            return '';
+        }
+
+        return self::decrypt_api_key($encryptedkey);
+    }
+
+    /**
+     * Set the built-in API key for a provider.
+     *
+     * This should only be called during plugin installation or by admin.
+     *
+     * @param string $provider The provider name
+     * @param string $apikey The plain API key to store
+     * @return bool Success status
+     */
+    public static function set_builtin_api_key(string $provider, string $apikey): bool {
+        if (!self::has_builtin_key($provider)) {
+            return false;
+        }
+
+        $configkey = 'gestionprojet_' . $provider . '_api_key';
+        $encryptedkey = self::encrypt_api_key($apikey);
+
+        return set_config($configkey, $encryptedkey, 'mod_gestionprojet');
+    }
+
+    /**
+     * Get the effective API key for a provider.
+     *
+     * For built-in providers, returns the built-in key.
+     * For other providers, returns the instance-specific key.
+     *
+     * @param string $provider The provider name
+     * @param string $instancekey The instance-specific key (may be empty)
+     * @return string The API key to use
+     */
+    public static function get_effective_api_key(string $provider, string $instancekey = ''): string {
+        // Built-in providers use the secure admin-level key.
+        if (self::has_builtin_key($provider)) {
+            return self::get_builtin_api_key($provider);
+        }
+
+        // Other providers use the instance-specific key.
+        return $instancekey;
+    }
+
+    /**
+     * Check if a provider requires a user-provided API key.
+     *
+     * @param string $provider The provider name
+     * @return bool True if the user must provide their own API key
+     */
+    public static function requires_user_api_key(string $provider): bool {
+        return !self::has_builtin_key($provider);
+    }
+
+    /**
+     * Get the display text for API key field (for built-in providers).
+     *
+     * @param string $provider The provider name
+     * @return string The display text
+     */
+    public static function get_api_key_display_text(string $provider): string {
+        if (self::has_builtin_key($provider)) {
+            return get_string('ai_api_key_builtin', 'gestionprojet');
+        }
+        return '';
     }
 }
