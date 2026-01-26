@@ -80,9 +80,9 @@ Autres providers supportés (nécessitent une clé API) :
 
 GPL v3 - Ce plugin est un logiciel libre.
 
-## Auteurs
+## Auteur
 
-Développé pour le projet éLéa - Académie de Versailles.
+**REMY Emmanuel**
 
 ## Support
 
