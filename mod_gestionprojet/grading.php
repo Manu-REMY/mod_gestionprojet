@@ -138,8 +138,17 @@ if (optional_param('savegrading', false, PARAM_BOOL) && confirm_sesskey()) {
             $record->timemodified = time();
             $DB->update_record($table, $record);
 
-            // Update gradebook
-            gestionprojet_update_grades($gestionprojet, ($isGroupSubmission ? 0 : $userid));
+            // Update gradebook.
+            // In per_step mode, pass the step number to update only that grade item.
+            // In combined mode (legacy), step is null and all grades are recalculated.
+            $grademode = isset($gestionprojet->grade_mode) ? $gestionprojet->grade_mode : 0;
+            if ($grademode == 1) {
+                // Per-step mode: update only this step's grade item.
+                gestionprojet_update_grades($gestionprojet, ($isGroupSubmission ? 0 : $userid), true, $step);
+            } else {
+                // Combined mode: recalculate the combined average.
+                gestionprojet_update_grades($gestionprojet, ($isGroupSubmission ? 0 : $userid));
+            }
 
             // Redirect parameters
             $redirectParams = ['id' => $id, 'step' => $step];
@@ -1010,4 +1019,4 @@ if (!$submission): ?>
 
 <?php
 echo $OUTPUT->footer();
-?>?>
+?>

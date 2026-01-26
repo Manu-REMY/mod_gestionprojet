@@ -321,5 +321,19 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012700, 'gestionprojet');
     }
 
+    if ($oldversion < 2026012800) {
+        // Phase 5: Gradebook per-step integration.
+
+        // Add grade_mode field to main table.
+        $table = new xmldb_table('gestionprojet');
+        $field = new xmldb_field('grade_mode', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'enable_submission');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026012800, 'gestionprojet');
+    }
+
     return true;
 }

@@ -323,3 +323,10 @@ $string['trigger_ai_evaluation'] = 'Trigger AI evaluation';
 $string['ai_evaluation_section'] = 'Automatic AI Evaluation';
 $string['no_ai_evaluation'] = 'No AI evaluation available';
 $string['ai_review'] = 'AI Evaluation Review';
+
+// Phase 5: Gradebook per-step integration
+$string['gradebook_settings'] = 'Gradebook settings';
+$string['grade_mode'] = 'Grading mode';
+$string['grade_mode_help'] = 'Choose how grades appear in the Moodle gradebook. In "Single grade" mode, an average is calculated. In "Per-step grades" mode, each step has its own entry in the gradebook.';
+$string['grade_mode_combined'] = 'Single grade (average of steps)';
+$string['grade_mode_per_step'] = 'Per-step grades (separate)';

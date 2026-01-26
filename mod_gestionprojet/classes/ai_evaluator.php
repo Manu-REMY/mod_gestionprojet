@@ -309,7 +309,25 @@ class ai_evaluator {
         // Update Moodle gradebook.
         $gestionprojet = $DB->get_record('gestionprojet', ['id' => $evaluation->gestionprojetid]);
         if ($gestionprojet) {
-            gestionprojet_update_grades($gestionprojet, $evaluation->userid ?: null);
+            // Determine userid for gradebook update.
+            // For group submissions, we need to get the group members.
+            $targetuserid = 0;
+            if ($evaluation->userid) {
+                $targetuserid = $evaluation->userid;
+            } else if ($evaluation->groupid && $gestionprojet->group_submission) {
+                // Group submission - update all group members.
+                $targetuserid = 0; // 0 means update all users.
+            }
+
+            // Check grade mode and pass step for per-step mode.
+            $grademode = isset($gestionprojet->grade_mode) ? (int)$gestionprojet->grade_mode : 0;
+            if ($grademode == 1) {
+                // Per-step mode: update only this step's grade item.
+                gestionprojet_update_grades($gestionprojet, $targetuserid, true, $evaluation->step);
+            } else {
+                // Combined mode: recalculate the combined average.
+                gestionprojet_update_grades($gestionprojet, $targetuserid);
+            }
         }
 
         return true;

@@ -71,8 +71,13 @@ function gestionprojet_add_instance($data, $mform = null)
 
     $data->id = $DB->insert_record('gestionprojet', $data);
 
-    // Create empty teacher pages
+    // Create empty teacher pages.
     gestionprojet_create_teacher_pages($data->id);
+
+    // Initialize gradebook items.
+    // Need to fetch the complete record to have all fields including course.
+    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $data->id]);
+    gestionprojet_grade_item_update($gestionprojet);
 
     return $data->id;
 }
@@ -100,7 +105,13 @@ function gestionprojet_update_instance($data, $mform = null)
         }
     }
 
-    return $DB->update_record('gestionprojet', $data);
+    $result = $DB->update_record('gestionprojet', $data);
+
+    // Update gradebook items (may need to create/remove items if grade_mode changed).
+    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $data->id]);
+    gestionprojet_update_grades($gestionprojet);
+
+    return $result;
 }
 
 /**
@@ -440,37 +451,473 @@ function gestionprojet_extend_settings_navigation($settings, $navref)
 }
 
 /**
+ * Check if a specific step is enabled for an instance.
+ *
+ * @param stdClass $gestionprojet The activity instance
+ * @param int $step Step number (4-8)
+ * @return bool True if step is enabled
+ */
+function gestionprojet_is_step_enabled($gestionprojet, $step)
+{
+    $enableprop = 'enable_step' . $step;
+    // Check if property exists.
+    if (!isset($gestionprojet->$enableprop)) {
+        return true; // Default to enabled if not set.
+    }
+    // Handle various value formats (string "1", int 1, bool true).
+    $value = $gestionprojet->$enableprop;
+    return !empty($value) && $value !== '0';
+}
+
+/**
+ * Get the table name for a graded step.
+ *
+ * @param int $step Step number (4-8)
+ * @return string|null Table name or null if invalid step
+ */
+function gestionprojet_get_step_table($step)
+{
+    $tables = [
+        4 => 'gestionprojet_cdcf',
+        5 => 'gestionprojet_essai',
+        6 => 'gestionprojet_rapport',
+        7 => 'gestionprojet_besoin_eleve',
+        8 => 'gestionprojet_carnet',
+    ];
+    return $tables[$step] ?? null;
+}
+
+/**
+ * Map step number to itemnumber for gradebook.
+ * Steps 4-8 map to itemnumbers 1-5 (0 is reserved for combined mode).
+ *
+ * @param int $step Step number (4-8)
+ * @return int Itemnumber for gradebook (1-5)
+ */
+function gestionprojet_step_to_itemnumber($step)
+{
+    // Map: step 4 => 1, step 5 => 2, step 6 => 3, step 7 => 4, step 8 => 5
+    return $step - 3;
+}
+
+/**
+ * Map itemnumber back to step number.
+ *
+ * @param int $itemnumber Itemnumber (1-5)
+ * @return int Step number (4-8)
+ */
+function gestionprojet_itemnumber_to_step($itemnumber)
+{
+    return $itemnumber + 3;
+}
+
+/**
+ * Get grades for a specific step.
+ *
+ * @param stdClass $gestionprojet The activity instance
+ * @param int $step Step number (4-8)
+ * @param int $userid Optional user ID (0 for all users)
+ * @return array Array of grade objects keyed by userid
+ */
+function gestionprojet_get_step_grades($gestionprojet, $step, $userid = 0)
+{
+    global $DB;
+
+    $grades = [];
+    $tablename = gestionprojet_get_step_table($step);
+
+    if (!$tablename) {
+        return $grades;
+    }
+
+    // Check if step is enabled.
+    if (!gestionprojet_is_step_enabled($gestionprojet, $step)) {
+        return $grades;
+    }
+
+    // Get all groups.
+    $groups = groups_get_all_groups($gestionprojet->course);
+
+    // If no groups, create a virtual group for "All participants".
+    if (empty($groups)) {
+        $groups = [0 => (object) ['id' => 0]];
+    }
+
+    $isGroupSubmission = $gestionprojet->group_submission;
+
+    foreach ($groups as $group) {
+        // Get group members.
+        if ($group->id == 0) {
+            $context = context_course::instance($gestionprojet->course);
+            $members = get_enrolled_users($context);
+        } else {
+            $members = groups_get_members($group->id, 'u.id');
+        }
+
+        if (empty($members)) {
+            continue;
+        }
+
+        if (!$isGroupSubmission) {
+            // Individual mode: each user has their own submission.
+            foreach ($members as $member) {
+                if ($userid != 0 && $userid != $member->id) {
+                    continue;
+                }
+
+                // Individual submissions are stored with the user's id.
+                // Try to find submission with groupid=0 first (standard individual).
+                $submission = $DB->get_record($tablename, [
+                    'gestionprojetid' => $gestionprojet->id,
+                    'userid' => $member->id,
+                    'groupid' => 0
+                ]);
+
+                // If not found, try with the group's id (individual in group context).
+                if (!$submission && $group->id != 0) {
+                    $submission = $DB->get_record($tablename, [
+                        'gestionprojetid' => $gestionprojet->id,
+                        'userid' => $member->id,
+                        'groupid' => $group->id
+                    ]);
+                }
+
+                if ($submission && $submission->grade !== null) {
+                    $grades[$member->id] = new stdClass();
+                    $grades[$member->id]->userid = $member->id;
+                    $grades[$member->id]->rawgrade = $submission->grade;
+                }
+            }
+        } else {
+            // Group mode: all group members share the same grade.
+            // Group submissions are stored with userid=0.
+            $submission = $DB->get_record($tablename, [
+                'gestionprojetid' => $gestionprojet->id,
+                'groupid' => $group->id,
+                'userid' => 0
+            ]);
+
+            if ($submission && $submission->grade !== null) {
+                foreach ($members as $member) {
+                    if ($userid != 0 && $userid != $member->id) {
+                        continue;
+                    }
+                    $grades[$member->id] = new stdClass();
+                    $grades[$member->id]->userid = $member->id;
+                    $grades[$member->id]->rawgrade = $submission->grade;
+                }
+            }
+        }
+    }
+
+    return $grades;
+}
+
+/**
+ * Get or create the grade category for this activity.
+ * Each activity has its own unique category.
+ * We use the grade_item associated with the category to store our identifier.
+ *
+ * @param stdClass $gestionprojet The activity instance
+ * @return grade_category|null The grade category or null on failure
+ */
+function gestionprojet_get_grade_category($gestionprojet)
+{
+    global $CFG, $DB;
+    require_once($CFG->libdir . '/grade/grade_category.php');
+    require_once($CFG->libdir . '/grade/grade_item.php');
+
+    // Unique identifier for this activity's category.
+    // We store it in the category's grade_item idnumber field.
+    $catidnumber = 'gestionprojet_cat_' . $gestionprojet->id;
+
+    // First, try to find the category via its associated grade_item.
+    // Each category in Moodle has an associated grade_item of type 'category'.
+    $catitem = $DB->get_record('grade_items', [
+        'itemtype' => 'category',
+        'courseid' => $gestionprojet->course,
+        'idnumber' => $catidnumber
+    ]);
+
+    if ($catitem && $catitem->iteminstance) {
+        // Found the category's grade_item, fetch the category.
+        $category = grade_category::fetch(['id' => $catitem->iteminstance]);
+
+        if ($category) {
+            // Update category name if activity name changed.
+            if ($category->fullname !== $gestionprojet->name) {
+                $category->fullname = $gestionprojet->name;
+                $category->update();
+            }
+            // Unhide if previously hidden.
+            if ($category->hidden) {
+                $category->set_hidden(0);
+            }
+            return $category;
+        }
+    }
+
+    // Category doesn't exist, create a new one.
+    $category = new grade_category([
+        'courseid' => $gestionprojet->course,
+        'fullname' => $gestionprojet->name,
+    ], false);
+    $category->insert();
+
+    // Now set the idnumber on the category's grade_item for future lookups.
+    if ($category->id) {
+        $categoryitem = $category->get_grade_item();
+        if ($categoryitem) {
+            $categoryitem->idnumber = $catidnumber;
+            $categoryitem->update();
+        }
+    }
+
+    return $category;
+}
+
+/**
+ * Get the display order for graded steps (matching project workflow).
+ * Order: 7 (Expression du Besoin Élève), 4 (CdCF), 5 (Essai), 8 (Carnet de bord), 6 (Rapport)
+ *
+ * @return array Step numbers in display order
+ */
+function gestionprojet_get_graded_steps_order()
+{
+    return [7, 4, 5, 8, 6];
+}
+
+/**
  * Update activity grades.
  *
- * @param stdClass $gestionprojet
- * @param int $userid
- * @param bool $nullifnone
+ * @param stdClass $gestionprojet The activity instance
+ * @param int $userid Optional user ID (0 for all users)
+ * @param bool $nullifnone If true, return null grade for users with no submission
+ * @param int|null $step Optional step number for per_step mode (4-8)
  */
-function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = true)
+function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = true, $step = null)
 {
     global $CFG, $DB;
     require_once($CFG->libdir . '/gradelib.php');
+    require_once($CFG->libdir . '/grade/grade_item.php');
 
-    if ($gestionprojet->grade == 0) {
-        gestionprojet_grade_item_update($gestionprojet);
+    // Check grade mode.
+    $grademode = isset($gestionprojet->grade_mode) ? (int)$gestionprojet->grade_mode : 0;
+
+    if ($grademode == 1) {
+        // Per-step mode: create/update grade items for each enabled step.
+        // Use the correct display order for steps.
+        $gradedsteps = gestionprojet_get_graded_steps_order();
+
+        // Get or create the grade category for this activity.
+        $category = gestionprojet_get_grade_category($gestionprojet);
+        $categoryid = $category ? $category->id : null;
+
+        if ($step !== null) {
+            // Update only the specified step.
+            if (in_array($step, $gradedsteps) && gestionprojet_is_step_enabled($gestionprojet, $step)) {
+                $grades = gestionprojet_get_step_grades($gestionprojet, $step, $userid);
+                $sortorder = array_search($step, $gradedsteps);
+                gestionprojet_grade_item_update($gestionprojet, $grades, $step, $categoryid, $sortorder);
+            }
+        } else {
+            // Update all steps - create for enabled, hide for disabled.
+            $sortorder = 0;
+            foreach ($gradedsteps as $s) {
+                $isenabled = gestionprojet_is_step_enabled($gestionprojet, $s);
+                $idnumber = 'gestionprojet_' . $gestionprojet->id . '_step' . $s;
+
+                if ($isenabled) {
+                    // Create or update grade item for enabled step.
+                    $grades = gestionprojet_get_step_grades($gestionprojet, $s, $userid);
+                    gestionprojet_grade_item_update($gestionprojet, $grades, $s, $categoryid, $sortorder);
+                    $sortorder++;
+                } else {
+                    // Hide grade item for disabled step if it exists.
+                    $itemrecord = $DB->get_record('grade_items', [
+                        'itemtype' => 'manual',
+                        'courseid' => $gestionprojet->course,
+                        'idnumber' => $idnumber
+                    ]);
+                    if ($itemrecord) {
+                        $gradeitem = grade_item::fetch(['id' => $itemrecord->id]);
+                        if ($gradeitem) {
+                            $gradeitem->set_hidden(1);
+                        }
+                    }
+                }
+            }
+        }
     } else {
+        // Combined mode (legacy): single average grade.
         $grades = gestionprojet_get_user_grades($gestionprojet, $userid);
         gestionprojet_grade_item_update($gestionprojet, $grades);
+
+        // Hide any per-step grade items that might exist from mode change.
+        $gradedsteps = gestionprojet_get_graded_steps_order();
+        foreach ($gradedsteps as $s) {
+            $idnumber = 'gestionprojet_' . $gestionprojet->id . '_step' . $s;
+            $itemrecord = $DB->get_record('grade_items', [
+                'itemtype' => 'manual',
+                'courseid' => $gestionprojet->course,
+                'idnumber' => $idnumber
+            ]);
+            if ($itemrecord) {
+                $gradeitem = grade_item::fetch(['id' => $itemrecord->id]);
+                if ($gradeitem) {
+                    $gradeitem->set_hidden(1);
+                }
+            }
+        }
+
+        // Also hide the category if it exists (from a previous per-step mode).
+        $catidnumber = 'gestionprojet_cat_' . $gestionprojet->id;
+        // Find category via its grade_item.
+        $catitem = $DB->get_record('grade_items', [
+            'itemtype' => 'category',
+            'courseid' => $gestionprojet->course,
+            'idnumber' => $catidnumber
+        ]);
+        if ($catitem && $catitem->iteminstance) {
+            $category = grade_category::fetch(['id' => $catitem->iteminstance]);
+            if ($category) {
+                $category->set_hidden(1);
+            }
+        }
     }
 }
 
 /**
  * Create or update grade item.
  *
- * @param stdClass $gestionprojet
- * @param mixed $grades
+ * @param stdClass $gestionprojet The activity instance
+ * @param mixed $grades Array of grades or 'reset'
+ * @param int|null $step Step number for per_step mode (4-8), null for combined mode
+ * @param int|null $categoryid Grade category ID to assign the item to
+ * @param int|null $sortorder Sort order within the category
  * @return int 0 if ok, error code otherwise
  */
-function gestionprojet_grade_item_update($gestionprojet, $grades = null)
+function gestionprojet_grade_item_update($gestionprojet, $grades = null, $step = null, $categoryid = null, $sortorder = null)
 {
-    global $CFG;
+    global $CFG, $DB;
     require_once($CFG->libdir . '/gradelib.php');
+    require_once($CFG->libdir . '/grade/grade_item.php');
 
+    if ($step !== null) {
+        // Per-step mode: create/update a manual grade item for this step.
+        $stepname = get_string('step' . $step, 'gestionprojet');
+        // Use only the step name (not activity name prefix) since items are in a category.
+        $itemname = $stepname;
+        // Unique idnumber per activity and step.
+        $idnumber = 'gestionprojet_' . $gestionprojet->id . '_step' . $step;
+
+        // Check if grade item already exists - use direct DB query to avoid cache issues.
+        $itemrecord = $DB->get_record('grade_items', [
+            'itemtype' => 'manual',
+            'courseid' => $gestionprojet->course,
+            'idnumber' => $idnumber
+        ]);
+
+        $gradeitem = null;
+        if ($itemrecord) {
+            $gradeitem = grade_item::fetch(['id' => $itemrecord->id]);
+        }
+
+        if (!$gradeitem) {
+            // Create new grade item.
+            $itemdata = [
+                'itemtype' => 'manual',
+                'itemname' => $itemname,
+                'idnumber' => $idnumber,
+                'courseid' => $gestionprojet->course,
+                'gradetype' => GRADE_TYPE_VALUE,
+                'grademax' => 20,
+                'grademin' => 0,
+            ];
+            // Assign to category if provided.
+            if ($categoryid !== null) {
+                $itemdata['categoryid'] = $categoryid;
+            }
+            // Set sort order if provided.
+            if ($sortorder !== null) {
+                $itemdata['sortorder'] = $sortorder;
+            }
+            $gradeitem = new grade_item($itemdata, false);
+            $gradeitem->insert();
+        } else {
+            // Update item name if changed and ensure it's visible.
+            $needsupdate = false;
+            if ($gradeitem->itemname !== $itemname) {
+                $gradeitem->itemname = $itemname;
+                $needsupdate = true;
+            }
+            // Update category if provided and different.
+            if ($categoryid !== null && (int)$gradeitem->categoryid !== (int)$categoryid) {
+                $gradeitem->categoryid = $categoryid;
+                $needsupdate = true;
+            }
+            // Update sort order if provided.
+            if ($sortorder !== null && (int)$gradeitem->sortorder !== (int)$sortorder) {
+                $gradeitem->sortorder = $sortorder;
+                $needsupdate = true;
+            }
+            // Unhide if previously hidden (e.g., step was re-enabled).
+            if ($gradeitem->hidden) {
+                $gradeitem->set_hidden(0);
+            }
+            if ($needsupdate) {
+                $gradeitem->update();
+            }
+        }
+
+        // Update grades if provided.
+        // For manual grade items, we need to use grade_grade directly.
+        if ($grades !== null && $grades !== 'reset' && !empty($grades)) {
+            require_once($CFG->libdir . '/grade/grade_grade.php');
+
+            foreach ($grades as $uid => $grade) {
+                // Fetch or create grade_grade record.
+                $gradegrade = grade_grade::fetch([
+                    'itemid' => $gradeitem->id,
+                    'userid' => $uid
+                ]);
+
+                if (!$gradegrade) {
+                    // Create new grade record.
+                    $gradegrade = new grade_grade([
+                        'itemid' => $gradeitem->id,
+                        'userid' => $uid,
+                    ], false);
+                }
+
+                // Set the grade value.
+                $gradegrade->rawgrade = $grade->rawgrade;
+                $gradegrade->rawgrademax = $gradeitem->grademax;
+                $gradegrade->rawgrademin = $gradeitem->grademin;
+                $gradegrade->rawscaleid = $gradeitem->scaleid;
+                $gradegrade->finalgrade = $grade->rawgrade; // For manual items, final = raw.
+                $gradegrade->timemodified = time();
+
+                if ($gradegrade->id) {
+                    $gradegrade->update();
+                } else {
+                    $gradegrade->timecreated = time();
+                    $gradegrade->insert();
+                }
+            }
+
+            // Force regrading to update final grades.
+            $gradeitem->force_regrading();
+        }
+
+        if ($grades === 'reset') {
+            $gradeitem->delete_all_grades();
+        }
+
+        return GRADE_UPDATE_OK;
+    }
+
+    // Combined mode: use standard grade_update with itemnumber = 0.
     $params = [
         'itemname' => $gestionprojet->name,
         'idnumber' => $gestionprojet->id
@@ -596,22 +1043,26 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
         }
 
         // Group grading logic (existing)
-        // Get grades for this group
+        // Get grades for this group - group submissions are stored with userid=0
         $cdcf = $DB->get_record('gestionprojet_cdcf', [
             'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $group->id
+            'groupid' => $group->id,
+            'userid' => 0
         ]);
         $essai = $DB->get_record('gestionprojet_essai', [
             'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $group->id
+            'groupid' => $group->id,
+            'userid' => 0
         ]);
         $rapport = $DB->get_record('gestionprojet_rapport', [
             'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $group->id
+            'groupid' => $group->id,
+            'userid' => 0
         ]);
         $besoin_eleve = $DB->get_record('gestionprojet_besoin_eleve', [
             'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $group->id
+            'groupid' => $group->id,
+            'userid' => 0
         ]);
 
         // Calculate average grade
@@ -636,7 +1087,8 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
         }
         $carnet = $DB->get_record('gestionprojet_carnet', [
             'gestionprojetid' => $gestionprojet->id,
-            'groupid' => $group->id
+            'groupid' => $group->id,
+            'userid' => 0
         ]);
         if ($carnet && $carnet->grade !== null && (!isset($gestionprojet->enable_step8) || $gestionprojet->enable_step8)) {
             $totalgrade += $carnet->grade;

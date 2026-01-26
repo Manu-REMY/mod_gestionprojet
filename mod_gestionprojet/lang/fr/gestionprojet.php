@@ -339,3 +339,10 @@ $string['trigger_ai_evaluation'] = 'Lancer l\'évaluation IA';
 $string['ai_evaluation_section'] = 'Évaluation automatique par IA';
 $string['no_ai_evaluation'] = 'Aucune évaluation IA disponible';
 $string['ai_review'] = 'Révision des évaluations IA';
+
+// Phase 5: Gradebook per-step integration
+$string['gradebook_settings'] = 'Paramètres du carnet de notes';
+$string['grade_mode'] = 'Mode de notation';
+$string['grade_mode_help'] = 'Choisissez comment les notes apparaissent dans le carnet de notes Moodle. En mode "Note unique", une moyenne est calculée. En mode "Notes par étape", chaque étape a sa propre entrée dans le carnet de notes.';
+$string['grade_mode_combined'] = 'Note unique (moyenne des étapes)';
+$string['grade_mode_per_step'] = 'Notes par étape (séparées)';

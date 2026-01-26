@@ -132,6 +132,17 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->addHelpButton('ai_auto_apply', 'ai_auto_apply', 'gestionprojet');
         $mform->hideIf('ai_auto_apply', 'ai_enabled', 'eq', 0);
 
+        // Gradebook mode settings.
+        $mform->addElement('header', 'gradebook_settings', get_string('gradebook_settings', 'gestionprojet'));
+
+        $grademodes = [
+            0 => get_string('grade_mode_combined', 'gestionprojet'),
+            1 => get_string('grade_mode_per_step', 'gestionprojet'),
+        ];
+        $mform->addElement('select', 'grade_mode', get_string('grade_mode', 'gestionprojet'), $grademodes);
+        $mform->setDefault('grade_mode', 0);
+        $mform->addHelpButton('grade_mode', 'grade_mode', 'gestionprojet');
+
         // Add standard grading elements.
         $this->standard_grading_coursemodule_elements();
 
