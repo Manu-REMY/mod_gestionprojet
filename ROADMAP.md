@@ -60,7 +60,7 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ---
 
-## État Actuel (v1.7.0)
+## État Actuel (v1.7.2)
 
 ### Fonctionnel
 - [x] 8 phases implémentées avec UI complète
@@ -83,11 +83,12 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 - [x] **Moteur d'évaluation IA (Phase 4 ✓)**
 - [x] **Intégration gradebook per-step (Phase 5 ✓)**
 - [x] **Provider Albert (Etalab) avec clé API intégrée**
+- [x] **Indicateurs de progression IA (Phase 6.2 ✓)**
+- [x] **Notifications toast temps réel (Phase 6.2 ✓)**
+- [x] **Annulation de soumission par l'enseignant (Phase 6.3 ✓)**
+- [x] **Relance des évaluations IA en masse (Phase 6.3 ✓)**
 
 ### Manquant (Phase 6)
-- [ ] Indicateurs de progression IA
-- [ ] Notifications temps réel
-- [ ] Responsive design amélioré
 - [ ] Documentation utilisateur
 - [ ] Export PDF complet
 - [ ] Optimisations (cache, batch processing)

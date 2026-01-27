@@ -227,6 +227,16 @@ echo $OUTPUT->header();
                     <?php echo $stepinfo['icon'] . ' ' . $stepinfo['name']; ?>
                 </a>
             <?php endforeach; ?>
+
+            <?php if (!empty($gestionprojet->ai_enabled)): ?>
+            <button type="button" class="btn btn-sm btn-outline-warning ms-3" id="btn-bulk-reevaluate"
+                data-cmid="<?php echo $cm->id; ?>"
+                data-step="<?php echo $step; ?>"
+                style="margin-left: 15px;"
+                title="<?php echo get_string('bulk_reevaluate_desc', 'gestionprojet'); ?>">
+                🔄 <?php echo get_string('bulk_reevaluate', 'gestionprojet'); ?>
+            </button>
+            <?php endif; ?>
         </div>
 
         <div class="group-navigation">
@@ -338,9 +348,51 @@ if (!$submission): ?>
             <p>Le groupe n'a pas encore commencé cette étape.</p>
         </div>
     </div>
-<?php else: ?>
+<?php else:
+    // Check if submission is submitted (status = 1)
+    $isSubmitted = !empty($submission->status) && $submission->status == 1;
+?>
     <div class="submission-content">
         <h2><?php echo $steps[$step]['icon'] . ' ' . get_string('step' . $step, 'gestionprojet'); ?></h2>
+
+        <?php // Student steps (4-8) - show submission status and unlock button
+        if (in_array($step, [4, 5, 6, 7, 8])): ?>
+        <div class="submission-status-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; margin-bottom: 15px; border-radius: 6px; background: <?php echo $isSubmitted ? '#d1fae5' : '#fef3c7'; ?>; border: 1px solid <?php echo $isSubmitted ? '#10b981' : '#f59e0b'; ?>;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <?php if ($isSubmitted): ?>
+                    <span style="font-size: 1.2em;">✅</span>
+                    <div>
+                        <strong style="color: #065f46;"><?php echo get_string('submission_status_submitted', 'gestionprojet'); ?></strong>
+                        <?php if (!empty($submission->timesubmitted)): ?>
+                            <span style="color: #047857; font-size: 0.9em; margin-left: 10px;">
+                                <?php echo get_string('submitted_at', 'gestionprojet'); ?>: <?php echo userdate($submission->timesubmitted, get_string('strftimedatetime')); ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <span style="font-size: 1.2em;">📝</span>
+                    <div>
+                        <strong style="color: #92400e;"><?php echo get_string('submission_status_draft', 'gestionprojet'); ?></strong>
+                        <span style="color: #b45309; font-size: 0.9em; margin-left: 10px;">
+                            <?php echo get_string('submission_status_draft_desc', 'gestionprojet'); ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($isSubmitted && has_capability('mod/gestionprojet:lock', $context)): ?>
+            <button type="button" class="btn btn-warning btn-sm" id="btn-unlock-submission"
+                data-cmid="<?php echo $cm->id; ?>"
+                data-step="<?php echo $step; ?>"
+                data-groupid="<?php echo $groupid; ?>"
+                data-userid="<?php echo $userid ?? 0; ?>"
+                title="<?php echo get_string('unlock_submission_desc', 'gestionprojet'); ?>">
+                🔓 <?php echo get_string('unlock_submission', 'gestionprojet'); ?>
+            </button>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
         <hr>
 
         <?php
@@ -987,6 +1039,99 @@ if (!$submission): ?>
         </div>
     </div>
 <?php endif; ?>
+
+<!-- JavaScript for unlock submission and bulk reevaluate buttons -->
+<script>
+(function() {
+    'use strict';
+
+    // Unlock submission button
+    var unlockBtn = document.getElementById('btn-unlock-submission');
+    if (unlockBtn) {
+        unlockBtn.addEventListener('click', function() {
+            if (!confirm('<?php echo addslashes(get_string('confirm_unlock_submission', 'gestionprojet')); ?>')) {
+                return;
+            }
+
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ...';
+
+            var formData = new FormData();
+            formData.append('cmid', btn.dataset.cmid);
+            formData.append('step', btn.dataset.step);
+            formData.append('action', 'unlock');
+            formData.append('groupid', btn.dataset.groupid);
+            formData.append('userid', btn.dataset.userid);
+            formData.append('sesskey', M.cfg.sesskey);
+
+            fetch(M.cfg.wwwroot + '/mod/gestionprojet/ajax/submit_step.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    // Reload page to show updated status
+                    location.reload();
+                } else {
+                    alert(data.message || '<?php echo addslashes(get_string('error_invaliddata', 'gestionprojet')); ?>');
+                    btn.disabled = false;
+                    btn.innerHTML = '🔓 <?php echo addslashes(get_string('unlock_submission', 'gestionprojet')); ?>';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('<?php echo addslashes(get_string('toast_network_error', 'gestionprojet')); ?>');
+                btn.disabled = false;
+                btn.innerHTML = '🔓 <?php echo addslashes(get_string('unlock_submission', 'gestionprojet')); ?>';
+            });
+        });
+    }
+
+    // Bulk reevaluate button
+    var bulkReevalBtn = document.getElementById('btn-bulk-reevaluate');
+    if (bulkReevalBtn) {
+        bulkReevalBtn.addEventListener('click', function() {
+            if (!confirm('<?php echo addslashes(get_string('confirm_bulk_reevaluate', 'gestionprojet')); ?>')) {
+                return;
+            }
+
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> <?php echo addslashes(get_string('bulk_reevaluate_processing', 'gestionprojet')); ?>';
+
+            var formData = new FormData();
+            formData.append('id', btn.dataset.cmid);
+            formData.append('step', btn.dataset.step);
+            formData.append('sesskey', M.cfg.sesskey);
+
+            fetch(M.cfg.wwwroot + '/mod/gestionprojet/ajax/bulk_reevaluate.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert(data.message);
+                    // Reload page to show updated status
+                    location.reload();
+                } else {
+                    alert(data.message || '<?php echo addslashes(get_string('error_invaliddata', 'gestionprojet')); ?>');
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄 <?php echo addslashes(get_string('bulk_reevaluate', 'gestionprojet')); ?>';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('<?php echo addslashes(get_string('toast_network_error', 'gestionprojet')); ?>');
+                btn.disabled = false;
+                btn.innerHTML = '🔄 <?php echo addslashes(get_string('bulk_reevaluate', 'gestionprojet')); ?>';
+            });
+        });
+    }
+})();
+</script>
 
 <?php
 echo $OUTPUT->footer();
