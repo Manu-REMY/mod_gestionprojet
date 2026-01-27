@@ -362,3 +362,22 @@ $string['toast_evaluation_started'] = 'AI evaluation started';
 $string['toast_evaluation_complete'] = 'Evaluation complete - Grade: {$a}/20';
 $string['toast_network_error'] = 'Server connection error';
 $string['toast_close'] = 'Close';
+
+// Phase 6.3: Unlock submission and bulk re-evaluate
+$string['submission_status_submitted'] = 'Work submitted';
+$string['submission_status_draft'] = 'Draft';
+$string['submission_status_draft_desc'] = 'The student has not yet submitted this work';
+$string['unlock_submission'] = 'Cancel submission';
+$string['unlock_submission_desc'] = 'Allow the student to edit their work again';
+$string['confirm_unlock_submission'] = 'Are you sure you want to cancel the submission? The student will be able to edit their work again.';
+$string['bulk_reevaluate'] = 'Re-evaluate all with AI';
+$string['bulk_reevaluate_desc'] = 'Delete existing evaluations and re-run AI for all submissions of this step';
+$string['confirm_bulk_reevaluate'] = 'Are you sure you want to re-run AI evaluation for all submissions of this step? Existing evaluations will be deleted.';
+$string['bulk_reevaluate_processing'] = 'Processing...';
+$string['bulk_reevaluate_success'] = '{$a->deleted} evaluation(s) deleted, {$a->queued} new evaluation(s) started';
+$string['bulk_reevaluate_no_submissions'] = 'No submitted work for this step';
+$string['ai_evaluation_deleted'] = 'AI evaluation deleted';
+$string['ai_evaluation_delete_failed'] = 'Failed to delete AI evaluation';
+$string['ai_evaluations_deleted'] = '{$a} AI evaluation(s) deleted';
+$string['step_not_enabled'] = 'This step is not enabled';
+$string['nousers'] = 'No users';

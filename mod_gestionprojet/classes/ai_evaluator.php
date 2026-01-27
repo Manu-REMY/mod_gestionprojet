@@ -424,6 +424,130 @@ class ai_evaluator {
     }
 
     /**
+     * Delete an evaluation record.
+     *
+     * @param int $evaluationid Evaluation ID
+     * @return bool Success
+     */
+    public static function delete_evaluation(int $evaluationid): bool {
+        global $DB;
+
+        $evaluation = $DB->get_record('gestionprojet_ai_evaluations', ['id' => $evaluationid]);
+        if (!$evaluation) {
+            return false;
+        }
+
+        // Don't delete if evaluation is currently processing.
+        if ($evaluation->status === 'processing') {
+            return false;
+        }
+
+        return $DB->delete_records('gestionprojet_ai_evaluations', ['id' => $evaluationid]);
+    }
+
+    /**
+     * Delete all evaluations for a submission.
+     *
+     * @param int $gestionprojetid Instance ID
+     * @param int $step Step number
+     * @param int $submissionid Submission ID
+     * @return int Number of deleted records
+     */
+    public static function delete_evaluations_for_submission(int $gestionprojetid, int $step, int $submissionid): int {
+        global $DB;
+
+        // Get all evaluations (excluding processing ones).
+        $evaluations = $DB->get_records_sql(
+            'SELECT id FROM {gestionprojet_ai_evaluations}
+             WHERE gestionprojetid = ? AND step = ? AND submissionid = ?
+             AND status != ?',
+            [$gestionprojetid, $step, $submissionid, 'processing']
+        );
+
+        $deleted = 0;
+        foreach ($evaluations as $eval) {
+            if ($DB->delete_records('gestionprojet_ai_evaluations', ['id' => $eval->id])) {
+                $deleted++;
+            }
+        }
+
+        return $deleted;
+    }
+
+    /**
+     * Get all submitted submissions for a step.
+     *
+     * @param int $gestionprojetid Instance ID
+     * @param int $step Step number
+     * @return array Submission records
+     */
+    public static function get_submitted_submissions(int $gestionprojetid, int $step): array {
+        global $DB;
+
+        $table = self::STEP_TABLES[$step] ?? null;
+        if (!$table) {
+            return [];
+        }
+
+        return $DB->get_records_sql(
+            'SELECT * FROM {' . $table . '}
+             WHERE gestionprojetid = ? AND status = 1',
+            [$gestionprojetid]
+        );
+    }
+
+    /**
+     * Bulk re-evaluate all submissions for a step.
+     * Deletes existing evaluations and queues new ones.
+     *
+     * @param int $gestionprojetid Instance ID
+     * @param int $step Step number
+     * @return array ['deleted' => int, 'queued' => int, 'errors' => array]
+     */
+    public static function bulk_reevaluate_step(int $gestionprojetid, int $step): array {
+        global $DB;
+
+        $result = [
+            'deleted' => 0,
+            'queued' => 0,
+            'errors' => [],
+        ];
+
+        // Get all submitted submissions for this step.
+        $submissions = self::get_submitted_submissions($gestionprojetid, $step);
+
+        if (empty($submissions)) {
+            return $result;
+        }
+
+        foreach ($submissions as $submission) {
+            try {
+                // Delete existing evaluations for this submission.
+                $deleted = self::delete_evaluations_for_submission($gestionprojetid, $step, $submission->id);
+                $result['deleted'] += $deleted;
+
+                // Queue new evaluation.
+                self::queue_evaluation(
+                    $gestionprojetid,
+                    $step,
+                    $submission->id,
+                    $submission->groupid ?? 0,
+                    $submission->userid ?? 0
+                );
+                $result['queued']++;
+
+            } catch (\Exception $e) {
+                $result['errors'][] = [
+                    'submissionid' => $submission->id,
+                    'message' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Check if a submission has a pending evaluation.
      *
      * @param int $gestionprojetid Instance ID

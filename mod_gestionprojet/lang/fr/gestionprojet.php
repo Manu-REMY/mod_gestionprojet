@@ -378,3 +378,22 @@ $string['toast_evaluation_started'] = 'Évaluation IA lancée';
 $string['toast_evaluation_complete'] = 'Évaluation terminée - Note: {$a}/20';
 $string['toast_network_error'] = 'Erreur de connexion au serveur';
 $string['toast_close'] = 'Fermer';
+
+// Phase 6.3: Unlock submission and bulk re-evaluate
+$string['submission_status_submitted'] = 'Travail soumis';
+$string['submission_status_draft'] = 'Brouillon';
+$string['submission_status_draft_desc'] = 'L\'élève n\'a pas encore soumis ce travail';
+$string['unlock_submission'] = 'Annuler la soumission';
+$string['unlock_submission_desc'] = 'Permet à l\'élève de modifier à nouveau son travail';
+$string['confirm_unlock_submission'] = 'Êtes-vous sûr de vouloir annuler la soumission ? L\'élève pourra à nouveau modifier son travail.';
+$string['bulk_reevaluate'] = 'Relancer toutes les évaluations IA';
+$string['bulk_reevaluate_desc'] = 'Supprimer les évaluations existantes et relancer l\'IA pour toutes les soumissions de cette étape';
+$string['confirm_bulk_reevaluate'] = 'Êtes-vous sûr de vouloir relancer l\'évaluation IA pour toutes les soumissions de cette étape ? Les évaluations existantes seront supprimées.';
+$string['bulk_reevaluate_processing'] = 'Traitement en cours...';
+$string['bulk_reevaluate_success'] = '{$a->deleted} évaluation(s) supprimée(s), {$a->queued} nouvelle(s) évaluation(s) lancée(s)';
+$string['bulk_reevaluate_no_submissions'] = 'Aucune soumission validée pour cette étape';
+$string['ai_evaluation_deleted'] = 'Évaluation IA supprimée';
+$string['ai_evaluation_delete_failed'] = 'Échec de la suppression de l\'évaluation IA';
+$string['ai_evaluations_deleted'] = '{$a} évaluation(s) IA supprimée(s)';
+$string['step_not_enabled'] = 'Cette étape n\'est pas activée';
+$string['nousers'] = 'Aucun utilisateur';
