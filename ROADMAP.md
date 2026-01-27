@@ -60,7 +60,7 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ---
 
-## État Actuel (v1.4.0)
+## État Actuel (v1.7.0)
 
 ### Fonctionnel
 - [x] 8 phases implémentées avec UI complète
@@ -80,12 +80,17 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 - [x] **Timeline Step 3 avec vacances scolaires API (Phase 3.5 ✓)**
 - [x] **Dates de soumission configurables par step (Phase 3.5 ✓)**
 - [x] **Affichage des dates aux élèves (Phase 3.5 ✓)**
+- [x] **Moteur d'évaluation IA (Phase 4 ✓)**
+- [x] **Intégration gradebook per-step (Phase 5 ✓)**
+- [x] **Provider Albert (Etalab) avec clé API intégrée**
 
-### Manquant
-- [ ] Système d'évaluation IA automatique
-- [ ] Évaluation par compétences
-- [ ] Notes individuelles par phase dans Moodle
+### Manquant (Phase 6)
+- [ ] Indicateurs de progression IA
+- [ ] Notifications temps réel
+- [ ] Responsive design amélioré
+- [ ] Documentation utilisateur
 - [ ] Export PDF complet
+- [ ] Optimisations (cache, batch processing)
 
 ---
 
@@ -278,36 +283,59 @@ L'enseignant configure le cadre pédagogique et fournit des modèles de correcti
 
 ---
 
-### PHASE 6 : Raffinements et Qualité
+### PHASE 6 : Raffinements et Qualité ⏳ EN COURS
 **Objectif** : Robustesse, UX, documentation
 
+**Statut** : En cours (v1.7.0 → v1.8.0)
+
+#### Étape 6.1 : Tests et validation ✅ TERMINÉE
+- [x] Tests unitaires (PHPUnit)
+- [x] Tests d'intégration
+- [x] Tests de charge API
+
+#### Étape 6.2 : Interface utilisateur ⏳ EN COURS
+**Objectif** : Améliorer l'expérience utilisateur avec des indicateurs visuels
+
 **Tâches :**
-1. **Tests et validation**
-   - Tests unitaires (PHPUnit)
-   - Tests d'intégration
-   - Tests de charge API
+1. **Indicateurs de progression IA**
+   - [ ] Spinner/loader pendant l'évaluation IA
+   - [ ] Barre de progression pour les évaluations longues
+   - [ ] État visuel (en attente, en cours, terminé, erreur)
+   - [ ] Affichage du résultat IA inline
 
-2. **Interface utilisateur**
-   - Indicateurs de progression IA
-   - Notifications temps réel (WebSocket ou polling)
-   - Responsive design
+2. **Notifications temps réel**
+   - [ ] Système de notifications toast (succès, erreur, info)
+   - [ ] Polling pour mise à jour du statut d'évaluation
+   - [ ] Notification quand l'évaluation IA est terminée
+   - [ ] Badge de notification sur les steps évalués
 
-3. **Documentation**
-   - Guide enseignant
-   - Guide élève
-   - Documentation technique
+3. **Responsive design**
+   - [ ] Adaptation mobile des formulaires steps
+   - [ ] Menu navigation responsive
+   - [ ] Timeline step3 responsive
+   - [ ] Tableaux de grading responsive
 
-4. **Export PDF**
-   - Export du projet complet
-   - Export des évaluations
-   - Certificat de complétion
+**Fichiers impactés :**
+- `amd/src/ai_progress.js` (nouveau)
+- `amd/src/notifications.js` (nouveau)
+- `templates/ai_progress.mustache` (nouveau)
+- `styles.css` ou SCSS
+- `ajax/check_evaluation_status.php` (nouveau)
 
-5. **Optimisations**
-   - Cache des évaluations
-   - Batch processing pour les soumissions multiples
-   - Monitoring des coûts API
+#### Étape 6.3 : Documentation
+- [ ] Guide enseignant (PDF/Markdown)
+- [ ] Guide élève (PDF/Markdown)
+- [ ] Documentation technique (README amélioré)
 
-**Fichiers impactés :** `tests/`, `docs/`, `export_pdf.php`, `classes/cache.php`
+#### Étape 6.4 : Export PDF
+- [ ] Export du projet complet
+- [ ] Export des évaluations
+- [ ] Certificat de complétion
+
+#### Étape 6.5 : Optimisations
+- [ ] Cache des évaluations
+- [ ] Batch processing pour les soumissions multiples
+- [ ] Monitoring des coûts API
 
 ---
 
@@ -343,9 +371,13 @@ PHASE 2 ──────────────────┼──── PH
 | Phase 2 | Faible | Clé API stockée et testable | ✅ Terminée |
 | Phase 3 | Moyenne | Modèles de correction complets | ✅ Terminée |
 | Phase 3.5 | Moyenne | Améliorations planification & soumissions | ✅ Terminée |
-| Phase 4 | Élevée | Première évaluation IA fonctionnelle | ⏳ À venir |
-| Phase 5 | Moyenne | Notes par phase dans carnet Moodle | ⏳ À venir |
-| Phase 6 | Variable | Version production | ⏳ À venir |
+| Phase 4 | Élevée | Première évaluation IA fonctionnelle | ✅ Terminée |
+| Phase 5 | Moyenne | Notes par phase dans carnet Moodle | ✅ Terminée |
+| Phase 6.1 | Moyenne | Tests unitaires et intégration | ✅ Terminée |
+| Phase 6.2 | Moyenne | Interface utilisateur améliorée | ⏳ En cours |
+| Phase 6.3 | Faible | Documentation utilisateur | ⏳ À venir |
+| Phase 6.4 | Moyenne | Export PDF | ⏳ À venir |
+| Phase 6.5 | Moyenne | Optimisations | ⏳ À venir |
 
 ---
 
@@ -386,4 +418,4 @@ PHASE 2 ──────────────────┼──── PH
 
 ---
 
-*Document créé le 24/01/2026 - Dernière mise à jour 25/01/2026 (Phase 3.5 terminée)*
+*Document créé le 24/01/2026 - Dernière mise à jour 27/01/2026 (Phase 6.2 en cours)*

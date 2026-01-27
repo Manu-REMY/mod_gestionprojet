@@ -169,6 +169,14 @@ $PAGE->set_title(get_string('grading_navigation', 'gestionprojet'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
+// Initialize AMD modules for AI progress and notifications
+$PAGE->requires->js_call_amd('mod_gestionprojet/notifications', 'init', []);
+$PAGE->requires->js_call_amd('mod_gestionprojet/ai_progress', 'init', [[
+    'cmid' => $cm->id,
+    'step' => $step,
+    'containerSelector' => 'body'
+]]);
+
 echo $OUTPUT->header();
 
 // Display step selector and group navigation
@@ -895,95 +903,58 @@ if (!$submission): ?>
             <?php endif; ?>
         </div>
 
+        <!-- AI Progress Container -->
+        <div id="ai-progress-container"></div>
+
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Trigger AI evaluation
+        // Initialize AI progress and notifications using AMD modules
+        require(['mod_gestionprojet/ai_progress', 'mod_gestionprojet/notifications'], function(AIProgress, Notifications) {
+            // Initialize notifications
+            Notifications.init();
+
+            // Initialize AI progress
+            AIProgress.init({
+                cmid: <?php echo $cm->id; ?>,
+                step: <?php echo $step; ?>,
+                submissionid: <?php echo $submission->id ?? 0; ?>,
+                containerSelector: '#ai-progress-container'
+            });
+
+            // Trigger AI evaluation button
             var triggerBtn = document.getElementById('btn-trigger-ai-eval');
             if (triggerBtn) {
                 triggerBtn.addEventListener('click', function() {
                     var btn = this;
-                    btn.disabled = true;
-                    btn.innerHTML = '⏳ En cours...';
-
-                    fetch('<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/evaluate.php', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: 'id=' + btn.dataset.cmid + '&step=' + btn.dataset.step + '&submissionid=' + btn.dataset.submissionid + '&sesskey=<?php echo sesskey(); ?>'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert('Erreur: ' + (data.message || 'Échec du déclenchement'));
-                            btn.disabled = false;
-                            btn.innerHTML = '🚀 <?php echo get_string('trigger_ai_evaluation', 'gestionprojet'); ?>';
-                        }
-                    })
-                    .catch(err => {
-                        alert('Erreur réseau');
-                        btn.disabled = false;
-                        btn.innerHTML = '🚀 <?php echo get_string('trigger_ai_evaluation', 'gestionprojet'); ?>';
-                    });
+                    AIProgress.triggerEvaluation(
+                        parseInt(btn.dataset.cmid),
+                        parseInt(btn.dataset.step),
+                        parseInt(btn.dataset.submissionid)
+                    );
                 });
             }
 
-            // Apply AI grade
+            // Apply AI grade button
             var applyBtn = document.getElementById('btn-apply-ai-grade');
             if (applyBtn) {
                 applyBtn.addEventListener('click', function() {
                     var btn = this;
-                    btn.disabled = true;
-
-                    fetch('<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/apply_ai_grade.php', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: 'id=' + btn.dataset.cmid + '&evaluationid=' + btn.dataset.evaluationid + '&sesskey=<?php echo sesskey(); ?>'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert('Erreur: ' + (data.message || 'Échec de l\'application'));
-                            btn.disabled = false;
-                        }
-                    })
-                    .catch(err => {
-                        alert('Erreur réseau');
-                        btn.disabled = false;
-                    });
+                    AIProgress.applyGrade(
+                        parseInt(btn.dataset.cmid),
+                        parseInt(btn.dataset.evaluationid)
+                    );
                 });
             }
 
-            // Retry AI evaluation
+            // Retry AI evaluation button
             var retryBtn = document.getElementById('btn-retry-ai-eval');
             if (retryBtn) {
                 retryBtn.addEventListener('click', function() {
                     var btn = this;
-                    btn.disabled = true;
-                    btn.innerHTML = '⏳ En cours...';
-
-                    fetch('<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/evaluate.php', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: 'id=<?php echo $cm->id; ?>&step=<?php echo $step; ?>&submissionid=<?php echo $submission->id; ?>&retry=1&sesskey=<?php echo sesskey(); ?>'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert('Erreur: ' + (data.message || 'Échec'));
-                            btn.disabled = false;
-                            btn.innerHTML = '🔄 <?php echo get_string('retry_evaluation', 'gestionprojet'); ?>';
-                        }
-                    })
-                    .catch(err => {
-                        alert('Erreur réseau');
-                        btn.disabled = false;
-                        btn.innerHTML = '🔄 <?php echo get_string('retry_evaluation', 'gestionprojet'); ?>';
-                    });
+                    AIProgress.retryEvaluation(
+                        <?php echo $cm->id; ?>,
+                        <?php echo $step; ?>,
+                        <?php echo $submission->id ?? 0; ?>
+                    );
                 });
             }
         });

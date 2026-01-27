@@ -242,12 +242,20 @@ class ai_evaluator {
     public static function get_evaluation(int $gestionprojetid, int $step, int $submissionid): ?object {
         global $DB;
 
-        return $DB->get_record_sql(
+        // Return null if submissionid is 0 or invalid (no submission exists yet).
+        if (empty($submissionid)) {
+            return null;
+        }
+
+        $result = $DB->get_record_sql(
             'SELECT * FROM {gestionprojet_ai_evaluations}
              WHERE gestionprojetid = ? AND step = ? AND submissionid = ?
              ORDER BY timecreated DESC LIMIT 1',
             [$gestionprojetid, $step, $submissionid]
         );
+
+        // Convert false to null to match return type.
+        return $result ?: null;
     }
 
     /**
