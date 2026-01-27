@@ -381,3 +381,16 @@ $string['ai_evaluation_delete_failed'] = 'Failed to delete AI evaluation';
 $string['ai_evaluations_deleted'] = '{$a} AI evaluation(s) deleted';
 $string['step_not_enabled'] = 'This step is not enabled';
 $string['nousers'] = 'No users';
+
+// Missing strings
+$string['confirm_revert'] = 'Are you sure you want to revert to draft?';
+$string['confirm_submission'] = 'Are you sure you want to submit this work?';
+$string['export_pdf_coming_soon'] = 'PDF export coming soon';
+$string['feedback'] = 'Feedback';
+$string['grade'] = 'Grade';
+$string['gradesaved'] = 'Grade saved';
+$string['invalidstep'] = 'Invalid step';
+$string['revert_to_draft'] = 'Revert to draft';
+$string['submit'] = 'Submit';
+$string['submitted_on'] = 'Submitted on';
+$string['teacher_feedback'] = 'Teacher feedback';

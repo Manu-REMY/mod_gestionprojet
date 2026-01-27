@@ -397,3 +397,16 @@ $string['ai_evaluation_delete_failed'] = 'Échec de la suppression de l\'évalua
 $string['ai_evaluations_deleted'] = '{$a} évaluation(s) IA supprimée(s)';
 $string['step_not_enabled'] = 'Cette étape n\'est pas activée';
 $string['nousers'] = 'Aucun utilisateur';
+
+// Chaînes manquantes
+$string['confirm_revert'] = 'Êtes-vous sûr de vouloir revenir au brouillon ?';
+$string['confirm_submission'] = 'Êtes-vous sûr de vouloir soumettre ce travail ?';
+$string['export_pdf_coming_soon'] = 'Export PDF bientôt disponible';
+$string['feedback'] = 'Commentaire';
+$string['grade'] = 'Note';
+$string['gradesaved'] = 'Note enregistrée';
+$string['invalidstep'] = 'Étape invalide';
+$string['revert_to_draft'] = 'Revenir au brouillon';
+$string['submit'] = 'Soumettre';
+$string['submitted_on'] = 'Soumis le';
+$string['teacher_feedback'] = 'Commentaire de l\'enseignant';
