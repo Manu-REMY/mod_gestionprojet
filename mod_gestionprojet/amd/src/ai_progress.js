@@ -424,13 +424,25 @@ define(['jquery', 'core/notification'], function($, Notification) {
             this.showProgress('Application de la note...');
             this.updateProgressBar(50);
 
+            // Collect visibility options from checkboxes.
+            var showFeedback = $('#show_feedback').is(':checked') ? 1 : 0;
+            var showCriteria = $('#show_criteria').is(':checked') ? 1 : 0;
+            var showKeywordsFound = $('#show_keywords_found').is(':checked') ? 1 : 0;
+            var showKeywordsMissing = $('#show_keywords_missing').is(':checked') ? 1 : 0;
+            var showSuggestions = $('#show_suggestions').is(':checked') ? 1 : 0;
+
             $.ajax({
                 url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/apply_ai_grade.php',
                 method: 'POST',
                 data: {
                     id: cmid,
                     evaluationid: evaluationid,
-                    sesskey: M.cfg.sesskey
+                    sesskey: M.cfg.sesskey,
+                    show_feedback: showFeedback,
+                    show_criteria: showCriteria,
+                    show_keywords_found: showKeywordsFound,
+                    show_keywords_missing: showKeywordsMissing,
+                    show_suggestions: showSuggestions
                 },
                 dataType: 'json'
             })

@@ -152,19 +152,8 @@ if ($submission->precautions) {
         <?php echo format_string($group->name); ?>
     </div>
 
-    <!-- Grade display -->
-    <?php if (isset($submission->grade) && $submission->grade !== null): ?>
-        <div class="grade-display">
-            ⭐ <strong><?php echo get_string('grade', 'gestionprojet'); ?>:</strong>
-            <?php echo format_float($submission->grade, 2); ?> / 20
-        </div>
-        <?php if (!empty($submission->feedback)): ?>
-            <div class="feedback-display">
-                <h4>💬 <?php echo get_string('teacher_feedback', 'gestionprojet'); ?></h4>
-                <p><?php echo format_text($submission->feedback, FORMAT_PLAIN); ?></p>
-            </div>
-        <?php endif; ?>
-    <?php endif; ?>
+    <!-- AI Evaluation Feedback Display -->
+    <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
 
     <form id="essaiForm" method="post" action="">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
@@ -187,11 +176,6 @@ if ($submission->precautions) {
                 </div>
             </div>
 
-            <div class="info-group">
-                <label for="groupe_eleves"><?php echo get_string('groupe_eleves', 'gestionprojet'); ?> :</label>
-                <textarea id="groupe_eleves" name="groupe_eleves" rows="2"
-                    placeholder="<?php echo get_string('groupe_eleves_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->groupe_eleves ?? ''); ?></textarea>
-            </div>
         </div>
 
         <!-- Section 1: Objectif de l'essai -->

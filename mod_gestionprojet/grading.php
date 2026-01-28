@@ -930,8 +930,40 @@ if (!$submission): ?>
                 </div>
                 <?php endif; ?>
 
-                <!-- Action buttons -->
+                <!-- Visibility options for student feedback -->
                 <?php if ($aievaluation->status !== 'applied'): ?>
+                <div class="visibility-options" style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: #495057;">
+                        👁️ <?php echo get_string('visibility_options', 'gestionprojet'); ?>
+                    </div>
+                    <p style="font-size: 0.85em; color: #6c757d; margin-bottom: 12px;">
+                        <?php echo get_string('visibility_options_desc', 'gestionprojet'); ?>
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="show_feedback" name="show_feedback" value="1" checked>
+                            <span><?php echo get_string('show_feedback_to_student', 'gestionprojet'); ?></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="show_criteria" name="show_criteria" value="1" checked>
+                            <span><?php echo get_string('show_criteria_to_student', 'gestionprojet'); ?></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="show_keywords_found" name="show_keywords_found" value="1" checked>
+                            <span><?php echo get_string('show_keywords_found_to_student', 'gestionprojet'); ?></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="show_keywords_missing" name="show_keywords_missing" value="1" checked>
+                            <span><?php echo get_string('show_keywords_missing_to_student', 'gestionprojet'); ?></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="show_suggestions" name="show_suggestions" value="1" checked>
+                            <span><?php echo get_string('show_suggestions_to_student', 'gestionprojet'); ?></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-success" id="btn-apply-ai-grade"
                         data-cmid="<?php echo $cm->id; ?>"

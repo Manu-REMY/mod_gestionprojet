@@ -106,13 +106,18 @@ try {
         $userid = optional_param('userid', 0, PARAM_INT);
 
         // Find the submission to unlock.
+        // Use the same logic as gestionprojet_get_or_create_submission() in lib.php:
+        // - Group submission mode (group_submission=1) AND groupid!=0: key by groupid, userid=0
+        // - Individual mode OR groupid=0: key by userid, groupid as passed (may be non-zero if user is in a group)
         $conditions = ['gestionprojetid' => $gestionprojet->id];
-        if ($groupid) {
+        if ($gestionprojet->group_submission && $groupid) {
+            // Group submission mode: key by groupid, userid=0
             $conditions['groupid'] = $groupid;
             $conditions['userid'] = 0;
         } else if ($userid) {
+            // Individual submission mode: key by userid, groupid as context
             $conditions['userid'] = $userid;
-            $conditions['groupid'] = 0;
+            $conditions['groupid'] = $groupid; // May be non-zero if user belongs to a group
         } else {
             throw new moodle_exception('invalidparams');
         }

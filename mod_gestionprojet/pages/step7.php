@@ -118,14 +118,8 @@ echo '<li><strong>' . get_string('dansquelbut', 'gestionprojet') . '</strong> - 
 echo '</ul>';
 echo '</div>';
 
-if (isset($submission->grade) && $submission->grade !== null) {
-    echo '<div class="alert alert-success">';
-    echo '<h4>' . get_string('grade', 'gestionprojet') . ': ' . number_format($submission->grade, 2) . '/20</h4>';
-    if (!empty($submission->feedback)) {
-        echo '<p><strong>' . get_string('feedback', 'gestionprojet') . ':</strong><br>' . format_text($submission->feedback, FORMAT_HTML) . '</p>';
-    }
-    echo '</div>';
-}
+// AI Evaluation Feedback Display
+require_once(__DIR__ . '/student_ai_feedback_display.php');
 
 ?>
 
