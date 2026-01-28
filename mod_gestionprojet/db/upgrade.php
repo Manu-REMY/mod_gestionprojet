@@ -349,5 +349,44 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012900, 'gestionprojet');
     }
 
+    if ($oldversion < 2026012902) {
+        // Phase 6.4: Add visibility controls for AI feedback to students.
+
+        $table = new xmldb_table('gestionprojet_ai_evaluations');
+
+        // Add show_feedback field.
+        $field = new xmldb_field('show_feedback', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'applied_at');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add show_criteria field.
+        $field = new xmldb_field('show_criteria', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'show_feedback');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add show_keywords_found field.
+        $field = new xmldb_field('show_keywords_found', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'show_criteria');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add show_keywords_missing field.
+        $field = new xmldb_field('show_keywords_missing', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'show_keywords_found');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add show_suggestions field.
+        $field = new xmldb_field('show_suggestions', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'show_keywords_missing');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026012902, 'gestionprojet');
+    }
+
     return true;
 }

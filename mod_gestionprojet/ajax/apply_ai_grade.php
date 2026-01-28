@@ -23,6 +23,13 @@ $action = optional_param('action', 'apply', PARAM_ALPHA); // 'apply' or 'apply_m
 $overridegrade = optional_param('grade', null, PARAM_FLOAT);
 $overridefeedback = optional_param('feedback', null, PARAM_RAW);
 
+// Visibility options for student feedback (all enabled by default).
+$showfeedback = optional_param('show_feedback', 1, PARAM_INT);
+$showcriteria = optional_param('show_criteria', 1, PARAM_INT);
+$showkeywordsfound = optional_param('show_keywords_found', 1, PARAM_INT);
+$showkeywordsmissing = optional_param('show_keywords_missing', 1, PARAM_INT);
+$showsuggestions = optional_param('show_suggestions', 1, PARAM_INT);
+
 $cm = get_coursemodule_from_id('gestionprojet', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
@@ -50,6 +57,15 @@ try {
     if ($evaluation->status !== 'completed') {
         throw new \Exception(get_string('ai_evaluation_not_ready', 'gestionprojet'));
     }
+
+    // Update visibility settings on the evaluation record.
+    $evaluation->show_feedback = $showfeedback ? 1 : 0;
+    $evaluation->show_criteria = $showcriteria ? 1 : 0;
+    $evaluation->show_keywords_found = $showkeywordsfound ? 1 : 0;
+    $evaluation->show_keywords_missing = $showkeywordsmissing ? 1 : 0;
+    $evaluation->show_suggestions = $showsuggestions ? 1 : 0;
+    $evaluation->timemodified = time();
+    $DB->update_record('gestionprojet_ai_evaluations', $evaluation);
 
     // Apply the grade.
     if ($action === 'apply_modified' && ($overridegrade !== null || $overridefeedback !== null)) {

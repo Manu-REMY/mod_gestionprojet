@@ -162,19 +162,8 @@ if (empty($interacteurs)) {
         <p><strong>FC (Fonction Contrainte)</strong> : Relie le produit à 1 élément du milieu extérieur</p>
     </div>
 
-    <!-- Grade display -->
-    <?php if (isset($submission->grade) && $submission->grade !== null): ?>
-        <div class="grade-display">
-            ⭐ <strong><?php echo get_string('grade', 'gestionprojet'); ?>:</strong>
-            <?php echo format_float($submission->grade, 2); ?> / 20
-        </div>
-        <?php if (!empty($submission->feedback)): ?>
-            <div class="feedback-display">
-                <h4>💬 <?php echo get_string('teacher_feedback', 'gestionprojet'); ?></h4>
-                <p><?php echo format_text($submission->feedback, FORMAT_PLAIN); ?></p>
-            </div>
-        <?php endif; ?>
-    <?php endif; ?>
+    <!-- AI Evaluation Feedback Display -->
+    <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
 
     <form id="cdcfForm" method="post" action="">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">

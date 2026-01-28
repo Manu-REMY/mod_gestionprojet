@@ -382,6 +382,15 @@ $string['ai_evaluations_deleted'] = '{$a} AI evaluation(s) deleted';
 $string['step_not_enabled'] = 'This step is not enabled';
 $string['nousers'] = 'No users';
 
+// Phase 6.4: Visibility options for student feedback
+$string['visibility_options'] = 'Elements to show to students';
+$string['visibility_options_desc'] = 'Select which information to share with students. All elements are shown by default.';
+$string['show_feedback_to_student'] = 'Feedback';
+$string['show_criteria_to_student'] = 'Evaluation criteria';
+$string['show_keywords_found_to_student'] = 'Found elements';
+$string['show_keywords_missing_to_student'] = 'Missing elements';
+$string['show_suggestions_to_student'] = 'Improvement suggestions';
+
 // Missing strings
 $string['confirm_revert'] = 'Are you sure you want to revert to draft?';
 $string['confirm_submission'] = 'Are you sure you want to submit this work?';
