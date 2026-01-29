@@ -403,3 +403,73 @@ $string['revert_to_draft'] = 'Revert to draft';
 $string['submit'] = 'Submit';
 $string['submitted_on'] = 'Submitted on';
 $string['teacher_feedback'] = 'Teacher feedback';
+
+// Privacy API - Complete metadata strings
+$string['privacy:metadata:timecreated'] = 'The time when the record was created';
+$string['privacy:metadata:timemodified'] = 'The time when the record was last modified';
+
+// CDCF (Step 4)
+$string['privacy:metadata:gestionprojet_cdcf:userid'] = 'The ID of the user who submitted the requirements specification';
+$string['privacy:metadata:gestionprojet_cdcf:produit'] = 'The product defined by the student';
+$string['privacy:metadata:gestionprojet_cdcf:milieu'] = 'The environment of use defined by the student';
+$string['privacy:metadata:gestionprojet_cdcf:fp'] = 'The main function defined by the student';
+$string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'JSON data containing stakeholders, constraint functions and criteria';
+$string['privacy:metadata:gestionprojet_cdcf:status'] = 'The submission status (draft or submitted)';
+$string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'The time when the work was submitted';
+
+// Essai (Step 5)
+$string['privacy:metadata:gestionprojet_essai:userid'] = 'The ID of the user who submitted the test sheet';
+$string['privacy:metadata:gestionprojet_essai:nom_essai'] = 'The name of the test';
+$string['privacy:metadata:gestionprojet_essai:date_essai'] = 'The date of the test';
+$string['privacy:metadata:gestionprojet_essai:groupe_eleves'] = 'The students involved in the test';
+$string['privacy:metadata:gestionprojet_essai:fonction_service'] = 'The service function being tested';
+$string['privacy:metadata:gestionprojet_essai:etapes_protocole'] = 'The protocol steps defined by the student';
+$string['privacy:metadata:gestionprojet_essai:resultats_obtenus'] = 'The results obtained during the test';
+$string['privacy:metadata:gestionprojet_essai:conclusion'] = 'The conclusion written by the student';
+$string['privacy:metadata:gestionprojet_essai:status'] = 'The submission status (draft or submitted)';
+$string['privacy:metadata:gestionprojet_essai:timesubmitted'] = 'The time when the work was submitted';
+
+// Rapport (Step 6)
+$string['privacy:metadata:gestionprojet_rapport:userid'] = 'The ID of the user who submitted the project report';
+$string['privacy:metadata:gestionprojet_rapport:titre_projet'] = 'The project title';
+$string['privacy:metadata:gestionprojet_rapport:auteurs'] = 'The authors of the report';
+$string['privacy:metadata:gestionprojet_rapport:besoin_projet'] = 'The project need described by the student';
+$string['privacy:metadata:gestionprojet_rapport:solutions'] = 'The solutions chosen by the student';
+$string['privacy:metadata:gestionprojet_rapport:realisation'] = 'The implementation description';
+$string['privacy:metadata:gestionprojet_rapport:difficultes'] = 'The difficulties encountered';
+$string['privacy:metadata:gestionprojet_rapport:bilan'] = 'The project summary';
+$string['privacy:metadata:gestionprojet_rapport:status'] = 'The submission status (draft or submitted)';
+$string['privacy:metadata:gestionprojet_rapport:timesubmitted'] = 'The time when the work was submitted';
+
+// Besoin Eleve (Step 7)
+$string['privacy:metadata:gestionprojet_besoin_eleve'] = 'Student needs expression (Horn Diagram) submissions';
+$string['privacy:metadata:gestionprojet_besoin_eleve:userid'] = 'The ID of the user who submitted the needs expression';
+$string['privacy:metadata:gestionprojet_besoin_eleve:aqui'] = 'Who the product serves (student answer)';
+$string['privacy:metadata:gestionprojet_besoin_eleve:surquoi'] = 'What the product acts on (student answer)';
+$string['privacy:metadata:gestionprojet_besoin_eleve:dansquelbut'] = 'The purpose of the product (student answer)';
+$string['privacy:metadata:gestionprojet_besoin_eleve:status'] = 'The submission status (draft or submitted)';
+$string['privacy:metadata:gestionprojet_besoin_eleve:timesubmitted'] = 'The time when the work was submitted';
+
+// Carnet (Step 8)
+$string['privacy:metadata:gestionprojet_carnet'] = 'Project logbook entries submitted by students';
+$string['privacy:metadata:gestionprojet_carnet:userid'] = 'The ID of the user who submitted the logbook';
+$string['privacy:metadata:gestionprojet_carnet:tasks_data'] = 'JSON data containing daily log entries with tasks, status and observations';
+$string['privacy:metadata:gestionprojet_carnet:status'] = 'The submission status (draft or submitted)';
+$string['privacy:metadata:gestionprojet_carnet:timesubmitted'] = 'The time when the work was submitted';
+
+// AI Evaluations
+$string['privacy:metadata:gestionprojet_ai_evaluations'] = 'AI evaluation results for student submissions';
+$string['privacy:metadata:gestionprojet_ai_evaluations:userid'] = 'The ID of the user whose work was evaluated';
+$string['privacy:metadata:gestionprojet_ai_evaluations:step'] = 'The step number that was evaluated';
+$string['privacy:metadata:gestionprojet_ai_evaluations:provider'] = 'The AI provider used for evaluation';
+$string['privacy:metadata:gestionprojet_ai_evaluations:parsed_grade'] = 'The grade suggested by the AI';
+$string['privacy:metadata:gestionprojet_ai_evaluations:parsed_feedback'] = 'The feedback generated by the AI';
+$string['privacy:metadata:gestionprojet_ai_evaluations:status'] = 'The evaluation status (pending, completed, applied, etc.)';
+$string['privacy:metadata:gestionprojet_ai_evaluations:applied_by'] = 'The ID of the teacher who applied the AI grade';
+$string['privacy:metadata:gestionprojet_ai_evaluations:applied_at'] = 'The time when the grade was applied';
+
+// History
+$string['privacy:metadata:gestionprojet_history:tablename'] = 'The database table that was modified';
+$string['privacy:metadata:gestionprojet_history:fieldname'] = 'The field that was changed';
+$string['privacy:metadata:gestionprojet_history:oldvalue'] = 'The previous value before modification';
+$string['privacy:metadata:gestionprojet_history:newvalue'] = 'The new value after modification';

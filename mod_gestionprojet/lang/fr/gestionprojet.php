@@ -419,3 +419,73 @@ $string['revert_to_draft'] = 'Revenir au brouillon';
 $string['submit'] = 'Soumettre';
 $string['submitted_on'] = 'Soumis le';
 $string['teacher_feedback'] = 'Commentaire de l\'enseignant';
+
+// Privacy API - Chaînes de métadonnées complètes
+$string['privacy:metadata:timecreated'] = 'Date et heure de création de l\'enregistrement';
+$string['privacy:metadata:timemodified'] = 'Date et heure de dernière modification de l\'enregistrement';
+
+// CDCF (Étape 4)
+$string['privacy:metadata:gestionprojet_cdcf:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le cahier des charges';
+$string['privacy:metadata:gestionprojet_cdcf:produit'] = 'Le produit défini par l\'élève';
+$string['privacy:metadata:gestionprojet_cdcf:milieu'] = 'Le milieu d\'utilisation défini par l\'élève';
+$string['privacy:metadata:gestionprojet_cdcf:fp'] = 'La fonction principale définie par l\'élève';
+$string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'Données JSON contenant les interacteurs, fonctions contraintes et critères';
+$string['privacy:metadata:gestionprojet_cdcf:status'] = 'Le statut de la soumission (brouillon ou soumis)';
+$string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'Date et heure de soumission du travail';
+
+// Essai (Étape 5)
+$string['privacy:metadata:gestionprojet_essai:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis la fiche d\'essai';
+$string['privacy:metadata:gestionprojet_essai:nom_essai'] = 'Le nom de l\'essai';
+$string['privacy:metadata:gestionprojet_essai:date_essai'] = 'La date de l\'essai';
+$string['privacy:metadata:gestionprojet_essai:groupe_eleves'] = 'Les élèves impliqués dans l\'essai';
+$string['privacy:metadata:gestionprojet_essai:fonction_service'] = 'La fonction de service testée';
+$string['privacy:metadata:gestionprojet_essai:etapes_protocole'] = 'Les étapes du protocole définies par l\'élève';
+$string['privacy:metadata:gestionprojet_essai:resultats_obtenus'] = 'Les résultats obtenus pendant l\'essai';
+$string['privacy:metadata:gestionprojet_essai:conclusion'] = 'La conclusion rédigée par l\'élève';
+$string['privacy:metadata:gestionprojet_essai:status'] = 'Le statut de la soumission (brouillon ou soumis)';
+$string['privacy:metadata:gestionprojet_essai:timesubmitted'] = 'Date et heure de soumission du travail';
+
+// Rapport (Étape 6)
+$string['privacy:metadata:gestionprojet_rapport:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le rapport de projet';
+$string['privacy:metadata:gestionprojet_rapport:titre_projet'] = 'Le titre du projet';
+$string['privacy:metadata:gestionprojet_rapport:auteurs'] = 'Les auteurs du rapport';
+$string['privacy:metadata:gestionprojet_rapport:besoin_projet'] = 'Le besoin du projet décrit par l\'élève';
+$string['privacy:metadata:gestionprojet_rapport:solutions'] = 'Les solutions choisies par l\'élève';
+$string['privacy:metadata:gestionprojet_rapport:realisation'] = 'La description de la réalisation';
+$string['privacy:metadata:gestionprojet_rapport:difficultes'] = 'Les difficultés rencontrées';
+$string['privacy:metadata:gestionprojet_rapport:bilan'] = 'Le bilan du projet';
+$string['privacy:metadata:gestionprojet_rapport:status'] = 'Le statut de la soumission (brouillon ou soumis)';
+$string['privacy:metadata:gestionprojet_rapport:timesubmitted'] = 'Date et heure de soumission du travail';
+
+// Besoin Élève (Étape 7)
+$string['privacy:metadata:gestionprojet_besoin_eleve'] = 'Soumissions de l\'expression du besoin (Bête à Corne) par les élèves';
+$string['privacy:metadata:gestionprojet_besoin_eleve:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis l\'expression du besoin';
+$string['privacy:metadata:gestionprojet_besoin_eleve:aqui'] = 'À qui le produit rend service (réponse de l\'élève)';
+$string['privacy:metadata:gestionprojet_besoin_eleve:surquoi'] = 'Sur quoi le produit agit (réponse de l\'élève)';
+$string['privacy:metadata:gestionprojet_besoin_eleve:dansquelbut'] = 'Le but du produit (réponse de l\'élève)';
+$string['privacy:metadata:gestionprojet_besoin_eleve:status'] = 'Le statut de la soumission (brouillon ou soumis)';
+$string['privacy:metadata:gestionprojet_besoin_eleve:timesubmitted'] = 'Date et heure de soumission du travail';
+
+// Carnet (Étape 8)
+$string['privacy:metadata:gestionprojet_carnet'] = 'Entrées du carnet de bord soumises par les élèves';
+$string['privacy:metadata:gestionprojet_carnet:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le carnet de bord';
+$string['privacy:metadata:gestionprojet_carnet:tasks_data'] = 'Données JSON contenant les entrées quotidiennes avec tâches, statut et observations';
+$string['privacy:metadata:gestionprojet_carnet:status'] = 'Le statut de la soumission (brouillon ou soumis)';
+$string['privacy:metadata:gestionprojet_carnet:timesubmitted'] = 'Date et heure de soumission du travail';
+
+// Évaluations IA
+$string['privacy:metadata:gestionprojet_ai_evaluations'] = 'Résultats des évaluations IA pour les soumissions des élèves';
+$string['privacy:metadata:gestionprojet_ai_evaluations:userid'] = 'L\'identifiant de l\'utilisateur dont le travail a été évalué';
+$string['privacy:metadata:gestionprojet_ai_evaluations:step'] = 'Le numéro de l\'étape évaluée';
+$string['privacy:metadata:gestionprojet_ai_evaluations:provider'] = 'Le fournisseur IA utilisé pour l\'évaluation';
+$string['privacy:metadata:gestionprojet_ai_evaluations:parsed_grade'] = 'La note suggérée par l\'IA';
+$string['privacy:metadata:gestionprojet_ai_evaluations:parsed_feedback'] = 'Le commentaire généré par l\'IA';
+$string['privacy:metadata:gestionprojet_ai_evaluations:status'] = 'Le statut de l\'évaluation (en attente, terminée, appliquée, etc.)';
+$string['privacy:metadata:gestionprojet_ai_evaluations:applied_by'] = 'L\'identifiant de l\'enseignant qui a appliqué la note IA';
+$string['privacy:metadata:gestionprojet_ai_evaluations:applied_at'] = 'Date et heure d\'application de la note';
+
+// Historique
+$string['privacy:metadata:gestionprojet_history:tablename'] = 'La table de base de données modifiée';
+$string['privacy:metadata:gestionprojet_history:fieldname'] = 'Le champ qui a été modifié';
+$string['privacy:metadata:gestionprojet_history:oldvalue'] = 'La valeur précédente avant modification';
+$string['privacy:metadata:gestionprojet_history:newvalue'] = 'La nouvelle valeur après modification';
