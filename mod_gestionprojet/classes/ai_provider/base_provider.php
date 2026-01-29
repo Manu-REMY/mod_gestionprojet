@@ -91,7 +91,9 @@ abstract class base_provider implements provider_interface {
      */
     public function estimate_tokens(string $text): int {
         // Rough estimate: 1 token ≈ 4 characters for most languages.
-        return (int) ceil(mb_strlen($text) / 4);
+        // Use mb_strlen if available, fall back to strlen otherwise.
+        $length = function_exists('mb_strlen') ? mb_strlen($text) : strlen($text);
+        return (int) ceil($length / 4);
     }
 
     /**

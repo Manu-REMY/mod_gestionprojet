@@ -1167,3 +1167,236 @@ function gestionprojet_get_navigation_links($gestionprojet, $cmid, $current_step
 
     return ['prev' => $prev_url, 'next' => $next_url];
 }
+
+/**
+ * Render the teacher dashboard for a specific step.
+ *
+ * This function generates the HTML for the dashboard that shows submission
+ * statistics, grade averages, AI summaries, and token usage.
+ *
+ * @param object $gestionprojet Instance record
+ * @param int $step Step number (4-8)
+ * @param context_module $context Module context
+ * @param int $cmid Course module ID
+ * @return string Rendered HTML, empty if user doesn't have permission
+ */
+function gestionprojet_render_step_dashboard($gestionprojet, $step, $context, $cmid) {
+    global $OUTPUT, $PAGE;
+
+    // Only show dashboard for student submission steps (4-8).
+    if ($step < 4 || $step > 8) {
+        return '';
+    }
+
+    // Check permission.
+    if (!has_capability('mod/gestionprojet:grade', $context)) {
+        return '';
+    }
+
+    // Check if step is enabled.
+    if (!gestionprojet_is_step_enabled($gestionprojet, $step)) {
+        return '';
+    }
+
+    // Load dashboard classes.
+    require_once(__DIR__ . '/classes/dashboard/submission_stats.php');
+    require_once(__DIR__ . '/classes/dashboard/token_stats.php');
+    require_once(__DIR__ . '/classes/dashboard/ai_summary_generator.php');
+
+    // Get statistics.
+    $submissionStats = \mod_gestionprojet\dashboard\submission_stats::get_step_stats($gestionprojet->id, $step);
+    $tokenStats = \mod_gestionprojet\dashboard\token_stats::get_step_token_stats($gestionprojet->id, $step);
+
+    // Try to get existing summary, or auto-generate if enough evaluations exist.
+    $aiSummary = \mod_gestionprojet\dashboard\ai_summary_generator::get_summary($gestionprojet->id, $step);
+    if (!$aiSummary->has_summary && !empty($gestionprojet->ai_enabled)) {
+        // Check if there are enough evaluations to generate a summary.
+        $minRequired = \mod_gestionprojet\dashboard\ai_summary_generator::MIN_EVALUATIONS;
+        if (isset($aiSummary->current_count) && $aiSummary->current_count >= $minRequired) {
+            // Auto-generate the summary.
+            $generateResult = \mod_gestionprojet\dashboard\ai_summary_generator::generate_summary($gestionprojet, $step, false);
+            if ($generateResult->success && isset($generateResult->summary)) {
+                $aiSummary = $generateResult->summary;
+            }
+        }
+    }
+
+    // Step name.
+    $stepname = get_string('step' . $step, 'gestionprojet');
+
+    // Prepare template context.
+    $dashboardContext = [
+        'step' => $step,
+        'stepname' => $stepname,
+        'cmid' => $cmid,
+        'submissionstats' => (array)$submissionStats,
+        'tokenstats' => (array)$tokenStats,
+        'aisummary' => (array)$aiSummary,
+        'aienabled' => !empty($gestionprojet->ai_enabled),
+        'canedit' => has_capability('mod/gestionprojet:configureteacherpages', $context),
+        'gradeDistributionJson' => json_encode($submissionStats->grade_distribution),
+    ];
+
+    // Convert nested objects to arrays for Mustache.
+    if (!empty($dashboardContext['tokenstats']['by_provider'])) {
+        $providers = [];
+        foreach ($dashboardContext['tokenstats']['by_provider'] as $p) {
+            $providers[] = (array)$p;
+        }
+        $dashboardContext['tokenstats']['by_provider'] = $providers;
+    }
+
+    // Ensure arrays are properly formatted.
+    $dashboardContext['aisummary']['difficulties'] = $aiSummary->difficulties ?? [];
+    $dashboardContext['aisummary']['strengths'] = $aiSummary->strengths ?? [];
+    $dashboardContext['aisummary']['recommendations'] = $aiSummary->recommendations ?? [];
+
+    // Add JS module.
+    $PAGE->requires->js_call_amd('mod_gestionprojet/dashboard', 'init', [$cmid, $step, $submissionStats->grade_distribution]);
+
+    return $OUTPUT->render_from_template('mod_gestionprojet/dashboard_teacher', $dashboardContext);
+}
+
+/**
+ * Check and auto-submit drafts that have passed their deadline.
+ *
+ * This function is called on page view to ensure deadlines are enforced
+ * even without a working cron task.
+ *
+ * @param stdClass $gestionprojet The activity instance
+ * @return array ['processed' => int, 'errors' => int] Count of processed and errored submissions
+ */
+function gestionprojet_check_deadline_submissions($gestionprojet) {
+    global $DB;
+
+    $result = ['processed' => 0, 'errors' => 0];
+    $now = time();
+
+    // Define the steps that have deadlines (steps 4-8).
+    $steps = [
+        4 => ['table' => 'gestionprojet_cdcf', 'teacher_table' => 'gestionprojet_cdcf_teacher'],
+        5 => ['table' => 'gestionprojet_essai', 'teacher_table' => 'gestionprojet_essai_teacher'],
+        6 => ['table' => 'gestionprojet_rapport', 'teacher_table' => 'gestionprojet_rapport_teacher'],
+        7 => ['table' => 'gestionprojet_besoin_eleve', 'teacher_table' => 'gestionprojet_besoin_eleve_teacher'],
+        8 => ['table' => 'gestionprojet_carnet', 'teacher_table' => 'gestionprojet_carnet_teacher'],
+    ];
+
+    foreach ($steps as $stepnum => $stepconfig) {
+        // Check if step is enabled.
+        $enableprop = 'enable_step' . $stepnum;
+        if (isset($gestionprojet->$enableprop) && !$gestionprojet->$enableprop) {
+            continue;
+        }
+
+        // Get teacher model with deadline.
+        $teachermodel = $DB->get_record($stepconfig['teacher_table'], [
+            'gestionprojetid' => $gestionprojet->id
+        ]);
+
+        // Skip if no deadline or deadline not passed.
+        if (!$teachermodel || empty($teachermodel->deadline_date) || $teachermodel->deadline_date > $now) {
+            continue;
+        }
+
+        // Get all draft submissions for this step and instance.
+        $drafts = $DB->get_records($stepconfig['table'], [
+            'gestionprojetid' => $gestionprojet->id,
+            'status' => 0, // Draft status
+        ]);
+
+        if (empty($drafts)) {
+            continue;
+        }
+
+        foreach ($drafts as $draft) {
+            try {
+                // Update to submitted status.
+                $draft->status = 1; // Submitted
+                $draft->timesubmitted = $now;
+                $draft->timemodified = $now;
+
+                $DB->update_record($stepconfig['table'], $draft);
+
+                // Log to history table.
+                gestionprojet_log_change(
+                    $gestionprojet->id,
+                    $stepconfig['table'],
+                    $draft->id,
+                    'status',
+                    0,
+                    1,
+                    0, // System user
+                    $draft->groupid
+                );
+
+                // Trigger AI evaluation if enabled.
+                gestionprojet_trigger_ai_evaluation_safe($gestionprojet, $stepnum, $draft);
+
+                $result['processed']++;
+            } catch (\Exception $e) {
+                $result['errors']++;
+                debugging('Auto-submit failed for draft ' . $draft->id . ': ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Safely trigger AI evaluation (catches all errors to not break page load).
+ *
+ * @param stdClass $gestionprojet The activity instance
+ * @param int $step Step number
+ * @param stdClass $submission Submission record
+ */
+function gestionprojet_trigger_ai_evaluation_safe($gestionprojet, $step, $submission) {
+    global $CFG;
+
+    // Skip if AI not enabled.
+    if (empty($gestionprojet->ai_enabled)) {
+        return;
+    }
+
+    // Check if AI evaluator class exists.
+    $evaluatorfile = $CFG->dirroot . '/mod/gestionprojet/classes/ai_evaluator.php';
+    if (!file_exists($evaluatorfile)) {
+        return;
+    }
+
+    try {
+        require_once($evaluatorfile);
+
+        // Check if AI instructions are defined.
+        $teachertables = [
+            4 => 'gestionprojet_cdcf_teacher',
+            5 => 'gestionprojet_essai_teacher',
+            6 => 'gestionprojet_rapport_teacher',
+            7 => 'gestionprojet_besoin_eleve_teacher',
+            8 => 'gestionprojet_carnet_teacher',
+        ];
+
+        global $DB;
+        $teachertable = $teachertables[$step] ?? null;
+        if (!$teachertable) {
+            return;
+        }
+
+        $teachermodel = $DB->get_record($teachertable, ['gestionprojetid' => $gestionprojet->id]);
+        if (!$teachermodel || empty($teachermodel->ai_instructions)) {
+            return;
+        }
+
+        // Queue the AI evaluation.
+        \mod_gestionprojet\ai_evaluator::queue_evaluation(
+            $gestionprojet->id,
+            $step,
+            $submission->id,
+            $submission->groupid ?? 0,
+            $submission->userid ?? 0
+        );
+    } catch (\Throwable $e) {
+        // Silently fail - don't break page load for AI errors.
+        debugging('AI evaluation trigger failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+    }
+}

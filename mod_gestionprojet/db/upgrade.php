@@ -388,5 +388,38 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026012902, 'gestionprojet');
     }
 
+    if ($oldversion < 2026013000) {
+        // Phase 7: Teacher Dashboard - Create AI summaries table.
+
+        $table = new xmldb_table('gestionprojet_ai_summaries');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('step', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('difficulties', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('strengths', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('recommendations', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('general_observation', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('submissions_analyzed', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('provider', XMLDB_TYPE_CHAR, '20', null, null, null, null);
+        $table->add_field('model', XMLDB_TYPE_CHAR, '50', null, null, null, null);
+        $table->add_field('prompt_tokens', XMLDB_TYPE_INTEGER, '10', null, null, null, '0');
+        $table->add_field('completion_tokens', XMLDB_TYPE_INTEGER, '10', null, null, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN, ['gestionprojetid'], 'gestionprojet', ['id']);
+
+        $table->add_index('step_idx', XMLDB_INDEX_UNIQUE, ['gestionprojetid', 'step']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026013000, 'gestionprojet');
+    }
+
     return true;
 }

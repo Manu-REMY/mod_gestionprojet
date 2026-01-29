@@ -81,6 +81,10 @@ $isteacher = has_capability('mod/gestionprojet:configureteacherpages', $context)
 $cangrade = has_capability('mod/gestionprojet:grade', $context);
 $cansubmit = has_capability('mod/gestionprojet:submit', $context);
 
+// Check and auto-submit drafts that have passed their deadline.
+// This ensures deadlines are enforced even without cron.
+gestionprojet_check_deadline_submissions($gestionprojet);
+
 // Get user's group if student
 $usergroup = 0;
 if ($cansubmit && !$isteacher) {
