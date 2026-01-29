@@ -1,0 +1,318 @@
+{{!
+    @template mod_gestionprojet/dashboard_teacher
+
+    Teacher Dashboard for a specific step showing submission stats, grades, and AI summary.
+
+    Context variables required:
+    * step - Step number (4-8)
+    * stepname - Localized step name
+    * cmid - Course module ID
+    * submissionstats - Submission statistics object
+    * tokenstats - Token usage statistics
+    * aisummary - AI-generated summary
+    * aienabled - Boolean if AI is enabled
+    * canedit - Boolean if user can refresh summary
+    * gradeDistributionJson - JSON array for chart
+
+    Example context (json):
+    {
+        "step": 4,
+        "stepname": "CDCF",
+        "cmid": 123,
+        "aienabled": true,
+        "canedit": true,
+        "submissionstats": {
+            "total": 10,
+            "submitted": 8,
+            "draft": 2,
+            "graded_count": 6,
+            "pending_grade": 2,
+            "avg_grade": 14.5,
+            "completion_percent": 80,
+            "graded_percent": 60,
+            "pending_percent": 20,
+            "draft_percent": 20,
+            "grade_distribution": [0, 1, 2, 3, 2]
+        },
+        "tokenstats": {
+            "total_evaluations": 6,
+            "total_tokens": 5000,
+            "prompt_tokens": 3500,
+            "completion_tokens": 1500,
+            "avg_per_evaluation": 833,
+            "has_data": true,
+            "by_provider": [{"provider": "Albert", "count": 6, "tokens": 5000}]
+        },
+        "aisummary": {
+            "has_summary": true,
+            "difficulties": ["Difficulte 1", "Difficulte 2"],
+            "strengths": ["Point fort 1", "Point fort 2"],
+            "recommendations": ["Recommandation 1"],
+            "general_observation": "Observation generale",
+            "submissions_analyzed": 6,
+            "generated_date": "29/01/2026 10:30"
+        },
+        "gradeDistributionJson": "[0, 1, 2, 3, 2]"
+    }
+}}
+
+<div class="gestionprojet-dashboard card mb-4" id="dashboard-step-{{step}}" data-step="{{step}}" data-cmid="{{cmid}}">
+    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa fa-chart-bar mr-2"></i>
+                {{#str}}dashboard:title, gestionprojet{{/str}}
+            </h5>
+            <span class="badge badge-light">{{stepname}}</span>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {{! Section 1: Submission Progress }}
+        <div class="dashboard-section mb-4">
+            <h6 class="text-muted mb-3">
+                <i class="fa fa-tasks mr-2"></i>{{#str}}dashboard:submissionprogress, gestionprojet{{/str}}
+            </h6>
+
+            <div class="d-flex justify-content-between mb-2">
+                <span>
+                    <strong>{{submissionstats.submitted}}</strong> / {{submissionstats.total}}
+                    {{#str}}dashboard:submitted, gestionprojet{{/str}}
+                </span>
+                <span class="badge {{#submissionstats.completion_percent}}{{#js}}{{submissionstats.completion_percent}} >= 80 ? 'badge-success' : ({{submissionstats.completion_percent}} >= 50 ? 'badge-warning' : 'badge-danger'){{/js}}{{/submissionstats.completion_percent}}{{^submissionstats.completion_percent}}badge-secondary{{/submissionstats.completion_percent}}"
+                      style="{{#submissionstats.completion_percent}}{{#gte80}}background-color: #28a745;{{/gte80}}{{#gte50}}{{^gte80}}background-color: #ffc107; color: #212529;{{/gte80}}{{/gte50}}{{^gte50}}background-color: #dc3545;{{/gte50}}{{/submissionstats.completion_percent}}">
+                    {{submissionstats.completion_percent}}%
+                </span>
+            </div>
+
+            <div class="progress mb-2" style="height: 24px; border-radius: 12px; overflow: hidden;">
+                {{#submissionstats.graded_percent}}
+                <div class="progress-bar" role="progressbar"
+                     style="width: {{submissionstats.graded_percent}}%; background-color: #28a745;"
+                     aria-valuenow="{{submissionstats.graded_percent}}" aria-valuemin="0" aria-valuemax="100"
+                     title="{{#str}}dashboard:graded, gestionprojet{{/str}}: {{submissionstats.graded_count}}">
+                    {{#submissionstats.graded_count}}{{submissionstats.graded_count}}{{/submissionstats.graded_count}}
+                </div>
+                {{/submissionstats.graded_percent}}
+                {{#submissionstats.pending_percent}}
+                <div class="progress-bar" role="progressbar"
+                     style="width: {{submissionstats.pending_percent}}%; background-color: #ffc107;"
+                     aria-valuenow="{{submissionstats.pending_percent}}" aria-valuemin="0" aria-valuemax="100"
+                     title="{{#str}}dashboard:pendinggrade, gestionprojet{{/str}}: {{submissionstats.pending_grade}}">
+                    {{#submissionstats.pending_grade}}{{submissionstats.pending_grade}}{{/submissionstats.pending_grade}}
+                </div>
+                {{/submissionstats.pending_percent}}
+                {{#submissionstats.draft_percent}}
+                <div class="progress-bar" role="progressbar"
+                     style="width: {{submissionstats.draft_percent}}%; background-color: #6c757d;"
+                     aria-valuenow="{{submissionstats.draft_percent}}" aria-valuemin="0" aria-valuemax="100"
+                     title="{{#str}}dashboard:draft, gestionprojet{{/str}}: {{submissionstats.draft}}">
+                    {{#submissionstats.draft}}{{submissionstats.draft}}{{/submissionstats.draft}}
+                </div>
+                {{/submissionstats.draft_percent}}
+            </div>
+
+            <div class="d-flex flex-wrap mt-2" style="font-size: 0.85em;">
+                <span class="mr-3 mb-1">
+                    <span class="d-inline-block" style="width: 12px; height: 12px; background-color: #28a745; border-radius: 2px;"></span>
+                    {{#str}}dashboard:graded, gestionprojet{{/str}} ({{submissionstats.graded_count}})
+                </span>
+                <span class="mr-3 mb-1">
+                    <span class="d-inline-block" style="width: 12px; height: 12px; background-color: #ffc107; border-radius: 2px;"></span>
+                    {{#str}}dashboard:pendinggrade, gestionprojet{{/str}} ({{submissionstats.pending_grade}})
+                </span>
+                <span class="mb-1">
+                    <span class="d-inline-block" style="width: 12px; height: 12px; background-color: #6c757d; border-radius: 2px;"></span>
+                    {{#str}}dashboard:draft, gestionprojet{{/str}} ({{submissionstats.draft}})
+                </span>
+            </div>
+        </div>
+
+        {{! Section 2: Grade Average and Distribution }}
+        <div class="dashboard-section mb-4">
+            <h6 class="text-muted mb-3">
+                <i class="fa fa-graduation-cap mr-2"></i>{{#str}}dashboard:gradeaverage, gestionprojet{{/str}}
+            </h6>
+
+            <div class="row">
+                <div class="col-md-4 col-12 mb-3 mb-md-0">
+                    <div class="text-center p-3 border rounded h-100 d-flex flex-column justify-content-center" style="background: #f8f9fa;">
+                        {{#submissionstats.avg_grade}}
+                        <div class="display-4 font-weight-bold" style="color: {{#gte12}}#28a745{{/gte12}}{{^gte12}}{{#gte8}}#ffc107{{/gte8}}{{^gte8}}#dc3545{{/gte8}}{{/gte12}};">
+                            {{submissionstats.avg_grade}}
+                        </div>
+                        {{/submissionstats.avg_grade}}
+                        {{^submissionstats.avg_grade}}
+                        <div class="display-4 text-muted">-</div>
+                        {{/submissionstats.avg_grade}}
+                        <div class="text-muted">/ 20</div>
+                    </div>
+                </div>
+                <div class="col-md-8 col-12">
+                    <div class="p-2 border rounded" style="background: #f8f9fa; min-height: 150px;">
+                        <canvas id="grade-distribution-{{step}}" height="140"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{! Section 3: AI Summary }}
+        {{#aienabled}}
+        <div class="dashboard-section mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="text-muted mb-0">
+                    <i class="fa fa-robot mr-2"></i>{{#str}}dashboard:aisummary, gestionprojet{{/str}}
+                </h6>
+                {{#canedit}}
+                <button class="btn btn-sm btn-outline-primary refresh-summary-btn" data-step="{{step}}" data-cmid="{{cmid}}">
+                    <i class="fa fa-sync-alt"></i>
+                    <span class="d-none d-sm-inline ml-1">{{#str}}dashboard:refreshsummary, gestionprojet{{/str}}</span>
+                </button>
+                {{/canedit}}
+            </div>
+
+            {{#aisummary.has_summary}}
+            <div class="row">
+                {{! Difficulties }}
+                <div class="col-md-6 mb-3">
+                    <div class="h-100 p-3 border-left rounded" style="border-left: 4px solid #dc3545 !important; background: #fff5f5;">
+                        <h6 class="text-danger mb-2">
+                            <i class="fa fa-exclamation-triangle mr-1"></i>
+                            {{#str}}dashboard:difficulties, gestionprojet{{/str}}
+                        </h6>
+                        <ul class="mb-0 pl-3" style="font-size: 0.9em;">
+                            {{#aisummary.difficulties}}
+                            <li class="mb-1">{{.}}</li>
+                            {{/aisummary.difficulties}}
+                            {{^aisummary.difficulties}}
+                            <li class="text-muted">{{#str}}dashboard:nodata, gestionprojet{{/str}}</li>
+                            {{/aisummary.difficulties}}
+                        </ul>
+                    </div>
+                </div>
+
+                {{! Strengths }}
+                <div class="col-md-6 mb-3">
+                    <div class="h-100 p-3 border-left rounded" style="border-left: 4px solid #28a745 !important; background: #f0fff4;">
+                        <h6 class="text-success mb-2">
+                            <i class="fa fa-check-circle mr-1"></i>
+                            {{#str}}dashboard:strengths, gestionprojet{{/str}}
+                        </h6>
+                        <ul class="mb-0 pl-3" style="font-size: 0.9em;">
+                            {{#aisummary.strengths}}
+                            <li class="mb-1">{{.}}</li>
+                            {{/aisummary.strengths}}
+                            {{^aisummary.strengths}}
+                            <li class="text-muted">{{#str}}dashboard:nodata, gestionprojet{{/str}}</li>
+                            {{/aisummary.strengths}}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {{! Recommendations }}
+            {{#aisummary.recommendations.0}}
+            <div class="alert alert-info mb-3" style="background: #e7f3ff; border-color: #b8daff;">
+                <h6 class="alert-heading mb-2">
+                    <i class="fa fa-lightbulb mr-1"></i>
+                    {{#str}}dashboard:recommendations, gestionprojet{{/str}}
+                </h6>
+                <ul class="mb-0 pl-3" style="font-size: 0.9em;">
+                    {{#aisummary.recommendations}}
+                    <li class="mb-1">{{.}}</li>
+                    {{/aisummary.recommendations}}
+                </ul>
+            </div>
+            {{/aisummary.recommendations.0}}
+
+            {{! General observation }}
+            {{#aisummary.general_observation}}
+            <div class="p-3 rounded mb-3" style="background: #f8f9fa; font-style: italic;">
+                <i class="fa fa-quote-left text-muted mr-2"></i>
+                {{aisummary.general_observation}}
+            </div>
+            {{/aisummary.general_observation}}
+
+            <p class="text-muted mb-0" style="font-size: 0.8em;">
+                <i class="fa fa-info-circle mr-1"></i>
+                {{#str}}dashboard:analyzedfrom, gestionprojet{{/str}} {{aisummary.submissions_analyzed}} {{#str}}dashboard:evaluations, gestionprojet{{/str}}
+                &bull; {{#str}}dashboard:generatedat, gestionprojet{{/str}}: {{aisummary.generated_date}}
+            </p>
+            {{/aisummary.has_summary}}
+
+            {{^aisummary.has_summary}}
+            <div class="alert alert-secondary mb-0">
+                <i class="fa fa-info-circle mr-2"></i>
+                {{aisummary.message}}
+                {{#aisummary.min_required}}
+                <br><small class="text-muted">
+                    ({{aisummary.current_count}} / {{aisummary.min_required}} {{#str}}dashboard:evaluationsrequired, gestionprojet{{/str}})
+                </small>
+                {{/aisummary.min_required}}
+            </div>
+            {{/aisummary.has_summary}}
+        </div>
+        {{/aienabled}}
+
+        {{! Section 4: Token Usage }}
+        {{#aienabled}}
+        {{#tokenstats.has_data}}
+        <div class="dashboard-section">
+            <h6 class="text-muted mb-3">
+                <i class="fa fa-coins mr-2"></i>{{#str}}dashboard:tokenusage, gestionprojet{{/str}}
+            </h6>
+
+            <div class="row">
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="text-center p-2 border rounded" style="background: #f8f9fa;">
+                        <div class="h5 mb-0 font-weight-bold text-primary">{{tokenstats.total_evaluations}}</div>
+                        <small class="text-muted">{{#str}}dashboard:evaluations, gestionprojet{{/str}}</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="text-center p-2 border rounded" style="background: #f8f9fa;">
+                        <div class="h5 mb-0 font-weight-bold text-info">{{tokenstats.total_tokens}}</div>
+                        <small class="text-muted">{{#str}}dashboard:totaltokens, gestionprojet{{/str}}</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="text-center p-2 border rounded" style="background: #f8f9fa;">
+                        <div class="h5 mb-0 font-weight-bold" style="color: #6f42c1;">{{tokenstats.prompt_tokens}}</div>
+                        <small class="text-muted">{{#str}}dashboard:prompttokens, gestionprojet{{/str}}</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="text-center p-2 border rounded" style="background: #f8f9fa;">
+                        <div class="h5 mb-0 font-weight-bold" style="color: #20c997;">{{tokenstats.completion_tokens}}</div>
+                        <small class="text-muted">{{#str}}dashboard:completiontokens, gestionprojet{{/str}}</small>
+                    </div>
+                </div>
+            </div>
+
+            {{#tokenstats.avg_per_evaluation}}
+            <p class="text-muted mb-2 mt-2" style="font-size: 0.85em;">
+                <i class="fa fa-calculator mr-1"></i>
+                {{#str}}dashboard:avgpereval, gestionprojet{{/str}}: <strong>{{tokenstats.avg_per_evaluation}}</strong> tokens
+            </p>
+            {{/tokenstats.avg_per_evaluation}}
+
+            {{#tokenstats.by_provider.0}}
+            <div class="mt-2">
+                {{#tokenstats.by_provider}}
+                <span class="badge badge-light mr-1 mb-1" style="font-size: 0.8em;">
+                    {{provider}}: {{tokens}} tokens ({{count}} eval.)
+                </span>
+                {{/tokenstats.by_provider}}
+            </div>
+            {{/tokenstats.by_provider.0}}
+        </div>
+        {{/tokenstats.has_data}}
+        {{/aienabled}}
+    </div>
+</div>
+
+{{#js}}
+require(['mod_gestionprojet/dashboard'], function(Dashboard) {
+    Dashboard.init({{cmid}}, {{step}}, {{{gradeDistributionJson}}});
+});
+{{/js}}

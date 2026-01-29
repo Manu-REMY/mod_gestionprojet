@@ -34,6 +34,9 @@ echo $OUTPUT->header();
 
 // Include shared teacher model styles.
 require_once(__DIR__ . '/teacher_model_styles.php');
+
+// Render teacher dashboard for this step.
+echo gestionprojet_render_step_dashboard($gestionprojet, 5, $context, $cm->id);
 ?>
 
 <div class="teacher-model-container">
