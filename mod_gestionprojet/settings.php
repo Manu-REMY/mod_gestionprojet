@@ -1,0 +1,31 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+/**
+ * Settings for the gestionprojet module.
+ *
+ * @package    mod_gestionprojet
+ * @copyright  2026 Emmanuel REMY
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+if ($ADMIN->fulltree) {
+    // Add link to AI usage report.
+    $settings->add(new admin_setting_heading(
+        'mod_gestionprojet/reportheading',
+        get_string('ai_log_report', 'gestionprojet'),
+        get_string('ai_log_report_desc', 'gestionprojet') . '<br><br>' .
+        html_writer::link(
+            new moodle_url('/mod/gestionprojet/report.php'),
+            get_string('ai_log_report', 'gestionprojet'),
+            ['class' => 'btn btn-primary']
+        )
+    ));
+}
