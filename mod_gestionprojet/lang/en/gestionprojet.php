@@ -557,3 +557,4 @@ $string['status_processing'] = 'Processing';
 $string['status_completed'] = 'Completed';
 $string['status_failed'] = 'Failed';
 $string['status_applied'] = 'Applied';
+$string['ai_log_report_activity'] = 'AI Usage Report for {$a}';
