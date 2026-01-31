@@ -312,8 +312,8 @@ class ai_log_table extends \table_sql {
         $html = \html_writer::start_tag('button', [
             'class' => 'btn btn-sm btn-outline-primary ai-log-expand',
             'type' => 'button',
-            'data-toggle' => 'collapse',
-            'data-target' => '#prompts-' . $row->id,
+            'data-bs-toggle' => 'collapse',
+            'data-bs-target' => '#prompts-' . $row->id,
             'aria-expanded' => 'false',
             'data-evaluation-id' => $row->id,
         ]);
