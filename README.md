@@ -49,6 +49,40 @@ Autres providers supportés (nécessitent une clé API) :
 - Anthropic (Claude)
 - Mistral AI
 
+## Captures d'écran
+
+### Accueil et navigation
+
+![Accueil](screenshots/Accueil.png)
+*Page d'accueil de l'activité avec navigation vers les différentes phases*
+
+![Tableau de bord](screenshots/Tableau%20de%20bord.png)
+*Tableau de bord enseignant pour le suivi des élèves*
+
+### Configuration
+
+![Étapes actives](screenshots/Etapes%20actives.png)
+*Configuration des phases activées pour le projet*
+
+![Type de soumission](screenshots/Type%20de%20soumission.png)
+*Choix du mode de soumission (groupe ou individuel)*
+
+### Modèles de correction (Enseignant)
+
+![Hub de correction](screenshots/Hub%20de%20correction.png)
+*Hub centralisant tous les modèles de correction*
+
+![Modèle de correction CdCF](screenshots/Modèle%20de%20correction%20cdcf.png)
+*Exemple de modèle de correction pour le cahier des charges fonctionnel*
+
+### Évaluation par IA
+
+![Activité élève corrigée](screenshots/Activité%20élève%20corrigée%20-%20Expression%20du%20besoin.png)
+*Vue d'une activité élève avec correction automatique*
+
+![Synthèse IA](screenshots/Synthèse%20IA.png)
+*Synthèse générée par l'IA pour l'évaluation*
+
 ## Utilisation
 
 ### Pour l'enseignant
