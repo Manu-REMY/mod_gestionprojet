@@ -18,6 +18,11 @@ defined('MOODLE_INTERNAL') || die();
 ?>
 
 <style>
+    /* Dashboard and form container alignment */
+    .gestionprojet-dashboard {
+        max-width: 1200px;
+        margin: 0 auto 20px auto;
+    }
     .teacher-model-container {
         max-width: 1200px;
         margin: 0 auto;
@@ -156,5 +161,54 @@ defined('MOODLE_INTERNAL') || die();
         background: #f8d7da;
         color: #721c24;
         display: block;
+    }
+    /* Step Navigation */
+    .step-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #e9ecef;
+        gap: 15px;
+    }
+    .btn-nav {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn-prev, .btn-next {
+        background: #f8f9fa;
+        color: #17a2b8;
+        border: 2px solid #17a2b8;
+    }
+    .btn-prev:hover, .btn-next:hover {
+        background: #17a2b8;
+        color: white;
+        text-decoration: none;
+    }
+    .btn-hub {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        border: none;
+    }
+    .btn-hub:hover {
+        transform: scale(1.02);
+        color: white;
+        text-decoration: none;
+    }
+    .nav-spacer {
+        flex: 1;
+    }
+    .step-navigation-top {
+        margin-top: 0;
+        margin-bottom: 20px;
+        padding-top: 0;
+        border-top: none;
     }
 </style>

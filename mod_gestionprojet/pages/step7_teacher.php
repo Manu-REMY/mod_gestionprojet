@@ -55,17 +55,39 @@ if (!$model) {
 echo $OUTPUT->header();
 require_once(__DIR__ . '/teacher_model_styles.php');
 
+// Get navigation for teacher steps.
+$stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 7);
+?>
+
+<!-- Navigation en haut (avant le dashboard) -->
+<div class="step-navigation step-navigation-top" style="max-width: 1200px; margin: 0 auto 20px auto; padding: 0 20px;">
+    <?php if ($stepnav['prev']): ?>
+    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['prev'], 'mode' => 'teacher']); ?>" class="btn-nav btn-prev">
+        &#8592; <?php echo get_string('previous', 'gestionprojet'); ?>
+    </a>
+    <?php else: ?>
+    <div class="nav-spacer"></div>
+    <?php endif; ?>
+
+    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'page' => 'correctionmodels']); ?>" class="btn-nav btn-hub">
+        <?php echo get_string('correction_models', 'gestionprojet'); ?>
+    </a>
+
+    <?php if ($stepnav['next']): ?>
+    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['next'], 'mode' => 'teacher']); ?>" class="btn-nav btn-next">
+        <?php echo get_string('next', 'gestionprojet'); ?> &#8594;
+    </a>
+    <?php else: ?>
+    <div class="nav-spacer"></div>
+    <?php endif; ?>
+</div>
+
+<?php
 // Render teacher dashboard for this step.
 echo gestionprojet_render_step_dashboard($gestionprojet, 7, $context, $cm->id);
 ?>
 
 <div class="teacher-model-container">
-
-    <div class="back-nav">
-        <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'page' => 'correctionmodels']); ?>">
-            &#8592; <?php echo get_string('correction_models', 'gestionprojet'); ?>
-        </a>
-    </div>
 
     <div class="teacher-model-header">
         <h2>&#129423; <?php echo get_string('step7', 'gestionprojet'); ?> - <?php echo get_string('correction_models', 'gestionprojet'); ?></h2>
@@ -110,6 +132,29 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 7, $context, $cm->id);
             <button type="button" class="btn-save" id="saveButton">&#128190; <?php echo get_string('save', 'gestionprojet'); ?></button>
             <div id="saveStatus" class="save-status"></div>
         </div>
+
+        <!-- Navigation entre étapes -->
+        <div class="step-navigation">
+            <?php if ($stepnav['prev']): ?>
+            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['prev'], 'mode' => 'teacher']); ?>" class="btn-nav btn-prev">
+                &#8592; <?php echo get_string('previous', 'gestionprojet'); ?>
+            </a>
+            <?php else: ?>
+            <div class="nav-spacer"></div>
+            <?php endif; ?>
+
+            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'page' => 'correctionmodels']); ?>" class="btn-nav btn-hub">
+                <?php echo get_string('correction_models', 'gestionprojet'); ?>
+            </a>
+
+            <?php if ($stepnav['next']): ?>
+            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['next'], 'mode' => 'teacher']); ?>" class="btn-nav btn-next">
+                <?php echo get_string('next', 'gestionprojet'); ?> &#8594;
+            </a>
+            <?php else: ?>
+            <div class="nav-spacer"></div>
+            <?php endif; ?>
+        </div>
     </form>
 </div>
 
@@ -149,8 +194,15 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 7, $context, $cm->id);
                 serialize: serializeData
             });
 
-            // Manual save button
+            // Manual save button with redirect to hub
             document.getElementById('saveButton').addEventListener('click', function() {
+                var originalOnSave = Autosave.onSave;
+                Autosave.onSave = function(response) {
+                    if (originalOnSave) originalOnSave(response);
+                    setTimeout(function() {
+                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid + '&page=correctionmodels';
+                    }, 800);
+                };
                 Autosave.save();
             });
         });
