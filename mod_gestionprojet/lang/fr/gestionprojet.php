@@ -573,3 +573,4 @@ $string['status_processing'] = 'En cours';
 $string['status_completed'] = 'Terminé';
 $string['status_failed'] = 'Échoué';
 $string['status_applied'] = 'Appliqué';
+$string['ai_log_report_activity'] = 'Rapport d\'utilisation IA pour {$a}';

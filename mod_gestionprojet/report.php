@@ -9,6 +9,10 @@
 /**
  * AI usage report for the gestionprojet module.
  *
+ * Supports two access modes:
+ * - Admin mode: /report.php (all activities, requires viewailogs capability)
+ * - Activity mode: /report.php?id=XX (single activity, requires grade capability)
+ *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -17,10 +21,33 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
-// Check login and capability.
-require_login();
-$context = context_system::instance();
-require_capability('mod/gestionprojet:viewailogs', $context);
+// Get mode parameter.
+$id = optional_param('id', 0, PARAM_INT);  // Course module ID (activity mode)
+
+// Initialize variables.
+$cm = null;
+$course = null;
+$gestionprojet = null;
+$activitymode = false;
+
+// Determine access mode and check permissions.
+if ($id) {
+    // Activity mode: filtered on a specific activity.
+    $cm = get_coursemodule_from_id('gestionprojet', $id, 0, false, MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
+
+    require_login($course, true, $cm);
+    $context = context_module::instance($cm->id);
+    require_capability('mod/gestionprojet:grade', $context);
+
+    $activitymode = true;
+} else {
+    // Admin mode: all activities.
+    require_login();
+    $context = context_system::instance();
+    require_capability('mod/gestionprojet:viewailogs', $context);
+}
 
 // Get filter parameters.
 $datefrom = optional_param('datefrom', 0, PARAM_INT);
@@ -32,19 +59,37 @@ $status = optional_param('status', '', PARAM_ALPHA);
 $page = optional_param('page', 0, PARAM_INT);
 $perpage = optional_param('perpage', 25, PARAM_INT);
 
-// Set up the page.
-$PAGE->set_url('/mod/gestionprojet/report.php', [
+// Build URL parameters.
+$urlparams = [
     'datefrom' => $datefrom,
     'dateto' => $dateto,
-    'courseid' => $courseid,
     'userid' => $userid,
     'provider' => $provider,
     'status' => $status,
-]);
+];
+if ($activitymode) {
+    $urlparams['id'] = $id;
+} else {
+    $urlparams['courseid'] = $courseid;
+}
+
+// Set up the page.
+$PAGE->set_url('/mod/gestionprojet/report.php', $urlparams);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('report');
-$PAGE->set_title(get_string('ai_log_report', 'gestionprojet'));
-$PAGE->set_heading(get_string('ai_log_report', 'gestionprojet'));
+
+// Set title based on mode.
+if ($activitymode) {
+    $pagetitle = get_string('ai_log_report_activity', 'gestionprojet', format_string($gestionprojet->name));
+    $PAGE->set_title($pagetitle);
+    $PAGE->set_heading($pagetitle);
+
+    // Add breadcrumb.
+    $PAGE->navbar->add(get_string('ai_log_report', 'gestionprojet'));
+} else {
+    $PAGE->set_title(get_string('ai_log_report', 'gestionprojet'));
+    $PAGE->set_heading(get_string('ai_log_report', 'gestionprojet'));
+}
 
 // Add CSS.
 $PAGE->requires->css('/mod/gestionprojet/styles.css');
@@ -58,9 +103,6 @@ if ($dateto) {
     // Add 23:59:59 to include the full day.
     $filters['dateto'] = $dateto + 86399;
 }
-if ($courseid) {
-    $filters['courseid'] = $courseid;
-}
 if ($userid) {
     $filters['userid'] = $userid;
 }
@@ -71,6 +113,13 @@ if ($status) {
     $filters['status'] = $status;
 }
 
+// Apply activity-specific filter in activity mode.
+if ($activitymode) {
+    $filters['gestionprojetid'] = $gestionprojet->id;
+} else if ($courseid) {
+    $filters['courseid'] = $courseid;
+}
+
 // Create table instance.
 require_once(__DIR__ . '/classes/report/ai_log_table.php');
 $table = new \mod_gestionprojet\report\ai_log_table('ai-log-report', $filters);
@@ -79,23 +128,40 @@ $table->define_baseurl($PAGE->url);
 // Get summary.
 $summary = $table->get_summary();
 
-// Get courses with gestionprojet activities for filter.
-$courses = $DB->get_records_sql(
-    "SELECT DISTINCT c.id, c.shortname, c.fullname
-     FROM {course} c
-     JOIN {gestionprojet} g ON g.course = c.id
-     ORDER BY c.shortname"
-);
+// Get courses with gestionprojet activities for filter (admin mode only).
+$courses = [];
+if (!$activitymode) {
+    $courses = $DB->get_records_sql(
+        "SELECT DISTINCT c.id, c.shortname, c.fullname
+         FROM {course} c
+         JOIN {gestionprojet} g ON g.course = c.id
+         ORDER BY c.shortname"
+    );
+}
 
 // Get users who have evaluations for filter.
-$users = $DB->get_records_sql(
-    "SELECT DISTINCT u.id, u.firstname, u.lastname, u.email
-     FROM {user} u
-     JOIN {gestionprojet_ai_evaluations} e ON e.userid = u.id
-     WHERE e.userid > 0
-     ORDER BY u.lastname, u.firstname
-     LIMIT 200"
-);
+if ($activitymode) {
+    // Only users from this activity.
+    $users = $DB->get_records_sql(
+        "SELECT DISTINCT u.id, u.firstname, u.lastname, u.email
+         FROM {user} u
+         JOIN {gestionprojet_ai_evaluations} e ON e.userid = u.id
+         WHERE e.userid > 0 AND e.gestionprojetid = ?
+         ORDER BY u.lastname, u.firstname
+         LIMIT 200",
+        [$gestionprojet->id]
+    );
+} else {
+    // All users.
+    $users = $DB->get_records_sql(
+        "SELECT DISTINCT u.id, u.firstname, u.lastname, u.email
+         FROM {user} u
+         JOIN {gestionprojet_ai_evaluations} e ON e.userid = u.id
+         WHERE e.userid > 0
+         ORDER BY u.lastname, u.firstname
+         LIMIT 200"
+    );
+}
 
 // Available providers.
 $providers = [
@@ -123,6 +189,11 @@ echo html_writer::start_tag('form', [
     'action' => $PAGE->url->out_omit_querystring(),
     'class' => 'mb-4',
 ]);
+
+// Hidden field for activity mode.
+if ($activitymode) {
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]);
+}
 
 echo html_writer::start_div('card');
 echo html_writer::start_div('card-body');
@@ -155,15 +226,17 @@ echo html_writer::empty_tag('input', [
 ]);
 echo html_writer::end_div();
 
-// Course.
-echo html_writer::start_div('col-md-2 mb-2');
-echo html_writer::tag('label', get_string('filter_course', 'gestionprojet'), ['for' => 'courseid', 'class' => 'form-label']);
-$courseoptions = ['' => get_string('all_courses', 'gestionprojet')];
-foreach ($courses as $course) {
-    $courseoptions[$course->id] = $course->shortname;
+// Course filter (admin mode only).
+if (!$activitymode) {
+    echo html_writer::start_div('col-md-2 mb-2');
+    echo html_writer::tag('label', get_string('filter_course', 'gestionprojet'), ['for' => 'courseid', 'class' => 'form-label']);
+    $courseoptions = ['' => get_string('all_courses', 'gestionprojet')];
+    foreach ($courses as $c) {
+        $courseoptions[$c->id] = $c->shortname;
+    }
+    echo html_writer::select($courseoptions, 'courseid', $courseid, false, ['class' => 'form-control']);
+    echo html_writer::end_div();
 }
-echo html_writer::select($courseoptions, 'courseid', $courseid, false, ['class' => 'form-control']);
-echo html_writer::end_div();
 
 // User.
 echo html_writer::start_div('col-md-2 mb-2');
@@ -200,8 +273,14 @@ echo html_writer::empty_tag('input', [
     'value' => get_string('filter_apply', 'gestionprojet'),
     'class' => 'btn btn-primary mr-2',
 ]);
+
+// Clear filters link (preserving activity mode if applicable).
+$clearurl = new moodle_url('/mod/gestionprojet/report.php');
+if ($activitymode) {
+    $clearurl->param('id', $id);
+}
 echo html_writer::link(
-    new moodle_url('/mod/gestionprojet/report.php'),
+    $clearurl,
     get_string('filter_clear', 'gestionprojet'),
     ['class' => 'btn btn-secondary']
 );

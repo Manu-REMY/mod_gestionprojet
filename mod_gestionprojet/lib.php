@@ -448,6 +448,16 @@ function gestionprojet_extend_settings_navigation($settings, $navref)
         $url = new moodle_url('/mod/gestionprojet/export.php', ['id' => $PAGE->cm->id]);
         $navref->add(get_string('export_all', 'gestionprojet'), $url, navigation_node::TYPE_SETTING);
     }
+
+    // Add link to AI usage report for teachers (if AI is enabled)
+    if (has_capability('mod/gestionprojet:grade', $context)) {
+        global $DB;
+        $gestionprojet = $DB->get_record('gestionprojet', ['id' => $PAGE->cm->instance]);
+        if (!empty($gestionprojet->ai_enabled)) {
+            $url = new moodle_url('/mod/gestionprojet/report.php', ['id' => $PAGE->cm->id]);
+            $navref->add(get_string('ai_log_report', 'gestionprojet'), $url, navigation_node::TYPE_SETTING);
+        }
+    }
 }
 
 /**
@@ -1255,6 +1265,43 @@ function gestionprojet_render_step_dashboard($gestionprojet, $step, $context, $c
     $PAGE->requires->js_call_amd('mod_gestionprojet/dashboard', 'init', [$cmid, $step, $submissionStats->grade_distribution]);
 
     return $OUTPUT->render_from_template('mod_gestionprojet/dashboard_teacher', $dashboardContext);
+}
+
+/**
+ * Get navigation info for teacher correction model pages.
+ *
+ * Returns previous/next step numbers based on enabled steps and fixed order.
+ * Order: Step 7 (Expression du Besoin) → Step 4 (CdCF) → Step 5 (Fiche Essai)
+ *        → Step 8 (Carnet de Bord) → Step 6 (Rapport)
+ *
+ * @param stdClass $gestionprojet The activity instance
+ * @param int $currentstep The current step number
+ * @return array ['prev' => int|null, 'next' => int|null, 'order' => array]
+ */
+function gestionprojet_get_teacher_step_navigation($gestionprojet, $currentstep) {
+    // Fixed order for correction models.
+    $steporder = [7, 4, 5, 8, 6];
+
+    // Filter to only enabled steps.
+    $enabledsteps = [];
+    foreach ($steporder as $step) {
+        $field = 'enable_step' . $step;
+        if (!isset($gestionprojet->$field) || $gestionprojet->$field) {
+            $enabledsteps[] = $step;
+        }
+    }
+
+    // Find current position.
+    $currentindex = array_search($currentstep, $enabledsteps);
+    if ($currentindex === false) {
+        return ['prev' => null, 'next' => null, 'order' => $enabledsteps];
+    }
+
+    return [
+        'prev' => ($currentindex > 0) ? $enabledsteps[$currentindex - 1] : null,
+        'next' => ($currentindex < count($enabledsteps) - 1) ? $enabledsteps[$currentindex + 1] : null,
+        'order' => $enabledsteps
+    ];
 }
 
 /**

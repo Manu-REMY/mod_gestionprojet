@@ -135,6 +135,11 @@ class ai_log_table extends \table_sql {
             $params['status'] = $this->filters['status'];
         }
 
+        if (!empty($this->filters['gestionprojetid'])) {
+            $where .= " AND e.gestionprojetid = :gestionprojetid";
+            $params['gestionprojetid'] = $this->filters['gestionprojetid'];
+        }
+
         $this->set_sql($fields, $from, $where, $params);
         $this->set_count_sql("SELECT COUNT(1) FROM $from WHERE $where", $params);
     }
@@ -485,6 +490,11 @@ class ai_log_table extends \table_sql {
         if (!empty($this->filters['status'])) {
             $where .= " AND e.status = :status";
             $params['status'] = $this->filters['status'];
+        }
+
+        if (!empty($this->filters['gestionprojetid'])) {
+            $where .= " AND e.gestionprojetid = :gestionprojetid";
+            $params['gestionprojetid'] = $this->filters['gestionprojetid'];
         }
 
         $sql = "SELECT COUNT(*) as total_requests,
