@@ -341,15 +341,22 @@ $PAGE->requires->js_amd_inline("
             }
         });
 
-        // Handle expand/collapse buttons.
+        // Handle expand/collapse buttons (Bootstrap 5 compatible).
         \$(document).on('click', '.ai-log-expand', function() {
             var btn = \$(this);
-            var target = \$(btn.data('target'));
+            var targetId = btn.attr('data-bs-target');
+            var target = \$(targetId);
 
+            // Toggle visibility.
+            target.toggleClass('show');
+
+            // Update button text and aria-expanded.
             if (target.hasClass('show')) {
-                btn.text('" . get_string('expand_prompts', 'gestionprojet') . "');
-            } else {
                 btn.text('" . get_string('collapse_prompts', 'gestionprojet') . "');
+                btn.attr('aria-expanded', 'true');
+            } else {
+                btn.text('" . get_string('expand_prompts', 'gestionprojet') . "');
+                btn.attr('aria-expanded', 'false');
             }
         });
     });
