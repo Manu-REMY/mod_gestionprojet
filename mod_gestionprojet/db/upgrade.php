@@ -421,5 +421,26 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026013000, 'gestionprojet');
     }
 
+    if ($oldversion < 2026013100) {
+        // Add prompt_system and prompt_user fields to AI evaluations for logging.
+
+        $table = new xmldb_table('gestionprojet_ai_evaluations');
+
+        // Add prompt_system field.
+        $field = new xmldb_field('prompt_system', XMLDB_TYPE_TEXT, null, null, null, null, null, 'model');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add prompt_user field.
+        $field = new xmldb_field('prompt_user', XMLDB_TYPE_TEXT, null, null, null, null, null, 'prompt_system');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026013100, 'gestionprojet');
+    }
+
     return true;
 }

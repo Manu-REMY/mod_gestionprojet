@@ -195,7 +195,9 @@ class ai_evaluator {
             $parser = new ai_response_parser();
             $result = $parser->parse($response['content']);
 
-            // Update evaluation record.
+            // Update evaluation record with prompts and response.
+            $evaluation->prompt_system = $prompts['system'];
+            $evaluation->prompt_user = $prompts['user'];
             $evaluation->raw_response = $response['content'];
             $evaluation->prompt_tokens = $response['prompt_tokens'] ?? 0;
             $evaluation->completion_tokens = $response['completion_tokens'] ?? 0;

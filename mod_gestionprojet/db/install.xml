@@ -388,6 +388,8 @@
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="provider" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="AI provider used"/>
         <FIELD NAME="model" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="AI model used"/>
+        <FIELD NAME="prompt_system" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="System prompt sent to AI"/>
+        <FIELD NAME="prompt_user" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="User prompt with student data"/>
         <FIELD NAME="prompt_tokens" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="completion_tokens" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="raw_response" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Full AI response"/>
