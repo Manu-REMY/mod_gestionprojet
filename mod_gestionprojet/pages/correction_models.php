@@ -216,13 +216,20 @@ foreach ($models as $stepnum => $model) {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        color: #667eea;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
         text-decoration: none;
-        font-weight: 500;
+        transition: all 0.2s;
+        background: #f8f9fa;
+        color: #17a2b8;
+        border: 2px solid #17a2b8;
     }
 
     .back-button a:hover {
-        text-decoration: underline;
+        background: #17a2b8;
+        color: white;
+        text-decoration: none;
     }
 
     .ai-status-badge {
