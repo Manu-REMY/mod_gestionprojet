@@ -37,8 +37,9 @@ trouver_cmid.php
 verifier_installation.sh
 gestion-projet.html
 
-# Archives
+# Archives (except installation package)
 *.zip
+!gestionprojet.zip
 
 # Node modules (if using grunt)
 node_modules/
