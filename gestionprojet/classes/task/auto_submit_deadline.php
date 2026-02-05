@@ -80,7 +80,9 @@ class auto_submit_deadline extends \core\task\scheduled_task {
                     continue;
                 }
 
-                mtrace("    Processing instance {$model->gestionprojetid} (deadline: " . userdate($model->deadline_date) . ")...");
+                // Use date() instead of userdate() to avoid IntlTimeZone dependency in CLI context.
+                $deadlinestr = date('Y-m-d H:i:s', $model->deadline_date);
+                mtrace("    Processing instance {$model->gestionprojetid} (deadline: {$deadlinestr})...");
 
                 // Get all draft submissions (status = 0) for this step and instance.
                 $drafts = $DB->get_records($stepconfig['table'], [
