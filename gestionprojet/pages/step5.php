@@ -5,9 +5,17 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 5: Fiche Essai - Validation (Student group page)
+ * Step 5: Trial sheet - Validation (Student group page)
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -72,12 +80,19 @@ $isLocked = $isSubmitted; // Lock if submitted
 $canSubmit = $gestionprojet->enable_submission && !$isSubmitted;
 $canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
-// Autosave handled inline at bottom of file
-// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
-//     'cmid' => $cm->id,
-//     'step' => 5,
-//     'interval' => $gestionprojet->autosaveinterval * 1000
-// ]]);
+// Load AMD module.
+$PAGE->requires->js_call_amd('mod_gestionprojet/step5', 'init', [[
+    'cmid' => $cm->id,
+    'step' => 5,
+    'groupid' => $groupid,
+    'autosaveInterval' => $gestionprojet->autosave_interval * 1000,
+    'isLocked' => $isLocked,
+    'strings' => [
+        'confirm_submission' => get_string('confirm_submission', 'gestionprojet'),
+        'confirm_revert' => get_string('confirm_revert', 'gestionprojet'),
+        'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet'),
+    ],
+]]);
 
 echo $OUTPUT->header();
 
@@ -158,7 +173,7 @@ if ($submission->precautions) {
     <form id="essaiForm" method="post" action="">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
 
-        <!-- Informations générales -->
+        <!-- General information -->
         <div class="info-section">
             <div class="section-title-simple">Informations générales</div>
 
@@ -178,7 +193,7 @@ if ($submission->precautions) {
 
         </div>
 
-        <!-- Section 1: Objectif de l'essai -->
+        <!-- Section 1: Trial objective -->
         <div class="numbered-section">
             <div class="section-header">
                 <div class="section-number">1</div>
@@ -203,7 +218,7 @@ if ($submission->precautions) {
             </div>
         </div>
 
-        <!-- Section 2: Conception du protocole -->
+        <!-- Section 2: Protocol design -->
         <div class="numbered-section">
             <div class="section-header">
                 <div class="section-number">2</div>
@@ -266,7 +281,7 @@ if ($submission->precautions) {
             </div>
         </div>
 
-        <!-- Section 3: Résultats et observations -->
+        <!-- Section 3: Results and observations -->
         <div class="numbered-section">
             <div class="section-header">
                 <div class="section-number">3</div>
@@ -322,7 +337,7 @@ if ($submission->precautions) {
                 </button>
             <?php endif; ?>
 
-            <button type="button" class="btn-export btn-export-margin" onclick="exportPDF()">
+            <button type="button" class="btn-export btn-export-margin" id="exportPdfBtn">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?> (2 pages)
             </button>
             <p class="export-notice">
@@ -331,123 +346,6 @@ if ($submission->precautions) {
         </div>
     </form>
 </div>
-
-<?php
-// Ensure jQuery is loaded
-$PAGE->requires->jquery();
-?>
-
-<script>
-    // Wait for jQuery to be loaded
-    // Wait for jQuery to be loaded
-    // Wait for RequireJS and jQuery
-    (function waitRequire() {
-        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
-            setTimeout(waitRequire, 50);
-            return;
-        }
-
-        require(['jquery', 'mod_gestionprojet/autosave'], function ($, Autosave) {
-            var cmid = <?php echo $cm->id; ?>;
-            var step = 5;
-            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-            var groupid = <?php echo $groupid; ?>;
-
-            // Custom serialization for step 5
-            var serializeData = function () {
-                var formData = {};
-
-                // Collect regular fields (text inputs, textareas, date)
-                $('#essaiForm').find('input[type="text"], input[type="date"], textarea').each(function () {
-                    if (this.name && !this.name.startsWith('precaution_')) {
-                        formData[this.name] = this.value;
-                    }
-                });
-
-                // Collect precautions as JSON array
-                var precautions = [];
-                for (var i = 1; i <= 6; i++) {
-                    var input = document.getElementById('precaution_' + i);
-                    if (input) {
-                        precautions.push(input.value);
-                    }
-                }
-                formData['precautions'] = JSON.stringify(precautions);
-
-                return formData;
-            };
-
-            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
-
-            // Handle Submission
-            $('#submitButton').on('click', function() {
-                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
-                    $.ajax({
-                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
-                        method: 'POST',
-                        data: {
-                            id: cmid,
-                            step: step,
-                            groupid: groupid,
-                            action: 'submit',
-                            sesskey: M.cfg.sesskey
-                        },
-                        success: function(response) {
-                             var res = JSON.parse(response);
-                             if (res.success) {
-                                 window.location.reload();
-                             } else {
-                                 alert('Error submitting');
-                             }
-                        }
-                    });
-                }
-            });
-
-            // Handle Revert
-            $('#revertButton').on('click', function() {
-                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
-                    $.ajax({
-                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
-                        method: 'POST',
-                        data: {
-                            id: cmid,
-                            step: step,
-                            groupid: groupid,
-                            action: 'revert',
-                            sesskey: M.cfg.sesskey
-                        },
-                        success: function(response) {
-                             var res = JSON.parse(response);
-                             if (res.success) {
-                                 window.location.reload();
-                             } else {
-                                 alert('Error reverting');
-                             }
-                        }
-                    });
-                }
-            });
-
-            if (!isLocked) {
-                Autosave.init({
-                    cmid: cmid,
-                    step: step,
-                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
-                    interval: autosaveInterval,
-                    formSelector: '#essaiForm',
-                    serialize: serializeData
-                });
-            }
-        });
-    })();
-
-    // PDF Export placeholder (will use TCPDF server-side in future)
-    function exportPDF() {
-        alert('<?php echo get_string('export_pdf_coming_soon', 'gestionprojet'); ?>');
-        // TODO: Implement server-side PDF generation with TCPDF
-    }
-</script>
 
 <?php
 echo $OUTPUT->footer();

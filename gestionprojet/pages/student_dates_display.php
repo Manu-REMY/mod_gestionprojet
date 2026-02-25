@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Shared dates display for student pages.
@@ -44,72 +52,6 @@ $isDueSoon = ($submissionDate > 0 && $now < $submissionDate && ($submissionDate 
 // Only display if we have at least one date set.
 if ($submissionDate > 0 || $deadlineDate > 0):
 ?>
-<style>
-    .student-dates-display {
-        background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        flex-wrap: wrap;
-        border-left: 4px solid #2196f3;
-    }
-    .student-dates-display.overdue {
-        border-left-color: #f44336;
-        background: linear-gradient(135deg, #ffebee 0%, #fff5f5 100%);
-    }
-    .student-dates-display.due-soon {
-        border-left-color: #ff9800;
-        background: linear-gradient(135deg, #fff3e0 0%, #fffaf5 100%);
-    }
-    .student-dates-display .date-icon {
-        font-size: 24px;
-    }
-    .student-dates-display .dates-info {
-        display: flex;
-        gap: 25px;
-        flex-wrap: wrap;
-    }
-    .student-dates-display .date-item {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-    .student-dates-display .date-label {
-        font-size: 11px;
-        color: #666;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .student-dates-display .date-value {
-        font-size: 14px;
-        font-weight: 600;
-        color: #333;
-    }
-    .student-dates-display .date-value.overdue {
-        color: #c62828;
-    }
-    .student-dates-display .date-value.due-soon {
-        color: #ef6c00;
-    }
-    .student-dates-display .status-badge {
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-    .student-dates-display .status-badge.overdue {
-        background: #ffcdd2;
-        color: #c62828;
-    }
-    .student-dates-display .status-badge.due-soon {
-        background: #ffe0b2;
-        color: #ef6c00;
-    }
-</style>
 
 <div class="student-dates-display <?php echo $isOverdue ? 'overdue' : ($isDueSoon ? 'due-soon' : ''); ?>">
     <span class="date-icon"><?php echo $isOverdue ? '&#9888;' : ($isDueSoon ? '&#8987;' : '&#128197;'); ?></span>

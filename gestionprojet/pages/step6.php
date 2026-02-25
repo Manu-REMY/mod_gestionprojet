@@ -5,9 +5,17 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 6: Rapport de Projet (Student group page)
+ * Step 6: Project report (Student group page)
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -72,12 +80,26 @@ $isLocked = $isSubmitted; // Lock if submitted
 $canSubmit = $gestionprojet->enable_submission && !$isSubmitted;
 $canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
-// Autosave handled inline at bottom of file
-// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
-//     'cmid' => $cm->id,
-//     'step' => 6,
-//     'interval' => $gestionprojet->autosaveinterval * 1000
-// ]]);
+// Parse auteurs (stored as JSON array)
+$auteurs = [];
+if ($submission->auteurs) {
+    $auteurs = json_decode($submission->auteurs, true) ?? [];
+}
+
+// Load AMD module.
+$PAGE->requires->js_call_amd('mod_gestionprojet/step6', 'init', [[
+    'cmid' => $cm->id,
+    'step' => 6,
+    'groupid' => $groupid,
+    'autosaveInterval' => $gestionprojet->autosave_interval * 1000,
+    'isLocked' => $isLocked,
+    'auteurs' => $auteurs,
+    'strings' => [
+        'confirm_submission' => get_string('confirm_submission', 'gestionprojet'),
+        'confirm_revert' => get_string('confirm_revert', 'gestionprojet'),
+        'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet'),
+    ],
+]]);
 
 echo $OUTPUT->header();
 
@@ -99,11 +121,6 @@ if (!$group) {
     $group->name = get_string('defaultgroup', 'group'); // Generic fallback
 }
 
-// Parse auteurs (stored as JSON array)
-$auteurs = [];
-if ($submission->auteurs) {
-    $auteurs = json_decode($submission->auteurs, true) ?? [];
-}
 ?>
 
 
@@ -159,7 +176,7 @@ if ($submission->auteurs) {
     <form id="rapportForm" method="post" action="">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
 
-        <!-- Section 1: Informations Générales -->
+        <!-- Section 1: General information -->
         <div class="report-section">
             <h2 class="report-section-title">1. INFORMATIONS GÉNÉRALES</h2>
 
@@ -177,7 +194,7 @@ if ($submission->auteurs) {
             </div>
         </div>
 
-        <!-- Section 2: Le Projet -->
+        <!-- Section 2: The project -->
         <div class="report-section">
             <h2 class="report-section-title">2. LE PROJET</h2>
 
@@ -194,7 +211,7 @@ if ($submission->auteurs) {
             </div>
         </div>
 
-        <!-- Section 3: Solutions Choisies -->
+        <!-- Section 3: Chosen solutions -->
         <div class="report-section">
             <h2 class="report-section-title">3. SOLUTIONS CHOISIES</h2>
 
@@ -210,7 +227,7 @@ if ($submission->auteurs) {
             </div>
         </div>
 
-        <!-- Section 4: Réalisation -->
+        <!-- Section 4: Implementation -->
         <div class="report-section">
             <h2 class="report-section-title">4. RÉALISATION</h2>
 
@@ -227,7 +244,7 @@ if ($submission->auteurs) {
             </div>
         </div>
 
-        <!-- Section 5: Validation et Résultats -->
+        <!-- Section 5: Validation and results -->
         <div class="report-section">
             <h2 class="report-section-title">5. VALIDATION ET RÉSULTATS</h2>
 
@@ -275,7 +292,7 @@ if ($submission->auteurs) {
                 </button>
             <?php endif; ?>
 
-            <button type="button" class="btn-export btn-export-margin" onclick="exportPDF()">
+            <button type="button" class="btn-export btn-export-margin" id="exportPdfBtn">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
             </button>
             <p class="export-notice">
@@ -284,214 +301,6 @@ if ($submission->auteurs) {
         </div>
     </form>
 </div>
-
-<?php
-// Ensure jQuery is loaded
-$PAGE->requires->jquery();
-?>
-
-<script>
-    // Wait for jQuery to be loaded
-    // Wait for RequireJS and jQuery
-    (function waitRequire() {
-        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
-            setTimeout(waitRequire, 50);
-            return;
-        }
-
-        require(['jquery', 'mod_gestionprojet/autosave'], function ($, Autosave) {
-            var cmid = <?php echo $cm->id; ?>;
-            var step = 6;
-            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-            var groupid = <?php echo $groupid; ?>;
-
-            // Custom serialization for step 6
-            var serializeData = function () {
-                var formData = {};
-
-                // Collect regular fields (text inputs, textareas)
-                $('#rapportForm').find('input[type="text"], textarea').each(function () {
-                    if (this.name) {
-                        formData[this.name] = this.value;
-                    }
-                });
-
-                // Collect authors as JSON array
-                // members is defined globally in the script below
-                if (typeof members !== 'undefined') {
-                    formData['auteurs'] = JSON.stringify(members.filter(function (m) {
-                        return m.trim() !== '';
-                    }));
-                } else {
-                    formData['auteurs'] = '[]';
-                }
-
-                return formData;
-            };
-
-            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
-
-            // Handle Submission
-            $('#submitButton').on('click', function () {
-                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
-                    $.ajax({
-                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
-                        method: 'POST',
-                        data: {
-                            id: cmid,
-                            step: step,
-                            groupid: groupid,
-                            action: 'submit',
-                            sesskey: M.cfg.sesskey
-                        },
-                        success: function (response) {
-                            var res = JSON.parse(response);
-                            if (res.success) {
-                                window.location.reload();
-                            } else {
-                                alert('Error submitting');
-                            }
-                        }
-                    });
-                }
-            });
-
-            // Handle Revert
-            $('#revertButton').on('click', function () {
-                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
-                    $.ajax({
-                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
-                        method: 'POST',
-                        data: {
-                            id: cmid,
-                            step: step,
-                            groupid: groupid,
-                            action: 'revert',
-                            sesskey: M.cfg.sesskey
-                        },
-                        success: function (response) {
-                            var res = JSON.parse(response);
-                            if (res.success) {
-                                window.location.reload();
-                            } else {
-                                alert('Error reverting');
-                            }
-                        }
-                    });
-                }
-            });
-
-            if (!isLocked) {
-                Autosave.init({
-                    cmid: cmid,
-                    step: step,
-                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
-                    interval: autosaveInterval,
-                    formSelector: '#rapportForm',
-                    serialize: serializeData
-                });
-            }
-
-            // We need to trigger autosave when members change
-            // The Autosave module listens for 'change input' on the form, so this should work automatically if not locked.
-        });
-    })();
-
-    // Members management
-    let members = <?php echo json_encode($auteurs); ?>;
-    let isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
-
-    if (members.length === 0) {
-        members = [''];
-    }
-
-    function renderMembers() {
-        const container = document.getElementById('membersContainer');
-        container.innerHTML = '';
-
-        members.forEach((member, index) => {
-            const memberGroup = document.createElement('div');
-            memberGroup.className = 'member-group';
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Nom et prénom';
-            input.value = member;
-            if (isLocked) {
-                input.disabled = true;
-                input.readOnly = true;
-            } else {
-                input.onchange = (e) => {
-                    members[index] = e.target.value;
-                    // Trigger auto-save
-                    const event = new Event('change', { bubbles: true });
-                    document.getElementById('rapportForm').dispatchEvent(event);
-                };
-            }
-
-            memberGroup.appendChild(input);
-
-            if (!isLocked) {
-                if (index === members.length - 1) {
-                    const addBtn = document.createElement('button');
-                    addBtn.type = 'button';
-                    addBtn.className = 'btn-circle btn-add-circle';
-                    addBtn.innerHTML = '+';
-                    addBtn.title = 'Ajouter un membre';
-                    addBtn.onclick = () => {
-                        members.push('');
-                        renderMembers();
-                    };
-                    memberGroup.appendChild(addBtn);
-                } else {
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'btn-circle btn-remove-circle';
-                    removeBtn.innerHTML = '✕';
-                    removeBtn.title = 'Retirer ce membre';
-                    removeBtn.onclick = () => {
-                        if (members.length > 1) {
-                            members.splice(index, 1);
-                            renderMembers();
-                        }
-                    };
-                    memberGroup.appendChild(removeBtn);
-                }
-            }
-
-            container.appendChild(memberGroup);
-        });
-    }
-
-    // Custom data collection for auto-save (auteurs as JSON array)
-    window.collectFormData = function () {
-        const formData = {};
-        const form = document.getElementById('rapportForm');
-
-        // Regular fields (text inputs, textareas)
-        form.querySelectorAll('input[type="text"], textarea').forEach(field => {
-            if (field.name) {
-                formData[field.name] = field.value;
-            }
-        });
-
-        // Collect authors as JSON array
-        formData['auteurs'] = JSON.stringify(members.filter(m => m.trim() !== ''));
-
-        return formData;
-    };
-
-    // PDF Export placeholder (will use TCPDF server-side in future)
-    function exportPDF() {
-        alert('<?php echo get_string('export_pdf_coming_soon', 'gestionprojet'); ?>');
-        // TODO: Implement server-side PDF generation with TCPDF
-    }
-
-    // Initialize members on page load
-    document.addEventListener('DOMContentLoaded', function () {
-        renderMembers();
-    });
-</script>
 
 <?php
 echo $OUTPUT->footer();

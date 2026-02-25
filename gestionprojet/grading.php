@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Grading interface with step-by-step navigation.
@@ -169,14 +177,6 @@ $PAGE->set_title(get_string('grading_navigation', 'gestionprojet'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-// Initialize AMD modules for AI progress and notifications
-$PAGE->requires->js_call_amd('mod_gestionprojet/notifications', 'init', []);
-$PAGE->requires->js_call_amd('mod_gestionprojet/ai_progress', 'init', [[
-    'cmid' => $cm->id,
-    'step' => $step,
-    'containerSelector' => 'body'
-]]);
-
 echo $OUTPUT->header();
 
 // Display step selector and group navigation
@@ -274,7 +274,7 @@ echo $OUTPUT->header();
 
     <div class="context-indicator">
         ℹ️ <strong><?php echo get_string('grading_context_maintained', 'gestionprojet'); ?></strong>
-        - Vous corrigez l'étape "<?php echo $steps[$step]['name']; ?>" pour tous les groupes.
+        - <?php echo get_string('grading_step_context', 'gestionprojet', $steps[$step]['name']); ?>
     </div>
 </div>
 
@@ -302,7 +302,7 @@ switch ($step) {
         break;
     case 2:
         $tablename = 'gestionprojet_besoin';
-        // Besoin is always by teacher
+        // Needs expression is always set by teacher
         $submission = $DB->get_record($tablename, [
             'gestionprojetid' => $gestionprojet->id
         ]);
@@ -345,7 +345,7 @@ if (!$submission): ?>
     <div class="submission-content">
         <div class="no-submission">
             <h3>❌ <?php echo get_string('no_submission', 'gestionprojet'); ?></h3>
-            <p>Le groupe n'a pas encore commencé cette étape.</p>
+            <p><?php echo get_string('group_not_started', 'gestionprojet'); ?></p>
         </div>
     </div>
 <?php else:
@@ -439,7 +439,7 @@ if (!$submission): ?>
                 <p><?php echo format_text($submission->evaluation ?? '', FORMAT_HTML); ?></p>
             </div>
 
-        <?php elseif ($step == 2): // Besoin ?>
+        <?php elseif ($step == 2): // Needs expression ?>
             <div class="field-display">
                 <h4><?php echo get_string('aqui', 'gestionprojet'); ?></h4>
                 <p><?php echo format_text($submission->aqui ?? '', FORMAT_PLAIN); ?></p>
@@ -528,7 +528,7 @@ if (!$submission): ?>
                 </div>
             <?php endif; ?>
 
-        <?php elseif ($step == 5): // Essai ?>
+        <?php elseif ($step == 5): // Trial sheet ?>
             <div class="field-display">
                 <h4><?php echo get_string('nom_essai', 'gestionprojet'); ?></h4>
                 <p><?php echo s($submission->nom_essai ?? ''); ?></p>
@@ -569,7 +569,7 @@ if (!$submission): ?>
                 <p><?php echo s($submission->conclusion ?? ''); ?></p>
             </div>
 
-        <?php elseif ($step == 6): // Rapport ?>
+        <?php elseif ($step == 6): // Report ?>
             <?php
             $auteurs = [];
             if ($submission->auteurs) {
@@ -625,7 +625,7 @@ if (!$submission): ?>
                 <h4><?php echo get_string('bilan', 'gestionprojet'); ?></h4>
                 <p><?php echo s($submission->bilan ?? ''); ?></p>
             </div>
-        <?php elseif ($step == 7): // Besoin Eleve ?>
+        <?php elseif ($step == 7): // Student needs expression ?>
             <div class="field-display">
                 <h4><?php echo get_string('aqui', 'gestionprojet'); ?></h4>
                 <p><?php echo format_text($submission->aqui ?? '', FORMAT_PLAIN); ?></p>
@@ -640,7 +640,7 @@ if (!$submission): ?>
                 <h4><?php echo get_string('dansquelbut', 'gestionprojet'); ?></h4>
                 <p><?php echo format_text($submission->dansquelbut ?? '', FORMAT_PLAIN); ?></p>
             </div>
-        <?php elseif ($step == 8): // Carnet de bord ?>
+        <?php elseif ($step == 8): // Logbook ?>
             <?php
             $tasks_data = [];
             if ($submission->tasks_data) {
@@ -651,55 +651,8 @@ if (!$submission): ?>
                 <h4><?php echo get_string('step8', 'gestionprojet'); ?></h4>
 
                 <?php if (empty($tasks_data)): ?>
-                    <p><em>Aucune entrée dans le carnet de bord.</em></p>
+                    <p><em><?php echo get_string('logbook_no_entries', 'gestionprojet'); ?></em></p>
                 <?php else: ?>
-                    <style>
-                        .grading-logbook-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 10px;
-                        }
-
-                        .grading-logbook-table th,
-                        .grading-logbook-table td {
-                            border: 1px solid #ddd;
-                            padding: 8px;
-                            text-align: left;
-                        }
-
-                        .grading-logbook-table th {
-                            background-color: #f2f2f2;
-                        }
-
-                        .status-badge {
-                            padding: 4px 8px;
-                            border-radius: 4px;
-                            font-size: 0.9em;
-                            display: inline-block;
-                        }
-
-                        .status-ahead {
-                            background-color: #d1fae5;
-                            color: #065f46;
-                        }
-
-                        .status-ontime {
-                            background-color: #fee2e2;
-                            color: #991b1b;
-                        }
-
-                        /* Wait, ontime usually green? ontime -> blue/gray? late -> red */
-                        /* Fixing colors based on intent */
-                        .status-ontime-fixed {
-                            background-color: #dbeafe;
-                            color: #1e40af;
-                        }
-
-                        .status-late {
-                            background-color: #fee2e2;
-                            color: #991b1b;
-                        }
-                    </style>
                     <table class="grading-logbook-table">
                         <thead>
                             <tr>
@@ -716,13 +669,13 @@ if (!$submission): ?>
                                 $statusLabel = '';
                                 if (($task['status'] ?? '') === 'ahead') {
                                     $statusClass = 'status-ahead';
-                                    $statusLabel = 'En avance';
+                                    $statusLabel = get_string('logbook_status_ahead', 'gestionprojet');
                                 } elseif (($task['status'] ?? '') === 'ontime') {
                                     $statusClass = 'status-ontime-fixed';
-                                    $statusLabel = 'À l\'heure';
+                                    $statusLabel = get_string('logbook_status_ontime', 'gestionprojet');
                                 } elseif (($task['status'] ?? '') === 'late') {
                                     $statusClass = 'status-late';
-                                    $statusLabel = 'En retard';
+                                    $statusLabel = get_string('logbook_status_late', 'gestionprojet');
                                 }
                                 ?>
                                 <tr>
@@ -777,7 +730,7 @@ if (!$submission): ?>
                         </button>
                     <?php else: ?>
                         <p style="color: #9ca3af; font-style: italic;">
-                            (La soumission doit être validée pour lancer l'évaluation IA)
+                            <?php echo get_string('ai_submission_required_hint', 'gestionprojet'); ?>
                         </p>
                     <?php endif; ?>
                 </div>
@@ -787,20 +740,16 @@ if (!$submission): ?>
                 <div style="padding: 15px; background: #fff; border-radius: 6px; text-align: center;">
                     <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                         <div class="spinner-border text-primary" role="status" style="width: 24px; height: 24px;">
-                            <span class="visually-hidden">Loading...</span>
+                            <span class="visually-hidden"><?php echo get_string('loading', 'gestionprojet'); ?></span>
                         </div>
                         <span style="color: #1a56db; font-weight: 500;">
                             <?php echo get_string('ai_evaluating', 'gestionprojet'); ?>
                         </span>
                     </div>
                     <p style="color: #6b7280; margin-top: 10px; font-size: 0.9em;">
-                        Statut: <?php echo $aievaluation->status; ?> | ID: <?php echo $aievaluation->id; ?>
+                        <?php echo get_string('grading_status_label', 'gestionprojet'); ?> <?php echo $aievaluation->status; ?> | ID: <?php echo $aievaluation->id; ?>
                     </p>
                 </div>
-                <script>
-                    // Auto-refresh to check status
-                    setTimeout(function() { location.reload(); }, 10000);
-                </script>
 
             <?php elseif ($aievaluation->status === 'failed'): ?>
                 <!-- Evaluation failed -->
@@ -972,8 +921,7 @@ if (!$submission): ?>
                         data-feedback="<?php echo htmlspecialchars($aievaluation->parsed_feedback ?? '', ENT_QUOTES); ?>">
                         ✅ <?php echo get_string('apply_ai_grade', 'gestionprojet'); ?>
                     </button>
-                    <button type="button" class="btn btn-outline-primary" id="btn-apply-modified"
-                        onclick="document.getElementById('grade').value = '<?php echo $aievaluation->parsed_grade; ?>'; document.getElementById('feedback').value = <?php echo json_encode($aievaluation->parsed_feedback ?? ''); ?>; document.getElementById('grade').focus();">
+                    <button type="button" class="btn btn-outline-primary" id="btn-apply-modified">
                         ✏️ <?php echo get_string('apply_with_modifications', 'gestionprojet'); ?>
                     </button>
                     <button type="button" class="btn btn-outline-secondary" id="btn-retry-ai-eval"
@@ -990,64 +938,11 @@ if (!$submission): ?>
         <!-- AI Progress Container -->
         <div id="ai-progress-container"></div>
 
-        <script>
-        // Initialize AI progress and notifications using AMD modules
-        require(['mod_gestionprojet/ai_progress', 'mod_gestionprojet/notifications'], function(AIProgress, Notifications) {
-            // Initialize notifications
-            Notifications.init();
-
-            // Initialize AI progress
-            AIProgress.init({
-                cmid: <?php echo $cm->id; ?>,
-                step: <?php echo $step; ?>,
-                submissionid: <?php echo $submission->id ?? 0; ?>,
-                containerSelector: '#ai-progress-container'
-            });
-
-            // Trigger AI evaluation button
-            var triggerBtn = document.getElementById('btn-trigger-ai-eval');
-            if (triggerBtn) {
-                triggerBtn.addEventListener('click', function() {
-                    var btn = this;
-                    AIProgress.triggerEvaluation(
-                        parseInt(btn.dataset.cmid),
-                        parseInt(btn.dataset.step),
-                        parseInt(btn.dataset.submissionid)
-                    );
-                });
-            }
-
-            // Apply AI grade button
-            var applyBtn = document.getElementById('btn-apply-ai-grade');
-            if (applyBtn) {
-                applyBtn.addEventListener('click', function() {
-                    var btn = this;
-                    AIProgress.applyGrade(
-                        parseInt(btn.dataset.cmid),
-                        parseInt(btn.dataset.evaluationid)
-                    );
-                });
-            }
-
-            // Retry AI evaluation button
-            var retryBtn = document.getElementById('btn-retry-ai-eval');
-            if (retryBtn) {
-                retryBtn.addEventListener('click', function() {
-                    var btn = this;
-                    AIProgress.retryEvaluation(
-                        <?php echo $cm->id; ?>,
-                        <?php echo $step; ?>,
-                        <?php echo $submission->id ?? 0; ?>
-                    );
-                });
-            }
-        });
-        </script>
         <?php endif; ?>
 
         <!-- Grading Form -->
         <div class="grading-form">
-            <h3>✏️ Évaluation</h3>
+            <h3>✏️ <?php echo get_string('grading_evaluation_heading', 'gestionprojet'); ?></h3>
             <form method="post" action="">
                 <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
                 <input type="hidden" name="savegrading" value="1">
@@ -1055,13 +950,13 @@ if (!$submission): ?>
                 <div class="form-group">
                     <label for="grade"><?php echo get_string('grading_grade', 'gestionprojet'); ?></label>
                     <input type="number" name="grade" id="grade" min="0" max="20" step="0.5"
-                        value="<?php echo $submission->grade ?? ''; ?>" placeholder="Note sur 20">
+                        value="<?php echo $submission->grade ?? ''; ?>" placeholder="<?php echo get_string('grade_placeholder', 'gestionprojet'); ?>">
                 </div>
 
                 <div class="form-group">
                     <label for="feedback"><?php echo get_string('grading_feedback', 'gestionprojet'); ?></label>
                     <textarea name="feedback" id="feedback"
-                        placeholder="Vos commentaires pour le groupe..."><?php echo s($submission->feedback ?? ''); ?></textarea>
+                        placeholder="<?php echo get_string('feedback_placeholder', 'gestionprojet'); ?>"><?php echo s($submission->feedback ?? ''); ?></textarea>
                 </div>
 
                 <button type="submit" class="btn-save-grade">
@@ -1072,99 +967,26 @@ if (!$submission): ?>
     </div>
 <?php endif; ?>
 
-<!-- JavaScript for unlock submission and bulk reevaluate buttons -->
-<script>
-(function() {
-    'use strict';
-
-    // Unlock submission button
-    var unlockBtn = document.getElementById('btn-unlock-submission');
-    if (unlockBtn) {
-        unlockBtn.addEventListener('click', function() {
-            if (!confirm('<?php echo addslashes(get_string('confirm_unlock_submission', 'gestionprojet')); ?>')) {
-                return;
-            }
-
-            var btn = this;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ...';
-
-            var formData = new FormData();
-            formData.append('cmid', btn.dataset.cmid);
-            formData.append('step', btn.dataset.step);
-            formData.append('action', 'unlock');
-            formData.append('groupid', btn.dataset.groupid);
-            formData.append('userid', btn.dataset.userid);
-            formData.append('sesskey', M.cfg.sesskey);
-
-            fetch(M.cfg.wwwroot + '/mod/gestionprojet/ajax/submit_step.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    // Reload page to show updated status
-                    location.reload();
-                } else {
-                    alert(data.message || '<?php echo addslashes(get_string('error_invaliddata', 'gestionprojet')); ?>');
-                    btn.disabled = false;
-                    btn.innerHTML = '🔓 <?php echo addslashes(get_string('unlock_submission', 'gestionprojet')); ?>';
-                }
-            })
-            .catch(function(error) {
-                console.error('Error:', error);
-                alert('<?php echo addslashes(get_string('toast_network_error', 'gestionprojet')); ?>');
-                btn.disabled = false;
-                btn.innerHTML = '🔓 <?php echo addslashes(get_string('unlock_submission', 'gestionprojet')); ?>';
-            });
-        });
-    }
-
-    // Bulk reevaluate button
-    var bulkReevalBtn = document.getElementById('btn-bulk-reevaluate');
-    if (bulkReevalBtn) {
-        bulkReevalBtn.addEventListener('click', function() {
-            if (!confirm('<?php echo addslashes(get_string('confirm_bulk_reevaluate', 'gestionprojet')); ?>')) {
-                return;
-            }
-
-            var btn = this;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> <?php echo addslashes(get_string('bulk_reevaluate_processing', 'gestionprojet')); ?>';
-
-            var formData = new FormData();
-            formData.append('id', btn.dataset.cmid);
-            formData.append('step', btn.dataset.step);
-            formData.append('sesskey', M.cfg.sesskey);
-
-            fetch(M.cfg.wwwroot + '/mod/gestionprojet/ajax/bulk_reevaluate.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    alert(data.message);
-                    // Reload page to show updated status
-                    location.reload();
-                } else {
-                    alert(data.message || '<?php echo addslashes(get_string('error_invaliddata', 'gestionprojet')); ?>');
-                    btn.disabled = false;
-                    btn.innerHTML = '🔄 <?php echo addslashes(get_string('bulk_reevaluate', 'gestionprojet')); ?>';
-                }
-            })
-            .catch(function(error) {
-                console.error('Error:', error);
-                alert('<?php echo addslashes(get_string('toast_network_error', 'gestionprojet')); ?>');
-                btn.disabled = false;
-                btn.innerHTML = '🔄 <?php echo addslashes(get_string('bulk_reevaluate', 'gestionprojet')); ?>';
-            });
-        });
-    }
-})();
-</script>
-
 <?php
+
+// Build configuration for the grading AMD module.
+$gradingconfig = [
+    'cmid' => $cm->id,
+    'step' => $step,
+    'submissionId' => isset($submission->id) ? (int) $submission->id : 0,
+    'aiEnabled' => !empty($gestionprojet->ai_enabled),
+    'aiStatus' => isset($aievaluation) ? $aievaluation->status : '',
+    'parsedGrade' => isset($aievaluation) ? (float) $aievaluation->parsed_grade : 0,
+    'parsedFeedback' => isset($aievaluation) ? ($aievaluation->parsed_feedback ?? '') : '',
+    'confirmUnlockMsg' => get_string('confirm_unlock_submission', 'gestionprojet'),
+    'confirmBulkMsg' => get_string('confirm_bulk_reevaluate', 'gestionprojet'),
+    'errorMsg' => get_string('error_invaliddata', 'gestionprojet'),
+    'networkErrorMsg' => get_string('toast_network_error', 'gestionprojet'),
+    'unlockBtnLabel' => get_string('unlock_submission', 'gestionprojet'),
+    'bulkBtnLabel' => get_string('bulk_reevaluate', 'gestionprojet'),
+    'bulkProcessingLabel' => get_string('bulk_reevaluate_processing', 'gestionprojet'),
+];
+$PAGE->requires->js_call_amd('mod_gestionprojet/grading', 'init', [$gradingconfig]);
+
 echo $OUTPUT->footer();
 ?>

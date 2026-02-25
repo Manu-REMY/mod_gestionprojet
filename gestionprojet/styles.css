@@ -2142,3 +2142,1281 @@
         break-inside: avoid;
     }
 }
+
+/* =========================================
+   Teacher Model Styles
+   (from pages/teacher_model_styles.php)
+   ========================================= */
+
+.path-mod-gestionprojet .gestionprojet-dashboard {
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+}
+
+.path-mod-gestionprojet .teacher-model-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.path-mod-gestionprojet .teacher-model-header {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+.path-mod-gestionprojet .teacher-model-header h2 {
+    margin: 0 0 10px;
+    font-size: 24px;
+}
+
+.path-mod-gestionprojet .teacher-model-header p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.path-mod-gestionprojet .back-nav {
+    margin-bottom: 20px;
+}
+
+.path-mod-gestionprojet .back-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #17a2b8;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.path-mod-gestionprojet .back-nav a:hover {
+    text-decoration: underline;
+}
+
+.path-mod-gestionprojet .model-form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.path-mod-gestionprojet .model-form-section h3 {
+    color: #17a2b8;
+    margin: 0 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.path-mod-gestionprojet .teacher-model-container .form-group input[type="text"],
+.path-mod-gestionprojet .teacher-model-container .form-group textarea {
+    border: 2px solid #e9ecef;
+}
+
+.path-mod-gestionprojet .teacher-model-container .form-group input[type="text"]:focus,
+.path-mod-gestionprojet .teacher-model-container .form-group textarea:focus {
+    border-color: #17a2b8;
+}
+
+.path-mod-gestionprojet .ai-instructions-section {
+    background: linear-gradient(135deg, #e7f3ff 0%, #f0f7ff 100%);
+    border: 2px solid #17a2b8;
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 30px;
+}
+
+.path-mod-gestionprojet .ai-instructions-section h3 {
+    color: #0056b3;
+    margin: 0 0 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.path-mod-gestionprojet .ai-instructions-section textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    border: 2px solid #17a2b8;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    box-sizing: border-box;
+}
+
+.path-mod-gestionprojet .ai-instructions-help {
+    font-size: 13px;
+    color: #666;
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+.path-mod-gestionprojet .save-section {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.path-mod-gestionprojet .btn-save {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.path-mod-gestionprojet .btn-save:hover {
+    transform: scale(1.02);
+}
+
+.path-mod-gestionprojet .save-status {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    display: none;
+}
+
+.path-mod-gestionprojet .save-status.success {
+    background: #d4edda;
+    color: #155724;
+    display: block;
+}
+
+.path-mod-gestionprojet .save-status.error {
+    background: #f8d7da;
+    color: #721c24;
+    display: block;
+}
+
+.path-mod-gestionprojet .step-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #e9ecef;
+    gap: 15px;
+}
+
+.path-mod-gestionprojet .btn-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.path-mod-gestionprojet .btn-prev,
+.path-mod-gestionprojet .btn-next {
+    background: #f8f9fa;
+    color: #17a2b8;
+    border: 2px solid #17a2b8;
+}
+
+.path-mod-gestionprojet .btn-prev:hover,
+.path-mod-gestionprojet .btn-next:hover {
+    background: #17a2b8;
+    color: white;
+    text-decoration: none;
+}
+
+.path-mod-gestionprojet .btn-hub {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+    border: none;
+}
+
+.path-mod-gestionprojet .btn-hub:hover {
+    transform: scale(1.02);
+    color: white;
+    text-decoration: none;
+}
+
+.path-mod-gestionprojet .nav-spacer {
+    flex: 1;
+}
+
+.path-mod-gestionprojet .step-navigation-top {
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-top: 0;
+    border-top: none;
+}
+
+/* =========================================
+   Teacher Dates Section Styles
+   (from pages/teacher_dates_section.php)
+   ========================================= */
+
+.path-mod-gestionprojet .dates-section {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-left: 4px solid #2196f3;
+}
+
+.path-mod-gestionprojet .dates-section h3 {
+    margin: 0 0 15px 0;
+    color: #1565c0;
+    font-size: 16px;
+}
+
+.path-mod-gestionprojet .dates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.path-mod-gestionprojet .date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.path-mod-gestionprojet .date-field label {
+    font-weight: 500;
+    color: #424242;
+    font-size: 14px;
+}
+
+.path-mod-gestionprojet .date-field input[type="date"] {
+    padding: 10px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.path-mod-gestionprojet .date-field input[type="date"]:focus {
+    border-color: #2196f3;
+    outline: none;
+}
+
+.path-mod-gestionprojet .date-field .date-help {
+    font-size: 12px;
+    color: #757575;
+    margin-top: 3px;
+}
+
+.path-mod-gestionprojet .date-auto-filled {
+    background-color: #fff9c4 !important;
+    border-color: #fbc02d !important;
+}
+
+.path-mod-gestionprojet .auto-fill-notice {
+    font-size: 11px;
+    color: #f57c00;
+    margin-top: 3px;
+}
+
+@media (max-width: 768px) {
+    .path-mod-gestionprojet .dates-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================
+   Correction Models Hub Styles
+   (from pages/correction_models.php)
+   ========================================= */
+
+.path-mod-gestionprojet .correction-models-hub {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.path-mod-gestionprojet .hub-description {
+    background: linear-gradient(135deg, #e7f3ff 0%, #f0f7ff 100%);
+    border-left: 4px solid #17a2b8;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.path-mod-gestionprojet .hub-description h3 {
+    color: #0056b3;
+    margin: 0 0 10px;
+}
+
+.path-mod-gestionprojet .hub-description p {
+    color: #555;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.path-mod-gestionprojet .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.path-mod-gestionprojet .model-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border-top: 5px solid #17a2b8;
+    position: relative;
+}
+
+.path-mod-gestionprojet .model-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.path-mod-gestionprojet .model-card.complete {
+    border-top-color: #28a745;
+}
+
+.path-mod-gestionprojet .model-card .card-icon {
+    font-size: 48px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.path-mod-gestionprojet .model-card .card-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.path-mod-gestionprojet .model-card .card-description {
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.path-mod-gestionprojet .model-card .card-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.path-mod-gestionprojet .model-card .card-status.complete {
+    background: #d4edda;
+    color: #155724;
+}
+
+.path-mod-gestionprojet .model-card .card-status.incomplete {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.path-mod-gestionprojet .model-card .card-status.has-instructions {
+    background: #e7f3ff;
+    color: #0056b3;
+    margin-top: 8px;
+}
+
+.path-mod-gestionprojet .model-card .card-button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.path-mod-gestionprojet .model-card .card-button:hover {
+    transform: scale(1.02);
+    color: white;
+    text-decoration: none;
+    background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+}
+
+.path-mod-gestionprojet .back-button {
+    margin-bottom: 20px;
+}
+
+.path-mod-gestionprojet .back-button a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    background: #f8f9fa;
+    color: #17a2b8;
+    border: 2px solid #17a2b8;
+}
+
+.path-mod-gestionprojet .back-button a:hover {
+    background: #17a2b8;
+    color: white;
+    text-decoration: none;
+}
+
+.path-mod-gestionprojet .correction-models-hub .ai-status-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.path-mod-gestionprojet .correction-models-hub .ai-status-badge.enabled {
+    background: #d4edda;
+    color: #155724;
+}
+
+.path-mod-gestionprojet .correction-models-hub .ai-status-badge.disabled {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+/* =========================================
+   Student AI Feedback Display Styles
+   (from pages/student_ai_feedback_display.php)
+   ========================================= */
+
+.path-mod-gestionprojet .student-feedback {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+}
+
+.path-mod-gestionprojet .student-feedback .feedback-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.path-mod-gestionprojet .student-feedback .feedback-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.path-mod-gestionprojet .student-feedback .feedback-title .icon {
+    font-size: 24px;
+}
+
+.path-mod-gestionprojet .student-feedback .grade-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.path-mod-gestionprojet .student-feedback .grade-badge.grade-excellent {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+}
+
+.path-mod-gestionprojet .student-feedback .grade-badge.grade-good {
+    background: linear-gradient(135deg, #cce5ff 0%, #b8daff 100%);
+    color: #004085;
+}
+
+.path-mod-gestionprojet .student-feedback .grade-badge.grade-average {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    color: #856404;
+}
+
+.path-mod-gestionprojet .student-feedback .grade-badge.grade-medium {
+    background: linear-gradient(135deg, #ffeeba 0%, #ffe69c 100%);
+    color: #856404;
+}
+
+.path-mod-gestionprojet .student-feedback .grade-badge.grade-low {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+}
+
+.path-mod-gestionprojet .student-feedback .feedback-section {
+    margin-bottom: 20px;
+}
+
+.path-mod-gestionprojet .student-feedback .feedback-section:last-child {
+    margin-bottom: 0;
+}
+
+.path-mod-gestionprojet .student-feedback .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 12px;
+}
+
+.path-mod-gestionprojet .student-feedback .section-title .section-icon {
+    font-size: 18px;
+}
+
+.path-mod-gestionprojet .student-feedback .feedback-text {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-item {
+    background: #fff;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-info {
+    flex: 1;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-comment {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-score {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-score.score-high {
+    background: #d4edda;
+    color: #155724;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-score.score-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.path-mod-gestionprojet .student-feedback .criteria-score.score-low {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.path-mod-gestionprojet .student-feedback .keywords-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 768px) {
+    .path-mod-gestionprojet .student-feedback .keywords-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.path-mod-gestionprojet .student-feedback .keywords-box {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.path-mod-gestionprojet .student-feedback .keywords-box.found {
+    border-left: 4px solid #28a745;
+}
+
+.path-mod-gestionprojet .student-feedback .keywords-box.missing {
+    border-left: 4px solid #ffc107;
+}
+
+.path-mod-gestionprojet .student-feedback .keywords-box-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.path-mod-gestionprojet .student-feedback .keywords-box.found .keywords-box-title {
+    color: #155724;
+}
+
+.path-mod-gestionprojet .student-feedback .keywords-box.missing .keywords-box-title {
+    color: #856404;
+}
+
+.path-mod-gestionprojet .student-feedback .keywords-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.path-mod-gestionprojet .student-feedback .keyword-tag {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+}
+
+.path-mod-gestionprojet .student-feedback .keyword-tag.found {
+    background: #d4edda;
+    color: #155724;
+}
+
+.path-mod-gestionprojet .student-feedback .keyword-tag.missing {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.path-mod-gestionprojet .student-feedback .suggestions-list {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid #17a2b8;
+}
+
+.path-mod-gestionprojet .student-feedback .suggestions-list ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.path-mod-gestionprojet .student-feedback .suggestions-list li {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.5;
+}
+
+.path-mod-gestionprojet .student-feedback .suggestions-list li:last-child {
+    margin-bottom: 0;
+}
+
+/* =========================================
+   Student Submission Section Styles
+   (from pages/student_submission_section.php)
+   ========================================= */
+
+.path-mod-gestionprojet .submission-section {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 25px;
+    border-left: 4px solid #4caf50;
+}
+
+.path-mod-gestionprojet .submission-section.submitted {
+    border-left-color: #2196f3;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+}
+
+.path-mod-gestionprojet .submission-section.overdue {
+    border-left-color: #f44336;
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+}
+
+.path-mod-gestionprojet .submission-section.due-soon {
+    border-left-color: #ff9800;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+}
+
+.path-mod-gestionprojet .submission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.path-mod-gestionprojet .submission-info h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.path-mod-gestionprojet .submission-dates {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.path-mod-gestionprojet .submission-section .date-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.path-mod-gestionprojet .submission-section .date-item .label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.path-mod-gestionprojet .submission-section .date-item .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.path-mod-gestionprojet .submission-section .date-item .value.overdue {
+    color: #f44336;
+}
+
+.path-mod-gestionprojet .submission-section .date-item .value.due-soon {
+    color: #ff9800;
+}
+
+.path-mod-gestionprojet .submission-status {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.path-mod-gestionprojet .submission-status.draft {
+    background: #e0e0e0;
+    color: #616161;
+}
+
+.path-mod-gestionprojet .submission-status.submitted {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.path-mod-gestionprojet .submission-status.overdue {
+    background: #ffcdd2;
+    color: #c62828;
+}
+
+.path-mod-gestionprojet .btn-submit-step {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.path-mod-gestionprojet .btn-submit-step:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.path-mod-gestionprojet .btn-submit-step:disabled {
+    background: #bdbdbd;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.path-mod-gestionprojet .submission-submitted-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+.path-mod-gestionprojet .submission-submitted-info .icon {
+    font-size: 24px;
+}
+
+@media (max-width: 768px) {
+    .path-mod-gestionprojet .submission-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* =========================================
+   Student Dates Display Styles
+   (from pages/student_dates_display.php)
+   ========================================= */
+
+.path-mod-gestionprojet .student-dates-display {
+    background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    border-left: 4px solid #2196f3;
+}
+
+.path-mod-gestionprojet .student-dates-display.overdue {
+    border-left-color: #f44336;
+    background: linear-gradient(135deg, #ffebee 0%, #fff5f5 100%);
+}
+
+.path-mod-gestionprojet .student-dates-display.due-soon {
+    border-left-color: #ff9800;
+    background: linear-gradient(135deg, #fff3e0 0%, #fffaf5 100%);
+}
+
+.path-mod-gestionprojet .student-dates-display .date-icon {
+    font-size: 24px;
+}
+
+.path-mod-gestionprojet .student-dates-display .dates-info {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.path-mod-gestionprojet .student-dates-display .date-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.path-mod-gestionprojet .student-dates-display .date-label {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.path-mod-gestionprojet .student-dates-display .date-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.path-mod-gestionprojet .student-dates-display .date-value.overdue {
+    color: #c62828;
+}
+
+.path-mod-gestionprojet .student-dates-display .date-value.due-soon {
+    color: #ef6c00;
+}
+
+.path-mod-gestionprojet .student-dates-display .status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.path-mod-gestionprojet .student-dates-display .status-badge.overdue {
+    background: #ffcdd2;
+    color: #c62828;
+}
+
+.path-mod-gestionprojet .student-dates-display .status-badge.due-soon {
+    background: #ffe0b2;
+    color: #ef6c00;
+}
+
+/* =========================================
+   Step 8 Teacher Styles
+   (from pages/step8_teacher.php)
+   ========================================= */
+
+.path-mod-gestionprojet .logbook-entry {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid #17a2b8;
+}
+
+.path-mod-gestionprojet .logbook-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.path-mod-gestionprojet .logbook-entry-header input[type="date"] {
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.path-mod-gestionprojet .logbook-entry-header select {
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.path-mod-gestionprojet .logbook-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.path-mod-gestionprojet .logbook-row textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    resize: vertical;
+}
+
+.path-mod-gestionprojet .btn-remove-entry {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.path-mod-gestionprojet .btn-add-entry {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+/* =========================================
+   Home Page Inline Overrides
+   (from pages/home.php)
+   ========================================= */
+
+.path-mod-gestionprojet .card-status.info {
+    background: #e7f3ff;
+    color: #0056b3;
+}
+
+.path-mod-gestionprojet .correction-models-card {
+    border-top-color: #17a2b8 !important;
+}
+
+.path-mod-gestionprojet .gestionprojet-home .alert-warning {
+    margin: 20px 0;
+}
+
+/* =========================================
+   Step 4 Teacher Styles
+   (from pages/step4_teacher.php)
+   ========================================= */
+
+.path-mod-gestionprojet .teacher-model-container .interactor-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .interactor-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .interactor-name-input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.path-mod-gestionprojet .teacher-model-container .fc-item {
+    background: white;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-left: 4px solid #17a2b8;
+}
+
+.path-mod-gestionprojet .teacher-model-container .fc-label {
+    display: inline-block;
+    background: #17a2b8;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .fc-value-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .criteres-list {
+    margin-top: 10px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .critere-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .critere-input {
+    padding: 6px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .btn-add,
+.path-mod-gestionprojet .teacher-model-container .btn-remove,
+.path-mod-gestionprojet .teacher-model-container .btn-delete-interactor {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .btn-add {
+    background: #e9ecef;
+    color: #495057;
+    margin-top: 10px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .btn-add:hover {
+    background: #dee2e6;
+}
+
+.path-mod-gestionprojet .teacher-model-container .btn-remove {
+    background: #dc3545;
+    color: white;
+    padding: 4px 10px;
+}
+
+.path-mod-gestionprojet .teacher-model-container .btn-delete-interactor {
+    background: #ffc107;
+    color: #212529;
+}
+
+/* =========================================
+   Step 3 Timeline Styles
+   (from pages/step3.php)
+   ========================================= */
+
+.path-mod-gestionprojet .timeline-box {
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    height: 60px;
+}
+
+.path-mod-gestionprojet .vacation-overlay {
+    position: absolute;
+    top: 0;
+    height: 60px;
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(150, 150, 150, 0.3),
+        rgba(150, 150, 150, 0.3) 10px,
+        rgba(180, 180, 180, 0.3) 10px,
+        rgba(180, 180, 180, 0.3) 20px
+    );
+    border-left: 2px solid #999;
+    border-right: 2px solid #999;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.path-mod-gestionprojet .current-day-marker {
+    position: absolute;
+    top: 0;
+    height: 60px;
+    width: 2px;
+    background: #dc3545;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.path-mod-gestionprojet .current-day-marker::before {
+    content: attr(data-date);
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #dc3545;
+    font-weight: bold;
+    white-space: nowrap;
+    background: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.path-mod-gestionprojet .milestones-container {
+    margin-top: 10px;
+    padding: 10px 0;
+    position: relative;
+    height: 30px;
+}
+
+.path-mod-gestionprojet .milestone-marker {
+    position: absolute;
+    font-size: 9px;
+    color: #0056b3;
+    font-weight: 500;
+    text-align: center;
+    transform: translateX(-50%);
+}
+
+.path-mod-gestionprojet .milestone-marker::before {
+    content: '';
+    display: block;
+    width: 2px;
+    height: 8px;
+    background: #0056b3;
+    margin: 0 auto 2px;
+}
+
+.path-mod-gestionprojet .step3-container .task-input-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.path-mod-gestionprojet .task-color-indicator {
+    flex-shrink: 0;
+}
+
+.path-mod-gestionprojet .total-info-box {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.path-mod-gestionprojet .vacation-info {
+    margin-top: 10px;
+    font-style: italic;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.path-mod-gestionprojet .vacation-info span {
+    display: inline-block;
+    margin-right: 15px;
+}
+
+/* =========================================
+   Grading Logbook Table Styles
+   (from grading.php)
+   ========================================= */
+
+.path-mod-gestionprojet .grading-logbook-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.path-mod-gestionprojet .grading-logbook-table th,
+.path-mod-gestionprojet .grading-logbook-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.path-mod-gestionprojet .grading-logbook-table th {
+    background-color: #f2f2f2;
+}
+
+.path-mod-gestionprojet .grading-logbook-table .status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    display: inline-block;
+}
+
+.path-mod-gestionprojet .grading-logbook-table .status-ahead {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.path-mod-gestionprojet .grading-logbook-table .status-ontime {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.path-mod-gestionprojet .grading-logbook-table .status-ontime-fixed {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.path-mod-gestionprojet .grading-logbook-table .status-late {
+    background-color: #fee2e2;
+    color: #991b1b;
+}

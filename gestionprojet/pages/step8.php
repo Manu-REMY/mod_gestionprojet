@@ -5,9 +5,17 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 8: Carnet de bord (Student logbook)
+ * Step 8: Student logbook page
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -108,6 +116,25 @@ if (empty($tasks_data)) {
         ]
     ];
 }
+
+// Load AMD module.
+$PAGE->requires->js_call_amd('mod_gestionprojet/step8', 'init', [[
+    'cmid' => $cm->id,
+    'step' => 8,
+    'groupid' => $groupid,
+    'autosaveInterval' => $gestionprojet->autosave_interval * 1000,
+    'isLocked' => $isLocked,
+    'tasksData' => $tasks_data,
+    'strings' => [
+        'confirm_submission' => get_string('confirm_submission', 'gestionprojet'),
+        'confirm_revert' => get_string('confirm_revert', 'gestionprojet'),
+        'status_ahead' => get_string('logbook_status_ahead', 'gestionprojet'),
+        'status_ontime' => get_string('logbook_status_ontime', 'gestionprojet'),
+        'status_late' => get_string('logbook_status_late', 'gestionprojet'),
+        'remove_line' => get_string('logbook_remove_line', 'gestionprojet'),
+        'confirm_remove_line' => get_string('logbook_remove_line', 'gestionprojet') . '?',
+    ],
+]]);
 ?>
 
 <div class="step8-container">
@@ -183,7 +210,7 @@ if (empty($tasks_data)) {
             </table>
 
             <?php if (!$isLocked): ?>
-                <button type="button" class="btn-add-line" onclick="addLogEntry()">
+                <button type="button" class="btn-add-line" id="addLogEntryButton">
                     ➕
                     <?php echo get_string('logbook_add_line', 'gestionprojet'); ?>
                 </button>
@@ -206,233 +233,13 @@ if (empty($tasks_data)) {
                 </button>
             <?php endif; ?>
 
-            <button type="button" class="btn-export btn-export-margin" onclick="exportPDF()">
+            <button type="button" class="btn-export btn-export-margin" id="exportPdfButton">
                 📄
                 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
             </button>
         </div>
     </form>
 </div>
-
-<?php
-// Ensure jQuery is loaded
-$PAGE->requires->jquery();
-?>
-
-<script>
-    // Wait for RequireJS and jQuery
-    (function waitRequire() {
-        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
-            setTimeout(waitRequire, 50);
-            return;
-        }
-
-        require(['jquery', 'mod_gestionprojet/autosave'], function ($, Autosave) {
-            var cmid = <?php echo $cm->id; ?>;
-            var step = 8;
-            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-            var groupid = <?php echo $groupid; ?>;
-
-            // Custom serialization for step 8
-            var serializeData = function () {
-                var formData = {};
-                formData['tasks_data'] = JSON.stringify(tasksData);
-                return formData;
-            };
-
-            var onSave = function (response) {
-                // console.log('Step 8 saved', response);
-            };
-
-            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
-
-            // Handle Submission
-            $('#submitButton').on('click', function () {
-                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
-                    $.ajax({
-                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
-                        method: 'POST',
-                        data: {
-                            id: cmid,
-                            step: step,
-                            groupid: groupid,
-                            action: 'submit',
-                            sesskey: M.cfg.sesskey
-                        },
-                        success: function (response) {
-                            var res = JSON.parse(response);
-                            if (res.success) {
-                                window.location.reload();
-                            } else {
-                                alert('Error submitting');
-                            }
-                        }
-                    });
-                }
-            });
-
-            // Handle Revert
-            $('#revertButton').on('click', function () {
-                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
-                    $.ajax({
-                        url: '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/ajax/submit.php',
-                        method: 'POST',
-                        data: {
-                            id: cmid,
-                            step: step,
-                            groupid: groupid,
-                            action: 'revert',
-                            sesskey: M.cfg.sesskey
-                        },
-                        success: function (response) {
-                            var res = JSON.parse(response);
-                            if (res.success) {
-                                window.location.reload();
-                            } else {
-                                alert('Error reverting');
-                            }
-                        }
-                    });
-                }
-            });
-
-            if (!isLocked) {
-                Autosave.init({
-                    cmid: cmid,
-                    step: step,
-                    groupid: groupid,
-                    interval: autosaveInterval,
-                    formSelector: '#carnetForm',
-                    serialize: serializeData,
-                    onSave: onSave
-                });
-            }
-        });
-    })();
-
-    // Tasks data
-    let tasksData = <?php echo json_encode($tasks_data); ?>;
-    const isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
-
-    function renderLogEntries() {
-        const tbody = document.getElementById('logbookTableBody');
-        tbody.innerHTML = '';
-
-        tasksData.forEach((entry, index) => {
-            const tr = document.createElement('tr');
-
-            // Date Cell
-            const tdDate = document.createElement('td');
-            const dateInput = document.createElement('input');
-            dateInput.type = 'date';
-            dateInput.className = 'form-control';
-            dateInput.value = entry.date;
-            dateInput.disabled = isLocked;
-            dateInput.onchange = (e) => {
-                tasksData[index].date = e.target.value;
-            };
-            tdDate.appendChild(dateInput);
-            tr.appendChild(tdDate);
-
-            // Today Tasks Cell
-            const tdToday = document.createElement('td');
-            const todayInput = document.createElement('textarea');
-            todayInput.className = 'form-control';
-            todayInput.rows = 3;
-            todayInput.value = entry.tasks_today;
-            todayInput.disabled = isLocked;
-            todayInput.onchange = (e) => {
-                tasksData[index].tasks_today = e.target.value;
-            };
-            tdToday.appendChild(todayInput);
-            tr.appendChild(tdToday);
-
-            // Future Tasks Cell
-            const tdFuture = document.createElement('td');
-            const futureInput = document.createElement('textarea');
-            futureInput.className = 'form-control';
-            futureInput.rows = 3;
-            futureInput.value = entry.tasks_future;
-            futureInput.disabled = isLocked;
-            futureInput.onchange = (e) => {
-                tasksData[index].tasks_future = e.target.value;
-            };
-            tdFuture.appendChild(futureInput);
-            tr.appendChild(tdFuture);
-
-            // Status Cell
-            const tdStatus = document.createElement('td');
-            const statusDiv = document.createElement('div');
-            statusDiv.className = 'status-radios';
-
-            const statuses = [
-                { id: 'ahead', label: <?php echo json_encode(get_string('logbook_status_ahead', 'gestionprojet')); ?> },
-                { id: 'ontime', label: <?php echo json_encode(get_string('logbook_status_ontime', 'gestionprojet')); ?> },
-                { id: 'late', label: <?php echo json_encode(get_string('logbook_status_late', 'gestionprojet')); ?> }
-            ];
-
-            statuses.forEach(status => {
-                const label = document.createElement('label');
-                label.className = 'status-radio-label';
-
-                const input = document.createElement('input');
-                input.type = 'radio';
-                input.name = 'status_' + index;
-                input.value = status.id;
-                input.checked = entry.status === status.id;
-                input.disabled = isLocked;
-                input.onchange = () => {
-                    tasksData[index].status = status.id;
-                };
-
-                label.appendChild(input);
-                label.appendChild(document.createTextNode(' ' + status.label));
-                statusDiv.appendChild(label);
-            });
-            tdStatus.appendChild(statusDiv);
-            tr.appendChild(tdStatus);
-
-            // Actions Cell
-            const tdAction = document.createElement('td');
-            if (!isLocked && tasksData.length > 1) {
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'btn-remove-line';
-                removeBtn.innerHTML = '🗑️';
-                removeBtn.title = '<?php echo get_string('logbook_remove_line', 'gestionprojet'); ?>';
-                removeBtn.onclick = () => {
-                    if (confirm('<?php echo get_string('logbook_remove_line', 'gestionprojet'); ?>?')) {
-                        tasksData.splice(index, 1);
-                        renderLogEntries();
-                    }
-                };
-                tdAction.appendChild(removeBtn);
-            }
-            tr.appendChild(tdAction);
-
-            tbody.appendChild(tr);
-        });
-    }
-
-    function addLogEntry() {
-        tasksData.push({
-            date: new Date().toISOString().split('T')[0],
-            tasks_today: '',
-            tasks_future: '',
-            status: 'ontime'
-        });
-        renderLogEntries();
-    }
-
-    function exportPDF() {
-        window.location.href = '<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/export_pdf.php?id=<?php echo $cm->id; ?>&groupid=<?php echo $groupid; ?>';
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function () {
-        renderLogEntries();
-    });
-</script>
 
 <?php
 echo $OUTPUT->footer();
