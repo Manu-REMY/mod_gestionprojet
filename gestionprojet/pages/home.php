@@ -5,17 +5,11 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Home page content for gestionprojet.
+ *
+ * Builds the context data and renders the home Mustache template.
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -24,326 +18,277 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// Check if teacher pages are complete
+use mod_gestionprojet\output\icon;
+
+// Check if teacher pages are complete.
 $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id);
 
-?>
+// Build context data for the template.
+$templatecontext = [
+    'cmid' => $cm->id,
+    'isteacher' => $isteacher,
+    'cangrade' => $cangrade,
+    'teacherpagescomplete' => $teacherpagescomplete,
+    'hasusergroup' => false,
+    'nogrouperror' => false,
+    'groupnotfounderror' => false,
+];
 
-<div class="gestionprojet-home">
+// Step icons using Lucide SVGs via icon helper.
+$stepicons = [];
+for ($i = 1; $i <= 8; $i++) {
+    $stepicons[$i] = icon::render_step($i, 'xl', 'purple');
+}
 
-    <?php if ($isteacher): ?>
-        <!-- Teacher section -->
-        <div class="section-header">
-            <h2>📋 <?php echo get_string('navigation_teacher', 'gestionprojet'); ?></h2>
-            <p><?php echo get_string('step1_desc', 'gestionprojet') . ', ' .
-                get_string('step2_desc', 'gestionprojet') . ', ' .
-                get_string('step3_desc', 'gestionprojet'); ?></p>
-        </div>
+if ($isteacher) {
+    // Get teacher pages data.
+    $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]);
+    $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]);
+    $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);
 
-        <div class="gestionprojet-cards">
-            <?php
-            // Get teacher pages data
+    $teacherstepsraw = [
+        1 => [
+            'data' => $description,
+            'complete' => $description && !empty($description->intitule),
+        ],
+        3 => [
+            'data' => $planning,
+            'complete' => $planning && !empty($planning->projectname),
+        ],
+        2 => [
+            'data' => $besoin,
+            'complete' => $besoin && !empty($besoin->aqui),
+        ],
+    ];
+
+    $teachersteps = [];
+    foreach ($teacherstepsraw as $stepnum => $stepdata) {
+        $islocked = $stepdata['data'] && $stepdata['data']->locked;
+        $teachersteps[] = [
+            'stepnum' => $stepnum,
+            'icon' => $stepicons[$stepnum],
+            'title' => get_string('step' . $stepnum, 'gestionprojet'),
+            'description' => get_string('step' . $stepnum . '_desc', 'gestionprojet'),
+            'islocked' => $islocked,
+            'iscomplete' => !$islocked && $stepdata['complete'],
+            'url' => 'view.php?id=' . $cm->id . '&step=' . $stepnum,
+            'buttonlabel' => $islocked ? get_string('unlock', 'gestionprojet') : get_string('configure', 'gestionprojet'),
+        ];
+    }
+    $templatecontext['teachersteps'] = $teachersteps;
+
+    // Grading steps.
+    if ($cangrade && $teacherpagescomplete) {
+        $studentstepsraw = [
+            7 => get_string('step7', 'gestionprojet'),
+            4 => get_string('step4', 'gestionprojet'),
+            5 => get_string('step5', 'gestionprojet'),
+            8 => get_string('step8', 'gestionprojet'),
+            6 => get_string('step6', 'gestionprojet'),
+        ];
+
+        $gradingsteps = [];
+        foreach ($studentstepsraw as $stepnum => $title) {
+            $field = 'enable_step' . $stepnum;
+            if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
+                continue;
+            }
+            $gradingsteps[] = [
+                'stepnum' => $stepnum,
+                'icon' => $stepicons[$stepnum],
+                'title' => $title,
+                'gradingurl' => $CFG->wwwroot . '/mod/gestionprojet/grading.php?id=' . $cm->id . '&step=' . $stepnum,
+            ];
+        }
+        $templatecontext['gradingsteps'] = $gradingsteps;
+    }
+
+    // Dashboard data: submission counts per step.
+    $studenttables = [
+        7 => 'gestionprojet_besoin_eleve',
+        4 => 'gestionprojet_cdcf',
+        5 => 'gestionprojet_essai',
+        8 => 'gestionprojet_carnet',
+        6 => 'gestionprojet_rapport',
+    ];
+
+    // Count teacher config completion.
+    $teachercomplete = 0;
+    foreach ($teacherstepsraw as $stepdata) {
+        if ($stepdata['complete']) {
+            $teachercomplete++;
+        }
+    }
+    $teachertotal = count($teacherstepsraw);
+
+    // Count correction models completed.
+    $modeltables = [
+        4 => 'gestionprojet_cdcf_teacher',
+        5 => 'gestionprojet_essai_teacher',
+        6 => 'gestionprojet_rapport_teacher',
+        7 => 'gestionprojet_besoin_eleve_teacher',
+        8 => 'gestionprojet_carnet_teacher',
+    ];
+    $modelscomplete = 0;
+    $modelstotal = 0;
+    foreach ($modeltables as $mstep => $mtable) {
+        $mfield = 'enable_step' . $mstep;
+        if (isset($gestionprojet->$mfield) && !$gestionprojet->$mfield) {
+            continue;
+        }
+        $modelstotal++;
+        $mrecord = $DB->get_record($mtable, ['gestionprojetid' => $gestionprojet->id]);
+        if ($mrecord && !empty($mrecord->ai_instructions)) {
+            $modelscomplete++;
+        }
+    }
+
+    // Count submissions and grades per student step.
+    $dashboardsubmissions = [];
+    $totalungraded = 0;
+    foreach ($studenttables as $dstep => $dtable) {
+        $dfield = 'enable_step' . $dstep;
+        if (isset($gestionprojet->$dfield) && !$gestionprojet->$dfield) {
+            continue;
+        }
+        $totalsubmitted = $DB->count_records_select(
+            $dtable,
+            'gestionprojetid = :gid AND status = 1',
+            ['gid' => $gestionprojet->id]
+        );
+        $totalgraded = $DB->count_records_select(
+            $dtable,
+            'gestionprojetid = :gid AND grade IS NOT NULL',
+            ['gid' => $gestionprojet->id]
+        );
+        $ungraded = max(0, $totalsubmitted - $totalgraded);
+        $totalungraded += $ungraded;
+        $dashboardsubmissions[] = [
+            'stepnum' => $dstep,
+            'stepname' => get_string('step' . $dstep, 'gestionprojet'),
+            'submitted' => $totalsubmitted,
+            'graded' => $totalgraded,
+            'ungraded' => $ungraded,
+            'hasungraded' => $ungraded > 0,
+        ];
+    }
+
+    $templatecontext['dashboard'] = [
+        'teachercomplete' => $teachercomplete,
+        'teachertotal' => $teachertotal,
+        'modelscomplete' => $modelscomplete,
+        'modelstotal' => $modelstotal,
+        'totalungraded' => $totalungraded,
+        'hasungraded' => $totalungraded > 0,
+        'submissions' => $dashboardsubmissions,
+        'hassubmissions' => !empty($dashboardsubmissions),
+    ];
+
+} else {
+    // Student section.
+    if ($teacherpagescomplete && $usergroup == 0) {
+        $templatecontext['nogrouperror'] = true;
+    } else if ($teacherpagescomplete && $usergroup > 0) {
+        // Safe retrieval of group info.
+        $groupinfo = $DB->get_record('groups', ['id' => $usergroup]);
+
+        if (!$groupinfo) {
+            $templatecontext['groupnotfounderror'] = true;
+            $templatecontext['groupnotfounderrorid'] = $usergroup;
+        } else {
+            $templatecontext['hasusergroup'] = true;
+            $templatecontext['usergroupname'] = s($groupinfo->name);
+
+            // Consultation steps (read-only for students).
             $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]);
             $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]);
             $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);
 
-            $steps = [
-                1 => [
-                    'icon' => '📋',
-                    'title' => get_string('step1', 'gestionprojet'),
-                    'desc' => get_string('step1_desc', 'gestionprojet'),
-                    'data' => $description,
-                    'complete' => $description && !empty($description->intitule)
-                ],
-                3 => [
-                    'icon' => '📅',
-                    'title' => get_string('step3', 'gestionprojet'),
-                    'desc' => get_string('step3_desc', 'gestionprojet'),
-                    'data' => $planning,
-                    'complete' => $planning && !empty($planning->projectname)
-                ],
-                2 => [
-                    'icon' => '🦏',
-                    'title' => get_string('step2', 'gestionprojet'),
-                    'desc' => get_string('step2_desc', 'gestionprojet'),
-                    'data' => $besoin,
-                    'complete' => $besoin && !empty($besoin->aqui)
-                ]
+            $consultationstepsraw = [
+                1 => ['data' => $description, 'complete' => $description && !empty($description->intitule)],
+                3 => ['data' => $planning, 'complete' => $planning && !empty($planning->projectname)],
+                2 => ['data' => $besoin, 'complete' => $besoin && !empty($besoin->aqui)],
             ];
 
-            foreach ($steps as $stepnum => $step):
-                $islocked = $step['data'] && $step['data']->locked;
-                ?>
-                <div class="gestionprojet-card teacher <?php echo $islocked ? 'locked' : ''; ?>">
-                    <div class="card-icon"><?php echo $step['icon']; ?></div>
-                    <h3 class="card-title"><?php echo $step['title']; ?></h3>
-                    <p class="card-description"><?php echo $step['desc']; ?></p>
-
-                    <?php if ($islocked): ?>
-                        <div class="card-status locked">
-                            🔒 <?php echo get_string('locked', 'gestionprojet'); ?>
-                        </div>
-                    <?php elseif ($step['complete']): ?>
-                        <div class="card-status complete">
-                            ✓ Complété
-                        </div>
-                    <?php else: ?>
-                        <div class="card-status incomplete">
-                            ⏳ À compléter
-                        </div>
-                    <?php endif; ?>
-
-                    <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="card-button">
-                        <?php echo $islocked ? get_string('unlock', 'gestionprojet') : 'Configurer'; ?>
-                    </a>
-                </div>
-            <?php endforeach; ?>
-
-            <!-- Correction models button -->
-            <div class="gestionprojet-card teacher correction-models-card">
-                <div class="card-icon">📝</div>
-                <h3 class="card-title"><?php echo get_string('correction_models', 'gestionprojet'); ?></h3>
-                <p class="card-description"><?php echo get_string('correction_models_desc', 'gestionprojet'); ?></p>
-
-                <div class="card-status info">
-                    🤖 <?php echo get_string('correction_models_info', 'gestionprojet'); ?>
-                </div>
-
-                <a href="view.php?id=<?php echo $cm->id; ?>&page=correctionmodels" class="card-button">
-                    <?php echo get_string('correction_models_configure', 'gestionprojet'); ?>
-                </a>
-            </div>
-        </div>
-
-        <!-- Grading section -->
-        <?php if ($cangrade): ?>
-            <div class="grading-section">
-                <div class="section-header">
-                    <h2>✏️ <?php echo get_string('navigation_grading', 'gestionprojet'); ?></h2>
-                    <p>Corrigez les travaux des groupes par étape</p>
-                </div>
-
-                <?php if (!$teacherpagescomplete): ?>
-                    <div class="alert alert-warning">
-                        ⚠️ <?php echo get_string('must_complete_teacher_pages', 'gestionprojet'); ?>
-                    </div>
-                <?php else: ?>
-                    <div class="grading-cards">
-                        <?php
-                        $studentsteps = [
-                            7 => ['icon' => '🦏', 'title' => get_string('step7', 'gestionprojet')],
-                            4 => ['icon' => '📋', 'title' => get_string('step4', 'gestionprojet')],
-                            5 => ['icon' => '🔬', 'title' => get_string('step5', 'gestionprojet')],
-                            8 => ['icon' => '📓', 'title' => get_string('step8', 'gestionprojet')],
-                            6 => ['icon' => '📝', 'title' => get_string('step6', 'gestionprojet')]
-                        ];
-
-                        // Filter enabled steps
-                        foreach ($studentsteps as $k => $v) {
-                            $field = 'enable_step' . $k;
-                            if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
-                                unset($studentsteps[$k]);
-                            }
-                        }
-
-                        foreach ($studentsteps as $stepnum => $step):
-                            ?>
-                            <div class="grading-card">
-                                <div class="card-icon"><?php echo $step['icon']; ?></div>
-                                <h4><?php echo $step['title']; ?></h4>
-                                <a href="<?php echo $CFG->wwwroot; ?>/mod/gestionprojet/grading.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>"
-                                    class="btn btn-primary">
-                                    Corriger
-                                </a>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-
-    <?php else: ?>
-        <!-- Student section -->
-        <div class="section-header">
-            <h2>🎯 <?php echo get_string('navigation_student', 'gestionprojet'); ?></h2>
-            <p>Complétez votre projet en 3 étapes</p>
-        </div>
-
-        <?php if (!$teacherpagescomplete): ?>
-            <div class="alert alert-warning">
-                ⚠️ <?php echo get_string('must_complete_teacher_pages', 'gestionprojet'); ?>
-            </div>
-        <?php elseif ($usergroup == 0): ?>
-            <div class="alert alert-danger">
-                ❌ <?php echo get_string('no_groups', 'gestionprojet'); ?>
-            </div>
-        <?php else: ?>
-            <?php
-            // Safe retrieval of group info
-            $groupinfo = null;
-            if ($usergroup > 0) {
-                $groupinfo = $DB->get_record('groups', ['id' => $usergroup]);
+            $consultationsteps = [];
+            foreach ($consultationstepsraw as $stepnum => $stepdata) {
+                $field = 'enable_step' . $stepnum;
+                if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
+                    continue;
+                }
+                $consultationsteps[] = [
+                    'stepnum' => $stepnum,
+                    'icon' => $stepicons[$stepnum],
+                    'title' => get_string('step' . $stepnum, 'gestionprojet'),
+                    'description' => get_string('step' . $stepnum . '_desc', 'gestionprojet'),
+                    'url' => 'view.php?id=' . $cm->id . '&step=' . $stepnum,
+                ];
             }
+            $templatecontext['consultationsteps'] = $consultationsteps;
 
-            // If group not found despite ID existing, fallback to no groups error
-            if (!$groupinfo) {
-                ?>
-                <div class="alert alert-danger">
-                    ❌ Erreur : Groupe introuvable (ID: <?php echo $usergroup; ?>)
-                </div>
-            <?php } else { ?>
-                <div class="alert alert-info">
-                    👥 Vous travaillez en groupe: <strong><?php echo $groupinfo->name; ?></strong>
-                </div>
+            // Student work steps.
+            $cdcf = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'cdcf');
+            $essai = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'essai');
+            $rapport = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'rapport');
+            $besoineleve = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'besoin_eleve');
+            $carnet = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'carnet');
 
-                <div class="gestionprojet-cards">
-                    <?php
-                    // Consultation steps (read-only for students)
-                    $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]);
-                    $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]);
-                    $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);
+            $studentstepsraw = [
+                7 => ['data' => $besoineleve, 'complete' => $besoineleve && !empty($besoineleve->aqui)],
+                4 => ['data' => $cdcf, 'complete' => $cdcf && !empty($cdcf->produit)],
+                5 => ['data' => $essai, 'complete' => $essai && !empty($essai->objectif)],
+                8 => ['data' => $carnet, 'complete' => $carnet && !empty($carnet->tasks_data)],
+                6 => ['data' => $rapport, 'complete' => $rapport && !empty($rapport->besoins)],
+            ];
 
-                    $consultationsteps = [
-                        1 => [
-                            'icon' => '📋',
-                            'title' => get_string('step1', 'gestionprojet'),
-                            'desc' => get_string('step1_desc', 'gestionprojet'),
-                            'data' => $description,
-                            'complete' => $description && !empty($description->intitule)
-                        ],
-                        3 => [
-                            'icon' => '📅',
-                            'title' => get_string('step3', 'gestionprojet'),
-                            'desc' => get_string('step3_desc', 'gestionprojet'),
-                            'data' => $planning,
-                            'complete' => $planning && !empty($planning->projectname)
-                        ],
-                        2 => [
-                            'icon' => '🦏',
-                            'title' => get_string('step2', 'gestionprojet'),
-                            'desc' => get_string('step2_desc', 'gestionprojet'),
-                            'data' => $besoin,
-                            'complete' => $besoin && !empty($besoin->aqui)
-                        ]
-                    ];
+            $studentsteps = [];
+            foreach ($studentstepsraw as $stepnum => $stepdata) {
+                $field = 'enable_step' . $stepnum;
+                if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
+                    continue;
+                }
+                $hasgrade = $stepdata['data'] && $stepdata['data']->grade !== null;
+                $gradeformatted = '';
+                if ($hasgrade) {
+                    $gradeformatted = number_format($stepdata['data']->grade, 1) . ' / 20';
+                }
+                $studentsteps[] = [
+                    'stepnum' => $stepnum,
+                    'icon' => $stepicons[$stepnum],
+                    'title' => get_string('step' . $stepnum, 'gestionprojet'),
+                    'description' => get_string('step' . $stepnum . '_desc', 'gestionprojet'),
+                    'iscomplete' => $stepdata['complete'],
+                    'hasgrade' => $hasgrade,
+                    'gradeformatted' => $gradeformatted,
+                    'url' => 'view.php?id=' . $cm->id . '&step=' . $stepnum,
+                ];
+            }
+            $templatecontext['studentsteps'] = $studentsteps;
+        }
+    }
+}
 
-                    // Filter enabled steps
-                    foreach ($consultationsteps as $k => $v) {
-                        $field = 'enable_step' . $k;
-                        if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
-                            unset($consultationsteps[$k]);
-                        }
-                    }
+// Add icon template variables for the mustache template.
+$templatecontext['icon_lock'] = icon::render('lock', 'sm', 'red');
+$templatecontext['icon_unlock'] = icon::render('lock-open', 'sm', 'green');
+$templatecontext['icon_check'] = icon::render('check-circle', 'sm', 'green');
+$templatecontext['icon_incomplete'] = icon::render('x-circle', 'sm', 'orange');
+$templatecontext['icon_correction'] = icon::render('file-text', 'xl', 'purple');
+$templatecontext['icon_bot'] = icon::render('bot', 'sm', 'purple');
+$templatecontext['icon_pencil'] = icon::render('pencil', 'md', 'purple');
+$templatecontext['icon_warning'] = icon::render('alert-triangle', 'sm', 'orange');
+$templatecontext['icon_award'] = icon::render('award', 'md', 'purple');
+$templatecontext['icon_error'] = icon::render('x-circle', 'sm', 'red');
+$templatecontext['icon_users'] = icon::render('users', 'sm', 'blue');
+$templatecontext['icon_eye'] = icon::render('eye', 'sm', 'gray');
+$templatecontext['icon_bar_chart'] = icon::render('bar-chart-3', 'md', 'purple');
+$templatecontext['icon_clipboard'] = icon::render('clipboard-list', 'md', 'purple');
+$templatecontext['icon_home'] = icon::render('home', 'sm', 'inherit');
+$templatecontext['icon_chevron_left'] = icon::render('chevron-left', 'sm', 'inherit');
+$templatecontext['icon_settings'] = icon::render('settings', 'sm', 'purple');
+$templatecontext['icon_file_text'] = icon::render('file-text', 'sm', 'purple');
+$templatecontext['icon_bar_chart_sm'] = icon::render('bar-chart-3', 'sm', 'purple');
 
-                    foreach ($consultationsteps as $stepnum => $step):
-                        ?>
-                        <div class="gestionprojet-card student" style="border-top-color: #667eea; opacity: 0.9;">
-                            <div class="card-icon"><?php echo $step['icon']; ?></div>
-                            <h3 class="card-title"><?php echo $step['title']; ?></h3>
-                            <p class="card-description"><?php echo $step['desc']; ?></p>
-
-                            <div class="card-status locked" style="background: #e2e8f0; color: #4a5568;">
-                                👁️ Consultation
-                            </div>
-
-                            <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="card-button"
-                                style="background: #667eea;">
-                                Consulter
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-
-                    <?php
-                    // Get student submissions
-                    $cdcf = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'cdcf');
-                    $essai = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'essai');
-                    $rapport = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'rapport');
-                    $besoin_eleve = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'besoin_eleve');
-                    $carnet = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'carnet');
-
-                    $steps = [
-                        7 => [
-                            'icon' => '🦏',
-                            'title' => get_string('step7', 'gestionprojet'),
-                            'desc' => get_string('step7_desc', 'gestionprojet'),
-                            'data' => $besoin_eleve,
-                            'complete' => $besoin_eleve && !empty($besoin_eleve->aqui)
-                        ],
-                        4 => [
-                            'icon' => '📋',
-                            'title' => get_string('step4', 'gestionprojet'),
-                            'desc' => get_string('step4_desc', 'gestionprojet'),
-                            'data' => $cdcf,
-                            'complete' => $cdcf && !empty($cdcf->produit)
-                        ],
-                        5 => [
-                            'icon' => '🔬',
-                            'title' => get_string('step5', 'gestionprojet'),
-                            'desc' => get_string('step5_desc', 'gestionprojet'),
-                            'data' => $essai,
-                            'complete' => $essai && !empty($essai->objectif)
-                        ],
-                        8 => [
-                            'icon' => '📓',
-                            'title' => get_string('step8', 'gestionprojet'),
-                            'desc' => get_string('step8_desc', 'gestionprojet'),
-                            'data' => $carnet,
-                            'complete' => $carnet && !empty($carnet->tasks_data)
-                        ],
-                        6 => [
-                            'icon' => '📝',
-                            'title' => get_string('step6', 'gestionprojet'),
-                            'desc' => get_string('step6_desc', 'gestionprojet'),
-                            'data' => $rapport,
-                            'complete' => $rapport && !empty($rapport->besoins)
-                        ]
-                    ];
-
-                    // Filter enabled steps
-                    foreach ($steps as $k => $v) {
-                        $field = 'enable_step' . $k;
-                        if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
-                            unset($steps[$k]);
-                        }
-                    }
-
-                    foreach ($steps as $stepnum => $step):
-                        ?>
-                        <div class="gestionprojet-card student">
-                            <div class="card-icon"><?php echo $step['icon']; ?></div>
-                            <h3 class="card-title"><?php echo $step['title']; ?></h3>
-                            <p class="card-description"><?php echo $step['desc']; ?></p>
-
-                            <?php if ($step['complete']): ?>
-                                <div class="card-status complete">
-                                    ✓ Complété
-                                </div>
-                            <?php else: ?>
-                                <div class="card-status incomplete">
-                                    ⏳ À compléter
-                                </div>
-                            <?php endif; ?>
-
-                            <?php if ($step['data'] && $step['data']->grade !== null): ?>
-                                <div class="card-status">
-                                    Note: <?php echo number_format($step['data']->grade, 1); ?> / 20
-                                </div>
-                            <?php endif; ?>
-
-                            <a href="view.php?id=<?php echo $cm->id; ?>&step=<?php echo $stepnum; ?>" class="card-button">
-                                Travailler
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php } ?>
-        <?php endif; ?>
-    <?php endif; ?>
-
-</div>
-
-<?php
-// Note: Autosave JavaScript is now inline in each step file
-// Commented out to avoid "No define call" error
-
-?>
+// Render the template using the renderer.
+$renderer = $PAGE->get_renderer('mod_gestionprojet');
+echo $renderer->render_home($templatecontext);

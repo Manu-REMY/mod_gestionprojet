@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AI Provider Interface for Gestion de Projet.
+ * AI Provider Interface for Project Management.
  *
  * Defines the contract that all AI providers must implement.
  *

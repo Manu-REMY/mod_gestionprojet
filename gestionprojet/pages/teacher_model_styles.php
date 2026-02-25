@@ -5,17 +5,11 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Shared styles for teacher correction model pages.
+ *
+ * Styles have been moved to styles.css under the "Teacher Model Styles" section.
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -23,4 +17,3 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-// Teacher model styles are loaded via styles.css.

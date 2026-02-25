@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Anthropic Provider for Gestion de Projet.
+ * Anthropic Provider for Project Management.
  *
  * Implements the AI provider interface for Anthropic's Claude API.
  *

@@ -13,7 +13,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/notification'], function($, Notification) {
+define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
 
     var AIProgress = {
         cmid: 0,
@@ -259,18 +259,14 @@ define(['jquery', 'core/notification'], function($, Notification) {
             this.showProgress('Envoi de la demande d\'évaluation...');
             this.updateProgressBar(20);
 
-            $.ajax({
-                url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/evaluate.php',
-                method: 'POST',
-                data: {
-                    id: cmid,
+            Ajax.call([{
+                methodname: 'mod_gestionprojet_evaluate',
+                args: {
+                    cmid: cmid,
                     step: step,
-                    submissionid: submissionid,
-                    sesskey: M.cfg.sesskey
-                },
-                dataType: 'json'
-            })
-            .done(function(response) {
+                    submissionid: submissionid
+                }
+            }])[0].done(function(response) {
                 if (response.success) {
                     self.evaluationid = response.evaluationid;
                     self.updateStatus('Évaluation en cours...');
@@ -279,9 +275,8 @@ define(['jquery', 'core/notification'], function($, Notification) {
                 } else {
                     self.showError(response.message || 'Erreur lors du déclenchement');
                 }
-            })
-            .fail(function() {
-                self.showError('Erreur de connexion au serveur');
+            }).fail(function(ex) {
+                self.showError(ex.message || 'Erreur de connexion au serveur');
             });
         },
 
@@ -335,31 +330,30 @@ define(['jquery', 'core/notification'], function($, Notification) {
                 return;
             }
 
-            var params = {
-                id: this.cmid
+            var args = {
+                cmid: this.cmid,
+                evaluationid: 0,
+                step: 0,
+                submissionid: 0
             };
 
             if (this.evaluationid) {
-                params.evaluationid = this.evaluationid;
+                args.evaluationid = this.evaluationid;
             } else {
-                params.step = this.step;
-                params.submissionid = this.submissionid;
+                args.step = this.step;
+                args.submissionid = this.submissionid;
             }
 
-            $.ajax({
-                url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/get_evaluation_status.php',
-                method: 'GET',
-                data: params,
-                dataType: 'json'
-            })
-            .done(function(response) {
+            Ajax.call([{
+                methodname: 'mod_gestionprojet_get_evaluation_status',
+                args: args
+            }])[0].done(function(response) {
                 if (response.success && response.has_evaluation) {
                     self.handleStatusUpdate(response);
                 } else if (!response.success) {
-                    self.showError(response.message || 'Erreur de récupération du statut');
+                    self.showError(response.error_message || response.status_label || 'Erreur de récupération du statut');
                 }
-            })
-            .fail(function() {
+            }).fail(function() {
                 // Don't stop polling on network errors, just log
                 console.warn('Network error while polling AI status');
             });
@@ -372,9 +366,8 @@ define(['jquery', 'core/notification'], function($, Notification) {
          */
         handleStatusUpdate: function(response) {
             var status = response.status;
-            var statusDisplay = response.status_display || {};
 
-            this.updateStatus(statusDisplay.text || status);
+            this.updateStatus(response.status_label || status);
 
             if (status === 'completed' || status === 'applied') {
                 this.updateProgressBar(100);
@@ -431,22 +424,18 @@ define(['jquery', 'core/notification'], function($, Notification) {
             var showKeywordsMissing = $('#show_keywords_missing').is(':checked') ? 1 : 0;
             var showSuggestions = $('#show_suggestions').is(':checked') ? 1 : 0;
 
-            $.ajax({
-                url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/apply_ai_grade.php',
-                method: 'POST',
-                data: {
-                    id: cmid,
+            Ajax.call([{
+                methodname: 'mod_gestionprojet_apply_ai_grade',
+                args: {
+                    cmid: cmid,
                     evaluationid: evaluationid,
-                    sesskey: M.cfg.sesskey,
                     show_feedback: showFeedback,
                     show_criteria: showCriteria,
                     show_keywords_found: showKeywordsFound,
                     show_keywords_missing: showKeywordsMissing,
                     show_suggestions: showSuggestions
-                },
-                dataType: 'json'
-            })
-            .done(function(response) {
+                }
+            }])[0].done(function(response) {
                 if (response.success) {
                     self.updateStatus('Note appliquée !');
                     self.updateProgressBar(100);
@@ -462,9 +451,8 @@ define(['jquery', 'core/notification'], function($, Notification) {
                 } else {
                     self.showError(response.message || 'Erreur lors de l\'application');
                 }
-            })
-            .fail(function() {
-                self.showError('Erreur de connexion au serveur');
+            }).fail(function(ex) {
+                self.showError(ex.message || 'Erreur de connexion au serveur');
             });
         },
 

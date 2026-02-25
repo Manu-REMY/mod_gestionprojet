@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_gestionprojet\output\icon;
+
 // Map step to teacher table.
 $teacherTables = [
     4 => 'gestionprojet_cdcf_teacher',
@@ -54,7 +56,15 @@ if ($submissionDate > 0 || $deadlineDate > 0):
 ?>
 
 <div class="student-dates-display <?php echo $isOverdue ? 'overdue' : ($isDueSoon ? 'due-soon' : ''); ?>">
-    <span class="date-icon"><?php echo $isOverdue ? '&#9888;' : ($isDueSoon ? '&#8987;' : '&#128197;'); ?></span>
+    <span class="date-icon"><?php
+        if ($isOverdue) {
+            echo icon::render('alert-triangle', 'sm', 'red');
+        } else if ($isDueSoon) {
+            echo icon::render('clock', 'sm', 'orange');
+        } else {
+            echo icon::render('calendar-range', 'sm', 'blue');
+        }
+    ?></span>
     <div class="dates-info">
         <?php if ($submissionDate > 0): ?>
         <div class="date-item">

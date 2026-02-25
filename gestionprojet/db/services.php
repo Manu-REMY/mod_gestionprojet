@@ -33,4 +33,76 @@ $functions = [
         'ajax'        => true,
         'capabilities' => 'mod/gestionprojet:grade',
     ],
+
+    'mod_gestionprojet_autosave' => [
+        'classname'    => 'mod_gestionprojet\external\autosave',
+        'methodname'   => 'execute',
+        'description'  => 'Auto-save form data for any step (student or teacher)',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:submit, mod/gestionprojet:configureteacherpages',
+    ],
+
+    'mod_gestionprojet_submit_step' => [
+        'classname'    => 'mod_gestionprojet\external\submit_step',
+        'methodname'   => 'execute',
+        'description'  => 'Submit or unlock a step submission',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:submit, mod/gestionprojet:lock',
+    ],
+
+    'mod_gestionprojet_save_grade' => [
+        'classname'    => 'mod_gestionprojet\external\save_grade',
+        'methodname'   => 'execute',
+        'description'  => 'Save a manual grade and feedback for a step submission',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:grade',
+    ],
+
+    'mod_gestionprojet_evaluate' => [
+        'classname'    => 'mod_gestionprojet\external\evaluate',
+        'methodname'   => 'execute',
+        'description'  => 'Trigger AI evaluation for a submission',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:grade',
+    ],
+
+    'mod_gestionprojet_get_evaluation_status' => [
+        'classname'    => 'mod_gestionprojet\external\get_evaluation_status',
+        'methodname'   => 'execute',
+        'description'  => 'Get AI evaluation status and results for a submission',
+        'type'         => 'read',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:view',
+    ],
+
+    'mod_gestionprojet_apply_ai_grade' => [
+        'classname'    => 'mod_gestionprojet\external\apply_ai_grade',
+        'methodname'   => 'execute',
+        'description'  => 'Apply an AI evaluation grade to a submission with visibility options',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:grade',
+    ],
+
+    'mod_gestionprojet_bulk_reevaluate' => [
+        'classname'    => 'mod_gestionprojet\external\bulk_reevaluate',
+        'methodname'   => 'execute',
+        'description'  => 'Bulk re-evaluate all submissions for a step using AI',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:grade',
+    ],
+
+    'mod_gestionprojet_test_api_connection' => [
+        'classname'    => 'mod_gestionprojet\external\test_api_connection',
+        'methodname'   => 'execute',
+        'description'  => 'Test AI API provider connection',
+        'type'         => 'read',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:configureteacherpages',
+    ],
 ];

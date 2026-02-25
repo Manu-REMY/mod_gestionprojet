@@ -1,0 +1,322 @@
+{{!
+    @template mod_gestionprojet/home
+
+    Home/navigation page for the gestionprojet activity.
+
+    Displays teacher configuration cards, grading links, and student work cards
+    depending on the user's role.
+
+    Context variables required:
+    * cmid - Course module ID
+    * isteacher - Boolean if user is a teacher
+    * cangrade - Boolean if user can grade
+    * teacherpagescomplete - Boolean if teacher pages are all complete
+    * hasusergroup - Boolean if student has a group
+    * usergroupname - Name of the student's group (escaped)
+    * nogrouperror - Boolean if student has no group
+    * groupnotfounderror - Boolean if group ID exists but record not found
+    * groupnotfounderrorid - The group ID that was not found
+    * teachersteps - Array of teacher step cards
+    * gradingsteps - Array of grading step cards (for teacher)
+    * consultationsteps - Array of read-only step cards (for student)
+    * studentsteps - Array of student work step cards
+
+    Icon template variables (rendered SVG HTML):
+    * icon_lock - Lock icon (red, sm)
+    * icon_unlock - Lock-open icon (green, sm)
+    * icon_check - Check-circle icon (green, sm)
+    * icon_incomplete - X-circle icon (orange, sm)
+    * icon_correction - File-text icon (purple, xl)
+    * icon_bot - Bot icon (purple, sm)
+    * icon_pencil - Pencil icon (purple, md)
+    * icon_warning - Alert-triangle icon (orange, sm)
+    * icon_award - Award icon (purple, md)
+    * icon_error - X-circle icon (red, sm)
+    * icon_users - Users icon (blue, sm)
+    * icon_eye - Eye icon (gray, sm)
+    * icon_clipboard - Clipboard-list icon (purple, md)
+    * icon_chevron_left - Chevron-left icon (inherit, sm)
+    * icon_settings - Settings icon (purple, sm)
+    * icon_file_text - File-text icon (purple, sm)
+    * icon_bar_chart_sm - Bar-chart icon (purple, sm)
+    *
+    * dashboard - Teacher dashboard data object (only for teachers):
+    *   * teachercomplete - Number of teacher config steps completed
+    *   * teachertotal - Total number of teacher config steps
+    *   * modelscomplete - Number of correction models completed
+    *   * modelstotal - Total number of correction models
+    *   * totalungraded - Total ungraded submissions across all steps
+    *   * hasungraded - Boolean if there are ungraded submissions
+    *   * hassubmissions - Boolean if there are any submission rows
+    *   * submissions - Array of per-step submission data:
+    *     * stepnum - Step number
+    *     * stepname - Localized step name
+    *     * submitted - Number of submitted items
+    *     * graded - Number of graded items
+    *     * ungraded - Number of ungraded items
+    *     * hasungraded - Boolean if step has ungraded items
+
+    Each step card object:
+    * stepnum - Step number
+    * icon - Rendered SVG icon HTML from icon helper
+    * title - Localized step title
+    * description - Localized step description
+    * islocked - Boolean if step is locked
+    * iscomplete - Boolean if step is complete
+    * hasgrade - Boolean if step has a grade
+    * gradeformatted - Formatted grade string (e.g., "14.5 / 20")
+    * url - URL to navigate to
+
+    Example context (json):
+    {
+        "cmid": 123,
+        "isteacher": true,
+        "cangrade": true,
+        "teacherpagescomplete": true,
+        "hasusergroup": false,
+        "teachersteps": [
+            {
+                "stepnum": 1,
+                "icon": "<svg>...</svg>",
+                "title": "Descriptive Sheet",
+                "description": "Define the project framework",
+                "islocked": false,
+                "iscomplete": true,
+                "url": "view.php?id=123&step=1",
+                "buttonlabel": "Configure"
+            }
+        ],
+        "gradingsteps": [
+            {
+                "stepnum": 4,
+                "icon": "<svg>...</svg>",
+                "title": "Requirements Specification",
+                "gradingurl": "/mod/gestionprojet/grading.php?id=123&step=4"
+            }
+        ]
+    }
+}}
+
+<div class="gestionprojet-home">
+
+    {{#isteacher}}
+        {{! ====== Teacher section ====== }}
+        <div class="section-header">
+            <h2>{{{icon_clipboard}}} {{#str}} navigation_teacher, gestionprojet {{/str}}</h2>
+            <p>{{#str}} step1_desc, gestionprojet {{/str}}, {{#str}} step2_desc, gestionprojet {{/str}}, {{#str}} step3_desc, gestionprojet {{/str}}</p>
+        </div>
+
+        {{! ====== Teacher dashboard ====== }}
+        {{#dashboard}}
+        <div class="gp-dashboard">
+            <div class="gp-dashboard-progress">
+                <div class="gp-progress-segment">
+                    <div class="gp-progress-segment-label">{{{icon_settings}}} {{#str}} dashboard_config, gestionprojet {{/str}}</div>
+                    <div class="gp-progress-segment-value">{{teachercomplete}} / {{teachertotal}}</div>
+                </div>
+                <div class="gp-progress-segment">
+                    <div class="gp-progress-segment-label">{{{icon_file_text}}} {{#str}} dashboard_models, gestionprojet {{/str}}</div>
+                    <div class="gp-progress-segment-value">{{modelscomplete}} / {{modelstotal}}</div>
+                </div>
+                <div class="gp-progress-segment">
+                    <div class="gp-progress-segment-label">{{{icon_bar_chart_sm}}} {{#str}} dashboard_grading, gestionprojet {{/str}}</div>
+                    <div class="gp-progress-segment-value {{#hasungraded}}highlight{{/hasungraded}}">
+                        {{totalungraded}} {{#str}} dashboard_to_grade, gestionprojet {{/str}}
+                    </div>
+                </div>
+            </div>
+            {{#hassubmissions}}
+            <table class="gp-summary-table">
+                <thead>
+                    <tr>
+                        <th>{{#str}} step, gestionprojet {{/str}}</th>
+                        <th>{{#str}} dashboard_submitted, gestionprojet {{/str}}</th>
+                        <th>{{#str}} dashboard_graded, gestionprojet {{/str}}</th>
+                        <th>{{#str}} dashboard_to_grade, gestionprojet {{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#submissions}}
+                    <tr>
+                        <td>{{stepname}}</td>
+                        <td>{{submitted}}</td>
+                        <td>{{graded}}</td>
+                        <td>
+                            {{#hasungraded}}
+                                <span class="gp-badge-ungraded">{{ungraded}}</span>
+                            {{/hasungraded}}
+                            {{^hasungraded}}
+                                {{ungraded}}
+                            {{/hasungraded}}
+                        </td>
+                    </tr>
+                    {{/submissions}}
+                </tbody>
+            </table>
+            {{/hassubmissions}}
+        </div>
+        {{/dashboard}}
+
+        <div class="gestionprojet-cards">
+            {{#teachersteps}}
+                <div class="gestionprojet-card teacher {{#islocked}}locked{{/islocked}}">
+                    <div class="card-icon">{{{icon}}}</div>
+                    <h3 class="card-title">{{title}}</h3>
+                    <p class="card-description">{{description}}</p>
+
+                    {{#islocked}}
+                        <div class="card-status locked">
+                            {{{icon_lock}}} {{#str}} locked, gestionprojet {{/str}}
+                        </div>
+                    {{/islocked}}
+                    {{^islocked}}
+                        {{#iscomplete}}
+                            <div class="card-status complete">
+                                {{{icon_check}}} {{#str}} status_complete, gestionprojet {{/str}}
+                            </div>
+                        {{/iscomplete}}
+                        {{^iscomplete}}
+                            <div class="card-status incomplete">
+                                {{{icon_incomplete}}} {{#str}} status_incomplete, gestionprojet {{/str}}
+                            </div>
+                        {{/iscomplete}}
+                    {{/islocked}}
+
+                    <a href="{{url}}" class="card-button">
+                        {{buttonlabel}}
+                    </a>
+                </div>
+            {{/teachersteps}}
+
+            {{! Correction models card }}
+            <div class="gestionprojet-card teacher correction-models-card">
+                <div class="card-icon">{{{icon_correction}}}</div>
+                <h3 class="card-title">{{#str}} correction_models, gestionprojet {{/str}}</h3>
+                <p class="card-description">{{#str}} correction_models_desc, gestionprojet {{/str}}</p>
+
+                <div class="card-status info">
+                    {{{icon_bot}}} {{#str}} correction_models_info, gestionprojet {{/str}}
+                </div>
+
+                <a href="view.php?id={{cmid}}&page=correctionmodels" class="card-button">
+                    {{#str}} correction_models_configure, gestionprojet {{/str}}
+                </a>
+            </div>
+        </div>
+
+        {{! ====== Grading section ====== }}
+        {{#cangrade}}
+            <div class="grading-section">
+                <div class="section-header">
+                    <h2>{{{icon_pencil}}} {{#str}} navigation_grading, gestionprojet {{/str}}</h2>
+                    <p>{{#str}} grading_desc, gestionprojet {{/str}}</p>
+                </div>
+
+                {{^teacherpagescomplete}}
+                    <div class="alert alert-warning">
+                        {{{icon_warning}}} {{#str}} must_complete_teacher_pages, gestionprojet {{/str}}
+                    </div>
+                {{/teacherpagescomplete}}
+                {{#teacherpagescomplete}}
+                    <div class="grading-cards">
+                        {{#gradingsteps}}
+                            <div class="grading-card">
+                                <div class="card-icon">{{{icon}}}</div>
+                                <h4>{{title}}</h4>
+                                <a href="{{gradingurl}}" class="btn btn-primary">
+                                    {{#str}} navigation_grading, gestionprojet {{/str}}
+                                </a>
+                            </div>
+                        {{/gradingsteps}}
+                    </div>
+                {{/teacherpagescomplete}}
+            </div>
+        {{/cangrade}}
+
+    {{/isteacher}}
+
+    {{^isteacher}}
+        {{! ====== Student section ====== }}
+        <div class="section-header">
+            <h2>{{{icon_award}}} {{#str}} navigation_student, gestionprojet {{/str}}</h2>
+            <p>{{#str}} student_desc, gestionprojet {{/str}}</p>
+        </div>
+
+        {{^teacherpagescomplete}}
+            <div class="alert alert-warning">
+                {{{icon_warning}}} {{#str}} must_complete_teacher_pages, gestionprojet {{/str}}
+            </div>
+        {{/teacherpagescomplete}}
+
+        {{#teacherpagescomplete}}
+            {{#nogrouperror}}
+                <div class="alert alert-danger">
+                    {{{icon_error}}} {{#str}} no_groups, gestionprojet {{/str}}
+                </div>
+            {{/nogrouperror}}
+
+            {{#groupnotfounderror}}
+                <div class="alert alert-danger">
+                    {{{icon_error}}} {{#str}} error_group_not_found, gestionprojet, {{groupnotfounderrorid}} {{/str}}
+                </div>
+            {{/groupnotfounderror}}
+
+            {{#hasusergroup}}
+                <div class="alert alert-info">
+                    {{{icon_users}}} {{#str}} your_group, gestionprojet {{/str}}: <strong>{{usergroupname}}</strong>
+                </div>
+
+                <div class="gestionprojet-cards">
+                    {{! Consultation steps (read-only for students) }}
+                    {{#consultationsteps}}
+                        <div class="gestionprojet-card student consultation">
+                            <div class="card-icon">{{{icon}}}</div>
+                            <h3 class="card-title">{{title}}</h3>
+                            <p class="card-description">{{description}}</p>
+
+                            <div class="card-status view-only">
+                                {{{icon_eye}}} {{#str}} view_only, gestionprojet {{/str}}
+                            </div>
+
+                            <a href="{{url}}" class="card-button">
+                                {{#str}} view, gestionprojet {{/str}}
+                            </a>
+                        </div>
+                    {{/consultationsteps}}
+
+                    {{! Student work steps }}
+                    {{#studentsteps}}
+                        <div class="gestionprojet-card student">
+                            <div class="card-icon">{{{icon}}}</div>
+                            <h3 class="card-title">{{title}}</h3>
+                            <p class="card-description">{{description}}</p>
+
+                            {{#iscomplete}}
+                                <div class="card-status complete">
+                                    {{{icon_check}}} {{#str}} status_complete, gestionprojet {{/str}}
+                                </div>
+                            {{/iscomplete}}
+                            {{^iscomplete}}
+                                <div class="card-status incomplete">
+                                    {{{icon_incomplete}}} {{#str}} status_incomplete, gestionprojet {{/str}}
+                                </div>
+                            {{/iscomplete}}
+
+                            {{#hasgrade}}
+                                <div class="card-status">
+                                    {{#str}} grade, gestionprojet {{/str}}: {{gradeformatted}}
+                                </div>
+                            {{/hasgrade}}
+
+                            <a href="{{url}}" class="card-button">
+                                {{#str}} work, gestionprojet {{/str}}
+                            </a>
+                        </div>
+                    {{/studentsteps}}
+                </div>
+            {{/hasusergroup}}
+        {{/teacherpagescomplete}}
+
+    {{/isteacher}}
+
+</div>

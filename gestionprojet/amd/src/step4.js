@@ -11,7 +11,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification'], function ($, Autosave, Str, Notification) {
+define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification', 'core/ajax'], function ($, Autosave, Str, Notification, Ajax) {
     return {
         init: function (config) {
             var cmid = config.cmid;
@@ -57,27 +57,21 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification']
             });
 
             function submitAction(action) {
-                $.ajax({
-                    url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/submit.php',
-                    method: 'POST',
-                    data: {
-                        id: cmid,
+                Ajax.call([{
+                    methodname: 'mod_gestionprojet_submit_step',
+                    args: {
+                        cmid: cmid,
                         step: step,
-                        action: action,
-                        sesskey: M.cfg.sesskey
-                    },
-                    success: function (response) {
-                        try {
-                            var res = JSON.parse(response);
-                            if (res.success) {
-                                window.location.reload();
-                            } else {
-                                alert('Error: ' + (res.message || 'Unknown error'));
-                            }
-                        } catch (e) {
-                            console.error('Submission error', e);
-                        }
+                        action: action
                     }
+                }])[0].done(function(response) {
+                    if (response.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + (response.message || 'Unknown error'));
+                    }
+                }).fail(function(ex) {
+                    console.error('Submission error', ex);
                 });
             }
 

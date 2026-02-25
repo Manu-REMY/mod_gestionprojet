@@ -5,17 +5,9 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 6: Project report (Student group page)
+ * Step 6: Project Report (Student group page)
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -80,26 +72,12 @@ $isLocked = $isSubmitted; // Lock if submitted
 $canSubmit = $gestionprojet->enable_submission && !$isSubmitted;
 $canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
-// Parse auteurs (stored as JSON array)
-$auteurs = [];
-if ($submission->auteurs) {
-    $auteurs = json_decode($submission->auteurs, true) ?? [];
-}
-
-// Load AMD module.
-$PAGE->requires->js_call_amd('mod_gestionprojet/step6', 'init', [[
-    'cmid' => $cm->id,
-    'step' => 6,
-    'groupid' => $groupid,
-    'autosaveInterval' => $gestionprojet->autosave_interval * 1000,
-    'isLocked' => $isLocked,
-    'auteurs' => $auteurs,
-    'strings' => [
-        'confirm_submission' => get_string('confirm_submission', 'gestionprojet'),
-        'confirm_revert' => get_string('confirm_revert', 'gestionprojet'),
-        'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet'),
-    ],
-]]);
+// Autosave handled inline at bottom of file
+// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
+//     'cmid' => $cm->id,
+//     'step' => 6,
+//     'interval' => $gestionprojet->autosaveinterval * 1000
+// ]]);
 
 echo $OUTPUT->header();
 
@@ -121,11 +99,22 @@ if (!$group) {
     $group->name = get_string('defaultgroup', 'group'); // Generic fallback
 }
 
+// Parse auteurs (stored as JSON array)
+$auteurs = [];
+if ($submission->auteurs) {
+    $auteurs = json_decode($submission->auteurs, true) ?? [];
+}
 ?>
 
 
 
-<div class="step-container">
+<div class="step-container"
+    data-str-member-placeholder="<?php echo s(get_string('step6_member_placeholder', 'gestionprojet')); ?>"
+    data-str-add-member="<?php echo s(get_string('step6_add_member', 'gestionprojet')); ?>"
+    data-str-remove-member="<?php echo s(get_string('step6_remove_member', 'gestionprojet')); ?>"
+    data-str-error-submitting="<?php echo s(get_string('error_submitting', 'gestionprojet')); ?>"
+    data-str-error-reverting="<?php echo s(get_string('error_reverting', 'gestionprojet')); ?>"
+>
     <!-- Navigation -->
     <?php
     $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step6');
@@ -154,8 +143,8 @@ if (!$group) {
 
     <!-- Header -->
     <div class="header-section">
-        <h2>📋 RAPPORT DE PROJET</h2>
-        <p>Technologie - Collège</p>
+        <h2><?php echo get_string('step6_page_title', 'gestionprojet'); ?></h2>
+        <p><?php echo get_string('step6_page_subtitle', 'gestionprojet'); ?></p>
     </div>
 
     <!-- Group info -->
@@ -166,8 +155,8 @@ if (!$group) {
 
     <!-- Info box -->
     <div class="info-box">
-        <p><strong>💡 Ce document regroupe toutes les informations de votre projet</strong></p>
-        <p>Remplissez tous les champs pour obtenir un rapport complet</p>
+        <p><strong><?php echo get_string('step6_info_title', 'gestionprojet'); ?></strong></p>
+        <p><?php echo get_string('step6_info_text', 'gestionprojet'); ?></p>
     </div>
 
     <!-- AI Evaluation Feedback Display -->
@@ -176,14 +165,14 @@ if (!$group) {
     <form id="rapportForm" method="post" action="">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
 
-        <!-- Section 1: General information -->
+        <!-- Section 1: Informations Générales -->
         <div class="report-section">
-            <h2 class="report-section-title">1. INFORMATIONS GÉNÉRALES</h2>
+            <h2 class="report-section-title"><?php echo get_string('step6_section1_title', 'gestionprojet'); ?></h2>
 
             <div class="form-group">
                 <label for="titre_projet"><?php echo get_string('titre_projet', 'gestionprojet'); ?></label>
                 <input type="text" id="titre_projet" name="titre_projet"
-                    value="<?php echo s($submission->titre_projet ?? ''); ?>" placeholder="Nom de votre projet" <?php echo $disabled; ?>>
+                    value="<?php echo s($submission->titre_projet ?? ''); ?>" placeholder="<?php echo get_string('step6_titre_projet_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>>
             </div>
 
             <div class="form-group">
@@ -194,87 +183,87 @@ if (!$group) {
             </div>
         </div>
 
-        <!-- Section 2: The project -->
+        <!-- Section 2: Le Projet -->
         <div class="report-section">
-            <h2 class="report-section-title">2. LE PROJET</h2>
+            <h2 class="report-section-title"><?php echo get_string('step6_section2_title', 'gestionprojet'); ?></h2>
 
             <div class="form-group">
                 <label for="besoin_projet"><?php echo get_string('besoin_projet', 'gestionprojet'); ?></label>
                 <textarea id="besoin_projet" name="besoin_projet"
-                    placeholder="Décrivez le besoin auquel répond votre projet..." <?php echo $disabled; ?>><?php echo s($submission->besoin_projet ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('step6_besoin_projet_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->besoin_projet ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="imperatifs"><?php echo get_string('imperatifs', 'gestionprojet'); ?></label>
                 <textarea id="imperatifs" name="imperatifs"
-                    placeholder="Listez les contraintes et impératifs du projet..." <?php echo $disabled; ?>><?php echo s($submission->imperatifs ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('step6_imperatifs_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->imperatifs ?? ''); ?></textarea>
             </div>
         </div>
 
-        <!-- Section 3: Chosen solutions -->
+        <!-- Section 3: Solutions Choisies -->
         <div class="report-section">
-            <h2 class="report-section-title">3. SOLUTIONS CHOISIES</h2>
+            <h2 class="report-section-title"><?php echo get_string('step6_section3_title', 'gestionprojet'); ?></h2>
 
             <div class="form-group">
                 <label for="solutions"><?php echo get_string('solutions', 'gestionprojet'); ?></label>
-                <textarea id="solutions" name="solutions" placeholder="Décrivez les solutions retenues..." <?php echo $disabled; ?>><?php echo s($submission->solutions ?? ''); ?></textarea>
+                <textarea id="solutions" name="solutions" placeholder="<?php echo get_string('step6_solutions_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->solutions ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="justification"><?php echo get_string('justification', 'gestionprojet'); ?></label>
                 <textarea id="justification" name="justification"
-                    placeholder="Justifiez vos choix techniques et stratégiques..." <?php echo $disabled; ?>><?php echo s($submission->justification ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('step6_justification_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->justification ?? ''); ?></textarea>
             </div>
         </div>
 
-        <!-- Section 4: Implementation -->
+        <!-- Section 4: Réalisation -->
         <div class="report-section">
-            <h2 class="report-section-title">4. RÉALISATION</h2>
+            <h2 class="report-section-title"><?php echo get_string('step6_section4_title', 'gestionprojet'); ?></h2>
 
             <div class="form-group">
                 <label for="realisation"><?php echo get_string('realisation', 'gestionprojet'); ?></label>
-                <textarea id="realisation" name="realisation" placeholder="Comment avez-vous réalisé votre projet ?"
+                <textarea id="realisation" name="realisation" placeholder="<?php echo get_string('step6_realisation_placeholder', 'gestionprojet'); ?>"
                     <?php echo $disabled; ?>><?php echo s($submission->realisation ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="difficultes"><?php echo get_string('difficultes', 'gestionprojet'); ?></label>
                 <textarea id="difficultes" name="difficultes"
-                    placeholder="Quelles difficultés avez-vous rencontrées et comment les avez-vous surmontées ?" <?php echo $disabled; ?>><?php echo s($submission->difficultes ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('step6_difficultes_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->difficultes ?? ''); ?></textarea>
             </div>
         </div>
 
-        <!-- Section 5: Validation and results -->
+        <!-- Section 5: Validation et Résultats -->
         <div class="report-section">
-            <h2 class="report-section-title">5. VALIDATION ET RÉSULTATS</h2>
+            <h2 class="report-section-title"><?php echo get_string('step6_section5_title', 'gestionprojet'); ?></h2>
 
             <div class="form-group">
                 <label for="validation"><?php echo get_string('validation', 'gestionprojet'); ?></label>
                 <textarea id="validation" name="validation"
-                    placeholder="Décrivez les résultats de vos tests et essais..." <?php echo $disabled; ?>><?php echo s($submission->validation ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('step6_validation_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->validation ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="ameliorations"><?php echo get_string('ameliorations', 'gestionprojet'); ?></label>
                 <textarea id="ameliorations" name="ameliorations"
-                    placeholder="Quelles améliorations pourriez-vous apporter au projet ?" <?php echo $disabled; ?>><?php echo s($submission->ameliorations ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('step6_ameliorations_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->ameliorations ?? ''); ?></textarea>
             </div>
         </div>
 
         <!-- Section 6: Conclusion -->
         <div class="report-section">
-            <h2 class="report-section-title">6. CONCLUSION</h2>
+            <h2 class="report-section-title"><?php echo get_string('step6_section6_title', 'gestionprojet'); ?></h2>
 
             <div class="form-group">
                 <label for="bilan"><?php echo get_string('bilan', 'gestionprojet'); ?></label>
                 <textarea id="bilan" name="bilan"
-                    placeholder="Quel est votre bilan global du projet ? Qu'avez-vous appris ?" <?php echo $disabled; ?>><?php echo s($submission->bilan ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('step6_bilan_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->bilan ?? ''); ?></textarea>
             </div>
 
             <div class="form-group">
                 <label for="perspectives"><?php echo get_string('perspectives', 'gestionprojet'); ?></label>
                 <textarea id="perspectives" name="perspectives"
-                    placeholder="Quelles sont les perspectives d'évolution du projet ?" <?php echo $disabled; ?>><?php echo s($submission->perspectives ?? ''); ?></textarea>
+                    placeholder="<?php echo get_string('step6_perspectives_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->perspectives ?? ''); ?></textarea>
             </div>
         </div>
 
@@ -292,7 +281,7 @@ if (!$group) {
                 </button>
             <?php endif; ?>
 
-            <button type="button" class="btn-export btn-export-margin" id="exportPdfBtn">
+            <button type="button" class="btn-export btn-export-margin" onclick="exportPDF()">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
             </button>
             <p class="export-notice">
@@ -301,6 +290,219 @@ if (!$group) {
         </div>
     </form>
 </div>
+
+<?php
+// Ensure jQuery is loaded
+$PAGE->requires->jquery();
+?>
+
+<script>
+    // Wait for jQuery to be loaded
+    // Wait for RequireJS and jQuery
+    (function waitRequire() {
+        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
+            setTimeout(waitRequire, 50);
+            return;
+        }
+
+        require(['jquery', 'core/ajax', 'mod_gestionprojet/autosave'], function ($, Ajax, Autosave) {
+            var cmid = <?php echo $cm->id; ?>;
+            var step = 6;
+            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+            var groupid = <?php echo $groupid; ?>;
+            var stepContainer = document.querySelector('.step-container');
+            var strErrorSubmitting = stepContainer.dataset.strErrorSubmitting;
+            var strErrorReverting = stepContainer.dataset.strErrorReverting;
+
+            // Custom serialization for step 6
+            var serializeData = function () {
+                var formData = {};
+
+                // Collect regular fields (text inputs, textareas)
+                $('#rapportForm').find('input[type="text"], textarea').each(function () {
+                    if (this.name) {
+                        formData[this.name] = this.value;
+                    }
+                });
+
+                // Collect authors as JSON array
+                // members is defined globally in the script below
+                if (typeof members !== 'undefined') {
+                    formData['auteurs'] = JSON.stringify(members.filter(function (m) {
+                        return m.trim() !== '';
+                    }));
+                } else {
+                    formData['auteurs'] = '[]';
+                }
+
+                return formData;
+            };
+
+            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
+
+            // Handle Submission
+            $('#submitButton').on('click', function () {
+                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
+                    Ajax.call([{
+                        methodname: 'mod_gestionprojet_submit_step',
+                        args: {
+                            cmid: cmid,
+                            step: step,
+                            action: 'submit'
+                        }
+                    }])[0].done(function (data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(strErrorSubmitting);
+                        }
+                    }).fail(function () {
+                        alert(strErrorSubmitting);
+                    });
+                }
+            });
+
+            // Handle Revert
+            $('#revertButton').on('click', function () {
+                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
+                    Ajax.call([{
+                        methodname: 'mod_gestionprojet_submit_step',
+                        args: {
+                            cmid: cmid,
+                            step: step,
+                            action: 'revert'
+                        }
+                    }])[0].done(function (data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(strErrorReverting);
+                        }
+                    }).fail(function () {
+                        alert(strErrorReverting);
+                    });
+                }
+            });
+
+            if (!isLocked) {
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
+                    interval: autosaveInterval,
+                    formSelector: '#rapportForm',
+                    serialize: serializeData
+                });
+            }
+
+            // We need to trigger autosave when members change
+            // The Autosave module listens for 'change input' on the form, so this should work automatically if not locked.
+        });
+    })();
+
+    // Members management
+    let members = <?php echo json_encode($auteurs); ?>;
+    let isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
+
+    // Get translated strings from data attributes
+    const step6Container = document.querySelector('.step-container');
+    const STR6 = {
+        memberPlaceholder: step6Container.dataset.strMemberPlaceholder,
+        addMember: step6Container.dataset.strAddMember,
+        removeMember: step6Container.dataset.strRemoveMember
+    };
+
+    if (members.length === 0) {
+        members = [''];
+    }
+
+    function renderMembers() {
+        const container = document.getElementById('membersContainer');
+        container.innerHTML = '';
+
+        members.forEach((member, index) => {
+            const memberGroup = document.createElement('div');
+            memberGroup.className = 'member-group';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = STR6.memberPlaceholder;
+            input.value = member;
+            if (isLocked) {
+                input.disabled = true;
+                input.readOnly = true;
+            } else {
+                input.onchange = (e) => {
+                    members[index] = e.target.value;
+                    // Trigger auto-save
+                    const event = new Event('change', { bubbles: true });
+                    document.getElementById('rapportForm').dispatchEvent(event);
+                };
+            }
+
+            memberGroup.appendChild(input);
+
+            if (!isLocked) {
+                if (index === members.length - 1) {
+                    const addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'btn-circle btn-add-circle';
+                    addBtn.innerHTML = '+';
+                    addBtn.title = STR6.addMember;
+                    addBtn.onclick = () => {
+                        members.push('');
+                        renderMembers();
+                    };
+                    memberGroup.appendChild(addBtn);
+                } else {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn-circle btn-remove-circle';
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.title = STR6.removeMember;
+                    removeBtn.onclick = () => {
+                        if (members.length > 1) {
+                            members.splice(index, 1);
+                            renderMembers();
+                        }
+                    };
+                    memberGroup.appendChild(removeBtn);
+                }
+            }
+
+            container.appendChild(memberGroup);
+        });
+    }
+
+    // Custom data collection for auto-save (auteurs as JSON array)
+    window.collectFormData = function () {
+        const formData = {};
+        const form = document.getElementById('rapportForm');
+
+        // Regular fields (text inputs, textareas)
+        form.querySelectorAll('input[type="text"], textarea').forEach(field => {
+            if (field.name) {
+                formData[field.name] = field.value;
+            }
+        });
+
+        // Collect authors as JSON array
+        formData['auteurs'] = JSON.stringify(members.filter(m => m.trim() !== ''));
+
+        return formData;
+    };
+
+    // PDF Export placeholder (will use TCPDF server-side in future)
+    function exportPDF() {
+        alert('<?php echo get_string('export_pdf_coming_soon', 'gestionprojet'); ?>');
+        // TODO: Implement server-side PDF generation with TCPDF
+    }
+
+    // Initialize members on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        renderMembers();
+    });
+</script>
 
 <?php
 echo $OUTPUT->footer();

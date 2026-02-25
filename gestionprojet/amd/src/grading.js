@@ -1,296 +1,332 @@
-/*
- * This file is part of Moodle - http://moodle.org/
- *
- * Moodle is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * @package    mod_gestionprojet
- * @copyright  2026 Emmanuel REMY
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Grading interface module for the teacher grading page.
+ * Grading page interactions for mod_gestionprojet.
  *
- * Handles:
- * - Auto-refresh when AI evaluation is pending/processing
- * - AI progress initialization and evaluation button handlers
- * - Unlock submission functionality
- * - Bulk reevaluate functionality
- * - Apply-with-modifications button (pre-fills grade form)
+ * Handles toggle sections, AI trigger/apply/retry buttons,
+ * unlock submission, bulk reevaluate, and auto-reload for pending evaluations.
  *
  * @module     mod_gestionprojet/grading
  * @copyright  2026 Emmanuel REMY
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'mod_gestionprojet/ai_progress', 'mod_gestionprojet/notifications'], function($, AIProgress, Notifications) {
+define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
+
+    var config = {};
 
     /**
-     * Helper to set a button into its loading state (spinner + text).
+     * Toggle a collapsible section.
      *
-     * @param {HTMLElement} btn The button element
-     * @param {String} text The loading text to display
+     * @param {HTMLElement} toggleElement The toggle header element.
      */
-    var setButtonLoading = function(btn, text) {
+    function toggleSection(toggleElement) {
+        toggleElement.classList.toggle('collapsed');
+        var content = toggleElement.nextElementSibling;
+        if (content) {
+            content.classList.toggle('collapsed');
+        }
+    }
+
+    /**
+     * Set a button to loading state.
+     *
+     * @param {HTMLElement} btn The button element.
+     * @param {String} loadingText Text to show during loading.
+     * @return {Array} Original child nodes for restoration.
+     */
+    function setButtonLoading(btn, loadingText) {
+        // Save original children by cloning.
+        var originalNodes = [];
+        var i;
+        for (i = 0; i < btn.childNodes.length; i++) {
+            originalNodes.push(btn.childNodes[i].cloneNode(true));
+        }
+
+        // Clear and set loading state.
+        btn.disabled = true;
+        while (btn.firstChild) {
+            btn.removeChild(btn.firstChild);
+        }
+
         var spinner = document.createElement('span');
         spinner.className = 'spinner-border spinner-border-sm';
         spinner.setAttribute('role', 'status');
-        spinner.setAttribute('aria-hidden', 'true');
-        while (btn.firstChild) {
-            btn.removeChild(btn.firstChild);
-        }
         btn.appendChild(spinner);
-        btn.appendChild(document.createTextNode(' ' + text));
-    };
+        btn.appendChild(document.createTextNode(' ' + (loadingText || '...')));
+
+        return originalNodes;
+    }
 
     /**
-     * Helper to reset a button to its default state with an emoji prefix.
+     * Restore a button from loading state.
      *
-     * @param {HTMLElement} btn The button element
-     * @param {String} emoji The emoji prefix
-     * @param {String} label The button label text
+     * @param {HTMLElement} btn The button element.
+     * @param {Array} originalNodes The saved child nodes.
      */
-    var resetButton = function(btn, emoji, label) {
+    function restoreButton(btn, originalNodes) {
+        btn.disabled = false;
         while (btn.firstChild) {
             btn.removeChild(btn.firstChild);
         }
-        btn.appendChild(document.createTextNode(emoji + ' ' + label));
-    };
+        var i;
+        for (i = 0; i < originalNodes.length; i++) {
+            btn.appendChild(originalNodes[i]);
+        }
+    }
+
+    /**
+     * Set up all collapsible section toggles via event delegation.
+     */
+    function initToggles() {
+        document.addEventListener('click', function(e) {
+            var toggle = e.target.closest('.ai-section-toggle');
+            if (toggle) {
+                e.preventDefault();
+                toggleSection(toggle);
+            }
+        });
+    }
+
+    /**
+     * Set up the AI trigger evaluation button.
+     */
+    function initTriggerButton() {
+        var triggerBtn = document.getElementById('btn-trigger-ai-eval');
+        if (!triggerBtn) {
+            return;
+        }
+
+        triggerBtn.addEventListener('click', function() {
+            var btn = this;
+            if (typeof require !== 'undefined') {
+                require(['mod_gestionprojet/ai_progress'], function(AIProgress) {
+                    AIProgress.triggerEvaluation(
+                        parseInt(btn.dataset.cmid),
+                        parseInt(btn.dataset.step),
+                        parseInt(btn.dataset.submissionid)
+                    );
+                });
+            }
+        });
+    }
+
+    /**
+     * Set up the apply AI grade button.
+     */
+    function initApplyButton() {
+        var applyBtn = document.getElementById('btn-apply-ai-grade');
+        if (!applyBtn) {
+            return;
+        }
+
+        applyBtn.addEventListener('click', function() {
+            var btn = this;
+            if (typeof require !== 'undefined') {
+                require(['mod_gestionprojet/ai_progress'], function(AIProgress) {
+                    AIProgress.applyGrade(
+                        parseInt(btn.dataset.cmid),
+                        parseInt(btn.dataset.evaluationid)
+                    );
+                });
+            }
+        });
+    }
+
+    /**
+     * Set up the retry AI evaluation button.
+     */
+    function initRetryButton() {
+        var retryBtn = document.getElementById('btn-retry-ai-eval');
+        if (!retryBtn) {
+            return;
+        }
+
+        retryBtn.addEventListener('click', function() {
+            if (typeof require !== 'undefined') {
+                require(['mod_gestionprojet/ai_progress'], function(AIProgress) {
+                    AIProgress.retryEvaluation(
+                        config.cmid,
+                        config.step,
+                        config.submissionid
+                    );
+                });
+            }
+        });
+    }
+
+    /**
+     * Set up the "apply with modifications" button.
+     * Fills the manual grade form with AI values.
+     */
+    function initModifyButton() {
+        var modifyBtn = document.querySelector('.btn-ai-modify');
+        if (!modifyBtn) {
+            return;
+        }
+
+        modifyBtn.addEventListener('click', function() {
+            var gradeInput = document.getElementById('grade');
+            var feedbackInput = document.getElementById('feedback');
+
+            if (gradeInput) {
+                gradeInput.value = this.dataset.grade || '';
+            }
+            if (feedbackInput) {
+                feedbackInput.value = this.dataset.feedback || '';
+            }
+            if (gradeInput) {
+                gradeInput.focus();
+            }
+        });
+    }
+
+    /**
+     * Set up the unlock submission button.
+     */
+    function initUnlockButton() {
+        var unlockBtn = document.getElementById('btn-unlock-submission');
+        if (!unlockBtn) {
+            return;
+        }
+
+        unlockBtn.addEventListener('click', function() {
+            var confirmMsg = config.strings.confirm_unlock || 'Are you sure?';
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            var btn = this;
+            var saved = setButtonLoading(btn, '...');
+
+            Ajax.call([{
+                methodname: 'mod_gestionprojet_submit_step',
+                args: {
+                    cmid: parseInt(btn.dataset.cmid),
+                    step: parseInt(btn.dataset.step),
+                    action: 'unlock'
+                }
+            }])[0].done(function(data) {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    var errorMsg = config.strings.error || 'Error';
+                    alert(data.message || errorMsg);
+                    restoreButton(btn, saved);
+                }
+            }).fail(function() {
+                var networkMsg = config.strings.network_error || 'Network error';
+                alert(networkMsg);
+                restoreButton(btn, saved);
+            });
+        });
+    }
+
+    /**
+     * Set up the bulk reevaluate button.
+     */
+    function initBulkReevaluateButton() {
+        var bulkBtn = document.getElementById('btn-bulk-reevaluate');
+        if (!bulkBtn) {
+            return;
+        }
+
+        bulkBtn.addEventListener('click', function() {
+            var confirmMsg = config.strings.confirm_bulk || 'Are you sure?';
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            var btn = this;
+            var processingMsg = config.strings.bulk_processing || 'Processing...';
+            var saved = setButtonLoading(btn, processingMsg);
+
+            Ajax.call([{
+                methodname: 'mod_gestionprojet_bulk_reevaluate',
+                args: {
+                    cmid: parseInt(btn.dataset.cmid),
+                    step: parseInt(btn.dataset.step)
+                }
+            }])[0].done(function(data) {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    var errorMsg = config.strings.error || 'Error';
+                    alert(data.message || errorMsg);
+                    restoreButton(btn, saved);
+                }
+            }).fail(function() {
+                var networkMsg = config.strings.network_error || 'Network error';
+                alert(networkMsg);
+                restoreButton(btn, saved);
+            });
+        });
+    }
+
+    /**
+     * Set up the item selector dropdown for navigation.
+     */
+    function initItemSelector() {
+        var selector = document.getElementById('grading-item-selector');
+        if (!selector) {
+            return;
+        }
+
+        selector.addEventListener('change', function() {
+            if (this.value) {
+                window.location.href = this.value;
+            }
+        });
+    }
+
+    /**
+     * Set up auto-reload for pending AI evaluations.
+     */
+    function initAutoReload() {
+        var pendingEl = document.querySelector('.ai-pending[data-auto-reload]');
+        if (!pendingEl) {
+            return;
+        }
+
+        var delay = parseInt(pendingEl.dataset.autoReload) || 10000;
+        setTimeout(function() {
+            location.reload();
+        }, delay);
+    }
 
     return {
         /**
-         * Initialize the grading page functionality.
+         * Initialize grading page interactions.
          *
-         * @param {Object} config Configuration object passed from PHP
-         * @param {Number} config.cmid Course module ID
-         * @param {Number} config.step Current step number
-         * @param {Number} config.submissionId Submission ID (0 if none)
-         * @param {Boolean} config.aiEnabled Whether AI evaluation is enabled
-         * @param {String} config.aiStatus AI evaluation status (empty if no evaluation)
-         * @param {Number} config.parsedGrade Parsed AI grade for apply-with-modifications
-         * @param {String} config.parsedFeedback Parsed AI feedback for apply-with-modifications
-         * @param {String} config.confirmUnlockMsg Confirmation message for unlocking submission
-         * @param {String} config.confirmBulkMsg Confirmation message for bulk reevaluate
-         * @param {String} config.errorMsg Generic error message
-         * @param {String} config.networkErrorMsg Network error message
-         * @param {String} config.unlockBtnLabel Label for unlock button
-         * @param {String} config.bulkBtnLabel Label for bulk reevaluate button
-         * @param {String} config.bulkProcessingLabel Label shown during bulk processing
+         * @param {Object} cfg Configuration object from PHP.
          */
-        init: function(config) {
-            var cmid = config.cmid;
-            var step = config.step;
-            var submissionId = config.submissionId || 0;
+        init: function(cfg) {
+            config = cfg || {};
+            config.strings = config.strings || {};
 
-            // Initialize notifications.
-            Notifications.init();
-
-            // Initialize AI progress.
-            AIProgress.init({
-                cmid: cmid,
-                step: step,
-                submissionid: submissionId,
-                containerSelector: '#ai-progress-container'
-            });
-
-            // Script Block 1: Auto-refresh when AI evaluation is pending or processing.
-            if (config.aiStatus === 'pending' || config.aiStatus === 'processing') {
-                setTimeout(function() {
-                    location.reload();
-                }, 10000);
-            }
-
-            // Script Block 2: AI evaluation button event handlers.
-            this._bindAIButtons(cmid, step, submissionId);
-
-            // Apply-with-modifications button (replaces inline onclick).
-            this._bindApplyModified(config.parsedGrade, config.parsedFeedback);
-
-            // Script Block 3: Unlock submission and bulk reevaluate.
-            this._bindUnlockButton(config);
-            this._bindBulkReevaluateButton(config);
-        },
-
-        /**
-         * Bind AI evaluation button event handlers.
-         *
-         * @param {Number} cmid Course module ID
-         * @param {Number} step Step number
-         * @param {Number} submissionId Submission ID
-         * @private
-         */
-        _bindAIButtons: function(cmid, step, submissionId) {
-            // Trigger AI evaluation button.
-            var triggerBtn = document.getElementById('btn-trigger-ai-eval');
-            if (triggerBtn) {
-                $(triggerBtn).on('click', function() {
-                    var btn = $(this);
-                    AIProgress.triggerEvaluation(
-                        parseInt(btn.data('cmid'), 10),
-                        parseInt(btn.data('step'), 10),
-                        parseInt(btn.data('submissionid'), 10)
-                    );
-                });
-            }
-
-            // Apply AI grade button.
-            var applyBtn = document.getElementById('btn-apply-ai-grade');
-            if (applyBtn) {
-                $(applyBtn).on('click', function() {
-                    var btn = $(this);
-                    AIProgress.applyGrade(
-                        parseInt(btn.data('cmid'), 10),
-                        parseInt(btn.data('evaluationid'), 10)
-                    );
-                });
-            }
-
-            // Retry AI evaluation button.
-            var retryBtn = document.getElementById('btn-retry-ai-eval');
-            if (retryBtn) {
-                $(retryBtn).on('click', function() {
-                    AIProgress.retryEvaluation(
-                        cmid,
-                        step,
-                        submissionId
-                    );
-                });
-            }
-        },
-
-        /**
-         * Bind the apply-with-modifications button to pre-fill the grading form.
-         *
-         * @param {Number} parsedGrade The AI-parsed grade
-         * @param {String} parsedFeedback The AI-parsed feedback
-         * @private
-         */
-        _bindApplyModified: function(parsedGrade, parsedFeedback) {
-            var applyModifiedBtn = document.getElementById('btn-apply-modified');
-            if (applyModifiedBtn) {
-                $(applyModifiedBtn).on('click', function() {
-                    var gradeInput = document.getElementById('grade');
-                    var feedbackInput = document.getElementById('feedback');
-                    if (gradeInput) {
-                        gradeInput.value = parsedGrade;
-                    }
-                    if (feedbackInput) {
-                        feedbackInput.value = parsedFeedback;
-                    }
-                    if (gradeInput) {
-                        gradeInput.focus();
-                    }
-                });
-            }
-        },
-
-        /**
-         * Bind the unlock submission button.
-         *
-         * @param {Object} config Configuration object
-         * @private
-         */
-        _bindUnlockButton: function(config) {
-            var unlockBtn = document.getElementById('btn-unlock-submission');
-            if (!unlockBtn) {
-                return;
-            }
-
-            $(unlockBtn).on('click', function() {
-                if (!confirm(config.confirmUnlockMsg)) {
-                    return;
-                }
-
-                var btn = this;
-                btn.disabled = true;
-                setButtonLoading(btn, '...');
-
-                var formData = new FormData();
-                formData.append('cmid', btn.dataset.cmid);
-                formData.append('step', btn.dataset.step);
-                formData.append('action', 'unlock');
-                formData.append('groupid', btn.dataset.groupid);
-                formData.append('userid', btn.dataset.userid);
-                formData.append('sesskey', M.cfg.sesskey);
-
-                fetch(M.cfg.wwwroot + '/mod/gestionprojet/ajax/submit_step.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.message || config.errorMsg);
-                        btn.disabled = false;
-                        resetButton(btn, '\uD83D\uDD13', config.unlockBtnLabel);
-                    }
-                })
-                .catch(function(error) {
-                    console.error('Error:', error);
-                    alert(config.networkErrorMsg);
-                    btn.disabled = false;
-                    resetButton(btn, '\uD83D\uDD13', config.unlockBtnLabel);
-                });
-            });
-        },
-
-        /**
-         * Bind the bulk reevaluate button.
-         *
-         * @param {Object} config Configuration object
-         * @private
-         */
-        _bindBulkReevaluateButton: function(config) {
-            var bulkReevalBtn = document.getElementById('btn-bulk-reevaluate');
-            if (!bulkReevalBtn) {
-                return;
-            }
-
-            $(bulkReevalBtn).on('click', function() {
-                if (!confirm(config.confirmBulkMsg)) {
-                    return;
-                }
-
-                var btn = this;
-                btn.disabled = true;
-                setButtonLoading(btn, config.bulkProcessingLabel);
-
-                var formData = new FormData();
-                formData.append('id', btn.dataset.cmid);
-                formData.append('step', btn.dataset.step);
-                formData.append('sesskey', M.cfg.sesskey);
-
-                fetch(M.cfg.wwwroot + '/mod/gestionprojet/ajax/bulk_reevaluate.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data.success) {
-                        alert(data.message);
-                        location.reload();
-                    } else {
-                        alert(data.message || config.errorMsg);
-                        btn.disabled = false;
-                        resetButton(btn, '\uD83D\uDD04', config.bulkBtnLabel);
-                    }
-                })
-                .catch(function(error) {
-                    console.error('Error:', error);
-                    alert(config.networkErrorMsg);
-                    btn.disabled = false;
-                    resetButton(btn, '\uD83D\uDD04', config.bulkBtnLabel);
-                });
-            });
+            initToggles();
+            initTriggerButton();
+            initApplyButton();
+            initRetryButton();
+            initModifyButton();
+            initUnlockButton();
+            initBulkReevaluateButton();
+            initItemSelector();
+            initAutoReload();
         }
     };
 });

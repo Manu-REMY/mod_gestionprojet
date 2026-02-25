@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AI Response Parser for Gestion de Projet.
+ * AI Response Parser for Project Management.
  *
  * Parses and validates AI evaluation responses.
  *

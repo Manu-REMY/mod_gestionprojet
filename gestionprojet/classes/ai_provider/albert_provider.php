@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Albert Provider for Gestion de Projet.
+ * Albert Provider for Project Management.
  *
  * Implements the AI provider interface for Albert (Etalab) API.
  * Albert is the French government's AI service with an OpenAI-compatible API.
