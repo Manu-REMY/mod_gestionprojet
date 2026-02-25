@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Home page content for gestionprojet.
@@ -21,181 +29,10 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
 
 ?>
 
-<style>
-    .gestionprojet-home {
-        max-width: 1400px;
-        margin: 0 auto;
-    }
-
-    .gestionprojet-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 30px;
-        margin: 30px 0;
-    }
-
-    .gestionprojet-card {
-        background: white;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        border-top: 5px solid;
-        position: relative;
-    }
-
-    .gestionprojet-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .gestionprojet-card.teacher {
-        border-top-color: #667eea;
-    }
-
-    .gestionprojet-card.student {
-        border-top-color: #48bb78;
-    }
-
-    .gestionprojet-card.locked {
-        opacity: 0.7;
-    }
-
-    .card-icon {
-        font-size: 48px;
-        text-align: center;
-        margin-bottom: 15px;
-    }
-
-    .card-title {
-        font-size: 22px;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 10px;
-        text-align: center;
-    }
-
-    .card-description {
-        color: #666;
-        line-height: 1.6;
-        margin-bottom: 15px;
-        text-align: center;
-    }
-
-    .card-status {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 8px;
-        border-radius: 6px;
-        font-size: 14px;
-        margin-bottom: 15px;
-    }
-
-    .card-status.complete {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .card-status.incomplete {
-        background: #fff3cd;
-        color: #856404;
-    }
-
-    .card-status.locked {
-        background: #f8d7da;
-        color: #721c24;
-    }
-
-    .card-status.info {
-        background: #e7f3ff;
-        color: #0056b3;
-    }
-
-    .correction-models-card {
-        border-top-color: #17a2b8 !important;
-    }
-
-    .card-button {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        text-align: center;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-
-    .card-button:hover {
-        transform: scale(1.02);
-        color: white;
-        text-decoration: none;
-    }
-
-    .card-button:disabled,
-    .card-button.disabled {
-        background: #ccc;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .section-header {
-        margin: 40px 0 20px;
-        padding-bottom: 10px;
-        border-bottom: 3px solid #667eea;
-    }
-
-    .section-header h2 {
-        color: #667eea;
-        font-size: 28px;
-        margin: 0;
-    }
-
-    .section-header p {
-        color: #666;
-        margin: 5px 0 0;
-    }
-
-    .grading-section {
-        margin-top: 40px;
-        padding: 25px;
-        background: #f8f9fa;
-        border-radius: 12px;
-    }
-
-    .grading-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    .grading-card {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .grading-card h4 {
-        color: #667eea;
-        margin-bottom: 15px;
-    }
-
-    .alert-warning {
-        margin: 20px 0;
-    }
-</style>
-
 <div class="gestionprojet-home">
 
     <?php if ($isteacher): ?>
-        <!-- Section Enseignant -->
+        <!-- Teacher section -->
         <div class="section-header">
             <h2>📋 <?php echo get_string('navigation_teacher', 'gestionprojet'); ?></h2>
             <p><?php echo get_string('step1_desc', 'gestionprojet') . ', ' .
@@ -262,7 +99,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
                 </div>
             <?php endforeach; ?>
 
-            <!-- Bouton Modèles de correction -->
+            <!-- Correction models button -->
             <div class="gestionprojet-card teacher correction-models-card">
                 <div class="card-icon">📝</div>
                 <h3 class="card-title"><?php echo get_string('correction_models', 'gestionprojet'); ?></h3>
@@ -278,7 +115,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
             </div>
         </div>
 
-        <!-- Section Correction -->
+        <!-- Grading section -->
         <?php if ($cangrade): ?>
             <div class="grading-section">
                 <div class="section-header">
@@ -326,7 +163,7 @@ $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
         <?php endif; ?>
 
     <?php else: ?>
-        <!-- Section Élève -->
+        <!-- Student section -->
         <div class="section-header">
             <h2>🎯 <?php echo get_string('navigation_student', 'gestionprojet'); ?></h2>
             <p>Complétez votre projet en 3 étapes</p>

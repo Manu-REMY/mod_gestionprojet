@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * French language strings for mod_gestionprojet.
@@ -16,14 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// Module principal
+// Main module
 $string['modulename'] = 'Gestion de Projet';
 $string['modulenameplural'] = 'Gestions de Projet';
 $string['modulename_help'] = 'Le module Gestion de Projet permet aux enseignants de créer des projets pédagogiques structurés en 6 étapes. Les enseignants configurent les 3 premières étapes, puis les élèves (individuellement ou en groupe) complètent les 3 dernières.';
 $string['pluginname'] = 'Gestion de Projet';
 $string['pluginadministration'] = 'Administration Gestion de Projet';
 
-// Capacités
+// Capabilities
 $string['gestionprojet:addinstance'] = 'Ajouter une nouvelle activité Gestion de Projet';
 $string['gestionprojet:view'] = 'Voir l\'activité Gestion de Projet';
 $string['gestionprojet:configureteacherpages'] = 'Configurer les pages enseignant';
@@ -40,7 +48,7 @@ $string['navigation_teacher'] = 'Configuration Enseignant';
 $string['navigation_student'] = 'Travail Élève';
 $string['navigation_grading'] = 'Correction';
 
-// Les 6 étapes
+// The 6 steps
 $string['step1'] = 'Fiche Descriptive';
 $string['step2'] = 'Expression du Besoin';
 $string['step3'] = 'Planification';
@@ -59,7 +67,7 @@ $string['step7_desc'] = 'Diagramme Bête à Corne (élèves)';
 $string['step8'] = 'Carnet de bord';
 $string['step8_desc'] = 'Journal de bord du projet (élèves)';
 
-// Formulaire de configuration
+// Configuration form
 $string['activesteps'] = 'Étapes actives';
 $string['submissionsettings'] = 'Paramètres de soumission';
 $string['groupsubmission'] = 'Soumission de groupe';
@@ -67,7 +75,7 @@ $string['enable_submission'] = 'Activer la soumission';
 $string['autosave_interval'] = 'Intervalle de sauvegarde automatique';
 $string['autosave_interval_help'] = 'Fréquence de sauvegarde automatique en secondes (recommandé: 30s)';
 
-// Fiche Descriptive
+// Descriptive sheet
 $string['intitule'] = 'Intitulé du projet';
 $string['niveau'] = 'Niveau scolaire';
 $string['support'] = 'Support pédagogique';
@@ -79,7 +87,7 @@ $string['evaluation'] = 'Modalités d\'évaluation';
 $string['competences'] = 'Compétences travaillées';
 $string['image'] = 'Image du projet';
 
-// Expression du Besoin
+// Needs expression
 $string['aqui'] = 'À qui rend-il service ?';
 $string['surquoi'] = 'Sur quoi agit-il ?';
 $string['dansquelbut'] = 'Dans quel but ?';
@@ -90,7 +98,7 @@ $string['aqui_help'] = 'Identifier les utilisateurs ou bénéficiaires du produi
 $string['surquoi_help'] = 'Définir l\'objet ou le système sur lequel le produit intervient';
 $string['dansquelbut_help'] = 'Préciser l\'objectif principal du produit';
 
-// Planification
+// Planning
 $string['projectname'] = 'Nom du projet';
 $string['startdate'] = 'Date de début';
 $string['enddate'] = 'Date de fin';
@@ -112,14 +120,14 @@ $string['hours_per_week_info'] = 'Base : 1,5h par semaine en classe';
 $string['timeline_preview'] = 'Aperçu de la timeline';
 $string['finish'] = 'Terminer';
 
-// Cahier des Charges
+// Requirements specification
 $string['produit'] = 'Produit';
 $string['milieu'] = 'Milieu d\'utilisation';
 $string['interacteurs'] = 'Interacteurs';
 $string['fonction_principale'] = 'Fonction principale (FP)';
 $string['fonctions_contraintes'] = 'Fonctions contraintes (FC)';
 
-// Fiche Essai (Step 5)
+// Trial sheet (Step 5)
 $string['nom_essai'] = 'Nom de l\'essai';
 $string['nom_essai_placeholder'] = 'Entrez le nom de l\'essai';
 $string['date'] = 'Date';
@@ -141,7 +149,7 @@ $string['critere'] = 'Critère d\'appréciation';
 $string['niveau_attendu'] = 'Niveau attendu';
 $string['unite'] = 'Unité';
 
-// Rapport de Projet (Step 6)
+// Project report (Step 6)
 $string['titre_projet'] = 'Titre du projet';
 $string['membres_groupe'] = 'Membres du groupe';
 $string['besoin_projet'] = 'À quel besoin répond le projet';
@@ -158,14 +166,14 @@ $string['auteurs'] = 'Auteurs';
 $string['besoins'] = 'Besoins';
 $string['contraintes'] = 'Contraintes';
 
-// Fiche Essai
+// Trial sheet
 $string['objectif'] = 'Objectif de l\'essai';
 $string['protocole'] = 'Protocole expérimental';
 $string['precautions'] = 'Précautions';
 $string['resultats'] = 'Résultats et observations';
 $string['conclusion'] = 'Conclusion';
 
-// Rapport
+// Report
 $string['auteurs'] = 'Auteurs';
 $string['besoins'] = 'Besoins et contraintes';
 $string['contraintes'] = 'Contraintes identifiées';
@@ -174,7 +182,7 @@ $string['realisation'] = 'Réalisation';
 $string['difficultes'] = 'Difficultés rencontrées';
 $string['validation'] = 'Validation';
 
-// Interface de correction
+// Grading interface
 $string['grading_navigation'] = 'Navigation correction';
 $string['grading_step'] = 'Étape à corriger';
 $string['grading_group'] = 'Groupe';
@@ -221,7 +229,7 @@ $string['privacy:metadata:groupid'] = 'Le groupe auquel appartient la soumission
 $string['privacy:metadata:grade'] = 'La note attribuée par l\'enseignant';
 $string['privacy:metadata:feedback'] = 'Les commentaires de l\'enseignant';
 
-// Carnet de bord (Step 8)
+// Logbook (Step 8)
 $string['logbook_date'] = 'Date';
 $string['logbook_tasks_today'] = 'Tâches du jour';
 $string['logbook_tasks_future'] = 'Tâches à venir';
@@ -232,13 +240,13 @@ $string['logbook_status_late'] = 'En retard';
 $string['logbook_add_line'] = 'Ajouter une ligne';
 $string['logbook_remove_line'] = 'Supprimer la ligne';
 
-// Erreurs
+// Errors
 $string['error_nosuchinstance'] = 'Instance de Gestion de Projet introuvable';
 $string['error_nopermission'] = 'Vous n\'avez pas la permission d\'effectuer cette action';
 $string['error_notingroup'] = 'Vous devez faire partie d\'un groupe pour soumettre';
 $string['error_invaliddata'] = 'Données invalides';
 
-// Configuration IA
+// AI configuration
 $string['ai_settings'] = 'Évaluation par IA';
 $string['ai_enabled'] = 'Activer l\'évaluation IA';
 $string['ai_enabled_help'] = 'Si activé, les productions élèves seront évaluées automatiquement par l\'IA en les comparant aux modèles de correction fournis par l\'enseignant.';
@@ -258,7 +266,7 @@ $string['ai_api_key_builtin'] = 'Clé API intégrée';
 $string['ai_api_key_builtin_notice'] = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Ce fournisseur utilise une clé API intégrée. Aucune configuration supplémentaire n\'est nécessaire.</div>';
 $string['ai_provider_builtin'] = 'Clé intégrée';
 
-// Modèles de correction (Phase 3)
+// Correction models (Phase 3)
 $string['correction_models'] = 'Modèles de correction';
 $string['correction_models_desc'] = 'Définir les réponses attendues pour l\'évaluation IA';
 $string['correction_models_info'] = 'Pour l\'évaluation automatique';
@@ -276,7 +284,7 @@ $string['ai_instructions'] = 'Instructions de correction IA';
 $string['ai_instructions_help'] = 'Fournissez des instructions spécifiques pour guider l\'évaluation automatique par IA. Par exemple : critères de notation, points d\'attention, éléments obligatoires ou bonus.';
 $string['ai_instructions_placeholder'] = 'Ex: Vérifier la présence des 3 éléments clés. Accorder des points bonus si l\'élève mentionne des exemples concrets. Pénaliser les réponses hors sujet...';
 
-// Phase 3.5: Dates de soumission et timeline
+// Phase 3.5: Submission dates and timeline
 $string['submission_dates'] = 'Dates de soumission';
 $string['submission_date'] = 'Date de soumission prévue';
 $string['submission_date_help'] = 'Date à laquelle les élèves doivent soumettre ce travail. Cette date est automatiquement calculée depuis la planification si définie.';
@@ -408,7 +416,7 @@ $string['show_keywords_found_to_student'] = 'Éléments trouvés';
 $string['show_keywords_missing_to_student'] = 'Éléments manquants';
 $string['show_suggestions_to_student'] = 'Suggestions d\'amélioration';
 
-// Chaînes manquantes
+// Missing strings
 $string['confirm_revert'] = 'Êtes-vous sûr de vouloir revenir au brouillon ?';
 $string['confirm_submission'] = 'Êtes-vous sûr de vouloir soumettre ce travail ?';
 $string['export_pdf_coming_soon'] = 'Export PDF bientôt disponible';
@@ -421,11 +429,11 @@ $string['submit'] = 'Soumettre';
 $string['submitted_on'] = 'Soumis le';
 $string['teacher_feedback'] = 'Commentaire de l\'enseignant';
 
-// Privacy API - Chaînes de métadonnées complètes
+// Privacy API - Complete metadata strings
 $string['privacy:metadata:timecreated'] = 'Date et heure de création de l\'enregistrement';
 $string['privacy:metadata:timemodified'] = 'Date et heure de dernière modification de l\'enregistrement';
 
-// CDCF (Étape 4)
+// CDCF (Step 4)
 $string['privacy:metadata:gestionprojet_cdcf:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le cahier des charges';
 $string['privacy:metadata:gestionprojet_cdcf:produit'] = 'Le produit défini par l\'élève';
 $string['privacy:metadata:gestionprojet_cdcf:milieu'] = 'Le milieu d\'utilisation défini par l\'élève';
@@ -434,7 +442,7 @@ $string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'Données JSO
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'Le statut de la soumission (brouillon ou soumis)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'Date et heure de soumission du travail';
 
-// Essai (Étape 5)
+// Trial (Step 5)
 $string['privacy:metadata:gestionprojet_essai:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis la fiche d\'essai';
 $string['privacy:metadata:gestionprojet_essai:nom_essai'] = 'Le nom de l\'essai';
 $string['privacy:metadata:gestionprojet_essai:date_essai'] = 'La date de l\'essai';
@@ -446,7 +454,7 @@ $string['privacy:metadata:gestionprojet_essai:conclusion'] = 'La conclusion réd
 $string['privacy:metadata:gestionprojet_essai:status'] = 'Le statut de la soumission (brouillon ou soumis)';
 $string['privacy:metadata:gestionprojet_essai:timesubmitted'] = 'Date et heure de soumission du travail';
 
-// Rapport (Étape 6)
+// Report (Step 6)
 $string['privacy:metadata:gestionprojet_rapport:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le rapport de projet';
 $string['privacy:metadata:gestionprojet_rapport:titre_projet'] = 'Le titre du projet';
 $string['privacy:metadata:gestionprojet_rapport:auteurs'] = 'Les auteurs du rapport';
@@ -458,7 +466,7 @@ $string['privacy:metadata:gestionprojet_rapport:bilan'] = 'Le bilan du projet';
 $string['privacy:metadata:gestionprojet_rapport:status'] = 'Le statut de la soumission (brouillon ou soumis)';
 $string['privacy:metadata:gestionprojet_rapport:timesubmitted'] = 'Date et heure de soumission du travail';
 
-// Besoin Élève (Étape 7)
+// Student needs (Step 7)
 $string['privacy:metadata:gestionprojet_besoin_eleve'] = 'Soumissions de l\'expression du besoin (Bête à Corne) par les élèves';
 $string['privacy:metadata:gestionprojet_besoin_eleve:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis l\'expression du besoin';
 $string['privacy:metadata:gestionprojet_besoin_eleve:aqui'] = 'À qui le produit rend service (réponse de l\'élève)';
@@ -467,14 +475,14 @@ $string['privacy:metadata:gestionprojet_besoin_eleve:dansquelbut'] = 'Le but du 
 $string['privacy:metadata:gestionprojet_besoin_eleve:status'] = 'Le statut de la soumission (brouillon ou soumis)';
 $string['privacy:metadata:gestionprojet_besoin_eleve:timesubmitted'] = 'Date et heure de soumission du travail';
 
-// Carnet (Étape 8)
+// Logbook (Step 8)
 $string['privacy:metadata:gestionprojet_carnet'] = 'Entrées du carnet de bord soumises par les élèves';
 $string['privacy:metadata:gestionprojet_carnet:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le carnet de bord';
 $string['privacy:metadata:gestionprojet_carnet:tasks_data'] = 'Données JSON contenant les entrées quotidiennes avec tâches, statut et observations';
 $string['privacy:metadata:gestionprojet_carnet:status'] = 'Le statut de la soumission (brouillon ou soumis)';
 $string['privacy:metadata:gestionprojet_carnet:timesubmitted'] = 'Date et heure de soumission du travail';
 
-// Évaluations IA
+// AI evaluations
 $string['privacy:metadata:gestionprojet_ai_evaluations'] = 'Résultats des évaluations IA pour les soumissions des élèves';
 $string['privacy:metadata:gestionprojet_ai_evaluations:userid'] = 'L\'identifiant de l\'utilisateur dont le travail a été évalué';
 $string['privacy:metadata:gestionprojet_ai_evaluations:step'] = 'Le numéro de l\'étape évaluée';
@@ -485,7 +493,7 @@ $string['privacy:metadata:gestionprojet_ai_evaluations:status'] = 'Le statut de 
 $string['privacy:metadata:gestionprojet_ai_evaluations:applied_by'] = 'L\'identifiant de l\'enseignant qui a appliqué la note IA';
 $string['privacy:metadata:gestionprojet_ai_evaluations:applied_at'] = 'Date et heure d\'application de la note';
 
-// Historique
+// History
 $string['privacy:metadata:gestionprojet_history:tablename'] = 'La table de base de données modifiée';
 $string['privacy:metadata:gestionprojet_history:fieldname'] = 'Le champ qui a été modifié';
 $string['privacy:metadata:gestionprojet_history:oldvalue'] = 'La valeur précédente avant modification';
@@ -523,14 +531,14 @@ $string['dashboard:summary_cached'] = 'Synthèse disponible en cache';
 $string['dashboard:summary_refreshed'] = 'Synthèse actualisée avec succès';
 $string['error:invalidstep'] = 'Numéro d\'étape invalide';
 
-// Titres des étapes pour le rapport
+// Step titles for the report
 $string['step4_title'] = 'Cahier des charges';
 $string['step5_title'] = 'Fiche d\'essai';
 $string['step6_title'] = 'Rapport de projet';
 $string['step7_title'] = 'Expression du besoin (élève)';
 $string['step8_title'] = 'Carnet de bord';
 
-// Rapport de log IA
+// AI log report
 $string['ai_log_report'] = 'Rapport d\'utilisation IA';
 $string['ai_log_report_desc'] = 'Voir toutes les requêtes et réponses d\'évaluation IA';
 $string['filter_date_from'] = 'Date de début';
@@ -574,3 +582,53 @@ $string['status_completed'] = 'Terminé';
 $string['status_failed'] = 'Échoué';
 $string['status_applied'] = 'Appliqué';
 $string['ai_log_report_activity'] = 'Rapport d\'utilisation IA pour {$a}';
+
+// Events
+$string['event_submission_created'] = 'Soumission créée';
+$string['event_submission_graded'] = 'Soumission notée';
+$string['event_ai_evaluation_completed'] = 'Évaluation IA terminée';
+
+// Hardcoded strings - grading.php
+$string['grading_step_context'] = 'Vous corrigez l\'étape « {$a} » pour tous les groupes.';
+$string['group_not_started'] = 'Le groupe n\'a pas encore commencé cette étape.';
+$string['logbook_no_entries'] = 'Aucune entrée dans le carnet de bord.';
+$string['logbook_status_ahead'] = 'En avance';
+$string['logbook_status_ontime'] = 'À l\'heure';
+$string['logbook_status_late'] = 'En retard';
+$string['ai_submission_required_hint'] = '(La soumission doit être validée pour lancer l\'évaluation IA)';
+$string['loading'] = 'Chargement...';
+$string['grading_evaluation_heading'] = 'Évaluation';
+$string['grade_placeholder'] = 'Note sur 20';
+$string['feedback_placeholder'] = 'Vos commentaires pour le groupe...';
+$string['grading_status_label'] = 'Statut :';
+
+// Hardcoded strings - step1.php
+$string['step1_objective'] = 'Objectif';
+$string['step1_objective_desc'] = 'La fiche descriptive permet de cadrer le projet en définissant son intitulé, son niveau, les compétences travaillées et les modalités d\'évaluation.';
+$string['choose'] = '-- Choisir --';
+$string['level_6e'] = '6ème';
+$string['level_5e'] = '5ème';
+$string['level_4e'] = '4ème';
+$string['level_3e'] = '3ème';
+$string['duration_placeholder'] = 'ex : 12 semaines';
+$string['project_image_help'] = 'Image représentative du projet (optionnel)';
+$string['no_image'] = 'Aucune image';
+$string['image_upload_todo'] = 'Upload d\'image à implémenter';
+
+// Hardcoded strings - step4.php / step4_teacher.php
+$string['default_interactor'] = 'Interacteur {$a}';
+$string['step4_cdcf_title'] = 'CAHIER DES CHARGES FONCTIONNEL';
+$string['step4_subtitle'] = 'Analyse fonctionnelle - Technologie';
+$string['expected_product_name'] = 'Nom du produit attendu';
+$string['expected_usage_env'] = 'Milieu d\'utilisation attendu';
+$string['expected_main_function'] = 'Fonction principale attendue...';
+
+// Hardcoded strings - step3.php (timeline)
+$string['step3_select_dates'] = 'Sélectionnez une date de début et une date de fin';
+$string['step3_end_after_start'] = 'La date de fin doit être après la date de début';
+$string['step3_define_durations'] = 'Définissez les durées des tâches';
+$string['step3_total_hours'] = 'Total : {$a->hours} heures ({$a->weeks} semaines à {$a->hpw}h/semaine)';
+$string['step3_hours_available'] = '{$a}h disponibles';
+$string['step3_hours_exceeded'] = '{$a}h au-dessus de la capacité';
+$string['step3_vacation_periods'] = '{$a} période(s) de vacances :';
+$string['step3_vacation_prefix'] = 'Vacances ';

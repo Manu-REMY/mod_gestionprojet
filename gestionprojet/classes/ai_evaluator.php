@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * AI Evaluator for Gestion de Projet.
@@ -211,6 +219,19 @@ class ai_evaluator {
             $evaluation->timemodified = time();
 
             $DB->update_record('gestionprojet_ai_evaluations', $evaluation);
+
+            // Trigger AI evaluation completed event.
+            $cm = get_coursemodule_from_instance('gestionprojet', $gestionprojet->id, 0, false, MUST_EXIST);
+            $context = \context_module::instance($cm->id);
+            $event = \mod_gestionprojet\event\ai_evaluation_completed::create([
+                'objectid' => $evaluation->id,
+                'context' => $context,
+                'other' => [
+                    'step' => $evaluation->step,
+                    'status' => 'completed',
+                ],
+            ]);
+            $event->trigger();
 
             // Auto-apply if configured.
             if (!empty($gestionprojet->ai_auto_apply)) {

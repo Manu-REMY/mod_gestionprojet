@@ -5,9 +5,17 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 7 Teacher Correction Model: Expression du Besoin (Eleve)
+ * Step 7 Teacher Correction Model: Student needs expression
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -19,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 $PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 7, 'mode' => 'teacher']);
 $PAGE->set_title(get_string('step7', 'gestionprojet') . ' - ' . get_string('correction_models', 'gestionprojet'));
 
-// Default AI instructions for needs expression (Bête à Cornes).
+// Default AI instructions for needs expression (Horn Diagram).
 $defaultaiinstructions = 'Rôle : Tu es un professeur de technologie expérimenté au collège.
 
 Objectif : Corriger un diagramme d\'expression du besoin (type Bête à cornes ou Pieuvre) réalisé par un élève de 3ème.
@@ -52,6 +60,14 @@ if (!$model) {
     $model = $DB->get_record('gestionprojet_besoin_eleve_teacher', ['id' => $model->id]);
 }
 
+// Load AMD module for teacher model.
+$PAGE->requires->js_call_amd('mod_gestionprojet/teacher_model', 'init', [[
+    'cmid' => $cm->id,
+    'step' => 7,
+    'autosaveInterval' => ($gestionprojet->autosave_interval ?? 30) * 1000,
+    'fields' => ['aqui', 'surquoi', 'dansquelbut', 'ai_instructions'],
+]]);
+
 echo $OUTPUT->header();
 require_once(__DIR__ . '/teacher_model_styles.php');
 
@@ -59,7 +75,7 @@ require_once(__DIR__ . '/teacher_model_styles.php');
 $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 7);
 ?>
 
-<!-- Navigation en haut (avant le dashboard) -->
+<!-- Top navigation (before the dashboard) -->
 <div class="step-navigation step-navigation-top" style="max-width: 1200px; margin: 0 auto 20px auto; padding: 0 20px;">
     <?php if ($stepnav['prev']): ?>
     <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['prev'], 'mode' => 'teacher']); ?>" class="btn-nav btn-prev">
@@ -133,7 +149,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 7, $context, $cm->id);
             <div id="saveStatus" class="save-status"></div>
         </div>
 
-        <!-- Navigation entre étapes -->
+        <!-- Step navigation -->
         <div class="step-navigation">
             <?php if ($stepnav['prev']): ?>
             <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['prev'], 'mode' => 'teacher']); ?>" class="btn-nav btn-prev">
@@ -158,57 +174,6 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 7, $context, $cm->id);
     </form>
 </div>
 
-<script>
-(function waitRequire() {
-    if (typeof require === 'undefined') {
-        setTimeout(waitRequire, 50);
-        return;
-    }
-
-    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
-        $(document).ready(function() {
-            var cmid = <?php echo $cm->id; ?>;
-            var autosaveInterval = <?php echo ($gestionprojet->autosave_interval ?? 30) * 1000; ?>;
-
-            // Custom serialization for step 7 teacher model
-            var serializeData = function() {
-                var dates = getDateValues();
-                return {
-                    aqui: document.getElementById('aqui').value,
-                    surquoi: document.getElementById('surquoi').value,
-                    dansquelbut: document.getElementById('dansquelbut').value,
-                    ai_instructions: document.getElementById('ai_instructions').value,
-                    submission_date: dates.submission_date,
-                    deadline_date: dates.deadline_date
-                };
-            };
-
-            // Initialize Autosave for teacher mode
-            Autosave.init({
-                cmid: cmid,
-                step: 7,
-                groupid: 0,
-                mode: 'teacher',
-                interval: autosaveInterval,
-                formSelector: '#teacherModelForm',
-                serialize: serializeData
-            });
-
-            // Manual save button with redirect to hub
-            document.getElementById('saveButton').addEventListener('click', function() {
-                var originalOnSave = Autosave.onSave;
-                Autosave.onSave = function(response) {
-                    if (originalOnSave) originalOnSave(response);
-                    setTimeout(function() {
-                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid + '&page=correctionmodels';
-                    }, 800);
-                };
-                Autosave.save();
-            });
-        });
-    });
-})();
-</script>
 
 <?php
 echo $OUTPUT->footer();

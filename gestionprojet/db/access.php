@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Capability definitions for the gestionprojet module.
@@ -17,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
-    // Ajouter une instance du module dans un cours
+    // Add a module instance to a course
     'mod/gestionprojet:addinstance' => [
         'riskbitmask' => RISK_XSS,
         'captype' => 'write',
@@ -29,7 +37,7 @@ $capabilities = [
         'clonepermissionsfrom' => 'moodle/course:manageactivities',
     ],
 
-    // Voir l'activité
+    // View the activity
     'mod/gestionprojet:view' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -42,7 +50,7 @@ $capabilities = [
         ],
     ],
 
-    // Configurer les pages enseignant (description, besoin, planning)
+    // Configure teacher pages (description, needs, planning)
     'mod/gestionprojet:configureteacherpages' => [
         'riskbitmask' => RISK_SPAM,
         'captype' => 'write',
@@ -54,7 +62,7 @@ $capabilities = [
         ],
     ],
 
-    // Soumettre le travail (élèves)
+    // Submit work (students)
     'mod/gestionprojet:submit' => [
         'riskbitmask' => RISK_SPAM,
         'captype' => 'write',
@@ -64,7 +72,7 @@ $capabilities = [
         ],
     ],
 
-    // Voir toutes les soumissions (enseignants)
+    // View all submissions (teachers)
     'mod/gestionprojet:viewallsubmissions' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -75,7 +83,7 @@ $capabilities = [
         ],
     ],
 
-    // Noter et commenter
+    // Grade and comment
     'mod/gestionprojet:grade' => [
         'riskbitmask' => RISK_XSS,
         'captype' => 'write',
@@ -87,7 +95,7 @@ $capabilities = [
         ],
     ],
 
-    // Verrouiller/déverrouiller les pages enseignant
+    // Lock/unlock teacher pages
     'mod/gestionprojet:lock' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
@@ -97,7 +105,7 @@ $capabilities = [
         ],
     ],
 
-    // Voir l'historique des modifications
+    // View modification history
     'mod/gestionprojet:viewhistory' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -108,7 +116,7 @@ $capabilities = [
         ],
     ],
 
-    // Exporter tous les projets (enseignant)
+    // Export all projects (teacher)
     'mod/gestionprojet:exportall' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -119,7 +127,7 @@ $capabilities = [
         ],
     ],
 
-    // Voir les logs d'utilisation IA (administrateur)
+    // View AI usage logs (administrator)
     'mod/gestionprojet:viewailogs' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',

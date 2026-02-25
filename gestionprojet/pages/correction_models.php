@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Teacher correction models hub page.
@@ -87,172 +95,6 @@ foreach ($models as $stepnum => $model) {
 }
 
 ?>
-
-<style>
-    .correction-models-hub {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px 0;
-    }
-
-    .hub-description {
-        background: linear-gradient(135deg, #e7f3ff 0%, #f0f7ff 100%);
-        border-left: 4px solid #17a2b8;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 30px;
-    }
-
-    .hub-description h3 {
-        color: #0056b3;
-        margin: 0 0 10px;
-    }
-
-    .hub-description p {
-        color: #555;
-        margin: 0;
-        line-height: 1.6;
-    }
-
-    .models-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 25px;
-    }
-
-    .model-card {
-        background: white;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        border-top: 5px solid #17a2b8;
-        position: relative;
-    }
-
-    .model-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .model-card.complete {
-        border-top-color: #28a745;
-    }
-
-    .model-card .card-icon {
-        font-size: 48px;
-        text-align: center;
-        margin-bottom: 15px;
-    }
-
-    .model-card .card-title {
-        font-size: 20px;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 8px;
-        text-align: center;
-    }
-
-    .model-card .card-description {
-        color: #666;
-        line-height: 1.5;
-        margin-bottom: 15px;
-        text-align: center;
-        font-size: 14px;
-    }
-
-    .model-card .card-status {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 14px;
-        margin-bottom: 15px;
-    }
-
-    .model-card .card-status.complete {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .model-card .card-status.incomplete {
-        background: #fff3cd;
-        color: #856404;
-    }
-
-    .model-card .card-status.has-instructions {
-        background: #e7f3ff;
-        color: #0056b3;
-        margin-top: 8px;
-    }
-
-    .model-card .card-button {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-        color: white;
-        text-align: center;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-
-    .model-card .card-button:hover {
-        transform: scale(1.02);
-        color: white;
-        text-decoration: none;
-        background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
-    }
-
-    .back-button {
-        margin-bottom: 20px;
-    }
-
-    .back-button a {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s;
-        background: #f8f9fa;
-        color: #17a2b8;
-        border: 2px solid #17a2b8;
-    }
-
-    .back-button a:hover {
-        background: #17a2b8;
-        color: white;
-        text-decoration: none;
-    }
-
-    .ai-status-badge {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .ai-status-badge.enabled {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .ai-status-badge.disabled {
-        background: #f8f9fa;
-        color: #6c757d;
-    }
-</style>
 
 <div class="correction-models-hub">
 

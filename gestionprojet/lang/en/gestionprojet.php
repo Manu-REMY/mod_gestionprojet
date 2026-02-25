@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * English language strings for mod_gestionprojet.
@@ -418,7 +426,7 @@ $string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'JSON data co
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'The time when the work was submitted';
 
-// Essai (Step 5)
+// Trial (Step 5)
 $string['privacy:metadata:gestionprojet_essai:userid'] = 'The ID of the user who submitted the test sheet';
 $string['privacy:metadata:gestionprojet_essai:nom_essai'] = 'The name of the test';
 $string['privacy:metadata:gestionprojet_essai:date_essai'] = 'The date of the test';
@@ -430,7 +438,7 @@ $string['privacy:metadata:gestionprojet_essai:conclusion'] = 'The conclusion wri
 $string['privacy:metadata:gestionprojet_essai:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_essai:timesubmitted'] = 'The time when the work was submitted';
 
-// Rapport (Step 6)
+// Report (Step 6)
 $string['privacy:metadata:gestionprojet_rapport:userid'] = 'The ID of the user who submitted the project report';
 $string['privacy:metadata:gestionprojet_rapport:titre_projet'] = 'The project title';
 $string['privacy:metadata:gestionprojet_rapport:auteurs'] = 'The authors of the report';
@@ -442,7 +450,7 @@ $string['privacy:metadata:gestionprojet_rapport:bilan'] = 'The project summary';
 $string['privacy:metadata:gestionprojet_rapport:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_rapport:timesubmitted'] = 'The time when the work was submitted';
 
-// Besoin Eleve (Step 7)
+// Student needs (Step 7)
 $string['privacy:metadata:gestionprojet_besoin_eleve'] = 'Student needs expression (Horn Diagram) submissions';
 $string['privacy:metadata:gestionprojet_besoin_eleve:userid'] = 'The ID of the user who submitted the needs expression';
 $string['privacy:metadata:gestionprojet_besoin_eleve:aqui'] = 'Who the product serves (student answer)';
@@ -451,7 +459,7 @@ $string['privacy:metadata:gestionprojet_besoin_eleve:dansquelbut'] = 'The purpos
 $string['privacy:metadata:gestionprojet_besoin_eleve:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_besoin_eleve:timesubmitted'] = 'The time when the work was submitted';
 
-// Carnet (Step 8)
+// Logbook (Step 8)
 $string['privacy:metadata:gestionprojet_carnet'] = 'Project logbook entries submitted by students';
 $string['privacy:metadata:gestionprojet_carnet:userid'] = 'The ID of the user who submitted the logbook';
 $string['privacy:metadata:gestionprojet_carnet:tasks_data'] = 'JSON data containing daily log entries with tasks, status and observations';
@@ -558,3 +566,53 @@ $string['status_completed'] = 'Completed';
 $string['status_failed'] = 'Failed';
 $string['status_applied'] = 'Applied';
 $string['ai_log_report_activity'] = 'AI Usage Report for {$a}';
+
+// Events
+$string['event_submission_created'] = 'Submission created';
+$string['event_submission_graded'] = 'Submission graded';
+$string['event_ai_evaluation_completed'] = 'AI evaluation completed';
+
+// Hardcoded strings - grading.php
+$string['grading_step_context'] = 'You are grading the step "{$a}" for all groups.';
+$string['group_not_started'] = 'The group has not started this step yet.';
+$string['logbook_no_entries'] = 'No logbook entries.';
+$string['logbook_status_ahead'] = 'Ahead';
+$string['logbook_status_ontime'] = 'On time';
+$string['logbook_status_late'] = 'Late';
+$string['ai_submission_required_hint'] = '(Submission must be validated to start AI evaluation)';
+$string['loading'] = 'Loading...';
+$string['grading_evaluation_heading'] = 'Evaluation';
+$string['grade_placeholder'] = 'Grade out of 20';
+$string['feedback_placeholder'] = 'Your comments for the group...';
+$string['grading_status_label'] = 'Status:';
+
+// Hardcoded strings - step1.php
+$string['step1_objective'] = 'Objective';
+$string['step1_objective_desc'] = 'The description sheet allows you to frame the project by defining its title, level, skills worked on and assessment methods.';
+$string['choose'] = '-- Choose --';
+$string['level_6e'] = '6ème';
+$string['level_5e'] = '5ème';
+$string['level_4e'] = '4ème';
+$string['level_3e'] = '3ème';
+$string['duration_placeholder'] = 'e.g. 12 weeks';
+$string['project_image_help'] = 'Representative image for the project (optional)';
+$string['no_image'] = 'No image';
+$string['image_upload_todo'] = 'Image upload to be implemented';
+
+// Hardcoded strings - step4.php / step4_teacher.php
+$string['default_interactor'] = 'Interactor {$a}';
+$string['step4_cdcf_title'] = 'FUNCTIONAL SPECIFICATIONS';
+$string['step4_subtitle'] = 'Functional analysis - Technology';
+$string['expected_product_name'] = 'Expected product name';
+$string['expected_usage_env'] = 'Expected usage environment';
+$string['expected_main_function'] = 'Expected main function...';
+
+// Hardcoded strings - step3.php (timeline)
+$string['step3_select_dates'] = 'Select a start date and an end date';
+$string['step3_end_after_start'] = 'The end date must be after the start date';
+$string['step3_define_durations'] = 'Set the task durations';
+$string['step3_total_hours'] = 'Total: {$a->hours} hours ({$a->weeks} weeks at {$a->hpw}h/week)';
+$string['step3_hours_available'] = '{$a}h available';
+$string['step3_hours_exceeded'] = '{$a}h above capacity';
+$string['step3_vacation_periods'] = '{$a} vacation period(s):';
+$string['step3_vacation_prefix'] = 'Holidays ';

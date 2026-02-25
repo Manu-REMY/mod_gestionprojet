@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Shared dates section for teacher correction models.
@@ -30,7 +38,7 @@ if ($planning && $planning->startdate && $planning->enddate) {
         $projectDuration = $planning->enddate - $planning->startdate;
         $currentTime = $planning->startdate;
 
-        // Step 7 (Besoin Eleve) = after task 1 (Step 7)
+        // Step 7 (Student needs) = after task 1 (Step 7)
         $currentTime += ($planning->task1_hours / $totalHours) * $projectDuration;
         $milestones[7] = (int) $currentTime;
 
@@ -38,15 +46,15 @@ if ($planning && $planning->startdate && $planning->enddate) {
         $currentTime += ($planning->task2_hours / $totalHours) * $projectDuration;
         $milestones[4] = (int) $currentTime;
 
-        // Step 5 (Essai) = after task 3 (Step 5)
+        // Step 5 (Trial) = after task 3 (Step 5)
         $currentTime += ($planning->task3_hours / $totalHours) * $projectDuration;
         $milestones[5] = (int) $currentTime;
 
-        // Step 8 (Carnet) = after task 4 (Step 8)
+        // Step 8 (Logbook) = after task 4 (Step 8)
         $currentTime += ($planning->task4_hours / $totalHours) * $projectDuration;
         $milestones[8] = (int) $currentTime;
 
-        // Step 6 (Rapport) = end of project (after task 5)
+        // Step 6 (Report) = end of project (after task 5)
         $milestones[6] = (int) $planning->enddate;
     }
 }
@@ -68,66 +76,6 @@ if (!empty($model->deadline_date)) {
     $deadlineDateValue = date('Y-m-d', $model->deadline_date);
 }
 ?>
-
-<style>
-    .dates-section {
-        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 25px;
-        border-left: 4px solid #2196f3;
-    }
-    .dates-section h3 {
-        margin: 0 0 15px 0;
-        color: #1565c0;
-        font-size: 16px;
-    }
-    .dates-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-    .date-field {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-    .date-field label {
-        font-weight: 500;
-        color: #424242;
-        font-size: 14px;
-    }
-    .date-field input[type="date"] {
-        padding: 10px 12px;
-        border: 2px solid #dee2e6;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: border-color 0.2s;
-    }
-    .date-field input[type="date"]:focus {
-        border-color: #2196f3;
-        outline: none;
-    }
-    .date-field .date-help {
-        font-size: 12px;
-        color: #757575;
-        margin-top: 3px;
-    }
-    .date-auto-filled {
-        background-color: #fff9c4 !important;
-        border-color: #fbc02d !important;
-    }
-    .auto-fill-notice {
-        font-size: 11px;
-        color: #f57c00;
-        margin-top: 3px;
-    }
-    @media (max-width: 768px) {
-        .dates-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 
 <div class="dates-section">
     <h3><?php echo get_string('submission_dates', 'gestionprojet'); ?></h3>
@@ -151,19 +99,3 @@ if (!empty($model->deadline_date)) {
     </div>
 </div>
 
-<script>
-// Helper function to convert date input to timestamp.
-function dateToTimestamp(dateStr) {
-    if (!dateStr) return null;
-    var date = new Date(dateStr);
-    return Math.floor(date.getTime() / 1000);
-}
-
-// Helper function to get date values for serialization.
-function getDateValues() {
-    return {
-        submission_date: dateToTimestamp(document.getElementById('submission_date').value),
-        deadline_date: dateToTimestamp(document.getElementById('deadline_date').value)
-    };
-}
-</script>

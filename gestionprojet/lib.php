@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Library of interface functions and constants for module gestionprojet.
@@ -128,18 +136,33 @@ function gestionprojet_delete_instance($id)
         return false;
     }
 
-    // Delete all related data
-    $DB->delete_records('gestionprojet_description', ['gestionprojetid' => $id]);
-    $DB->delete_records('gestionprojet_besoin', ['gestionprojetid' => $id]);
-    $DB->delete_records('gestionprojet_planning', ['gestionprojetid' => $id]);
+    // Delete all student submission data.
     $DB->delete_records('gestionprojet_cdcf', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_essai', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_rapport', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_besoin_eleve', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_carnet', ['gestionprojetid' => $id]);
+
+    // Delete teacher configuration data.
+    $DB->delete_records('gestionprojet_description', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_besoin', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_planning', ['gestionprojetid' => $id]);
+
+    // Delete teacher correction models.
+    $DB->delete_records('gestionprojet_cdcf_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_essai_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_rapport_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_besoin_eleve_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_carnet_teacher', ['gestionprojetid' => $id]);
+
+    // Delete AI evaluations and summaries.
+    $DB->delete_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_ai_summaries', ['gestionprojetid' => $id]);
+
+    // Delete audit trail.
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
 
-    // Delete the instance
+    // Delete the instance.
     $DB->delete_records('gestionprojet', ['id' => $id]);
 
     return true;
@@ -688,7 +711,7 @@ function gestionprojet_get_grade_category($gestionprojet)
 
 /**
  * Get the display order for graded steps (matching project workflow).
- * Order: 7 (Expression du Besoin Élève), 4 (CdCF), 5 (Essai), 8 (Carnet de bord), 6 (Rapport)
+ * Order: 7 (Student needs), 4 (Requirements spec), 5 (Trial), 8 (Logbook), 6 (Report)
  *
  * @return array Step numbers in display order
  */
@@ -1271,8 +1294,8 @@ function gestionprojet_render_step_dashboard($gestionprojet, $step, $context, $c
  * Get navigation info for teacher correction model pages.
  *
  * Returns previous/next step numbers based on enabled steps and fixed order.
- * Order: Step 7 (Expression du Besoin) → Step 4 (CdCF) → Step 5 (Fiche Essai)
- *        → Step 8 (Carnet de Bord) → Step 6 (Rapport)
+ * Order: Step 7 (Student needs) -> Step 4 (Requirements spec) -> Step 5 (Trial)
+ *        -> Step 8 (Logbook) -> Step 6 (Report)
  *
  * @param stdClass $gestionprojet The activity instance
  * @param int $currentstep The current step number

@@ -5,9 +5,17 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 1: Fiche Descriptive du Projet
+ * Step 1: Project description sheet
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -55,13 +63,17 @@ if (!empty($description->competences)) {
 // Lock toggle removed
 
 
-// Autosave handled inline at bottom of file
-// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [
-//     'cmid' => $cm->id,
-//     'step' => 1,
-//     'interval' => $gestionprojet->autosave_interval * 1000,
-//     'formSelector' => '#descriptionForm'
-// ]);
+// AMD module for step 1 JS (autosave, readonly lock, PDF export).
+$PAGE->requires->js_call_amd('mod_gestionprojet/step1', 'init', [[
+    'cmid' => $cm->id,
+    'step' => 1,
+    'groupid' => 0,
+    'autosaveInterval' => $gestionprojet->autosave_interval * 1000,
+    'isReadonly' => $readonly,
+    'strings' => [
+        'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet'),
+    ],
+]]);
 
 echo $OUTPUT->header();
 ?>
@@ -97,8 +109,8 @@ echo $OUTPUT->header();
 
 
     <div class="description-info">
-        <h3>Objectif</h3>
-        <p>La fiche descriptive permet de cadrer le projet en définissant son intitulé, son niveau, les compétences travaillées et les modalités d'évaluation.</p>
+        <h3><?php echo get_string('step1_objective', 'gestionprojet'); ?></h3>
+        <p><?php echo get_string('step1_objective_desc', 'gestionprojet'); ?></p>
     </div>
 
     <form id="descriptionForm" class="locked-overlay">
@@ -115,11 +127,11 @@ echo $OUTPUT->header();
                     <div class="form-group">
                         <label for="niveau"><?php echo get_string('niveau', 'gestionprojet'); ?> *</label>
                         <select id="niveau" name="niveau" required>
-                            <option value="">-- Choisir --</option>
-                            <option value="6ème" <?php echo ($description->niveau ?? '') == '6ème' ? 'selected' : ''; ?>>6ème</option>
-                            <option value="5ème" <?php echo ($description->niveau ?? '') == '5ème' ? 'selected' : ''; ?>>5ème</option>
-                            <option value="4ème" <?php echo ($description->niveau ?? '') == '4ème' ? 'selected' : ''; ?>>4ème</option>
-                            <option value="3ème" <?php echo ($description->niveau ?? '') == '3ème' ? 'selected' : ''; ?>>3ème</option>
+                            <option value=""><?php echo get_string('choose', 'gestionprojet'); ?></option>
+                            <option value="6ème" <?php echo ($description->niveau ?? '') == '6ème' ? 'selected' : ''; ?>><?php echo get_string('level_6e', 'gestionprojet'); ?></option>
+                            <option value="5ème" <?php echo ($description->niveau ?? '') == '5ème' ? 'selected' : ''; ?>><?php echo get_string('level_5e', 'gestionprojet'); ?></option>
+                            <option value="4ème" <?php echo ($description->niveau ?? '') == '4ème' ? 'selected' : ''; ?>><?php echo get_string('level_4e', 'gestionprojet'); ?></option>
+                            <option value="3ème" <?php echo ($description->niveau ?? '') == '3ème' ? 'selected' : ''; ?>><?php echo get_string('level_3e', 'gestionprojet'); ?></option>
                         </select>
                     </div>
 
@@ -127,7 +139,7 @@ echo $OUTPUT->header();
                         <label for="duree"><?php echo get_string('duree', 'gestionprojet'); ?> *</label>
                         <input type="text" id="duree" name="duree"
                                value="<?php echo s($description->duree ?? ''); ?>"
-                               placeholder="ex: 12 semaines" required>
+                               placeholder="<?php echo get_string('duration_placeholder', 'gestionprojet'); ?>" required>
                     </div>
                 </div>
 
@@ -159,7 +171,7 @@ echo $OUTPUT->header();
 
             <div class="form-sidebar">
                 <h4><?php echo get_string('image', 'gestionprojet'); ?></h4>
-                <p style="font-size: 14px; color: #666; margin: 10px 0;">Image représentative du projet (optionnel)</p>
+                <p style="font-size: 14px; color: #666; margin: 10px 0;"><?php echo get_string('project_image_help', 'gestionprojet'); ?></p>
 
                 <?php if ($description->imageid): ?>
                     <div id="imagePreview">
@@ -181,18 +193,18 @@ echo $OUTPUT->header();
                     </div>
                 <?php else: ?>
                     <div style="padding: 40px; color: #999; font-style: italic;">
-                        Aucune image
+                        <?php echo get_string('no_image', 'gestionprojet'); ?>
                     </div>
                 <?php endif; ?>
 
                 <!-- TODO: Implement file upload with Moodle file API -->
                 <p style="font-size: 12px; color: #999; margin-top: 10px;">
-                    Upload d'image à implémenter
+                    <?php echo get_string('image_upload_todo', 'gestionprojet'); ?>
                 </p>
             </div>
         </div>
 
-        <!-- Compétences -->
+        <!-- Competencies -->
         <div class="competences-section">
             <h3><?php echo get_string('competences', 'gestionprojet'); ?></h3>
 
@@ -294,86 +306,12 @@ echo $OUTPUT->header();
     </form>
 
     <div class="button-container">
-        <button type="button" class="btn-export btn-export-margin" onclick="exportToPDF()">
+        <button type="button" id="exportPdfBtn" class="btn-export btn-export-margin">
             📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
         </button>
     </div>
 </div>
 
-<?php
-// Ensure jQuery is loaded
-$PAGE->requires->jquery();
-?>
-
-
-<script>
-// Wait for jQuery to be loaded
-// Wait for RequireJS to be loaded
-(function waitRequire() {
-    if (typeof require === 'undefined') {
-        setTimeout(waitRequire, 50);
-        return;
-    }
-    
-    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
-        <?php if (!$readonly): ?>
-        var cmid = <?php echo $cm->id; ?>;
-        var step = 1;
-        var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-
-        // Custom serialization for step 1 (handling competences array)
-        var serializeData = function() {
-            var formData = {};
-            var form = document.getElementById('descriptionForm');
-
-            // Collect regular fields
-            form.querySelectorAll('input[type="text"], select, textarea').forEach(function(field) {
-                if (field.name && !field.name.includes('[]')) {
-                    formData[field.name] = field.value;
-                }
-            });
-
-            // Collect competences as array
-            var competences = [];
-            form.querySelectorAll('input[name="competences[]"]:checked').forEach(function(cb) {
-                competences.push(cb.value);
-            });
-            formData['competences'] = JSON.stringify(competences);
-
-            // Include lock state if present
-            // Lock state removed
-
-            
-            return formData;
-        };
-
-        Autosave.init({
-            cmid: cmid,
-            step: step,
-            groupid: 0,
-            interval: autosaveInterval,
-            formSelector: '#descriptionForm',
-            serialize: serializeData
-        });
-        <?php endif; ?>
-
-        // Lock form elements if readonly
-        <?php if ($readonly): ?>
-        $('#descriptionForm input, #descriptionForm select, #descriptionForm textarea').prop('disabled', true);
-        <?php endif; ?>
-    });
-})();
-
-
-// Export PDF functionality (to be implemented with TCPDF)
-function exportToPDF() {
-    alert('Export PDF sera implémenté avec TCPDF côté serveur');
-    // TODO: Implement server-side PDF generation
-    window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/export_pdf.php?id=<?php echo $cm->id; ?>&step=1';
-}
-
-// Custom handling for checkbox arrays
-</script>
 
 <?php
 echo $OUTPUT->footer();

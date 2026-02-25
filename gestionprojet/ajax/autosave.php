@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * AJAX endpoint for autosave functionality.
@@ -21,11 +29,6 @@ require_once(__DIR__ . '/../lib.php');
 
 // Ensure JSON headers
 header('Content-Type: application/json');
-
-// Debug logging
-$debug_log = __DIR__ . '/../../../moodledata/temp/autosave_debug.log';
-@file_put_contents($debug_log, "\n=== " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
-@file_put_contents($debug_log, "POST: " . print_r($_POST, true), FILE_APPEND);
 
 // Support both 'cmid' and 'id' parameter names for compatibility.
 $cmid = optional_param('cmid', 0, PARAM_INT);
@@ -157,7 +160,7 @@ try {
             $success = true;
             break;
 
-        case 2: // Besoin
+        case 2: // Needs expression
             if (!has_capability('mod/gestionprojet:configureteacherpages', $context)) {
                 throw new moodle_exception('nopermission');
             }
@@ -267,7 +270,7 @@ try {
             $success = true;
             break;
 
-        case 5: // Essai
+        case 5: // Trial sheet
             if (!has_capability('mod/gestionprojet:submit', $context)) {
                 throw new moodle_exception('nopermission');
             }
@@ -297,7 +300,7 @@ try {
             $success = true;
             break;
 
-        case 6: // Rapport
+        case 6: // Report
             if (!has_capability('mod/gestionprojet:submit', $context)) {
                 throw new moodle_exception('nopermission');
             }
@@ -327,7 +330,7 @@ try {
             $success = true;
             break;
 
-        case 7: // Besoin Eleve
+        case 7: // Student needs expression
             if (!has_capability('mod/gestionprojet:submit', $context)) {
                 throw new moodle_exception('nopermission');
             }
@@ -357,7 +360,7 @@ try {
             $success = true;
             break;
 
-        case 8: // Carnet de bord
+        case 8: // Logbook
             if (!has_capability('mod/gestionprojet:submit', $context)) {
                 throw new moodle_exception('nopermission');
             }

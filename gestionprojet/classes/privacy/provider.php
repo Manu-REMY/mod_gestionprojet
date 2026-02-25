@@ -31,6 +31,7 @@ use core_privacy\local\request\contextlist;
 use core_privacy\local\request\deletion_approved;
 use core_privacy\local\request\helper;
 use core_privacy\local\request\userlist;
+use core_privacy\local\request\transform;
 use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
@@ -54,7 +55,7 @@ class provider implements
      * @return collection A listing of user data stored through this system.
      */
     public static function get_metadata(collection $collection): collection {
-        // Student submission tables - Step 4: CDCF (Cahier des Charges Fonctionnel).
+        // Student submission tables - Step 4: Requirements specification (cdcf).
         $collection->add_database_table(
             'gestionprojet_cdcf',
             [
@@ -74,7 +75,7 @@ class provider implements
             'privacy:metadata:gestionprojet_cdcf'
         );
 
-        // Student submission tables - Step 5: Essai (Test Sheet).
+        // Student submission tables - Step 5: Test sheet (essai).
         $collection->add_database_table(
             'gestionprojet_essai',
             [
@@ -97,7 +98,7 @@ class provider implements
             'privacy:metadata:gestionprojet_essai'
         );
 
-        // Student submission tables - Step 6: Rapport (Project Report).
+        // Student submission tables - Step 6: Project report (rapport).
         $collection->add_database_table(
             'gestionprojet_rapport',
             [
@@ -120,7 +121,7 @@ class provider implements
             'privacy:metadata:gestionprojet_rapport'
         );
 
-        // Student submission tables - Step 7: Besoin Eleve (Student Needs Expression).
+        // Student submission tables - Step 7: Student needs expression (besoin_eleve).
         $collection->add_database_table(
             'gestionprojet_besoin_eleve',
             [
@@ -139,7 +140,7 @@ class provider implements
             'privacy:metadata:gestionprojet_besoin_eleve'
         );
 
-        // Student submission tables - Step 8: Carnet (Logbook).
+        // Student submission tables - Step 8: Logbook (carnet).
         $collection->add_database_table(
             'gestionprojet_carnet',
             [

@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * AJAX endpoint for grading submissions.
@@ -97,6 +105,14 @@ try {
     // If the module supports only one grade item, we need to decide what that grade is.
     // Usually it's the sum or average.
     // Let's just save to local table for now.
+
+    // Trigger submission graded event.
+    $event = \mod_gestionprojet\event\submission_graded::create([
+        'objectid' => $gestionprojet->id,
+        'context' => $context,
+        'other' => ['step' => $step, 'grade' => $grade],
+    ]);
+    $event->trigger();
 
     $success = true;
     $message = get_string('gradesaved', 'gestionprojet');
