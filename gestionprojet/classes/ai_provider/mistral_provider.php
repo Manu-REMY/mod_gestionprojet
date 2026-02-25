@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Mistral Provider for Gestion de Projet.
+ * Mistral Provider for Project Management.
  *
  * Implements the AI provider interface for Mistral AI's API.
  *

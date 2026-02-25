@@ -5,17 +5,9 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 1: Project description sheet
+ * Step 1: Project Description Sheet
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -63,17 +55,13 @@ if (!empty($description->competences)) {
 // Lock toggle removed
 
 
-// AMD module for step 1 JS (autosave, readonly lock, PDF export).
-$PAGE->requires->js_call_amd('mod_gestionprojet/step1', 'init', [[
-    'cmid' => $cm->id,
-    'step' => 1,
-    'groupid' => 0,
-    'autosaveInterval' => $gestionprojet->autosave_interval * 1000,
-    'isReadonly' => $readonly,
-    'strings' => [
-        'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet'),
-    ],
-]]);
+// Autosave handled inline at bottom of file
+// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [
+//     'cmid' => $cm->id,
+//     'step' => 1,
+//     'interval' => $gestionprojet->autosave_interval * 1000,
+//     'formSelector' => '#descriptionForm'
+// ]);
 
 echo $OUTPUT->header();
 ?>
@@ -109,7 +97,7 @@ echo $OUTPUT->header();
 
 
     <div class="description-info">
-        <h3><?php echo get_string('step1_objective', 'gestionprojet'); ?></h3>
+        <h3><?php echo get_string('step1_objective_title', 'gestionprojet'); ?></h3>
         <p><?php echo get_string('step1_objective_desc', 'gestionprojet'); ?></p>
     </div>
 
@@ -127,11 +115,11 @@ echo $OUTPUT->header();
                     <div class="form-group">
                         <label for="niveau"><?php echo get_string('niveau', 'gestionprojet'); ?> *</label>
                         <select id="niveau" name="niveau" required>
-                            <option value=""><?php echo get_string('choose', 'gestionprojet'); ?></option>
-                            <option value="6ème" <?php echo ($description->niveau ?? '') == '6ème' ? 'selected' : ''; ?>><?php echo get_string('level_6e', 'gestionprojet'); ?></option>
-                            <option value="5ème" <?php echo ($description->niveau ?? '') == '5ème' ? 'selected' : ''; ?>><?php echo get_string('level_5e', 'gestionprojet'); ?></option>
-                            <option value="4ème" <?php echo ($description->niveau ?? '') == '4ème' ? 'selected' : ''; ?>><?php echo get_string('level_4e', 'gestionprojet'); ?></option>
-                            <option value="3ème" <?php echo ($description->niveau ?? '') == '3ème' ? 'selected' : ''; ?>><?php echo get_string('level_3e', 'gestionprojet'); ?></option>
+                            <option value=""><?php echo get_string('step1_select_default', 'gestionprojet'); ?></option>
+                            <option value="6ème" <?php echo ($description->niveau ?? '') == '6ème' ? 'selected' : ''; ?>><?php echo get_string('step1_grade_6', 'gestionprojet'); ?></option>
+                            <option value="5ème" <?php echo ($description->niveau ?? '') == '5ème' ? 'selected' : ''; ?>><?php echo get_string('step1_grade_5', 'gestionprojet'); ?></option>
+                            <option value="4ème" <?php echo ($description->niveau ?? '') == '4ème' ? 'selected' : ''; ?>><?php echo get_string('step1_grade_4', 'gestionprojet'); ?></option>
+                            <option value="3ème" <?php echo ($description->niveau ?? '') == '3ème' ? 'selected' : ''; ?>><?php echo get_string('step1_grade_3', 'gestionprojet'); ?></option>
                         </select>
                     </div>
 
@@ -139,7 +127,7 @@ echo $OUTPUT->header();
                         <label for="duree"><?php echo get_string('duree', 'gestionprojet'); ?> *</label>
                         <input type="text" id="duree" name="duree"
                                value="<?php echo s($description->duree ?? ''); ?>"
-                               placeholder="<?php echo get_string('duration_placeholder', 'gestionprojet'); ?>" required>
+                               placeholder="<?php echo get_string('step1_duree_placeholder', 'gestionprojet'); ?>" required>
                     </div>
                 </div>
 
@@ -171,7 +159,7 @@ echo $OUTPUT->header();
 
             <div class="form-sidebar">
                 <h4><?php echo get_string('image', 'gestionprojet'); ?></h4>
-                <p style="font-size: 14px; color: #666; margin: 10px 0;"><?php echo get_string('project_image_help', 'gestionprojet'); ?></p>
+                <p style="font-size: 14px; color: #666; margin: 10px 0;"><?php echo get_string('step1_image_desc', 'gestionprojet'); ?></p>
 
                 <?php if ($description->imageid): ?>
                     <div id="imagePreview">
@@ -193,13 +181,13 @@ echo $OUTPUT->header();
                     </div>
                 <?php else: ?>
                     <div style="padding: 40px; color: #999; font-style: italic;">
-                        <?php echo get_string('no_image', 'gestionprojet'); ?>
+                        <?php echo get_string('step1_no_image', 'gestionprojet'); ?>
                     </div>
                 <?php endif; ?>
 
                 <!-- TODO: Implement file upload with Moodle file API -->
                 <p style="font-size: 12px; color: #999; margin-top: 10px;">
-                    <?php echo get_string('image_upload_todo', 'gestionprojet'); ?>
+                    <?php echo get_string('step1_image_upload_todo', 'gestionprojet'); ?>
                 </p>
             </div>
         </div>
@@ -209,7 +197,7 @@ echo $OUTPUT->header();
             <h3><?php echo get_string('competences', 'gestionprojet'); ?></h3>
 
             <div class="competences-list">
-                <!-- Colonne OST -->
+                <!-- OST Column -->
                 <div class="competences-column">
                     <h4>OST</h4>
                     <div class="competence-item">
@@ -217,7 +205,7 @@ echo $OUTPUT->header();
                                <?php echo in_array('OST1', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">OST1</div>
-                            <div class="competence-text">Décrire les liens entre usages et évolutions technologiques des objets et des systèmes techniques</div>
+                            <div class="competence-text"><?php echo get_string('comp_ost1_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
 
@@ -226,7 +214,7 @@ echo $OUTPUT->header();
                                <?php echo in_array('OST2', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">OST2</div>
-                            <div class="competence-text">Décrire les interactions entre un objet ou un système technique, son environnement et les utilisateurs</div>
+                            <div class="competence-text"><?php echo get_string('comp_ost2_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
 
@@ -235,12 +223,12 @@ echo $OUTPUT->header();
                                <?php echo in_array('OST3', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">OST3</div>
-                            <div class="competence-text">Caractériser et choisir un objet ou un système technique selon différents critères</div>
+                            <div class="competence-text"><?php echo get_string('comp_ost3_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Colonne SFC -->
+                <!-- SFC Column -->
                 <div class="competences-column">
                     <h4>SFC</h4>
                     <div class="competence-item">
@@ -248,7 +236,7 @@ echo $OUTPUT->header();
                                <?php echo in_array('SFC1', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">SFC1</div>
-                            <div class="competence-text">Décrire et caractériser l'organisation interne d'un objet ou d'un système technique et ses échanges avec son environnement (énergies, données)</div>
+                            <div class="competence-text"><?php echo get_string('comp_sfc1_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
 
@@ -257,7 +245,7 @@ echo $OUTPUT->header();
                                <?php echo in_array('SFC2', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">SFC2</div>
-                            <div class="competence-text">Identifier un dysfonctionnement d'un objet technique et y remédier</div>
+                            <div class="competence-text"><?php echo get_string('comp_sfc2_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
 
@@ -266,12 +254,12 @@ echo $OUTPUT->header();
                                <?php echo in_array('SFC3', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">SFC3</div>
-                            <div class="competence-text">Comprendre et modifier un programme associé à une fonctionnalité d'un objet ou d'un système technique</div>
+                            <div class="competence-text"><?php echo get_string('comp_sfc3_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Colonne CCRI -->
+                <!-- CCRI Column -->
                 <div class="competences-column">
                     <h4>CCRI</h4>
                     <div class="competence-item">
@@ -279,7 +267,7 @@ echo $OUTPUT->header();
                                <?php echo in_array('CCRI1', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">CCRI1</div>
-                            <div class="competence-text">Imaginer, concevoir et réaliser une ou des solutions en réponse à un besoin, à des exigences (de développement durable, par exemple) ou à la nécessité d'améliorations dans une démarche de créativité</div>
+                            <div class="competence-text"><?php echo get_string('comp_ccri1_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
 
@@ -288,7 +276,7 @@ echo $OUTPUT->header();
                                <?php echo in_array('CCRI2', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">CCRI2</div>
-                            <div class="competence-text">Valider les solutions techniques par des simulations ou par des protocoles de tests</div>
+                            <div class="competence-text"><?php echo get_string('comp_ccri2_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
 
@@ -297,7 +285,7 @@ echo $OUTPUT->header();
                                <?php echo in_array('CCRI3', $competences) ? 'checked' : ''; ?>>
                         <div class="competence-content">
                             <div class="competence-code">CCRI3</div>
-                            <div class="competence-text">Concevoir, écrire, tester et mettre au point un programme</div>
+                            <div class="competence-text"><?php echo get_string('comp_ccri3_desc', 'gestionprojet'); ?></div>
                         </div>
                     </div>
                 </div>
@@ -306,12 +294,86 @@ echo $OUTPUT->header();
     </form>
 
     <div class="button-container">
-        <button type="button" id="exportPdfBtn" class="btn-export btn-export-margin">
+        <button type="button" class="btn-export btn-export-margin" onclick="exportToPDF()">
             📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
         </button>
     </div>
 </div>
 
+<?php
+// Ensure jQuery is loaded
+$PAGE->requires->jquery();
+?>
+
+
+<script>
+// Wait for jQuery to be loaded
+// Wait for RequireJS to be loaded
+(function waitRequire() {
+    if (typeof require === 'undefined') {
+        setTimeout(waitRequire, 50);
+        return;
+    }
+    
+    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
+        <?php if (!$readonly): ?>
+        var cmid = <?php echo $cm->id; ?>;
+        var step = 1;
+        var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+
+        // Custom serialization for step 1 (handling competences array)
+        var serializeData = function() {
+            var formData = {};
+            var form = document.getElementById('descriptionForm');
+
+            // Collect regular fields
+            form.querySelectorAll('input[type="text"], select, textarea').forEach(function(field) {
+                if (field.name && !field.name.includes('[]')) {
+                    formData[field.name] = field.value;
+                }
+            });
+
+            // Collect competences as array
+            var competences = [];
+            form.querySelectorAll('input[name="competences[]"]:checked').forEach(function(cb) {
+                competences.push(cb.value);
+            });
+            formData['competences'] = JSON.stringify(competences);
+
+            // Include lock state if present
+            // Lock state removed
+
+            
+            return formData;
+        };
+
+        Autosave.init({
+            cmid: cmid,
+            step: step,
+            groupid: 0,
+            interval: autosaveInterval,
+            formSelector: '#descriptionForm',
+            serialize: serializeData
+        });
+        <?php endif; ?>
+
+        // Lock form elements if readonly
+        <?php if ($readonly): ?>
+        $('#descriptionForm input, #descriptionForm select, #descriptionForm textarea').prop('disabled', true);
+        <?php endif; ?>
+    });
+})();
+
+
+// Export PDF functionality (to be implemented with TCPDF)
+function exportToPDF() {
+    alert('<?php echo addslashes_js(get_string('step1_export_pdf_todo', 'gestionprojet')); ?>');
+    // TODO: Implement server-side PDF generation
+    window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/export_pdf.php?id=<?php echo $cm->id; ?>&step=1';
+}
+
+// Custom handling for checkbox arrays
+</script>
 
 <?php
 echo $OUTPUT->footer();

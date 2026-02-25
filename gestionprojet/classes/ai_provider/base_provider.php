@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base AI Provider class for Gestion de Projet.
+ * Base AI Provider class for Project Management.
  *
  * Provides common functionality for all AI providers.
  *

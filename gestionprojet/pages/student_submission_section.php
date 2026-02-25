@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_gestionprojet\output\icon;
+
 // Map step to teacher table.
 $teacherTables = [
     4 => 'gestionprojet_cdcf_teacher',
@@ -52,25 +54,21 @@ $deadlineDate = $teacherModel->deadline_date ?? 0;
 $now = time();
 $isOverdue = ($deadlineDate > 0 && $now > $deadlineDate && !$isSubmitted);
 $isDueSoon = ($submissionDate > 0 && $now < $submissionDate && ($submissionDate - $now) < (3 * 24 * 60 * 60)); // 3 days
-
-// Load AMD module for submission button (only when button will be shown).
-if ($submissionEnabled && !$isSubmitted) {
-    $PAGE->requires->js_call_amd('mod_gestionprojet/student_submission', 'init', [[
-        'cmid' => $cm->id,
-        'step' => $step,
-        'groupid' => $groupid ?? 0,
-        'strings' => [
-            'confirm_submit' => get_string('confirm_submit', 'gestionprojet'),
-            'submitting' => get_string('submitting', 'gestionprojet'),
-            'submit_step' => get_string('submit_step', 'gestionprojet'),
-            'submissionsuccess' => get_string('submissionsuccess', 'gestionprojet'),
-            'submissionerror' => get_string('submissionerror', 'gestionprojet'),
-        ],
-    ]]);
-}
 ?>
 
 <?php if ($submissionEnabled): ?>
+<?php
+// Load the submission AMD module.
+$PAGE->requires->js_call_amd('mod_gestionprojet/submission', 'init', [[
+    'cmid' => $cm->id,
+    'step' => $step,
+    'strings' => [
+        'confirm_submit' => get_string('confirm_submit', 'gestionprojet'),
+        'submitting' => get_string('submitting', 'gestionprojet'),
+        'submission_error' => get_string('submissionerror', 'gestionprojet'),
+    ],
+]]);
+?>
 <div class="submission-section <?php echo $isSubmitted ? 'submitted' : ($isOverdue ? 'overdue' : ($isDueSoon ? 'due-soon' : '')); ?>">
     <div class="submission-header">
         <div class="submission-info">
@@ -104,17 +102,16 @@ if ($submissionEnabled && !$isSubmitted) {
         <div class="submission-actions">
             <?php if ($isSubmitted): ?>
                 <div class="submission-submitted-info">
-                    <span class="icon">&#9989;</span>
+                    <?php echo icon::render('check-circle', 'sm', 'green'); ?>
                     <span><?php echo get_string('already_submitted', 'gestionprojet'); ?></span>
                 </div>
             <?php else: ?>
                 <button type="button" class="btn-submit-step" id="submitStepBtn">
-                    <span>&#128228;</span>
+                    <?php echo icon::render('zap', 'sm', 'inherit'); ?>
                     <?php echo get_string('submit_step', 'gestionprojet'); ?>
                 </button>
             <?php endif; ?>
         </div>
     </div>
 </div>
-
 <?php endif; ?>

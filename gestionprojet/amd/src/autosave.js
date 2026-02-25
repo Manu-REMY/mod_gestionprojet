@@ -13,7 +13,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notification) {
+define(['jquery', 'core/ajax', 'core/notification', 'core/str', 'mod_gestionprojet/toast'], function ($, Ajax, Notification, Str, Toast) {
 
     var autosave = {
         cmid: 0,
@@ -29,6 +29,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
         isDirty: false,
         serialize: null, // Custom serialization function
         onSave: null,   // Custom callback after save
+        strings: {}, // Loaded language strings
 
         /**
          * Initialize autosave.
@@ -51,38 +52,46 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
                 this.onSave = config.onSave;
             }
 
-            // Create status indicator
-            this.createStatusIndicator();
+            // Load language strings then set up the UI.
+            var self = this;
+            Str.get_strings([
+                {key: 'autosave_status_default', component: 'mod_gestionprojet'},
+                {key: 'autosave_status_saving', component: 'mod_gestionprojet'},
+                {key: 'autosave_status_saved', component: 'mod_gestionprojet'},
+                {key: 'autosave_status_error', component: 'mod_gestionprojet'},
+                {key: 'autosave_unsaved_changes', component: 'mod_gestionprojet'},
+            ]).then(function (results) {
+                self.strings = {
+                    defaultText: results[0],
+                    saving: results[1],
+                    saved: results[2],
+                    error: results[3],
+                    unsavedChanges: results[4],
+                };
 
-            // Monitor form changes
-            this.monitorChanges();
+                // Create status indicator
+                self.createStatusIndicator();
 
-            // Start autosave timer
-            this.startTimer();
+                // Monitor form changes
+                self.monitorChanges();
 
-            // Save on page unload
-            this.setupBeforeUnload();
+                // Start autosave timer
+                self.startTimer();
+
+                // Save on page unload
+                self.setupBeforeUnload();
+
+                return;
+            }).catch(Notification.exception);
         },
 
         /**
          * Create visual status indicator.
+         * Uses the toast notification system instead of inline-styled elements.
          */
         createStatusIndicator: function () {
-            // Remove existing indicator if any
-            $('#autosave-status').remove();
-
-            var statusHtml = '<div id="autosave-status" style="' +
-                'position: fixed; top: 60px; right: 20px; z-index: 9999; ' +
-                'padding: 10px 20px; border-radius: 8px; ' +
-                'background: #f8f9fa; border: 2px solid #dee2e6; ' +
-                'box-shadow: 0 4px 12px rgba(0,0,0,0.1); ' +
-                'display: none; transition: all 0.3s; font-family: -apple-system, system-ui, BlinkMacSystemFont, sans-serif;">' +
-                '<span id="autosave-icon" style="margin-right: 8px;">💾</span> ' +
-                '<span id="autosave-text">Sauvegarde automatique...</span>' +
-                '</div>';
-
-            $('body').append(statusHtml);
-            this.statusElement = $('#autosave-status');
+            // Toast system handles its own container.
+            // No manual DOM creation needed.
         },
 
         /**
@@ -128,56 +137,22 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
         },
 
         /**
-         * Show status message.
+         * Show status message using the toast notification system.
          *
          * @param {String} type Status type (saving, saved, unsaved, error)
          */
         showStatus: function (type) {
-            var icon = '💾';
-            var text = 'Sauvegarde automatique...';
-            var bgColor = '#f8f9fa';
-            var borderColor = '#dee2e6';
-            var textColor = '#212529';
-
             switch (type) {
                 case 'saving':
-                    icon = '⏳';
-                    text = 'Sauvegarde en cours...';
-                    bgColor = '#fff3cd';
-                    borderColor = '#ffeeba';
-                    textColor = '#856404';
+                    // Brief info toast for saving state.
+                    Toast.info(this.strings.saving || 'Saving...', 2000);
                     break;
                 case 'saved':
-                    icon = '✓';
-                    text = 'Sauvegardé';
-                    bgColor = '#d4edda';
-                    borderColor = '#c3e6cb';
-                    textColor = '#155724';
+                    Toast.success(this.strings.saved || 'Saved', 2000);
                     break;
                 case 'error':
-                    icon = '⚠️';
-                    text = 'Erreur de sauvegarde';
-                    bgColor = '#f8d7da';
-                    borderColor = '#f5c6cb';
-                    textColor = '#721c24';
+                    Toast.error(this.strings.error || 'Save error', 5000);
                     break;
-            }
-
-            $('#autosave-icon').text(icon);
-            $('#autosave-text').text(text);
-            this.statusElement.css({
-                'background': bgColor,
-                'border-color': borderColor,
-                'color': textColor,
-                'display': 'flex',
-                'align-items': 'center'
-            });
-
-            // Auto-hide after 3 seconds for saved/error states
-            if (type === 'saved') {
-                setTimeout(function () {
-                    $('#autosave-status').fadeOut();
-                }, 3000);
             }
         },
 
@@ -230,47 +205,38 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
                 });
             }
 
-            // Build request data
-            var requestData = {
+            // Build request args matching the external service parameters.
+            var args = {
                 cmid: this.cmid,
                 step: this.step,
-                groupid: this.groupid,
                 data: JSON.stringify(formData),
-                sesskey: M.cfg.sesskey
+                groupid: this.groupid,
+                mode: this.mode || ''
             };
 
-            // Add mode if set (for teacher correction models)
-            if (this.mode) {
-                requestData.mode = this.mode;
-            }
+            // Call the registered Moodle external service.
+            Ajax.call([{
+                methodname: 'mod_gestionprojet_autosave',
+                args: args
+            }])[0].done(function(response) {
+                if (response.success) {
+                    self.isDirty = false;
+                    self.showStatus('saved');
 
-            // Make AJAX request
-            $.ajax({
-                url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/autosave.php',
-                method: 'POST',
-                data: requestData,
-                dataType: 'json',
-                success: function (response) {
-                    if (response.success) {
-                        self.isDirty = false;
-                        self.showStatus('saved');
-
-                        // Callback if defined
-                        if (self.onSave) {
-                            self.onSave(response);
-                        }
-                    } else {
-                        self.showStatus('error');
-                        // Only show notification for actual errors, not just failed status updates
-                        if (response.message) {
-                            console.error('Autosave error:', response.message);
-                        }
+                    // Callback if defined.
+                    if (self.onSave) {
+                        self.onSave(response);
                     }
-                },
-                error: function (xhr, status, error) {
+                } else {
                     self.showStatus('error');
-                    console.error('Autosave connection error:', status, error);
+                    // Only show notification for actual errors, not just failed status updates.
+                    if (response.message) {
+                        console.error('Autosave error:', response.message);
+                    }
                 }
+            }).fail(function(ex) {
+                self.showStatus('error');
+                console.error('Autosave connection error:', ex.message || ex);
             });
         },
 
@@ -282,10 +248,10 @@ define(['jquery', 'core/ajax', 'core/notification'], function ($, Ajax, Notifica
 
             $(window).on('beforeunload', function () {
                 if (self.isDirty) {
-                    // Try to save synchronously if possible, or just warn
-                    // Modern browsers don't allow sync XHR in beforeunload often
+                    // Try to save synchronously if possible, or just warn.
+                    // Modern browsers don't allow sync XHR in beforeunload often.
                     self.save();
-                    return 'Vous avez des modifications non sauvegardées.';
+                    return self.strings.unsavedChanges || 'You have unsaved changes.';
                 }
             });
         }

@@ -1,19 +1,4 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
  * AJAX handler for submission actions
  *
@@ -42,10 +27,10 @@ require_sesskey();
 
 $context = context_module::instance($cm->id);
 
-// Map step to table type.
-// Step 4: Requirements specification -> table gestionprojet_cdcf
-// Step 5: Trial sheet -> table gestionprojet_essai
-// Step 6: Project report -> table gestionprojet_rapport
+// Map step to table type
+// Step 4: Functional Specifications -> table gestionprojet_cdcf
+// Step 5: Test Sheet -> table gestionprojet_essai
+// Step 6: Report -> table gestionprojet_rapport
 
 $type = '';
 if ($step == 4) {
@@ -100,13 +85,8 @@ if ($action === 'submit') {
     $table = 'gestionprojet_' . $type;
     $DB->update_record($table, $submission);
 
-    // Trigger submission created event.
-    $event = \mod_gestionprojet\event\submission_created::create([
-        'objectid' => $gestionprojet->id,
-        'context' => $context,
-        'other' => ['step' => $step],
-    ]);
-    $event->trigger();
+    // Trigger event
+    // \mod_gestionprojet\event\assessable_submitted::create(...) (If we had events)
 
     // Trigger AI evaluation if enabled.
     $aievaluationid = null;

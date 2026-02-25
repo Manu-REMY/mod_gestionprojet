@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * OpenAI Provider for Gestion de Projet.
+ * OpenAI Provider for Project Management.
  *
  * Implements the AI provider interface for OpenAI's API.
  *

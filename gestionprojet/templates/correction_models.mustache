@@ -1,0 +1,137 @@
+{{!
+    @template mod_gestionprojet/correction_models
+
+    Correction models hub page for teachers.
+
+    Displays a list of correction model cards for student steps 4-8,
+    showing completion status, AI badge, and configuration links.
+
+    Context variables required:
+    * cmid - Course module ID
+    * aienabled - Boolean if AI evaluation is enabled
+    * aiprovider - Name of the AI provider (capitalized)
+    * totalmodels - Total number of model cards
+    * completedmodels - Number of completed models
+    * progresspercent - Completion percentage (0-100)
+    * hasmodels - Boolean if there are any models to display
+    * models - Array of model card objects
+
+    Icon template variables (rendered SVG HTML):
+    * icon_chevron_left - Chevron-left icon (inherit, sm)
+    * icon_check - Check-circle icon (green, sm)
+    * icon_warning - Alert-triangle icon (orange, sm)
+    * icon_incomplete - X-circle icon (orange, sm)
+    * icon_bot - Bot icon (purple, sm)
+
+    Each model card object:
+    * stepnum - Step number (4-8)
+    * icon - Rendered SVG icon HTML from icon helper
+    * title - Localized step title
+    * description - Localized step description
+    * iscomplete - Boolean if model is filled in
+    * hasinstructions - Boolean if AI instructions are set
+    * url - URL to configure the model
+
+    Example context (json):
+    {
+        "cmid": 123,
+        "aienabled": true,
+        "aiprovider": "Albert",
+        "totalmodels": 5,
+        "completedmodels": 3,
+        "progresspercent": 60,
+        "hasmodels": true,
+        "models": [
+            {
+                "stepnum": 7,
+                "icon": "<svg>...</svg>",
+                "title": "Needs Expression (Student)",
+                "description": "Horn Diagram (students)",
+                "iscomplete": true,
+                "hasinstructions": true,
+                "url": "view.php?id=123&step=7&mode=teacher"
+            }
+        ]
+    }
+}}
+
+<div class="correction-models-hub">
+
+    <div class="back-button">
+        <a href="view.php?id={{cmid}}">
+            {{{icon_chevron_left}}} {{#str}} home, gestionprojet {{/str}}
+        </a>
+    </div>
+
+    {{#aienabled}}
+        <div class="hub-ai-status enabled">
+            {{{icon_check}}} {{#str}} ai_evaluation_enabled, gestionprojet {{/str}}
+            ({{aiprovider}})
+        </div>
+    {{/aienabled}}
+    {{^aienabled}}
+        <div class="hub-ai-status disabled">
+            {{{icon_warning}}} {{#str}} ai_evaluation_disabled_hint, gestionprojet {{/str}}
+        </div>
+    {{/aienabled}}
+
+    {{#hasmodels}}
+        <div class="hub-progress">
+            <span class="hub-progress-text">{{completedmodels}} / {{totalmodels}}</span>
+            <div class="hub-progress-bar">
+                <div class="hub-progress-bar-fill" style="width: {{progresspercent}}%"></div>
+            </div>
+            <span class="hub-progress-text">{{progresspercent}}%</span>
+        </div>
+    {{/hasmodels}}
+
+    <div class="hub-description">
+        <h3>{{#str}} correction_models_hub_title, gestionprojet {{/str}}</h3>
+        <p>{{#str}} correction_models_hub_desc, gestionprojet {{/str}}</p>
+    </div>
+
+    {{^hasmodels}}
+        <div class="alert alert-warning">
+            {{#str}} no_student_steps_enabled, gestionprojet {{/str}}
+        </div>
+    {{/hasmodels}}
+
+    {{#hasmodels}}
+        <div class="models-grid">
+            {{#models}}
+                <div class="model-card {{#iscomplete}}complete{{/iscomplete}}">
+
+                    {{#aienabled}}
+                        <span class="ai-status-badge enabled">IA</span>
+                    {{/aienabled}}
+
+                    <div class="card-icon">{{{icon}}}</div>
+                    <h3 class="card-title">{{title}}</h3>
+                    <p class="card-description">{{description}}</p>
+
+                    {{#iscomplete}}
+                        <div class="card-status complete">
+                            {{{icon_check}}} {{#str}} correction_model_complete, gestionprojet {{/str}}
+                        </div>
+                    {{/iscomplete}}
+                    {{^iscomplete}}
+                        <div class="card-status incomplete">
+                            {{{icon_incomplete}}} {{#str}} correction_model_incomplete, gestionprojet {{/str}}
+                        </div>
+                    {{/iscomplete}}
+
+                    {{#hasinstructions}}
+                        <div class="card-status has-instructions">
+                            {{{icon_bot}}} {{#str}} ai_instructions_set, gestionprojet {{/str}}
+                        </div>
+                    {{/hasinstructions}}
+
+                    <a href="{{url}}" class="card-button">
+                        {{#str}} correction_model_configure, gestionprojet {{/str}}
+                    </a>
+                </div>
+            {{/models}}
+        </div>
+    {{/hasmodels}}
+
+</div>

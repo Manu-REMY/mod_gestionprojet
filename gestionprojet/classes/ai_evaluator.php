@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AI Evaluator for Gestion de Projet.
+ * AI Evaluator for Project Management.
  *
  * Main orchestrator for AI-powered evaluation of student submissions.
  *

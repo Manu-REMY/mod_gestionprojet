@@ -1,0 +1,127 @@
+{{!
+    @template mod_gestionprojet/grading_navigation
+
+    Grading page navigation components: back button, step tabs, and prev/next navigation bar.
+
+    Context variables required:
+    * cmid - Course module ID
+    * currentstep - Current step number
+    * homeurl - URL to home page
+    * aienabled - Boolean if AI is enabled
+    * steptabs - Array of step tab objects
+    * navid - Current navigation item ID (group or user)
+    * paramname - Parameter name for navigation ('groupid' or 'userid')
+    * currentindex - Current index (1-based) in navigation
+    * totalitems - Total number of navigation items
+    * hasprev - Boolean if previous item exists
+    * prevurl - URL for previous item
+    * hasnext - Boolean if next item exists
+    * nexturl - URL for next item
+    * navitems - Array of navigation items for dropdown
+    * currentstepicon - HTML for current step icon (SVG)
+    * currentstepname - Name of the current step
+    * icon_back - SVG icon for back navigation
+    * icon_prev - SVG icon for previous arrow
+    * icon_next - SVG icon for next arrow
+    * icon_refresh - SVG icon for refresh/reevaluate
+    * icon_home - SVG icon for home
+
+    Each steptab object:
+    * stepnum - Step number
+    * icon - SVG HTML for step icon
+    * name - Localized step name
+    * isactive - Boolean if this is the current step
+    * url - URL to navigate to this step tab
+
+    Each navitem object:
+    * id - Item ID (group or user ID)
+    * name - Display name
+    * isselected - Boolean if this is the current item
+    * url - URL to select this item
+
+    Example context (json):
+    {
+        "cmid": 123,
+        "currentstep": 4,
+        "homeurl": "/mod/gestionprojet/view.php?id=123",
+        "aienabled": true,
+        "steptabs": [
+            {
+                "stepnum": 7,
+                "icon": "<span class=\"gp-icon\">...</span>",
+                "name": "Needs Expression",
+                "isactive": false,
+                "url": "/mod/gestionprojet/grading.php?id=123&step=7&groupid=1"
+            }
+        ],
+        "navid": 1,
+        "paramname": "groupid",
+        "currentindex": 1,
+        "totalitems": 5,
+        "hasprev": false,
+        "hasnext": true,
+        "nexturl": "/mod/gestionprojet/grading.php?id=123&step=4&groupid=2",
+        "navitems": [
+            {"id": 1, "name": "Group A", "isselected": true, "url": "..."},
+            {"id": 2, "name": "Group B", "isselected": false, "url": "..."}
+        ]
+    }
+}}
+
+{{! Back button }}
+<a href="{{homeurl}}" class="grading-back-btn">
+    {{{icon_back}}} {{#str}} home, gestionprojet {{/str}}
+</a>
+
+{{! Step tabs }}
+<div class="step-tabs">
+    {{#steptabs}}
+        <a href="{{url}}" class="step-tab {{#isactive}}active{{/isactive}}">
+            {{{icon}}} {{name}}
+        </a>
+    {{/steptabs}}
+
+    {{#aienabled}}
+    <button type="button" class="bulk-reevaluate-btn" id="btn-bulk-reevaluate"
+        data-cmid="{{cmid}}"
+        data-step="{{currentstep}}"
+        title="{{#str}} bulk_reevaluate_desc, gestionprojet {{/str}}">
+        {{{icon_refresh}}} {{#str}} bulk_reevaluate, gestionprojet {{/str}}
+    </button>
+    {{/aienabled}}
+</div>
+
+{{! Navigation bar }}
+<div class="navigation-bar">
+    <div class="nav-buttons">
+        {{#hasprev}}
+            <a href="{{prevurl}}" class="nav-btn">
+                {{{icon_prev}}} {{#str}} grading_previous, gestionprojet {{/str}}
+            </a>
+        {{/hasprev}}
+        {{^hasprev}}
+            <span class="nav-btn disabled">{{{icon_prev}}} {{#str}} grading_previous, gestionprojet {{/str}}</span>
+        {{/hasprev}}
+
+        <span class="nav-counter">
+            {{currentindex}} / {{totalitems}}
+        </span>
+
+        {{#hasnext}}
+            <a href="{{nexturl}}" class="nav-btn">
+                {{#str}} grading_next, gestionprojet {{/str}} {{{icon_next}}}
+            </a>
+        {{/hasnext}}
+        {{^hasnext}}
+            <span class="nav-btn disabled">{{#str}} grading_next, gestionprojet {{/str}} {{{icon_next}}}</span>
+        {{/hasnext}}
+    </div>
+
+    <select class="item-selector" id="grading-item-selector">
+        {{#navitems}}
+            <option value="{{url}}" {{#isselected}}selected{{/isselected}}>
+                {{name}}
+            </option>
+        {{/navitems}}
+    </select>
+</div>

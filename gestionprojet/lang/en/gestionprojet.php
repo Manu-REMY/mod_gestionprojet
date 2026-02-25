@@ -5,14 +5,6 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * English language strings for mod_gestionprojet.
@@ -39,8 +31,6 @@ $string['gestionprojet:submit'] = 'Submit work';
 $string['gestionprojet:viewallsubmissions'] = 'View all submissions';
 $string['gestionprojet:grade'] = 'Grade submissions';
 $string['gestionprojet:lock'] = 'Lock/unlock pages';
-$string['gestionprojet:viewhistory'] = 'View modification history';
-$string['gestionprojet:exportall'] = 'Export all projects';
 
 // Navigation
 $string['home'] = 'Home';
@@ -86,6 +76,29 @@ $string['outils'] = 'Tools and technical means';
 $string['evaluation'] = 'Assessment methods';
 $string['competences'] = 'Skills developed';
 $string['image'] = 'Project image';
+
+// Step 1 - Descriptive Sheet
+$string['step1_objective_title'] = 'Objective';
+$string['step1_objective_desc'] = 'The descriptive sheet helps frame the project by defining its title, level, skills developed and assessment methods.';
+$string['step1_select_default'] = '-- Select --';
+$string['step1_grade_6'] = '6th grade';
+$string['step1_grade_5'] = '5th grade';
+$string['step1_grade_4'] = '4th grade';
+$string['step1_grade_3'] = '3rd grade';
+$string['step1_duree_placeholder'] = 'e.g.: 12 weeks';
+$string['step1_image_desc'] = 'Representative image of the project (optional)';
+$string['step1_no_image'] = 'No image';
+$string['step1_image_upload_todo'] = 'Image upload to be implemented';
+$string['step1_export_pdf_todo'] = 'PDF export will be implemented with TCPDF server-side';
+$string['comp_ost1_desc'] = 'Describe the links between uses and technological evolutions of objects and technical systems';
+$string['comp_ost2_desc'] = 'Describe the interactions between an object or a technical system, its environment and the users';
+$string['comp_ost3_desc'] = 'Characterise and choose an object or a technical system according to different criteria';
+$string['comp_sfc1_desc'] = 'Describe and characterise the internal organisation of an object or a technical system and its exchanges with its environment (energy, data)';
+$string['comp_sfc2_desc'] = 'Identify a malfunction of a technical object and remedy it';
+$string['comp_sfc3_desc'] = 'Understand and modify a program associated with a functionality of an object or a technical system';
+$string['comp_ccri1_desc'] = 'Imagine, design and create one or more solutions in response to a need, requirements (sustainable development, for example) or the need for improvements in a creative approach';
+$string['comp_ccri2_desc'] = 'Validate technical solutions through simulations or test protocols';
+$string['comp_ccri3_desc'] = 'Design, write, test and debug a program';
 
 // Needs Expression
 $string['aqui'] = 'Who does it serve?';
@@ -189,12 +202,16 @@ $string['saved'] = 'Auto-saved';
 $string['export_pdf'] = 'Export to PDF';
 $string['export_pdf_notice'] = 'The PDF export generates a document with all entered information.';
 $string['your_group'] = 'You are working in group';
-$string['export_all'] = 'Export all projects';
-$string['view_history'] = 'View history';
+$string['view_history'] = 'Modification history';
 
 // Messages
 $string['autosave_success'] = 'Auto-save completed';
 $string['autosave_error'] = 'Error during auto-save';
+$string['autosave_status_default'] = 'Auto-saving...';
+$string['autosave_status_saving'] = 'Saving...';
+$string['autosave_status_saved'] = 'Saved';
+$string['autosave_status_error'] = 'Save error';
+$string['autosave_unsaved_changes'] = 'You have unsaved changes.';
 $string['no_groups'] = 'No groups configured. Please create groups in this course.';
 $string['no_submission'] = 'No submission for this group';
 $string['submission_saved'] = 'Your work has been saved';
@@ -426,7 +443,7 @@ $string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'JSON data co
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'The time when the work was submitted';
 
-// Trial (Step 5)
+// Test Sheet (Step 5)
 $string['privacy:metadata:gestionprojet_essai:userid'] = 'The ID of the user who submitted the test sheet';
 $string['privacy:metadata:gestionprojet_essai:nom_essai'] = 'The name of the test';
 $string['privacy:metadata:gestionprojet_essai:date_essai'] = 'The date of the test';
@@ -450,7 +467,7 @@ $string['privacy:metadata:gestionprojet_rapport:bilan'] = 'The project summary';
 $string['privacy:metadata:gestionprojet_rapport:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_rapport:timesubmitted'] = 'The time when the work was submitted';
 
-// Student needs (Step 7)
+// Student Needs Expression (Step 7)
 $string['privacy:metadata:gestionprojet_besoin_eleve'] = 'Student needs expression (Horn Diagram) submissions';
 $string['privacy:metadata:gestionprojet_besoin_eleve:userid'] = 'The ID of the user who submitted the needs expression';
 $string['privacy:metadata:gestionprojet_besoin_eleve:aqui'] = 'Who the product serves (student answer)';
@@ -567,52 +584,191 @@ $string['status_failed'] = 'Failed';
 $string['status_applied'] = 'Applied';
 $string['ai_log_report_activity'] = 'AI Usage Report for {$a}';
 
-// Events
-$string['event_submission_created'] = 'Submission created';
-$string['event_submission_graded'] = 'Submission graded';
-$string['event_ai_evaluation_completed'] = 'AI evaluation completed';
+// SVG Diagram labels (Horn Diagram / Bete a Corne)
+$string['diagram_aqui_title'] = 'Who does the product serve?';
+$string['diagram_aqui_subtitle'] = '(user)';
+$string['diagram_surquoi_title'] = 'What does it act on?';
+$string['diagram_surquoi_subtitle'] = '(raw material)';
+$string['diagram_product_label'] = 'Product';
+$string['diagram_product_subtitle'] = '(technical object)';
+$string['diagram_dansquelbut_title'] = 'For what purpose?';
+$string['diagram_dansquelbut_subtitle'] = '(usage function or need)';
 
-// Hardcoded strings - grading.php
-$string['grading_step_context'] = 'You are grading the step "{$a}" for all groups.';
-$string['group_not_started'] = 'The group has not started this step yet.';
-$string['logbook_no_entries'] = 'No logbook entries.';
-$string['logbook_status_ahead'] = 'Ahead';
-$string['logbook_status_ontime'] = 'On time';
-$string['logbook_status_late'] = 'Late';
-$string['ai_submission_required_hint'] = '(Submission must be validated to start AI evaluation)';
-$string['loading'] = 'Loading...';
-$string['grading_evaluation_heading'] = 'Evaluation';
-$string['grade_placeholder'] = 'Grade out of 20';
-$string['feedback_placeholder'] = 'Your comments for the group...';
-$string['grading_status_label'] = 'Status:';
+// Step 3 Timeline JS messages
+$string['timeline_error_end_before_start'] = 'End date must be after start date';
+$string['timeline_define_durations'] = 'Define task durations';
+$string['timeline_total_hours'] = 'Total: {$a->hours} hours';
+$string['timeline_weeks_at_rate'] = '{$a->weeks} weeks at {$a->rate}h/week';
+$string['timeline_hours_available'] = '{$a}h available';
+$string['timeline_hours_over_capacity'] = '{$a}h over capacity';
+$string['timeline_vacation_periods'] = '{$a} vacation period(s):';
 
-// Hardcoded strings - step1.php
-$string['step1_objective'] = 'Objective';
-$string['step1_objective_desc'] = 'The description sheet allows you to frame the project by defining its title, level, skills worked on and assessment methods.';
-$string['choose'] = '-- Choose --';
-$string['level_6e'] = '6ème';
-$string['level_5e'] = '5ème';
-$string['level_4e'] = '4ème';
-$string['level_3e'] = '3ème';
-$string['duration_placeholder'] = 'e.g. 12 weeks';
-$string['project_image_help'] = 'Representative image for the project (optional)';
-$string['no_image'] = 'No image';
-$string['image_upload_todo'] = 'Image upload to be implemented';
+// Home page
+$string['status_complete'] = 'Completed';
+$string['status_incomplete'] = 'To complete';
+$string['configure'] = 'Configure';
+$string['grading_desc'] = 'Grade group submissions by step';
+$string['student_desc'] = 'Complete your project step by step';
+$string['error_group_not_found'] = 'Error: Group not found (ID: {$a})';
+$string['view_only'] = 'View only';
+$string['view'] = 'View';
+$string['work'] = 'Work';
 
-// Hardcoded strings - step4.php / step4_teacher.php
-$string['default_interactor'] = 'Interactor {$a}';
-$string['step4_cdcf_title'] = 'FUNCTIONAL SPECIFICATIONS';
-$string['step4_subtitle'] = 'Functional analysis - Technology';
-$string['expected_product_name'] = 'Expected product name';
-$string['expected_usage_env'] = 'Expected usage environment';
-$string['expected_main_function'] = 'Expected main function...';
+// Default AI instructions for teacher correction models
+$string['ai_instructions_default_step4'] = 'Role: You are an experienced and supportive Technology teacher at a middle school. You must evaluate 9th grade students (14-15 years old) on their writing of a Functional Requirements Specification (FRS). You have the teacher\'s model attached.
 
-// Hardcoded strings - step3.php (timeline)
-$string['step3_select_dates'] = 'Select a start date and an end date';
-$string['step3_end_after_start'] = 'The end date must be after the start date';
-$string['step3_define_durations'] = 'Set the task durations';
-$string['step3_total_hours'] = 'Total: {$a->hours} hours ({$a->weeks} weeks at {$a->hpw}h/week)';
-$string['step3_hours_available'] = '{$a}h available';
-$string['step3_hours_exceeded'] = '{$a}h above capacity';
-$string['step3_vacation_periods'] = '{$a} vacation period(s):';
-$string['step3_vacation_prefix'] = 'Holidays ';
+Pedagogical context: Students must move from "need" to "function". They often confuse the function (what the object must do) with the technical solution (how it is made). Your goal is to correct this common error while validating the structure of the FRS.
+
+Your evaluation criteria are as follows:
+
+Functional Analysis (Octopus Diagram / Functions)
+
+Verbs: Each function must begin with an infinitive verb.
+
+Main Function (MF): Does it correctly connect the user and the subject matter?
+
+Constraint Functions (CF): Are they relevant (Energy, Aesthetics, Safety, Budget, Environment)?
+
+Critical error to watch for: The student must not mention a technical solution (Example: saying "Must have wheels" is an error, they should say "Must allow movement").
+
+3. Characterization (Criteria and Levels)
+
+Criteria: Are they observable or measurable?
+
+Levels: Is there a target value (e.g., "Less than 20 euros", "Battery life > 2h")? Is the unit used for the level consistent with the measured function?
+
+4. Form and Spelling
+
+Is the syntax correct and the technical vocabulary precise?
+
+Response format: For each student, provide a structured response as follows:
+
+Overall indicative grade (out of 20) or general assessment (Achieved / In progress / Not achieved).
+
+Strengths: What is well done.
+
+Analysis table: A quick table checking the 3 pillars (Need, Functions, Criteria).
+
+Improvement advice: Explain how to transform a solution into a function if the student made a mistake. Be encouraging.';
+
+$string['ai_instructions_default_step7'] = 'Role: You are an experienced technology teacher at a middle school.
+
+Objective: Correct a needs expression diagram (Horn Diagram or Octopus type) completed by a 9th grade student.
+
+Correction instructions:
+
+Horn Diagram Analysis: Check that the student has correctly answered the three questions:
+
+Who does the product serve? (User)
+
+What does the product act on? (Subject matter / External element)
+
+For what purpose? (Usage function starting with an infinitive verb).
+
+Precision of formulation: The overall function must be precise. Avoid vague formulations like "It helps".
+
+Pedagogy: Do not give the raw correction. If an answer is wrong, ask a guiding question so the student finds the error (e.g., "Does the object really act on the user or on the object it manipulates?").
+
+Tone: Encouraging, clear and appropriate for a 14-15 year old level.';
+
+$string['logbook_model_desc'] = 'Define here a sample logbook expected from students. The AI will use this model to evaluate student submissions.';
+$string['logbook_status_header'] = 'Status';
+$string['produit_placeholder'] = 'Expected product name';
+$string['milieu_placeholder'] = 'Expected environment of use';
+$string['fp_placeholder'] = 'Expected main function...';
+$string['add_interactor'] = 'Add a stakeholder';
+$string['interactor_name_placeholder'] = 'Stakeholder name';
+$string['delete_interactor'] = 'Delete';
+$string['fc_description_placeholder'] = 'Constraint function description';
+$string['add_criterion'] = 'Criterion';
+$string['add_constraint_function'] = 'Constraint Function';
+
+// Step 4 - Requirements Specification page (student)
+$string['step4_page_title'] = 'FUNCTIONAL REQUIREMENTS SPECIFICATION';
+$string['step4_page_subtitle'] = 'Functional analysis - Technology';
+$string['step4_desc_title'] = 'What is a Functional Requirements Specification?';
+$string['step4_desc_text'] = 'The Functional Requirements Specification (FRS) defines what the product must do without specifying how.';
+$string['step4_fp_label'] = 'MF (Main Function)';
+$string['step4_fp_desc'] = 'Connects the product to the first 2 elements of the external environment';
+$string['step4_fc_label'] = 'CF (Constraint Function)';
+$string['step4_fc_desc'] = 'Connects the product to 1 element of the external environment';
+$string['step4_produit_placeholder'] = 'Product name';
+$string['step4_fp_placeholder'] = 'Describe the main function of the product...';
+$string['step4_milieu_placeholder'] = 'Environment of use';
+$string['step4_diagram_title'] = 'Stakeholder Diagram';
+$string['step4_interactors_section'] = 'Stakeholders and Constraint Functions';
+$string['step4_add_interactor'] = '+ Add a stakeholder';
+$string['step4_interactor_default'] = 'Stakeholder {$a}';
+$string['step4_interactor_name_placeholder'] = 'Stakeholder name';
+$string['step4_delete'] = 'Delete';
+$string['step4_fc_value_placeholder'] = 'Constraint function description';
+$string['step4_critere_placeholder'] = 'Appreciation criterion';
+$string['step4_niveau_placeholder'] = 'Level';
+$string['step4_unite_placeholder'] = 'Unit';
+$string['step4_add_critere'] = '+ Criterion';
+$string['step4_add_fc'] = '+ Constraint Function';
+$string['step4_product_fallback'] = 'Product';
+
+// Step 5 - Test Sheet page (student)
+$string['step5_page_title'] = 'TEST SHEET';
+$string['step5_page_subtitle'] = 'Experimental approach - Technology';
+$string['step5_general_info'] = 'General information';
+$string['step5_section1_title'] = 'TEST OBJECTIVE';
+$string['step5_fonction_service_label'] = 'What is the service/constraint function that the system must satisfy?';
+$string['step5_fonction_service_placeholder'] = 'Describe the service function or constraint to satisfy...';
+$string['step5_niveaux_reussite_label'] = 'What are the levels (values and units) that define the success of the test?';
+$string['step5_niveaux_reussite_placeholder'] = 'Specify the expected values and units of measurement...';
+$string['step5_section2_title'] = 'PROTOCOL DESIGN';
+$string['step5_etapes_protocole_label'] = 'What are the steps of your protocol?';
+$string['step5_etapes_protocole_placeholder'] = 'List the steps of your experimental protocol...';
+$string['step5_materiel_outils_label'] = 'What materials and tools will you use?';
+$string['step5_materiel_outils_placeholder'] = 'List the required materials and tools...';
+$string['step5_precautions_label'] = 'What experimental precautions must you implement to ensure the validity of the test?';
+$string['step5_precaution_placeholder'] = 'Precaution {$a}...';
+$string['step5_section3_title'] = 'RESULTS AND OBSERVATIONS';
+$string['step5_resultats_label'] = 'Results obtained:';
+$string['step5_resultats_placeholder'] = 'Describe the test results...';
+$string['step5_observations_label'] = 'Observations and remarks:';
+$string['step5_observations_placeholder'] = 'Note your observations and remarks...';
+$string['step5_section4_title'] = 'CONCLUSION';
+$string['step5_conclusion_label'] = 'Is the test conclusive? Why?';
+$string['step5_conclusion_placeholder'] = 'Write your conclusion...';
+
+// Step 6 - Project Report page (student)
+$string['step6_page_title'] = 'PROJECT REPORT';
+$string['step6_page_subtitle'] = 'Technology - Middle School';
+$string['step6_info_title'] = 'This document gathers all information about your project';
+$string['step6_info_text'] = 'Fill in all fields to obtain a complete report';
+$string['step6_section1_title'] = '1. GENERAL INFORMATION';
+$string['step6_titre_projet_placeholder'] = 'Your project name';
+$string['step6_section2_title'] = '2. THE PROJECT';
+$string['step6_besoin_projet_placeholder'] = 'Describe the need your project addresses...';
+$string['step6_imperatifs_placeholder'] = 'List the project constraints and requirements...';
+$string['step6_section3_title'] = '3. CHOSEN SOLUTIONS';
+$string['step6_solutions_placeholder'] = 'Describe the selected solutions...';
+$string['step6_justification_placeholder'] = 'Justify your technical and strategic choices...';
+$string['step6_section4_title'] = '4. IMPLEMENTATION';
+$string['step6_realisation_placeholder'] = 'How did you implement your project?';
+$string['step6_difficultes_placeholder'] = 'What difficulties did you encounter and how did you overcome them?';
+$string['step6_section5_title'] = '5. VALIDATION AND RESULTS';
+$string['step6_validation_placeholder'] = 'Describe the results of your tests and trials...';
+$string['step6_ameliorations_placeholder'] = 'What improvements could you make to the project?';
+$string['step6_section6_title'] = '6. CONCLUSION';
+$string['step6_bilan_placeholder'] = 'What is your overall project summary? What did you learn?';
+$string['step6_perspectives_placeholder'] = 'What are the development perspectives for the project?';
+$string['step6_member_placeholder'] = 'Last name and first name';
+$string['step6_add_member'] = 'Add a member';
+$string['step6_remove_member'] = 'Remove this member';
+
+// Teacher dashboard.
+$string['dashboard_config'] = 'Configuration';
+$string['dashboard_models'] = 'Correction models';
+$string['dashboard_grading'] = 'Grading';
+$string['dashboard_to_grade'] = 'to grade';
+$string['dashboard_submitted'] = 'Submitted';
+$string['dashboard_graded'] = 'Graded';
+$string['step'] = 'Step';
+
+// Shared error strings for JS
+$string['error_submitting'] = 'Error submitting';
+$string['error_reverting'] = 'Error reverting';

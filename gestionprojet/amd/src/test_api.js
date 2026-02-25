@@ -50,31 +50,24 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
             var originalText = testBtn.text();
             testBtn.prop('disabled', true).text('Testing...');
 
-            // Make AJAX request (don't send apikey for built-in providers)
-            var requestData = {
-                sesskey: M.cfg.sesskey,
-                cmid: cmid,
-                provider: provider
-            };
-            if (!hasBuiltinKey) {
-                requestData.apikey = apiKey;
-            }
-
-            $.ajax({
-                url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/test_api.php',
-                method: 'POST',
-                data: requestData,
-                dataType: 'json'
-            }).done(function(response) {
+            // Call external service for API connection test.
+            Ajax.call([{
+                methodname: 'mod_gestionprojet_test_api_connection',
+                args: {
+                    cmid: cmid,
+                    provider: provider,
+                    apikey: hasBuiltinKey ? '' : apiKey
+                }
+            }])[0].done(function(response) {
                 if (response.success) {
                     Notification.alert('Success', response.message, 'OK');
                 } else {
                     Notification.alert('Error', response.message, 'OK');
                 }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                Notification.alert('Error', 'Connection failed: ' + errorThrown, 'OK');
+            }).fail(function(ex) {
+                Notification.alert('Error', 'Connection failed: ' + (ex.message || ex.error), 'OK');
             }).always(function() {
-                // Restore button state
+                // Restore button state.
                 testBtn.prop('disabled', false).text(originalText);
             });
         });

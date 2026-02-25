@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AI Configuration class for Gestion de Projet.
+ * AI Configuration class for Project Management.
  *
  * Handles secure storage and retrieval of AI API keys and settings.
  *

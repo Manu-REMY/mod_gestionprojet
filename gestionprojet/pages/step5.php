@@ -5,17 +5,9 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 5: Trial sheet - Validation (Student group page)
+ * Step 5: Test Sheet - Validation (Student group page)
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -80,19 +72,12 @@ $isLocked = $isSubmitted; // Lock if submitted
 $canSubmit = $gestionprojet->enable_submission && !$isSubmitted;
 $canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
-// Load AMD module.
-$PAGE->requires->js_call_amd('mod_gestionprojet/step5', 'init', [[
-    'cmid' => $cm->id,
-    'step' => 5,
-    'groupid' => $groupid,
-    'autosaveInterval' => $gestionprojet->autosave_interval * 1000,
-    'isLocked' => $isLocked,
-    'strings' => [
-        'confirm_submission' => get_string('confirm_submission', 'gestionprojet'),
-        'confirm_revert' => get_string('confirm_revert', 'gestionprojet'),
-        'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet'),
-    ],
-]]);
+// Autosave handled inline at bottom of file
+// $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
+//     'cmid' => $cm->id,
+//     'step' => 5,
+//     'interval' => $gestionprojet->autosaveinterval * 1000
+// ]]);
 
 echo $OUTPUT->header();
 
@@ -123,7 +108,10 @@ if ($submission->precautions) {
 
 
 
-<div class="step-container">
+<div class="step-container"
+    data-str-error-submitting="<?php echo s(get_string('error_submitting', 'gestionprojet')); ?>"
+    data-str-error-reverting="<?php echo s(get_string('error_reverting', 'gestionprojet')); ?>"
+>
     <!-- Navigation -->
 <?php
     $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step5');
@@ -155,8 +143,8 @@ if ($submission->precautions) {
     <!-- Header -->
     <div class="header-section">
         <div class="header-title">
-            <h2>■ FICHE ESSAI</h2>
-            <div class="header-subtitle">Démarche expérimentale - Technologie</div>
+            <h2><?php echo get_string('step5_page_title', 'gestionprojet'); ?></h2>
+            <div class="header-subtitle"><?php echo get_string('step5_page_subtitle', 'gestionprojet'); ?></div>
         </div>
         <div class="header-logo">🔬</div>
     </div>
@@ -173,9 +161,9 @@ if ($submission->precautions) {
     <form id="essaiForm" method="post" action="">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
 
-        <!-- General information -->
+        <!-- Informations générales -->
         <div class="info-section">
-            <div class="section-title-simple">Informations générales</div>
+            <div class="section-title-simple"><?php echo get_string('step5_general_info', 'gestionprojet'); ?></div>
 
             <div class="info-row">
                 <div class="info-group">
@@ -193,86 +181,86 @@ if ($submission->precautions) {
 
         </div>
 
-        <!-- Section 1: Trial objective -->
+        <!-- Section 1: Objectif de l'essai -->
         <div class="numbered-section">
             <div class="section-header">
                 <div class="section-number">1</div>
-                <div class="section-header-text">OBJECTIF DE L'ESSAI</div>
+                <div class="section-header-text"><?php echo get_string('step5_section1_title', 'gestionprojet'); ?></div>
             </div>
             <div class="section-content">
                 <div class="question-block">
                     <label class="question-label" for="fonction_service">
-                        Quelle est la fonction de service/contrainte que doit satisfaire le système ?
+                        <?php echo get_string('step5_fonction_service_label', 'gestionprojet'); ?>
                     </label>
                     <textarea id="fonction_service" name="fonction_service"
-                        placeholder="Décrivez la fonction de service ou la contrainte à satisfaire..." <?php echo $disabled; ?>><?php echo s($submission->fonction_service ?? ''); ?></textarea>
+                        placeholder="<?php echo get_string('step5_fonction_service_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->fonction_service ?? ''); ?></textarea>
                 </div>
 
                 <div class="question-block">
                     <label class="question-label" for="niveaux_reussite">
-                        Quelles sont les niveaux (valeurs et unité) que définissent la réussite du test ?
+                        <?php echo get_string('step5_niveaux_reussite_label', 'gestionprojet'); ?>
                     </label>
                     <textarea id="niveaux_reussite" name="niveaux_reussite"
-                        placeholder="Précisez les valeurs attendues et les unités de mesure..." <?php echo $disabled; ?>><?php echo s($submission->niveaux_reussite ?? ''); ?></textarea>
+                        placeholder="<?php echo get_string('step5_niveaux_reussite_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->niveaux_reussite ?? ''); ?></textarea>
                 </div>
             </div>
         </div>
 
-        <!-- Section 2: Protocol design -->
+        <!-- Section 2: Conception du protocole -->
         <div class="numbered-section">
             <div class="section-header">
                 <div class="section-number">2</div>
-                <div class="section-header-text">CONCEPTION DU PROTOCOLE</div>
+                <div class="section-header-text"><?php echo get_string('step5_section2_title', 'gestionprojet'); ?></div>
             </div>
             <div class="section-content">
                 <div class="question-block">
                     <label class="question-label" for="etapes_protocole">
-                        Quelles sont les étapes de votre protocole ?
+                        <?php echo get_string('step5_etapes_protocole_label', 'gestionprojet'); ?>
                     </label>
                     <textarea id="etapes_protocole" name="etapes_protocole"
-                        placeholder="Listez les étapes de votre protocole expérimental..." <?php echo $disabled; ?>><?php echo s($submission->etapes_protocole ?? ''); ?></textarea>
+                        placeholder="<?php echo get_string('step5_etapes_protocole_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->etapes_protocole ?? ''); ?></textarea>
                 </div>
 
                 <div class="question-block">
                     <label class="question-label" for="materiel_outils">
-                        Quel matériel et quels outils allez-vous utiliser ?
+                        <?php echo get_string('step5_materiel_outils_label', 'gestionprojet'); ?>
                     </label>
                     <textarea id="materiel_outils" name="materiel_outils"
-                        placeholder="Listez le matériel et les outils nécessaires..." <?php echo $disabled; ?>><?php echo s($submission->materiel_outils ?? ''); ?></textarea>
+                        placeholder="<?php echo get_string('step5_materiel_outils_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->materiel_outils ?? ''); ?></textarea>
                 </div>
 
                 <div class="question-block">
                     <label class="question-label">
-                        Quelles précautions expérimentales devez-vous mettre en œuvre pour assurer la validité du test ?
+                        <?php echo get_string('step5_precautions_label', 'gestionprojet'); ?>
                     </label>
                     <table class="precautions-table">
                         <tbody>
                             <tr>
                                 <td>
                                     <textarea id="precaution_1" name="precaution_1"
-                                        placeholder="Précaution 1..." <?php echo $disabled; ?>><?php echo s($precautions[0] ?? ''); ?></textarea>
+                                        placeholder="<?php echo get_string('step5_precaution_placeholder', 'gestionprojet', 1); ?>" <?php echo $disabled; ?>><?php echo s($precautions[0] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <textarea id="precaution_2" name="precaution_2"
-                                        placeholder="Précaution 2..." <?php echo $disabled; ?>><?php echo s($precautions[1] ?? ''); ?></textarea>
+                                        placeholder="<?php echo get_string('step5_precaution_placeholder', 'gestionprojet', 2); ?>" <?php echo $disabled; ?>><?php echo s($precautions[1] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <textarea id="precaution_3" name="precaution_3"
-                                        placeholder="Précaution 3..." <?php echo $disabled; ?>><?php echo s($precautions[2] ?? ''); ?></textarea>
+                                        placeholder="<?php echo get_string('step5_precaution_placeholder', 'gestionprojet', 3); ?>" <?php echo $disabled; ?>><?php echo s($precautions[2] ?? ''); ?></textarea>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
                                     <textarea id="precaution_4" name="precaution_4"
-                                        placeholder="Précaution 4..." <?php echo $disabled; ?>><?php echo s($precautions[3] ?? ''); ?></textarea>
+                                        placeholder="<?php echo get_string('step5_precaution_placeholder', 'gestionprojet', 4); ?>" <?php echo $disabled; ?>><?php echo s($precautions[3] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <textarea id="precaution_5" name="precaution_5"
-                                        placeholder="Précaution 5..." <?php echo $disabled; ?>><?php echo s($precautions[4] ?? ''); ?></textarea>
+                                        placeholder="<?php echo get_string('step5_precaution_placeholder', 'gestionprojet', 5); ?>" <?php echo $disabled; ?>><?php echo s($precautions[4] ?? ''); ?></textarea>
                                 </td>
                                 <td>
                                     <textarea id="precaution_6" name="precaution_6"
-                                        placeholder="Précaution 6..." <?php echo $disabled; ?>><?php echo s($precautions[5] ?? ''); ?></textarea>
+                                        placeholder="<?php echo get_string('step5_precaution_placeholder', 'gestionprojet', 6); ?>" <?php echo $disabled; ?>><?php echo s($precautions[5] ?? ''); ?></textarea>
                                 </td>
                             </tr>
                         </tbody>
@@ -281,27 +269,27 @@ if ($submission->precautions) {
             </div>
         </div>
 
-        <!-- Section 3: Results and observations -->
+        <!-- Section 3: Résultats et observations -->
         <div class="numbered-section">
             <div class="section-header">
                 <div class="section-number">3</div>
-                <div class="section-header-text">RÉSULTATS ET OBSERVATIONS</div>
+                <div class="section-header-text"><?php echo get_string('step5_section3_title', 'gestionprojet'); ?></div>
             </div>
             <div class="section-content">
                 <div class="question-block">
                     <label class="question-label" for="resultats_obtenus">
-                        Résultats obtenus :
+                        <?php echo get_string('step5_resultats_label', 'gestionprojet'); ?>
                     </label>
                     <textarea id="resultats_obtenus" name="resultats_obtenus"
-                        placeholder="Décrivez les résultats de l'essai..." <?php echo $disabled; ?>><?php echo s($submission->resultats_obtenus ?? ''); ?></textarea>
+                        placeholder="<?php echo get_string('step5_resultats_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->resultats_obtenus ?? ''); ?></textarea>
                 </div>
 
                 <div class="question-block">
                     <label class="question-label" for="observations_remarques">
-                        Observations et remarques :
+                        <?php echo get_string('step5_observations_label', 'gestionprojet'); ?>
                     </label>
                     <textarea id="observations_remarques" name="observations_remarques"
-                        placeholder="Notez vos observations et remarques..." <?php echo $disabled; ?>><?php echo s($submission->observations_remarques ?? ''); ?></textarea>
+                        placeholder="<?php echo get_string('step5_observations_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->observations_remarques ?? ''); ?></textarea>
                 </div>
             </div>
         </div>
@@ -310,15 +298,15 @@ if ($submission->precautions) {
         <div class="numbered-section">
             <div class="section-header">
                 <div class="section-number">4</div>
-                <div class="section-header-text">CONCLUSION</div>
+                <div class="section-header-text"><?php echo get_string('step5_section4_title', 'gestionprojet'); ?></div>
             </div>
             <div class="section-content">
                 <div class="question-block">
                     <label class="question-label" for="conclusion">
-                        Le test est-il concluant ? Pourquoi ?
+                        <?php echo get_string('step5_conclusion_label', 'gestionprojet'); ?>
                     </label>
                     <textarea id="conclusion" name="conclusion"
-                        placeholder="Rédigez votre conclusion..." <?php echo $disabled; ?>><?php echo s($submission->conclusion ?? ''); ?></textarea>
+                        placeholder="<?php echo get_string('step5_conclusion_placeholder', 'gestionprojet'); ?>" <?php echo $disabled; ?>><?php echo s($submission->conclusion ?? ''); ?></textarea>
                 </div>
             </div>
         </div>
@@ -337,7 +325,7 @@ if ($submission->precautions) {
                 </button>
             <?php endif; ?>
 
-            <button type="button" class="btn-export btn-export-margin" id="exportPdfBtn">
+            <button type="button" class="btn-export btn-export-margin" onclick="exportPDF()">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?> (2 pages)
             </button>
             <p class="export-notice">
@@ -346,6 +334,120 @@ if ($submission->precautions) {
         </div>
     </form>
 </div>
+
+<?php
+// Ensure jQuery is loaded
+$PAGE->requires->jquery();
+?>
+
+<script>
+    // Wait for jQuery to be loaded
+    // Wait for jQuery to be loaded
+    // Wait for RequireJS and jQuery
+    (function waitRequire() {
+        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
+            setTimeout(waitRequire, 50);
+            return;
+        }
+
+        require(['jquery', 'core/ajax', 'mod_gestionprojet/autosave'], function ($, Ajax, Autosave) {
+            var cmid = <?php echo $cm->id; ?>;
+            var step = 5;
+            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
+            var groupid = <?php echo $groupid; ?>;
+            var stepContainer = document.querySelector('.step-container');
+            var strErrorSubmitting = stepContainer.dataset.strErrorSubmitting;
+            var strErrorReverting = stepContainer.dataset.strErrorReverting;
+
+            // Custom serialization for step 5
+            var serializeData = function () {
+                var formData = {};
+
+                // Collect regular fields (text inputs, textareas, date)
+                $('#essaiForm').find('input[type="text"], input[type="date"], textarea').each(function () {
+                    if (this.name && !this.name.startsWith('precaution_')) {
+                        formData[this.name] = this.value;
+                    }
+                });
+
+                // Collect precautions as JSON array
+                var precautions = [];
+                for (var i = 1; i <= 6; i++) {
+                    var input = document.getElementById('precaution_' + i);
+                    if (input) {
+                        precautions.push(input.value);
+                    }
+                }
+                formData['precautions'] = JSON.stringify(precautions);
+
+                return formData;
+            };
+
+            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
+
+            // Handle Submission
+            $('#submitButton').on('click', function() {
+                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
+                    Ajax.call([{
+                        methodname: 'mod_gestionprojet_submit_step',
+                        args: {
+                            cmid: cmid,
+                            step: step,
+                            action: 'submit'
+                        }
+                    }])[0].done(function(data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(strErrorSubmitting);
+                        }
+                    }).fail(function() {
+                        alert(strErrorSubmitting);
+                    });
+                }
+            });
+
+            // Handle Revert
+            $('#revertButton').on('click', function() {
+                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
+                    Ajax.call([{
+                        methodname: 'mod_gestionprojet_submit_step',
+                        args: {
+                            cmid: cmid,
+                            step: step,
+                            action: 'revert'
+                        }
+                    }])[0].done(function(data) {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(strErrorReverting);
+                        }
+                    }).fail(function() {
+                        alert(strErrorReverting);
+                    });
+                }
+            });
+
+            if (!isLocked) {
+                Autosave.init({
+                    cmid: cmid,
+                    step: step,
+                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
+                    interval: autosaveInterval,
+                    formSelector: '#essaiForm',
+                    serialize: serializeData
+                });
+            }
+        });
+    })();
+
+    // PDF Export placeholder (will use TCPDF server-side in future)
+    function exportPDF() {
+        alert('<?php echo get_string('export_pdf_coming_soon', 'gestionprojet'); ?>');
+        // TODO: Implement server-side PDF generation with TCPDF
+    }
+</script>
 
 <?php
 echo $OUTPUT->footer();
