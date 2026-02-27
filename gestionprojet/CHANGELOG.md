@@ -5,6 +5,48 @@ All notable changes to the mod_gestionprojet plugin will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-25
+
+### Added
+- Teacher dashboard with submission progress overview and AI evaluation summary
+- Lucide SVG icon system replacing emoji icons (classes/output/icon.php)
+- AI usage report with request/response logging accessible from activity page
+- Auto-submit at deadline with automatic AI summary generation
+- Sequential navigation and save redirect for teacher correction models
+- 14 AMD modules for client-side functionality
+
+### Changed
+- Migrated all AJAX to 9 External API classes (classes/external/) declared in db/services.php
+- Replaced legacy jQuery $.ajax() with core/ajax AMD module calls
+- Created 4 Mustache templates (home, dashboard_teacher, grading_navigation, correction_models)
+- Implemented Output API renderer (classes/output/renderer.php)
+
+### Fixed
+- Bootstrap 5 compatibility for expand/collapse buttons
+- Teacher access to AI report from activity page
+
+## [2.0.0] - 2026-02-24
+
+### Added
+- 9 External Web Services declared in db/services.php (autosave, submit_step, evaluate, get_evaluation_status, apply_ai_grade, save_grade, generate_ai_summary, bulk_reevaluate, test_api_connection)
+- 4 Mustache templates in templates/ directory
+- Output API renderer and icon helper classes
+- Public bug tracker on Forge Apps Education
+
+### Changed
+- Complete Moodle plugin checklist compliance audit (CONTRIB-10279)
+- All user-facing strings externalized via get_string() (775 EN + 1023 FR strings)
+- All code comments, variable names and function names converted to English
+- All CSS extracted from PHP files to styles.css (1,278 lines, namespaced with .path-mod-gestionprojet)
+- All inline JavaScript moved to AMD modules
+- GPL v3 headers verified on all PHP files
+- Removed all debug code and PHP superglobals
+
+### Fixed
+- All broken plugin documentation links
+- All missing language string definitions
+- Cron task date handling (userdate replaced with date)
+
 ## [1.8.0] - 2026-01-29
 
 ### Added
