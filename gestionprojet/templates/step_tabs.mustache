@@ -1,0 +1,49 @@
+{{!
+    @template mod_gestionprojet/step_tabs
+
+    Reusable step navigation tabs (8 phases).
+
+    Used on:
+    - grading.php (via grading_navigation.mustache partial include)
+    - teacher pages step1, step2, step3
+    - correction model pages step4_teacher .. step8_teacher
+
+    Context variables required:
+    * tabs - Array of 8 tab objects, in pedagogical order [1, 3, 2, 7, 4, 5, 8, 6]
+
+    Each tab object:
+    * stepnum - Step number (1-8)
+    * icon - SVG HTML for step icon
+    * name - Localized step name
+    * isactive - Boolean if this is the current step
+    * isenabled - Boolean if this step is enabled (false => greyed/disabled)
+    * url - URL to navigate to this step (only used when isenabled is true)
+
+    Example context (json):
+    {
+        "tabs": [
+            {
+                "stepnum": 1,
+                "icon": "<span class=\"gp-icon\">...</span>",
+                "name": "Description",
+                "isactive": true,
+                "isenabled": true,
+                "url": "/mod/gestionprojet/view.php?id=123&step=1"
+            }
+        ]
+    }
+}}
+<div class="step-tabs">
+    {{#tabs}}
+        {{#isenabled}}
+            <a href="{{url}}" class="step-tab {{#isactive}}active{{/isactive}}">
+                {{{icon}}} {{name}}
+            </a>
+        {{/isenabled}}
+        {{^isenabled}}
+            <span class="step-tab disabled" aria-disabled="true">
+                {{{icon}}} {{name}}
+            </span>
+        {{/isenabled}}
+    {{/tabs}}
+</div>
