@@ -3746,6 +3746,12 @@
     color: white;
 }
 
+.path-mod-gestionprojet .step-tab.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .path-mod-gestionprojet .step-tabs-row {
     display: flex;
     align-items: center;
