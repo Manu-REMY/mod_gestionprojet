@@ -1435,3 +1435,54 @@ function gestionprojet_trigger_ai_evaluation_safe($gestionprojet, $step, $submis
         debugging('AI evaluation trigger failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
     }
 }
+
+/**
+ * Build the context for the step_tabs Mustache partial.
+ *
+ * @param stdClass $gestionprojet The activity instance (for enable_stepN flags)
+ * @param int $cmid Course module ID
+ * @param int $currentstep The currently active step (1-8)
+ * @param string $context Tab context: 'teacher' (steps 1,2,3 view), 'model' (steps 4-8 teacher mode), 'grading' (grading.php)
+ * @return array Context array with key 'tabs' suitable for the step_tabs partial
+ */
+function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $context) {
+    global $CFG;
+
+    require_once($CFG->dirroot . '/mod/gestionprojet/classes/output/icon.php');
+
+    $order = [1, 3, 2, 7, 4, 5, 8, 6];
+    $tabs = [];
+
+    foreach ($order as $stepnum) {
+        $field = 'enable_step' . $stepnum;
+        $enableval = isset($gestionprojet->$field) ? (int)$gestionprojet->$field : 1;
+        $isenabled = ($enableval !== 0);
+
+        // Build the URL according to the destination context.
+        $params = ['id' => $cmid, 'step' => $stepnum];
+        $isteacherstep = in_array($stepnum, [1, 2, 3], true);
+        $isstudentstep = in_array($stepnum, [4, 5, 6, 7, 8], true);
+
+        if ($context === 'grading' && $isstudentstep) {
+            $url = (new \moodle_url('/mod/gestionprojet/grading.php', $params))->out(false);
+        } else if ($isteacherstep) {
+            // Teacher pages always go to view.php?step=N (no mode).
+            $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
+        } else {
+            // Student steps in non-grading context: go to teacher correction model page.
+            $params['mode'] = 'teacher';
+            $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
+        }
+
+        $tabs[] = [
+            'stepnum' => $stepnum,
+            'icon' => \mod_gestionprojet\output\icon::render_step($stepnum, 'sm', 'inherit'),
+            'name' => get_string('step' . $stepnum, 'gestionprojet'),
+            'isactive' => ($stepnum === (int)$currentstep),
+            'isenabled' => $isenabled,
+            'url' => $url,
+        ];
+    }
+
+    return ['tabs' => $tabs];
+}
