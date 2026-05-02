@@ -41,6 +41,10 @@ if (!$model) {
 }
 
 echo $OUTPUT->header();
+echo $OUTPUT->render_from_template(
+    'mod_gestionprojet/step_tabs',
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 5, 'model')
+);
 
 // Include shared teacher model styles.
 require_once(__DIR__ . '/teacher_model_styles.php');
