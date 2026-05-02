@@ -3746,7 +3746,14 @@
     color: white;
 }
 
-.path-mod-gestionprojet .step-tabs .bulk-reevaluate-btn {
+.path-mod-gestionprojet .step-tabs-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.path-mod-gestionprojet .step-tabs-row .bulk-reevaluate-btn {
     margin-left: auto;
     padding: 8px 14px;
     border: 2px solid #ed8936;
@@ -3759,7 +3766,7 @@
     transition: all 0.2s;
 }
 
-.path-mod-gestionprojet .step-tabs .bulk-reevaluate-btn:hover {
+.path-mod-gestionprojet .step-tabs-row .bulk-reevaluate-btn:hover {
     background: #ed8936;
     color: white;
 }
