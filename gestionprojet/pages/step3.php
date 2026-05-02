@@ -57,6 +57,12 @@ $showGrade = false;
 
 echo $OUTPUT->header();
 
+// Render direct step navigation tabs.
+echo $OUTPUT->render_from_template(
+    'mod_gestionprojet/step_tabs',
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 3, 'teacher')
+);
+
 // Navigation buttons
 $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step3');
 
