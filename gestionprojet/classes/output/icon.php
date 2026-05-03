@@ -56,6 +56,7 @@ class icon {
         6 => 'file-text',
         7 => 'target',
         8 => 'book-open',
+        9 => 'git-fork',
     ];
 
     /**
@@ -88,7 +89,7 @@ class icon {
     /**
      * Render the icon associated with a given step number.
      *
-     * @param int    $stepnum Step number (1-8).
+     * @param int    $stepnum Step number (1-9).
      * @param string $size    Size class suffix. Default 'md'.
      * @param string $color   Colour class suffix. Default 'purple'.
      * @return string HTML span containing the inline SVG, or empty string if step unknown.
