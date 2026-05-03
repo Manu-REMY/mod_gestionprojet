@@ -63,22 +63,6 @@ echo $OUTPUT->render_from_template(
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 2, 'teacher')
 );
 
-// Navigation buttons
-// Navigation buttons
-echo '<div class="navigation-container-flex">';
-    echo '<div class="nav-group">';
-        echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="nav-button nav-button-prev"><span>🏠</span><span>' . get_string('home', 'gestionprojet') . '</span></a>';
-        if ($nav_links['prev']) {
-            echo '<a href="' . $nav_links['prev'] . '" class="nav-button nav-button-prev"><span>←</span><span>' . get_string('previous', 'gestionprojet') . '</span></a>';
-        }
-    echo '</div>';
-
-    echo '<div>';
-        // Step 2 is the last teacher step - link back to home instead of next student step.
-        echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="nav-button"><span>' . get_string('home', 'gestionprojet') . '</span><span>🏠</span></a>';
-    echo '</div>';
-echo '</div>';
-
 echo '<h2>🦏 ' . get_string('step2', 'gestionprojet') . '</h2>';
 
 // Description
