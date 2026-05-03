@@ -468,87 +468,207 @@ Sur un Moodle de test :
 2. Vérifier que la barre d'onglets fonctionne comme avant (mêmes URLs, sélecteur de groupe préservé, prev/next préservés)
 
 ---
+## Phase 2 — Friction 2 : Refonte de la home enseignant en Gantt
 
-## Phase 2 — Friction 2 : Modèles de correction sur la home
-
-### Task 8 : Préparer le contexte template pour les modèles dans `home.php`
+### Task 8 : Construire le contexte Gantt dans `home.php`
 
 **Files :**
 - Modify: `gestionprojet/pages/home.php`
 
-- [ ] **Step 1 : Étendre le bloc enseignant pour exposer les cartes de modèles**
+- [ ] **Step 1 : Identifier le bloc enseignant actuel**
 
-Dans `gestionprojet/pages/home.php`, repérer le bloc qui calcule `modelscomplete` / `modelstotal` (vers les lignes 124-144). Juste après cette boucle, ajouter la construction des cartes :
+```bash
+grep -n "isteacher\|teachersteps\|gradingsteps\|dashboard" gestionprojet/pages/home.php | head -20
+```
+
+Repérer le bloc `if ($isteacher) {` qui construit `teachersteps`, `gradingsteps`, `dashboard` (vers les lignes 43-186).
+
+- [ ] **Step 2 : Remplacer le bloc enseignant par la construction du Gantt**
+
+Dans `home.php`, à l'intérieur du `if ($isteacher) {`, **remplacer entièrement** le contenu existant (qui construit `teachersteps`, `gradingsteps`, `dashboard`) par la construction du Gantt :
 
 ```php
-// Build correction models cards for the home template.
-$correctionmodelsorder = [7, 4, 5, 8, 6];
-$correctionmodels = [];
-foreach ($correctionmodelsorder as $mstep) {
-    if (!isset($modeltables[$mstep])) {
-        continue;
+// Build the Gantt dashboard for the teacher home view.
+// Pedagogical column order: [1, 3, 2, 7, 4, 5, 8, 6].
+$ganttorder = [1, 3, 2, 7, 4, 5, 8, 6];
+$teacherdocsteps = [1, 2, 3];
+$studentsteps = [4, 5, 6, 7, 8];
+
+// Map step number to its data source for "is filled" computation.
+$teacherdocs = [
+    1 => $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]),
+    2 => $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]),
+    3 => $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]),
+];
+$teachermodels = [
+    4 => $DB->get_record('gestionprojet_cdcf_teacher', ['gestionprojetid' => $gestionprojet->id]),
+    5 => $DB->get_record('gestionprojet_essai_teacher', ['gestionprojetid' => $gestionprojet->id]),
+    6 => $DB->get_record('gestionprojet_rapport_teacher', ['gestionprojetid' => $gestionprojet->id]),
+    7 => $DB->get_record('gestionprojet_besoin_eleve_teacher', ['gestionprojetid' => $gestionprojet->id]),
+    8 => $DB->get_record('gestionprojet_carnet_teacher', ['gestionprojetid' => $gestionprojet->id]),
+];
+$studenttables = [
+    4 => 'gestionprojet_cdcf',
+    5 => 'gestionprojet_essai',
+    6 => 'gestionprojet_rapport',
+    7 => 'gestionprojet_besoin_eleve',
+    8 => 'gestionprojet_carnet',
+];
+
+// Helper closures for cell completion logic.
+$teacherdocfilled = function($stepnum) use ($teacherdocs) {
+    $rec = $teacherdocs[$stepnum] ?? null;
+    if (!$rec) {
+        return false;
     }
-    $mfield = 'enable_step' . $mstep;
-    $enableval = isset($gestionprojet->$mfield) ? (int)$gestionprojet->$mfield : 1;
-    if ($enableval === 0) {
-        continue;
+    if ($stepnum === 1) {
+        return !empty($rec->intitule);
     }
-    $mrecord = $DB->get_record($modeltables[$mstep], ['gestionprojetid' => $gestionprojet->id]);
-    $hasinstructions = $mrecord && !empty($mrecord->ai_instructions);
-    $isprovided = ($mstep === 4 && $enableval === 2);
+    if ($stepnum === 2) {
+        return !empty($rec->aqui);
+    }
+    if ($stepnum === 3) {
+        return !empty($rec->projectname);
+    }
+    return false;
+};
+$teachermodelfilled = function($stepnum) use ($teachermodels, $gestionprojet) {
+    $rec = $teachermodels[$stepnum] ?? null;
+    if (!$rec) {
+        return false;
+    }
     // For step 4 in provided mode, completion is based on `produit` rather than `ai_instructions`.
-    $iscomplete = $isprovided
-        ? ($mrecord && !empty($mrecord->produit))
-        : $hasinstructions;
-    $correctionmodels[] = [
-        'stepnum' => $mstep,
-        'icon' => $stepicons[$mstep] ?? \mod_gestionprojet\output\icon::render_step($mstep, 'xl', 'purple'),
-        'title' => get_string('step' . $mstep, 'gestionprojet'),
-        'description' => get_string('step' . $mstep . '_desc', 'gestionprojet'),
-        'iscomplete' => $iscomplete,
-        'isprovided' => $isprovided,
-        'url' => 'view.php?id=' . $cm->id . '&step=' . $mstep . '&mode=teacher',
+    if ($stepnum === 4 && (int)$gestionprojet->enable_step4 === 2) {
+        return !empty($rec->produit);
+    }
+    return !empty($rec->ai_instructions);
+};
+
+// Build column headers and cells for each row.
+$ganttcolumns = [];
+$rowdocs = [];
+$rowmodels = [];
+$rowstudent = [];
+
+$totalconfigured = 0;
+$totalconfigtargets = 0;
+$totalungraded = 0;
+
+foreach ($ganttorder as $stepnum) {
+    $field = 'enable_step' . $stepnum;
+    $enableval = isset($gestionprojet->$field) ? (int)$gestionprojet->$field : 1;
+    $isenabled = ($enableval !== 0);
+    $isteacherdocstep = in_array($stepnum, $teacherdocsteps, true);
+    $isstudentstep = in_array($stepnum, $studentsteps, true);
+
+    // Column header — shows checkbox only for teacher doc steps (independent control).
+    $ganttcolumns[] = [
+        'stepnum' => $stepnum,
+        'name' => get_string('step' . $stepnum, 'gestionprojet'),
+        'icon' => \mod_gestionprojet\output\icon::render_step($stepnum, 'sm', 'inherit'),
     ];
+
+    // Row 1 cells — only fill for teacher doc steps.
+    if ($isteacherdocstep) {
+        $iscomplete = $teacherdocfilled($stepnum);
+        if ($isenabled) {
+            $totalconfigtargets++;
+            if ($iscomplete) {
+                $totalconfigured++;
+            }
+        }
+        $rowdocs[] = [
+            'stepnum' => $stepnum,
+            'isfilled' => true,
+            'isenabled' => $isenabled,
+            'iscomplete' => $iscomplete,
+            'haschexkbox' => true,
+            'name' => get_string('step' . $stepnum, 'gestionprojet'),
+            'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnum]))->out(false),
+        ];
+    } else {
+        $rowdocs[] = ['isfilled' => false];
+    }
+
+    // Row 2 cells — only fill for student steps. Checkbox is here (shared with row 3).
+    if ($isstudentstep) {
+        $iscomplete = $teachermodelfilled($stepnum);
+        $isprovided = ($stepnum === 4 && $enableval === 2);
+        if ($isenabled) {
+            $totalconfigtargets++;
+            if ($iscomplete) {
+                $totalconfigured++;
+            }
+        }
+        $rowmodels[] = [
+            'stepnum' => $stepnum,
+            'isfilled' => true,
+            'isenabled' => $isenabled,
+            'iscomplete' => $iscomplete,
+            'isprovided' => $isprovided,
+            'hascheckbox' => true,
+            'name' => get_string('step' . $stepnum, 'gestionprojet'),
+            'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnum, 'mode' => 'teacher']))->out(false),
+        ];
+    } else {
+        $rowmodels[] = ['isfilled' => false];
+    }
+
+    // Row 3 cells — only fill for student steps. No checkbox here (linked via row 2).
+    if ($isstudentstep) {
+        $table = $studenttables[$stepnum];
+        $totalsubmitted = $DB->count_records_select(
+            $table,
+            'gestionprojetid = :gid AND status = 1',
+            ['gid' => $gestionprojet->id]
+        );
+        $totalgraded = $DB->count_records_select(
+            $table,
+            'gestionprojetid = :gid AND grade IS NOT NULL',
+            ['gid' => $gestionprojet->id]
+        );
+        $ungraded = max(0, $totalsubmitted - $totalgraded);
+        if ($isenabled) {
+            $totalungraded += $ungraded;
+        }
+        $rowstudent[] = [
+            'stepnum' => $stepnum,
+            'isfilled' => true,
+            'isenabled' => $isenabled,
+            'submitted' => $totalsubmitted,
+            'graded' => $totalgraded,
+            'ungraded' => $ungraded,
+            'hasungraded' => $ungraded > 0,
+            'name' => get_string('step' . $stepnum, 'gestionprojet'),
+            'url' => (new \moodle_url('/mod/gestionprojet/grading.php', ['id' => $cm->id, 'step' => $stepnum]))->out(false),
+        ];
+    } else {
+        $rowstudent[] = ['isfilled' => false];
+    }
 }
-$templatecontext['correctionmodels'] = $correctionmodels;
-$templatecontext['hascorrectionmodels'] = !empty($correctionmodels);
+
+$templatecontext['gantt'] = [
+    'columns' => $ganttcolumns,
+    'rowdocs' => $rowdocs,
+    'rowmodels' => $rowmodels,
+    'rowstudent' => $rowstudent,
+    'cmid' => $cm->id,
+    'sesskey' => sesskey(),
+    'summary' => [
+        'configured' => $totalconfigured,
+        'total' => $totalconfigtargets,
+        'ungraded' => $totalungraded,
+        'hasungraded' => $totalungraded > 0,
+    ],
+];
 ```
 
-> Note : `$stepicons` est déjà construit pour les steps 1-8 plus haut dans le fichier ; le fallback `??` n'est qu'une sécurité.
-
-- [ ] **Step 2 : Étendre le calcul du compteur `modelscomplete`**
-
-Toujours dans `home.php`, modifier le calcul existant pour appliquer la même règle (mode fourni → `produit`) :
-
-Remplacer le bloc (vers les lignes 132-144) :
-
-```php
-$modelstotal++;
-$mrecord = $DB->get_record($mtable, ['gestionprojetid' => $gestionprojet->id]);
-if ($mrecord && !empty($mrecord->ai_instructions)) {
-    $modelscomplete++;
-}
-```
-
-par :
-
-```php
-$modelstotal++;
-$mrecord = $DB->get_record($mtable, ['gestionprojetid' => $gestionprojet->id]);
-$enableval = isset($gestionprojet->$mfield) ? (int)$gestionprojet->$mfield : 1;
-$isprovided = ($mstep === 4 && $enableval === 2);
-$iscomplete = $isprovided
-    ? ($mrecord && !empty($mrecord->produit))
-    : ($mrecord && !empty($mrecord->ai_instructions));
-if ($iscomplete) {
-    $modelscomplete++;
-}
-```
+> Note : la suppression des blocs `teachersteps`/`gradingsteps`/`dashboard` est intentionnelle — leurs données sont remplacées par la structure `gantt`. Cependant, **conserver** les variables d'icônes en fin de fichier (`$templatecontext['icon_*']`) car elles servent à d'autres parties du template.
 
 - [ ] **Step 3 : Vérifier la syntaxe**
 
 ```bash
-php -l gestionprojet/pages/home.php
+/usr/local/bin/php -l gestionprojet/pages/home.php
 ```
 Expected : `No syntax errors detected`.
 
@@ -556,256 +676,783 @@ Expected : `No syntax errors detected`.
 
 ```bash
 git add gestionprojet/pages/home.php
-git commit -m "feat(home): expose correction models data to template"
+git commit -m "feat(home): build Gantt context (3 rows × 8 columns) for teacher view"
 ```
 
 ---
 
-### Task 9 : Mettre à jour `home.mustache` pour afficher la section "Modèles de correction"
+### Task 9 : Créer le template `home_gantt.mustache`
+
+**Files :**
+- Create: `gestionprojet/templates/home_gantt.mustache`
+
+- [ ] **Step 1 : Créer le fichier**
+
+Contenu exact :
+
+```mustache
+{{!
+    @template mod_gestionprojet/home_gantt
+
+    Teacher home Gantt-style dashboard: 3 rows × 8 columns.
+    Row 1: teacher documents (steps 1, 3, 2)
+    Row 2: correction models (steps 7, 4, 5, 8, 6)
+    Row 3: student activities (steps 7, 4, 5, 8, 6)
+
+    Context variables required:
+    * cmid - Course module ID
+    * sesskey - Moodle sesskey for AJAX
+    * columns - Array of 8 column header objects {stepnum, name, icon}
+    * rowdocs, rowmodels, rowstudent - Arrays of 8 cell objects
+    * summary - {configured, total, ungraded, hasungraded}
+
+    Each cell object (filled): {stepnum, isfilled:true, isenabled, iscomplete?, isprovided?, hascheckbox, name, url, ...}
+    Each cell object (empty): {isfilled:false}
+}}
+<div class="gp-gantt" data-cmid="{{cmid}}" data-sesskey="{{sesskey}}">
+
+    <div class="gp-gantt-summary">
+        <span class="gp-gantt-summary-config">
+            {{#str}}gantt_progress_summary, gestionprojet, {"configured": "{{summary.configured}}", "total": "{{summary.total}}"}{{/str}}
+        </span>
+        {{#summary.hasungraded}}
+        <span class="gp-gantt-summary-ungraded">
+            {{#str}}gantt_ungraded_summary, gestionprojet, {{summary.ungraded}}{{/str}}
+        </span>
+        {{/summary.hasungraded}}
+        {{^summary.hasungraded}}
+        <span class="gp-gantt-summary-ungraded gp-summary-ok">
+            {{#str}}gantt_ungraded_summary_zero, gestionprojet{{/str}}
+        </span>
+        {{/summary.hasungraded}}
+    </div>
+
+    <div class="gp-gantt-grid">
+
+        {{! Header row }}
+        <div class="gp-gantt-corner"></div>
+        {{#columns}}
+            <div class="gp-col-head">
+                <div class="gp-col-icon">{{{icon}}}</div>
+                <div class="gp-col-name">{{name}}</div>
+            </div>
+        {{/columns}}
+
+        {{! Row 1 — Teacher documents }}
+        <div class="gp-row-label gp-row-label-docs">
+            {{#str}}gantt_row_teacher_docs, gestionprojet{{/str}}
+        </div>
+        {{#rowdocs}}
+            {{#isfilled}}
+                <div class="gp-cell gp-cell-docs {{^isenabled}}gp-cell-disabled{{/isenabled}}">
+                    <input type="checkbox" class="gp-cell-cb" data-stepnum="{{stepnum}}" data-row="docs" {{#isenabled}}checked{{/isenabled}} title="{{name}}">
+                    <a href="{{url}}" class="gp-cell-link">
+                        <div class="gp-cell-name">{{name}}</div>
+                        {{#isenabled}}
+                            {{#iscomplete}}<div class="gp-cell-status gp-status-done">{{#str}}gantt_cell_status_done, gestionprojet{{/str}}</div>{{/iscomplete}}
+                            {{^iscomplete}}<div class="gp-cell-status gp-status-todo">{{#str}}gantt_cell_status_todo, gestionprojet{{/str}}</div>{{/iscomplete}}
+                        {{/isenabled}}
+                        {{^isenabled}}<div class="gp-cell-status gp-status-disabled">{{#str}}gantt_cell_status_disabled, gestionprojet{{/str}}</div>{{/isenabled}}
+                    </a>
+                </div>
+            {{/isfilled}}
+            {{^isfilled}}<div class="gp-cell gp-cell-empty"></div>{{/isfilled}}
+        {{/rowdocs}}
+
+        {{! Row 2 — Correction models }}
+        <div class="gp-row-label gp-row-label-models">
+            {{#str}}gantt_row_correction_models, gestionprojet{{/str}}
+        </div>
+        {{#rowmodels}}
+            {{#isfilled}}
+                <div class="gp-cell gp-cell-models {{^isenabled}}gp-cell-disabled{{/isenabled}}" data-stepnum="{{stepnum}}">
+                    <input type="checkbox" class="gp-cell-cb gp-cell-cb-shared" data-stepnum="{{stepnum}}" data-row="models" {{#isenabled}}checked{{/isenabled}} title="{{name}}">
+                    <a href="{{url}}" class="gp-cell-link">
+                        <div class="gp-cell-name">{{name}}</div>
+                        {{#isenabled}}
+                            {{#isprovided}}<div class="gp-cell-status gp-status-provided">{{#str}}step4_provided_badge, gestionprojet{{/str}}</div>{{/isprovided}}
+                            {{^isprovided}}
+                                {{#iscomplete}}<div class="gp-cell-status gp-status-done">{{#str}}gantt_cell_status_done, gestionprojet{{/str}}</div>{{/iscomplete}}
+                                {{^iscomplete}}<div class="gp-cell-status gp-status-todo">{{#str}}gantt_cell_status_todo, gestionprojet{{/str}}</div>{{/iscomplete}}
+                            {{/isprovided}}
+                        {{/isenabled}}
+                        {{^isenabled}}<div class="gp-cell-status gp-status-disabled">{{#str}}gantt_cell_status_disabled, gestionprojet{{/str}}</div>{{/isenabled}}
+                    </a>
+                </div>
+            {{/isfilled}}
+            {{^isfilled}}<div class="gp-cell gp-cell-empty"></div>{{/isfilled}}
+        {{/rowmodels}}
+
+        {{! Row 3 — Student activities }}
+        <div class="gp-row-label gp-row-label-student">
+            {{#str}}gantt_row_student_activities, gestionprojet{{/str}}
+        </div>
+        {{#rowstudent}}
+            {{#isfilled}}
+                <div class="gp-cell gp-cell-student {{^isenabled}}gp-cell-disabled{{/isenabled}}" data-stepnum="{{stepnum}}">
+                    <span class="gp-cell-link-arrow" aria-hidden="true">↑</span>
+                    <a href="{{url}}" class="gp-cell-link">
+                        <div class="gp-cell-name">{{name}}</div>
+                        {{#isenabled}}
+                            <div class="gp-cell-status">{{submitted}} / {{graded}} notés</div>
+                            {{#hasungraded}}<div class="gp-cell-status gp-status-todo">{{ungraded}} à corriger</div>{{/hasungraded}}
+                        {{/isenabled}}
+                        {{^isenabled}}<div class="gp-cell-status gp-status-disabled">{{#str}}gantt_cell_status_disabled, gestionprojet{{/str}}</div>{{/isenabled}}
+                    </a>
+                </div>
+            {{/isfilled}}
+            {{^isfilled}}<div class="gp-cell gp-cell-empty"></div>{{/isfilled}}
+        {{/rowstudent}}
+
+    </div>
+</div>
+```
+
+- [ ] **Step 2 : Vérifier la balance Mustache**
+
+```bash
+grep -c "{{" gestionprojet/templates/home_gantt.mustache
+grep -c "}}" gestionprojet/templates/home_gantt.mustache
+```
+Expected : balanced.
+
+- [ ] **Step 3 : Commit**
+
+```bash
+git add gestionprojet/templates/home_gantt.mustache
+git commit -m "feat(home): add home_gantt Mustache template (3×8 layout)"
+```
+
+---
+
+### Task 10 : Brancher le rendu du Gantt dans `home.mustache`
 
 **Files :**
 - Modify: `gestionprojet/templates/home.mustache`
 
-- [ ] **Step 1 : Repérer le bouton "Modèles de correction" actuel**
+- [ ] **Step 1 : Repérer le bloc enseignant existant**
 
 ```bash
-grep -n "correction_models\|correctionmodels\|page=correctionmodels" gestionprojet/templates/home.mustache
+grep -n "isteacher\|teachersteps\|gradingsteps\|dashboard\|correction_models\|page=correctionmodels" gestionprojet/templates/home.mustache | head -20
 ```
 
-- [ ] **Step 2 : Supprimer le bouton et insérer la nouvelle section**
+- [ ] **Step 2 : Remplacer le bloc enseignant**
 
-Localiser dans `home.mustache` le lien/bouton pointant vers `view.php?id=...&page=correctionmodels` et le **remplacer** par le bloc suivant (avant la section dashboard, après la section "Documents enseignant") :
+Dans `gestionprojet/templates/home.mustache`, repérer le bloc `{{#isteacher}}…{{/isteacher}}` qui contient les sections existantes (teachersteps + gradingsteps + dashboard + bouton Modèles de correction). **Remplacer son contenu** par :
 
 ```mustache
-{{#hascorrectionmodels}}
-<section class="gp-section gp-section-models">
-    <h3 class="gp-section-title">
-        <span class="gp-section-dot gp-dot-models"></span>
-        {{#str}} correction_models, gestionprojet {{/str}}
-    </h3>
-    <div class="gp-models-grid">
-        {{#correctionmodels}}
-        <a href="{{url}}" class="gp-model-card{{#iscomplete}} is-complete{{/iscomplete}}{{#isprovided}} is-provided{{/isprovided}}">
-            <div class="gp-model-icon">{{{icon}}}</div>
-            <div class="gp-model-body">
-                <div class="gp-model-title">{{title}}</div>
-                <div class="gp-model-desc">{{description}}</div>
-                <div class="gp-model-status">
-                    {{#isprovided}}
-                        <span class="gp-badge gp-badge-provided">{{#str}} step4_provided_badge, gestionprojet {{/str}}</span>
-                    {{/isprovided}}
-                    {{^isprovided}}
-                        {{#iscomplete}}
-                            <span class="gp-badge gp-badge-complete">{{#str}} model_configured, gestionprojet {{/str}}</span>
-                        {{/iscomplete}}
-                        {{^iscomplete}}
-                            <span class="gp-badge gp-badge-todo">{{#str}} model_to_configure, gestionprojet {{/str}}</span>
-                        {{/iscomplete}}
-                    {{/isprovided}}
-                </div>
-            </div>
-        </a>
-        {{/correctionmodels}}
-    </div>
-</section>
-{{/hascorrectionmodels}}
+{{#isteacher}}
+    {{#teacherpagescomplete}}
+    {{/teacherpagescomplete}}
+
+    {{> mod_gestionprojet/home_gantt}}
+{{/isteacher}}
 ```
 
-- [ ] **Step 3 : Vérifier la balance Mustache**
+> Note : le bloc `{{> mod_gestionprojet/home_gantt}}` consomme la clé `gantt` du contexte (déjà construite en Task 8) car le partial accède à `cmid`, `sesskey`, `columns`, `rowdocs`, `rowmodels`, `rowstudent`, `summary` au niveau parent — les références doivent être `{{gantt.cmid}}`, etc. Adapter le template `home_gantt.mustache` créé en Task 9 pour préfixer ses variables par `gantt.`, OU appeler le partial dans un bloc `{{#gantt}}{{> ...}}{{/gantt}}` pour ouvrir un scope local.
+
+Préférer la seconde option (plus lisible) :
+
+```mustache
+{{#isteacher}}
+    {{#gantt}}
+        {{> mod_gestionprojet/home_gantt}}
+    {{/gantt}}
+{{/isteacher}}
+```
+
+Avec ce wrapper, les variables internes du partial (`cmid`, `columns`, etc.) sont résolues directement.
+
+- [ ] **Step 3 : Vérifier la balance Mustache et la syntaxe**
 
 ```bash
 grep -c "{{" gestionprojet/templates/home.mustache
 grep -c "}}" gestionprojet/templates/home.mustache
 ```
-Expected : les deux comptes identiques.
 
 - [ ] **Step 4 : Commit**
 
 ```bash
 git add gestionprojet/templates/home.mustache
-git commit -m "feat(home): render correction models section directly on home"
+git commit -m "feat(home): include home_gantt partial in teacher view"
 ```
 
 ---
 
-### Task 10 : Ajouter les styles CSS de la section "Modèles de correction"
+### Task 11 : Ajouter les styles CSS du Gantt
 
 **Files :**
 - Modify: `gestionprojet/styles.css`
 
 - [ ] **Step 1 : Ajouter le bloc CSS en fin de fichier**
 
-À la fin de `gestionprojet/styles.css` (avant les media queries finales si elles existent, sinon en toute fin) :
+À la fin de `gestionprojet/styles.css` :
 
 ```css
-/* Home — Correction models section */
-.path-mod-gestionprojet .gp-section-models {
-    margin: 24px 0;
+/* ============================================================
+   Home Gantt dashboard (teacher view)
+   ============================================================ */
+.path-mod-gestionprojet .gp-gantt {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+    margin: 16px 0 24px;
+    overflow-x: auto;
 }
-.path-mod-gestionprojet .gp-section-title {
+.path-mod-gestionprojet .gp-gantt-summary {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #6b7280;
-    margin: 0 0 14px;
-}
-.path-mod-gestionprojet .gp-section-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-.path-mod-gestionprojet .gp-dot-models {
-    background: #d97706;
-}
-.path-mod-gestionprojet .gp-models-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-}
-.path-mod-gestionprojet .gp-model-card {
-    display: flex;
-    gap: 12px;
-    padding: 14px;
-    background: linear-gradient(180deg, #fffbeb 0%, #fffefa 100%);
-    border: 1px solid #fde68a;
+    gap: 24px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #bbf7d0;
     border-radius: 10px;
-    text-decoration: none;
-    color: inherit;
-    transition: transform .12s ease, box-shadow .12s ease;
-}
-.path-mod-gestionprojet .gp-model-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    text-decoration: none;
-}
-.path-mod-gestionprojet .gp-model-title {
-    font-weight: 700;
-    color: #111827;
-    font-size: 14px;
-}
-.path-mod-gestionprojet .gp-model-desc {
-    color: #6b7280;
-    font-size: 12px;
-    margin-top: 2px;
-}
-.path-mod-gestionprojet .gp-model-status {
-    margin-top: 8px;
-}
-.path-mod-gestionprojet .gp-badge {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 999px;
-    letter-spacing: 0.02em;
-}
-.path-mod-gestionprojet .gp-badge-complete {
-    background: #d1fae5;
+    font-size: 13px;
     color: #065f46;
+    font-weight: 600;
+    flex-wrap: wrap;
 }
-.path-mod-gestionprojet .gp-badge-todo {
-    background: #fef3c7;
+.path-mod-gestionprojet .gp-gantt-summary-ungraded {
     color: #92400e;
 }
-.path-mod-gestionprojet .gp-badge-provided {
+.path-mod-gestionprojet .gp-gantt-summary-ungraded.gp-summary-ok {
+    color: #065f46;
+}
+.path-mod-gestionprojet .gp-gantt-grid {
+    display: grid;
+    grid-template-columns: 180px repeat(8, minmax(110px, 1fr));
+    gap: 6px;
+    min-width: 1100px;
+}
+.path-mod-gestionprojet .gp-gantt-corner {
+    background: transparent;
+}
+.path-mod-gestionprojet .gp-col-head {
+    text-align: center;
+    padding: 10px 6px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+.path-mod-gestionprojet .gp-col-name {
+    font-size: 11px;
+    color: #4b5563;
+    font-weight: 600;
+    line-height: 1.2;
+}
+.path-mod-gestionprojet .gp-row-label {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #111827;
+    padding: 12px 14px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+.path-mod-gestionprojet .gp-row-label-docs { border-color: #4f46e5; }
+.path-mod-gestionprojet .gp-row-label-models { border-color: #d97706; }
+.path-mod-gestionprojet .gp-row-label-student { border-color: #059669; }
+.path-mod-gestionprojet .gp-cell {
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid transparent;
+    min-height: 70px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.path-mod-gestionprojet .gp-cell-docs {
+    background: linear-gradient(180deg, #eef2ff 0%, #fafbff 100%);
+    border-color: #c7d2fe;
+}
+.path-mod-gestionprojet .gp-cell-models {
+    background: linear-gradient(180deg, #fffbeb 0%, #fffefa 100%);
+    border-color: #fde68a;
+}
+.path-mod-gestionprojet .gp-cell-student {
+    background: linear-gradient(180deg, #ecfdf5 0%, #f7fefb 100%);
+    border-color: #a7f3d0;
+}
+.path-mod-gestionprojet .gp-cell-empty {
+    background: transparent;
+    border: none;
+}
+.path-mod-gestionprojet .gp-cell-disabled {
+    opacity: 0.45;
+}
+.path-mod-gestionprojet .gp-cell-cb {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 16px;
+    height: 16px;
+    accent-color: #4f46e5;
+    cursor: pointer;
+    z-index: 2;
+}
+.path-mod-gestionprojet .gp-cell-cb-shared {
+    accent-color: #d97706;
+}
+.path-mod-gestionprojet .gp-cell-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    padding: 6px 4px 4px 24px;
+    text-align: center;
+    height: 100%;
+}
+.path-mod-gestionprojet .gp-cell-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+.path-mod-gestionprojet .gp-cell-name {
+    font-weight: 600;
+    color: #111827;
+    font-size: 12px;
+}
+.path-mod-gestionprojet .gp-cell-status {
+    font-size: 10px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+.path-mod-gestionprojet .gp-cell-status.gp-status-done {
+    color: #065f46;
+    font-weight: 700;
+}
+.path-mod-gestionprojet .gp-cell-status.gp-status-todo {
+    color: #92400e;
+    font-weight: 700;
+}
+.path-mod-gestionprojet .gp-cell-status.gp-status-disabled {
+    color: #6b7280;
+    font-weight: 600;
+    font-style: italic;
+}
+.path-mod-gestionprojet .gp-cell-status.gp-status-provided {
     background: #4f46e5;
     color: #fff;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    display: inline-block;
+}
+.path-mod-gestionprojet .gp-cell-link-arrow {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #d97706;
+    font-weight: 700;
+    font-size: 14px;
 }
 ```
 
-- [ ] **Step 2 : Vérifier qu'aucune balise `<style>` inline n'a été ajoutée à un PHP**
+- [ ] **Step 2 : Vérifier l'absence de CSS inline ailleurs**
 
 ```bash
-grep -rn '<style' gestionprojet --include="*.php"
+grep -rn '<style' gestionprojet --include="*.php" --include="*.mustache"
 ```
-Expected : aucun résultat (zéro CSS inline).
+Expected : aucun nouveau résultat.
 
 - [ ] **Step 3 : Commit**
 
 ```bash
 git add gestionprojet/styles.css
-git commit -m "style(home): add CSS for correction models section and badges"
+git commit -m "style(home): add CSS for Gantt dashboard layout"
 ```
 
 ---
 
-### Task 11 : Ajouter les chaînes de langue pour la section et les badges
+### Task 12 : Ajouter les chaînes de langue Gantt
 
 **Files :**
 - Modify: `gestionprojet/lang/en/gestionprojet.php`
 - Modify: `gestionprojet/lang/fr/gestionprojet.php`
 
-- [ ] **Step 1 : Vérifier les chaînes existantes**
-
-```bash
-grep -n "correction_models\|model_configured\|model_to_configure" gestionprojet/lang/en/gestionprojet.php
-```
-
-`correction_models` existe déjà. `model_configured` et `model_to_configure` doivent être ajoutées.
-
-- [ ] **Step 2 : Ajouter dans `lang/en/gestionprojet.php`**
-
-À un emplacement cohérent avec l'ordre alphabétique (ou en fin de fichier avant la fermeture) :
+- [ ] **Step 1 : Ajouter dans `lang/en/gestionprojet.php`**
 
 ```php
-$string['model_configured'] = 'Configured';
-$string['model_to_configure'] = 'To configure';
+$string['gantt_row_teacher_docs'] = 'Teacher documents';
+$string['gantt_row_correction_models'] = 'Correction models';
+$string['gantt_row_student_activities'] = 'Student activities';
+$string['gantt_cell_status_done'] = 'Configured';
+$string['gantt_cell_status_todo'] = 'To configure';
+$string['gantt_cell_status_disabled'] = 'Disabled';
+$string['gantt_toggle_success'] = 'Step updated';
+$string['gantt_toggle_error'] = 'Error while updating step';
+$string['gantt_progress_summary'] = '{$a->configured}/{$a->total} phases configured';
+$string['gantt_ungraded_summary'] = '{$a} submission(s) to grade';
+$string['gantt_ungraded_summary_zero'] = 'No pending submissions';
 ```
 
-- [ ] **Step 3 : Ajouter dans `lang/fr/gestionprojet.php`**
+- [ ] **Step 2 : Ajouter dans `lang/fr/gestionprojet.php`**
 
 ```php
-$string['model_configured'] = 'Configuré';
-$string['model_to_configure'] = 'À configurer';
+$string['gantt_row_teacher_docs'] = 'Documents enseignant';
+$string['gantt_row_correction_models'] = 'Modèles de correction';
+$string['gantt_row_student_activities'] = 'Activités élèves';
+$string['gantt_cell_status_done'] = 'Configuré';
+$string['gantt_cell_status_todo'] = 'À configurer';
+$string['gantt_cell_status_disabled'] = 'Désactivé';
+$string['gantt_toggle_success'] = 'Étape mise à jour';
+$string['gantt_toggle_error'] = 'Erreur lors de la mise à jour';
+$string['gantt_progress_summary'] = '{$a->configured}/{$a->total} phases configurées';
+$string['gantt_ungraded_summary'] = '{$a} soumission(s) à corriger';
+$string['gantt_ungraded_summary_zero'] = 'Aucune soumission en attente';
 ```
 
-- [ ] **Step 4 : Vérifier la syntaxe**
+- [ ] **Step 3 : Vérifier la syntaxe**
 
 ```bash
-php -l gestionprojet/lang/en/gestionprojet.php
-php -l gestionprojet/lang/fr/gestionprojet.php
+/usr/local/bin/php -l gestionprojet/lang/en/gestionprojet.php
+/usr/local/bin/php -l gestionprojet/lang/fr/gestionprojet.php
 ```
-Expected : `No syntax errors detected` pour chacun.
 
-- [ ] **Step 5 : Commit**
+- [ ] **Step 4 : Commit**
 
 ```bash
 git add gestionprojet/lang/en/gestionprojet.php gestionprojet/lang/fr/gestionprojet.php
-git commit -m "lang: add strings for correction model status badges"
+git commit -m "lang: add Gantt dashboard strings"
 ```
 
 ---
 
-### Task 12 : Transformer la route `correctionmodels` en redirect dans `view.php`
+### Task 13 : Créer le endpoint AJAX `ajax/toggle_step.php`
+
+**Files :**
+- Create: `gestionprojet/ajax/toggle_step.php`
+
+- [ ] **Step 1 : Créer le fichier**
+
+```php
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * AJAX endpoint: toggle the activation of a single step from the home Gantt.
+ *
+ * Inputs (POST):
+ *   cmid    int  Course module ID
+ *   stepnum int  Step number (1..8)
+ *   enabled int  0 to disable, 1 to enable (mode student); 2 reserved for step4 provided mode
+ *
+ * Output: JSON {success: bool, message?: string}
+ *
+ * @package    mod_gestionprojet
+ * @copyright  2026 Emmanuel REMY
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+define('AJAX_SCRIPT', true);
+
+require_once(__DIR__ . '/../../../config.php');
+
+require_login();
+require_sesskey();
+
+$cmid = required_param('cmid', PARAM_INT);
+$stepnum = required_param('stepnum', PARAM_INT);
+$enabled = required_param('enabled', PARAM_INT);
+
+if ($stepnum < 1 || $stepnum > 8) {
+    throw new \moodle_exception('invalidparameter', 'error');
+}
+if (!in_array($enabled, [0, 1, 2], true)) {
+    throw new \moodle_exception('invalidparameter', 'error');
+}
+if ($enabled === 2 && $stepnum !== 4) {
+    throw new \moodle_exception('invalidparameter', 'error');
+}
+
+$cm = get_coursemodule_from_id('gestionprojet', $cmid, 0, false, MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+$gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
+$context = context_module::instance($cm->id);
+
+require_capability('mod/gestionprojet:configureteacherpages', $context);
+
+$field = 'enable_step' . $stepnum;
+$update = new stdClass();
+$update->id = $gestionprojet->id;
+$update->$field = $enabled;
+$DB->update_record('gestionprojet', $update);
+
+echo json_encode([
+    'success' => true,
+    'message' => get_string('gantt_toggle_success', 'gestionprojet'),
+]);
+```
+
+- [ ] **Step 2 : Vérifier la syntaxe**
+
+```bash
+/usr/local/bin/php -l gestionprojet/ajax/toggle_step.php
+```
+
+- [ ] **Step 3 : Vérifier les patterns sécurité**
+
+```bash
+grep -E "require_login|require_sesskey|require_capability|required_param" gestionprojet/ajax/toggle_step.php
+```
+Expected : 4 lignes (les 4 patterns présents).
+
+- [ ] **Step 4 : Commit**
+
+```bash
+git add gestionprojet/ajax/toggle_step.php
+git commit -m "feat(ajax): add toggle_step.php endpoint for live step activation"
+```
+
+---
+
+### Task 14 : Créer le module AMD `amd/src/gantt.js`
+
+**Files :**
+- Create: `gestionprojet/amd/src/gantt.js`
+- Create: `gestionprojet/amd/build/gantt.min.js` (minified copy — see note)
+
+- [ ] **Step 1 : Créer le fichier source**
+
+Contenu de `gestionprojet/amd/src/gantt.js` :
+
+```javascript
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Gantt home dashboard — live step activation via AJAX.
+ *
+ * @module     mod_gestionprojet/gantt
+ * @copyright  2026 Emmanuel REMY
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+define(['jquery', 'core/notification', 'core/str', 'core/config'], function($, Notification, Str, Config) {
+
+    var ENDPOINT = '/mod/gestionprojet/ajax/toggle_step.php';
+
+    var Gantt = {
+
+        init: function() {
+            var $root = $('.gp-gantt');
+            if (!$root.length) {
+                return;
+            }
+            var cmid = $root.data('cmid');
+            var sesskey = $root.data('sesskey');
+            $root.on('change', '.gp-cell-cb', function() {
+                Gantt.handleToggle($(this), cmid, sesskey);
+            });
+        },
+
+        handleToggle: function($cb, cmid, sesskey) {
+            var stepnum = $cb.data('stepnum');
+            var row = $cb.data('row');
+            var enabled = $cb.is(':checked') ? 1 : 0;
+            var $cell = $cb.closest('.gp-cell');
+
+            // Optimistic UI update.
+            Gantt.applyVisualState($cell, $cb, row, enabled);
+
+            $.ajax({
+                url: Config.wwwroot + ENDPOINT,
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    cmid: cmid,
+                    stepnum: stepnum,
+                    enabled: enabled,
+                    sesskey: sesskey
+                }
+            }).done(function(response) {
+                if (!response.success) {
+                    Gantt.revertVisualState($cell, $cb, row, !enabled);
+                    Notification.alert('Erreur', response.message || 'Erreur lors de la mise à jour');
+                }
+            }).fail(function() {
+                Gantt.revertVisualState($cell, $cb, row, !enabled);
+                Str.get_string('gantt_toggle_error', 'mod_gestionprojet').done(function(s) {
+                    Notification.alert('Erreur', s);
+                });
+            });
+        },
+
+        applyVisualState: function($cell, $cb, row, enabled) {
+            if (enabled) {
+                $cell.removeClass('gp-cell-disabled');
+            } else {
+                $cell.addClass('gp-cell-disabled');
+            }
+            // For shared (row=models) checkbox, mirror the visual change on row 3 (student).
+            if (row === 'models') {
+                var stepnum = $cb.data('stepnum');
+                $('.gp-cell-student[data-stepnum="' + stepnum + '"]').toggleClass('gp-cell-disabled', !enabled);
+            }
+        },
+
+        revertVisualState: function($cell, $cb, row, restoreEnabled) {
+            $cb.prop('checked', restoreEnabled);
+            this.applyVisualState($cell, $cb, row, restoreEnabled);
+        }
+    };
+
+    return Gantt;
+});
+```
+
+- [ ] **Step 2 : Créer la version minifiée**
+
+Copier le contenu source en l'état (sans minification réelle — Moodle accepte un `.min.js` non minifié comme fallback) dans `gestionprojet/amd/build/gantt.min.js`.
+
+> **Note importante** : la pipeline AMD officielle est `grunt amd`. Si `grunt` est disponible localement, utiliser `cd gestionprojet && grunt amd` pour générer la version minifiée propre. Sinon, copier le source en l'état suffit pour le préprod ; à la finalisation v2.2.0 (Phase 4), passer un `grunt amd` propre avant le ZIP de release.
+
+```bash
+cp gestionprojet/amd/src/gantt.js gestionprojet/amd/build/gantt.min.js
+```
+
+- [ ] **Step 3 : Vérifier**
+
+```bash
+ls gestionprojet/amd/src/gantt.js gestionprojet/amd/build/gantt.min.js
+node -c gestionprojet/amd/src/gantt.js 2>&1 || echo "Note: node not available — skip JS lint"
+```
+
+- [ ] **Step 4 : Commit**
+
+```bash
+git add gestionprojet/amd/src/gantt.js gestionprojet/amd/build/gantt.min.js
+git commit -m "feat(amd): add gantt.js module for live step toggle"
+```
+
+---
+
+### Task 15 : Charger le module AMD `gantt` depuis `home.php`
+
+**Files :**
+- Modify: `gestionprojet/pages/home.php`
+
+- [ ] **Step 1 : Ajouter le chargement AMD**
+
+Dans `gestionprojet/pages/home.php`, dans le bloc `if ($isteacher) {`, à la fin de la construction du Gantt (juste avant de fermer le `if`), ajouter :
+
+```php
+$PAGE->requires->js_call_amd('mod_gestionprojet/gantt', 'init');
+```
+
+- [ ] **Step 2 : Vérifier la syntaxe**
+
+```bash
+/usr/local/bin/php -l gestionprojet/pages/home.php
+```
+
+- [ ] **Step 3 : Commit**
+
+```bash
+git add gestionprojet/pages/home.php
+git commit -m "feat(home): load gantt AMD module on teacher home"
+```
+
+---
+
+### Task 16 : Supprimer la section "Étapes actives" de `mod_form.php`
+
+**Files :**
+- Modify: `gestionprojet/mod_form.php`
+
+- [ ] **Step 1 : Identifier le bloc à supprimer**
+
+```bash
+sed -n '94,102p' gestionprojet/mod_form.php
+```
+
+- [ ] **Step 2 : Supprimer le bloc**
+
+Dans `gestionprojet/mod_form.php`, supprimer entièrement les lignes suivantes (vers les lignes 93-101) :
+
+```php
+        // Active steps settings
+        $mform->addElement('header', 'activesteps', get_string('activesteps', 'gestionprojet'));
+
+        $steps_order = [1, 3, 2, 7, 4, 5, 8, 6];
+        foreach ($steps_order as $i) {
+            $mform->addElement('advcheckbox', 'enable_step' . $i, get_string('step' . $i, 'gestionprojet'));
+            $default = ($i == 7 || $i == 8) ? 0 : 1;
+            $mform->setDefault('enable_step' . $i, $default);
+        }
+```
+
+> Note importante : les valeurs par défaut (`enable_step7=0`, `enable_step8=0`, autres = 1) sont déjà couvertes par les `DEFAULT="1"` / `DEFAULT="0"` dans `db/install.xml`. Vérifier que `db/install.xml` a bien `DEFAULT="0"` pour `enable_step7` et `enable_step8` ; sinon les ajuster (autre commit séparé).
+
+```bash
+grep -n "enable_step7\|enable_step8" gestionprojet/db/install.xml
+```
+
+- [ ] **Step 3 : Vérifier la syntaxe**
+
+```bash
+/usr/local/bin/php -l gestionprojet/mod_form.php
+```
+
+- [ ] **Step 4 : Commit**
+
+```bash
+git add gestionprojet/mod_form.php
+git commit -m "refactor(mod_form): remove 'active steps' section (now on home Gantt)"
+```
+
+---
+
+### Task 17 : Transformer la route `correctionmodels` en redirect dans `view.php`
 
 **Files :**
 - Modify: `gestionprojet/view.php`
 
-- [ ] **Step 1 : Repérer la route actuelle**
+- [ ] **Step 1 : Repérer le case existant**
 
 ```bash
 sed -n '100,116p' gestionprojet/view.php
 ```
 
-Repérer le bloc :
-```php
-case 'correctionmodels':
-    require_capability('mod/gestionprojet:configureteacherpages', $context);
-    require_once(__DIR__ . '/pages/correction_models.php');
-    ...
-```
-
-- [ ] **Step 2 : Remplacer le case par un redirect**
+- [ ] **Step 2 : Remplacer le case**
 
 Remplacer le bloc `case 'correctionmodels':` par :
 
 ```php
 case 'correctionmodels':
-    // Deprecated route: correction models are now displayed directly on the home page.
+    // Deprecated route: correction models are now displayed directly on the home Gantt.
     redirect(new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]));
     break;
 ```
@@ -813,9 +1460,8 @@ case 'correctionmodels':
 - [ ] **Step 3 : Vérifier la syntaxe**
 
 ```bash
-php -l gestionprojet/view.php
+/usr/local/bin/php -l gestionprojet/view.php
 ```
-Expected : `No syntax errors detected`.
 
 - [ ] **Step 4 : Commit**
 
@@ -826,20 +1472,21 @@ git commit -m "feat(routing): redirect deprecated correctionmodels route to home
 
 ---
 
-### Task 13 : Supprimer les artefacts obsolètes (page + template + méthode renderer)
+### Task 18 : Supprimer les artefacts obsolètes et les liens vers la page supprimée
 
 **Files :**
 - Delete: `gestionprojet/pages/correction_models.php`
 - Delete: `gestionprojet/templates/correction_models.mustache`
 - Modify: `gestionprojet/classes/output/renderer.php`
+- Modify: `gestionprojet/pages/step4_teacher.php` à `step8_teacher.php` (5 fichiers)
 
-- [ ] **Step 1 : Vérifier les usages**
+- [ ] **Step 1 : Vérifier qu'aucun usage ne subsiste hors des fichiers à retirer**
 
 ```bash
 grep -rn "correction_models\.mustache\|render_correction_models\|pages/correction_models" gestionprojet --include="*.php" --include="*.mustache"
 ```
 
-Attendu : seules occurrences dans les 3 fichiers ciblés (la route a déjà été remplacée par un redirect en Task 12).
+Attendu : seuls 3 fichiers ciblés cités (la route est déjà un redirect en Task 17, et les liens des step4-8 teacher sont retirés en Task 19).
 
 - [ ] **Step 2 : Supprimer les deux fichiers**
 
@@ -850,47 +1497,26 @@ git rm gestionprojet/templates/correction_models.mustache
 
 - [ ] **Step 3 : Retirer `render_correction_models()` du renderer**
 
-Dans `gestionprojet/classes/output/renderer.php`, supprimer la méthode `render_correction_models($data)` (commencement vers la ligne 44). Garder le reste de la classe intact.
+Dans `gestionprojet/classes/output/renderer.php`, supprimer la méthode `render_correction_models($data)` (commence vers la ligne 44). Garder le reste de la classe intact.
 
 - [ ] **Step 4 : Vérifier la syntaxe**
 
 ```bash
-php -l gestionprojet/classes/output/renderer.php
+/usr/local/bin/php -l gestionprojet/classes/output/renderer.php
 ```
-Expected : `No syntax errors detected`.
 
-- [ ] **Step 5 : Re-vérifier qu'aucune référence orpheline ne subsiste**
+- [ ] **Step 5 : Re-vérifier**
 
 ```bash
 grep -rn "render_correction_models\|correction_models\.mustache" gestionprojet --include="*.php" --include="*.mustache"
 ```
 Expected : aucun résultat.
 
-- [ ] **Step 6 : Commit**
-
-```bash
-git add gestionprojet/classes/output/renderer.php
-git commit -m "refactor: remove obsolete correction_models page, template, and renderer method"
-```
-
----
-
-### Task 14 : Retirer la liaison vers `correctionmodels` dans `step4_teacher.php` à `step8_teacher.php`
-
-**Files :**
-- Modify: `gestionprojet/pages/step4_teacher.php`
-- Modify: `gestionprojet/pages/step5_teacher.php`
-- Modify: `gestionprojet/pages/step6_teacher.php`
-- Modify: `gestionprojet/pages/step7_teacher.php`
-- Modify: `gestionprojet/pages/step8_teacher.php`
-
-- [ ] **Step 1 : Repérer toutes les occurrences**
+- [ ] **Step 6 : Repérer et remplacer les liens correctionmodels dans les 5 pages step_teacher**
 
 ```bash
 grep -n "page.*correctionmodels\|page=correctionmodels" gestionprojet/pages/step{4,5,6,7,8}_teacher.php
 ```
-
-- [ ] **Step 2 : Remplacer chaque lien par un retour vers la home**
 
 Pour chaque occurrence d'un lien du type :
 
@@ -904,54 +1530,48 @@ remplacer par :
 new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id])
 ```
 
-> Et adapter la chaîne du label si elle dit "Retour au hub des modèles" — elle peut devenir simplement "Retour à la home" via `get_string('home', 'gestionprojet')` qui existe déjà.
-
-- [ ] **Step 3 : Vérifier la syntaxe**
+- [ ] **Step 7 : Vérifier la syntaxe**
 
 ```bash
-for f in gestionprojet/pages/step{4,5,6,7,8}_teacher.php; do php -l "$f"; done
+for f in gestionprojet/pages/step{4,5,6,7,8}_teacher.php; do /usr/local/bin/php -l "$f"; done
 ```
-Expected : `No syntax errors detected` pour les 5.
 
-- [ ] **Step 4 : Commit**
+- [ ] **Step 8 : Commit**
 
 ```bash
-git add gestionprojet/pages/step4_teacher.php gestionprojet/pages/step5_teacher.php gestionprojet/pages/step6_teacher.php gestionprojet/pages/step7_teacher.php gestionprojet/pages/step8_teacher.php
-git commit -m "refactor: replace deprecated correctionmodels link with home link"
+git add gestionprojet/classes/output/renderer.php gestionprojet/pages/step4_teacher.php gestionprojet/pages/step5_teacher.php gestionprojet/pages/step6_teacher.php gestionprojet/pages/step7_teacher.php gestionprojet/pages/step8_teacher.php
+git commit -m "refactor: remove obsolete correctionmodels page, template, renderer method, and links"
 ```
 
 ---
 
-### Task 15 : Validation manuelle de la Phase 2
+### Task 19 : Validation manuelle de la Phase 2
 
-- [ ] **Step 1 : Purger les caches**
+- [ ] **Step 1 : Bumper version pour le déploiement préprod**
 
-```bash
-php admin/cli/purge_caches.php
-```
+Dans `gestionprojet/version.php` :
+- `$plugin->version = 2026050203;` → `2026050204`
+- `$plugin->release = '2.2.0-dev (phase 1 hotfix 2)';` → `'2.2.0-dev (phase 2)'`
 
-- [ ] **Step 2 : Tester la home enseignant**
+- [ ] **Step 2 : Commit + push + déploiement préprod**
 
-1. Ouvrir la home enseignant d'une activité
-2. Vérifier la présence : (a) section "Documents enseignant" (3 cartes), (b) section "Modèles de correction" (5 cartes), (c) dashboard
-3. Vérifier que **plus aucun bouton "Modèles de correction"** n'est présent
-4. Cliquer sur une carte de modèle → doit ouvrir directement `step4_teacher.php` (etc.)
+(via le workflow de déploiement habituel : push origin, ZIP, SCP, unzip, upgrade CLI, purge caches.)
 
-- [ ] **Step 3 : Tester le redirect**
+- [ ] **Step 3 : Tests fonctionnels**
 
-1. Ouvrir manuellement `view.php?id=<cmid>&page=correctionmodels`
-2. Vérifier que le navigateur est redirigé silencieusement vers la home
-
-- [ ] **Step 4 : Vérifier le compteur du dashboard**
-
-1. Configurer 2 modèles sur 5 (remplir `ai_instructions` pour 2)
-2. Vérifier que le dashboard indique "2 / 5 modèles configurés"
+1. Sur la home enseignant : vérifier le Gantt 3×8 (3 lignes : docs/modèles/élèves), bandeau de tête (X/Y phases configurées + soumissions à corriger).
+2. Cocher/décocher case d'une cellule de ligne 1 (ex. step 2) : la cellule grise/dégrise immédiatement, recharger la page → état persisté.
+3. Cocher/décocher case d'une cellule de ligne 2 (ex. step 4) : cellule de ligne 2 ET de ligne 3 grisent simultanément.
+4. Cliquer sur le contenu (hors checkbox) : ouvre la bonne page (édition doc, modèle, ou grading).
+5. Ouvrir les paramètres d'activité → confirmer que la section "Étapes actives" est absente.
+6. Ouvrir `view.php?id=X&page=correctionmodels` → redirige sur la home.
+7. Non-régression Phase 1 : barre d'onglets toujours présente sur les 8 pages step.
 
 ---
 
 ## Phase 3 — Friction 1 : Mode "CDCF fourni par l'enseignant"
 
-### Task 16 : Remplacer le checkbox `enable_step4` par un select 3-états dans `mod_form.php`
+### Task 20 : Remplacer le checkbox `enable_step4` par un select 3-états dans `mod_form.php`
 
 **Files :**
 - Modify: `gestionprojet/mod_form.php`
@@ -1010,7 +1630,7 @@ git commit -m "feat(step4): switch enable_step4 to 3-state select (disabled/stud
 
 ---
 
-### Task 17 : Ajouter les chaînes de langue pour le mode fourni
+### Task 21 : Ajouter les chaînes de langue pour le mode fourni
 
 **Files :**
 - Modify: `gestionprojet/lang/en/gestionprojet.php`
@@ -1059,7 +1679,7 @@ git commit -m "lang: add strings for step4 provided mode"
 
 ---
 
-### Task 18 : Afficher l'encart d'information sur `step4_teacher.php` en mode fourni
+### Task 22 : Afficher l'encart d'information sur `step4_teacher.php` en mode fourni
 
 **Files :**
 - Modify: `gestionprojet/pages/step4_teacher.php`
@@ -1119,7 +1739,7 @@ git commit -m "feat(step4): show teacher notice when CDCF is in provided mode"
 
 ---
 
-### Task 19 : Adapter la vue élève `step4.php` pour le mode fourni
+### Task 23 : Adapter la vue élève `step4.php` pour le mode fourni
 
 **Files :**
 - Modify: `gestionprojet/pages/step4.php`
@@ -1202,7 +1822,7 @@ git commit -m "feat(step4): render teacher-provided CDCF read-only on student pa
 
 ---
 
-### Task 20 : Mettre à jour la home élève pour le badge "Fourni par l'enseignant" sur step 4
+### Task 24 : Mettre à jour la home élève pour le badge "Fourni par l'enseignant" sur step 4
 
 **Files :**
 - Modify: `gestionprojet/pages/home.php`
@@ -1267,7 +1887,7 @@ git commit -m "feat(home): show 'Provided' badge on student step 4 card in provi
 
 ---
 
-### Task 21 : Validation manuelle de la Phase 3
+### Task 25 : Validation manuelle de la Phase 3
 
 - [ ] **Step 1 : Purger les caches**
 
@@ -1301,7 +1921,7 @@ php admin/cli/purge_caches.php
 
 ## Phase 4 — Finalisation
 
-### Task 22 : Bump version et upgrade step
+### Task 26 : Bump version et upgrade step
 
 **Files :**
 - Modify: `gestionprojet/version.php`
@@ -1352,7 +1972,7 @@ git commit -m "chore: bump version to 2.2.0"
 
 ---
 
-### Task 23 : Mettre à jour CHANGELOG.md
+### Task 27 : Mettre à jour CHANGELOG.md
 
 **Files :**
 - Modify: `gestionprojet/CHANGELOG.md` (ou `CHANGELOG.md` racine — vérifier l'emplacement)
@@ -1394,7 +2014,7 @@ git commit -m "docs: changelog entry for v2.2.0"
 
 ---
 
-### Task 24 : Vérification finale de conformité Moodle
+### Task 28 : Vérification finale de conformité Moodle
 
 - [ ] **Step 1 : Aucun `<style>` ou `<script>` inline en PHP**
 
@@ -1442,10 +2062,14 @@ Reprendre tous les critères de succès du spec :
 
 ## Synthèse des fichiers touchés
 
-**Créés (1)** :
-- `gestionprojet/templates/step_tabs.mustache`
+**Créés (5)** :
+- `gestionprojet/templates/step_tabs.mustache` — barre d'onglets réutilisable (Phase 1)
+- `gestionprojet/templates/home_gantt.mustache` — partial Gantt 3×8 (Phase 2)
+- `gestionprojet/ajax/toggle_step.php` — endpoint AJAX d'activation live (Phase 2)
+- `gestionprojet/amd/src/gantt.js` — module JS source (Phase 2)
+- `gestionprojet/amd/build/gantt.min.js` — module JS minifié (Phase 2 ; régénérer via `grunt amd` avant release)
 
-**Modifiés (15)** :
+**Modifiés (16)** :
 - `gestionprojet/lib.php`
 - `gestionprojet/mod_form.php`
 - `gestionprojet/version.php`
