@@ -772,3 +772,16 @@ $string['step'] = 'Step';
 // Shared error strings for JS
 $string['error_submitting'] = 'Error submitting';
 $string['error_reverting'] = 'Error reverting';
+
+// Gantt dashboard
+$string['gantt_row_teacher_docs'] = 'Teacher documents';
+$string['gantt_row_correction_models'] = 'Correction models';
+$string['gantt_row_student_activities'] = 'Student activities';
+$string['gantt_cell_status_done'] = 'Configured';
+$string['gantt_cell_status_todo'] = 'To configure';
+$string['gantt_cell_status_disabled'] = 'Disabled';
+$string['gantt_toggle_success'] = 'Step updated';
+$string['gantt_toggle_error'] = 'Error while updating step';
+$string['gantt_progress_summary'] = '{$a->configured}/{$a->total} phases configured';
+$string['gantt_ungraded_summary'] = '{$a} submission(s) to grade';
+$string['gantt_ungraded_summary_zero'] = 'No pending submissions';
