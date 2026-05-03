@@ -704,7 +704,7 @@ function gestionprojet_get_graded_steps_order()
  * @param stdClass $gestionprojet The activity instance
  * @param int $userid Optional user ID (0 for all users)
  * @param bool $nullifnone If true, return null grade for users with no submission
- * @param int|null $step Optional step number for per_step mode (4-8)
+ * @param int|null $step Optional step number for per_step mode (4-9)
  */
 function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = true, $step = null)
 {
@@ -803,7 +803,7 @@ function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = 
  *
  * @param stdClass $gestionprojet The activity instance
  * @param mixed $grades Array of grades or 'reset'
- * @param int|null $step Step number for per_step mode (4-8), null for combined mode
+ * @param int|null $step Step number for per_step mode (4-9), null for combined mode
  * @param int|null $categoryid Grade category ID to assign the item to
  * @param int|null $sortorder Sort order within the category
  * @return int 0 if ok, error code otherwise
@@ -1042,6 +1042,14 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
                     $totalgrade += $carnet->grade;
                     $count++;
                 }
+                $fast = $DB->get_record('gestionprojet_fast', [
+                    'gestionprojetid' => $gestionprojet->id,
+                    'userid' => $member->id
+                ]);
+                if ($fast && $fast->grade !== null && (!isset($gestionprojet->enable_step9) || $gestionprojet->enable_step9)) {
+                    $totalgrade += $fast->grade;
+                    $count++;
+                }
 
                 if ($count > 0 && ($userid == 0 || $userid == $member->id)) {
                     $avggrade = $totalgrade / $count;
@@ -1103,6 +1111,15 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
         ]);
         if ($carnet && $carnet->grade !== null && (!isset($gestionprojet->enable_step8) || $gestionprojet->enable_step8)) {
             $totalgrade += $carnet->grade;
+            $count++;
+        }
+        $fast = $DB->get_record('gestionprojet_fast', [
+            'gestionprojetid' => $gestionprojet->id,
+            'groupid' => $group->id,
+            'userid' => 0
+        ]);
+        if ($fast && $fast->grade !== null && (!isset($gestionprojet->enable_step9) || $gestionprojet->enable_step9)) {
+            $totalgrade += $fast->grade;
             $count++;
         }
 
