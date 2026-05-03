@@ -292,21 +292,6 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
 <div class="grading-container">
     <?php
     // Build grading navigation template context.
-    $steptabs = [];
-    foreach ($steps as $stepnum => $stepinfo) {
-        $steptabs[] = [
-            'stepnum' => $stepnum,
-            'icon' => $stepinfo['icon'],
-            'name' => $stepinfo['name'],
-            'isactive' => ($stepnum == $step),
-            'url' => (new moodle_url('/mod/gestionprojet/grading.php', [
-                'id' => $id,
-                'step' => $stepnum,
-                $paramName => $navId,
-            ]))->out(false),
-        ];
-    }
-
     $navitemsdata = [];
     foreach ($navItems as $item) {
         $navitemsdata[] = [
@@ -321,12 +306,13 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
         ];
     }
 
-    $navcontext = [
+    $navcontext = array_merge(
+        gestionprojet_build_step_tabs($gestionprojet, $cm->id, $step, 'grading'),
+        [
         'cmid' => $cm->id,
         'currentstep' => $step,
         'homeurl' => (new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]))->out(false),
         'aienabled' => !empty($gestionprojet->ai_enabled),
-        'steptabs' => $steptabs,
         'navid' => $navId,
         'paramname' => $paramName,
         'currentindex' => ($currentindex !== false ? $currentindex + 1 : 0),
@@ -347,7 +333,8 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
         'icon_next' => icon::render('chevron-right', 'sm'),
         'icon_refresh' => icon::render('refresh-cw', 'sm'),
         'icon_home' => icon::render('home', 'sm'),
-    ];
+        ]
+    );
 
     $gradingrenderer = $PAGE->get_renderer('mod_gestionprojet');
     echo $gradingrenderer->render_grading_navigation($navcontext);

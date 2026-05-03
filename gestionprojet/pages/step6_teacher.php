@@ -41,34 +41,15 @@ if (!$model) {
 }
 
 echo $OUTPUT->header();
+echo $OUTPUT->render_from_template(
+    'mod_gestionprojet/step_tabs',
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 6, 'model')
+);
 require_once(__DIR__ . '/teacher_model_styles.php');
 
 // Get navigation for teacher steps.
 $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 6);
 ?>
-
-<!-- Top navigation (before the dashboard) -->
-<div class="step-navigation step-navigation-top" style="max-width: 1200px; margin: 0 auto 20px auto; padding: 0 20px;">
-    <?php if ($stepnav['prev']): ?>
-    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['prev'], 'mode' => 'teacher']); ?>" class="btn-nav btn-prev">
-        <?php echo icon::render('chevron-left', 'sm', 'inherit'); ?> <?php echo get_string('previous', 'gestionprojet'); ?>
-    </a>
-    <?php else: ?>
-    <div class="nav-spacer"></div>
-    <?php endif; ?>
-
-    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'page' => 'correctionmodels']); ?>" class="btn-nav btn-hub">
-        <?php echo get_string('correction_models', 'gestionprojet'); ?>
-    </a>
-
-    <?php if ($stepnav['next']): ?>
-    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['next'], 'mode' => 'teacher']); ?>" class="btn-nav btn-next">
-        <?php echo get_string('next', 'gestionprojet'); ?> <?php echo icon::render('chevron-right', 'sm', 'inherit'); ?>
-    </a>
-    <?php else: ?>
-    <div class="nav-spacer"></div>
-    <?php endif; ?>
-</div>
 
 <?php
 // Render teacher dashboard for this step.
@@ -182,7 +163,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 6, $context, $cm->id);
             <div class="nav-spacer"></div>
             <?php endif; ?>
 
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'page' => 'correctionmodels']); ?>" class="btn-nav btn-hub">
+            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>" class="btn-nav btn-hub">
                 <?php echo get_string('correction_models', 'gestionprojet'); ?>
             </a>
 
@@ -247,7 +228,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 6, $context, $cm->id);
                 Autosave.onSave = function(response) {
                     if (originalOnSave) originalOnSave(response);
                     setTimeout(function() {
-                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid + '&page=correctionmodels';
+                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid;
                     }, 800);
                 };
                 Autosave.save();

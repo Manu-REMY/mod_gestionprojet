@@ -458,5 +458,26 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026013100, 'gestionprojet');
     }
 
+    if ($oldversion < 2026050300) {
+        // Add step4_provided field to gestionprojet table.
+        $table = new xmldb_table('gestionprojet');
+        $field = new xmldb_field(
+            'step4_provided',
+            XMLDB_TYPE_INTEGER,
+            '1',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'enable_step8'
+        );
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Gestionprojet savepoint reached.
+        upgrade_mod_savepoint(true, 2026050300, 'gestionprojet');
+    }
+
     return true;
 }
