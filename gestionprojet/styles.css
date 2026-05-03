@@ -4820,9 +4820,9 @@
 }
 .path-mod-gestionprojet .gp-gantt-grid {
     display: grid;
-    grid-template-columns: 180px repeat(7, minmax(110px, 1fr));
+    grid-template-columns: 180px repeat(8, minmax(110px, 1fr));
     gap: 6px;
-    min-width: 970px;
+    min-width: 1080px;
 }
 .path-mod-gestionprojet .gp-gantt-corner {
     background: transparent;
