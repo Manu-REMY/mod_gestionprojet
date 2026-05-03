@@ -121,14 +121,16 @@ if ($step > 0) {
 
     // Check availability
     if (!$isteacher && !$enabled) {
-        // Special case: step 4 may still be accessible if step4_provided is enabled.
-        if (!($step === 4 && (int)($gestionprojet->step4_provided ?? 0) === 1)) {
+        // Special case: step 4 / 9 may still be accessible if their _provided flag is enabled.
+        $providedaccess = ($step === 4 && (int)($gestionprojet->step4_provided ?? 0) === 1)
+            || ($step === 9 && (int)($gestionprojet->step9_provided ?? 0) === 1);
+        if (!$providedaccess) {
             throw new \moodle_exception('stepdisabled', 'gestionprojet');
         }
     }
 
-    // Handle teacher correction model mode for steps 4-8.
-    if ($mode === 'teacher' && in_array($step, [4, 5, 6, 7, 8])) {
+    // Handle teacher correction model mode for steps 4-9.
+    if ($mode === 'teacher' && in_array($step, [4, 5, 6, 7, 8, 9])) {
         require_capability('mod/gestionprojet:configureteacherpages', $context);
         require_once(__DIR__ . '/pages/step' . $step . '_teacher.php');
         exit;
