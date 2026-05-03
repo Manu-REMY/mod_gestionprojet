@@ -137,6 +137,8 @@ function gestionprojet_delete_instance($id)
     $DB->delete_records('gestionprojet_rapport', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_besoin_eleve', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_carnet', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_fast', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_fast_teacher', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
 
     // Delete the instance
@@ -246,6 +248,16 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
         $record->timemodified = time();
 
         $record->id = $DB->insert_record($tablename, $record);
+    }
+
+    // For FAST phase: when teacher provides their diagram, seed student submission with it.
+    if ($table === 'fast' && (int)$gestionprojet->step9_provided === 1 && empty($record->data_json)) {
+        $teacher = $DB->get_record('gestionprojet_fast_teacher', ['gestionprojetid' => $gestionprojet->id]);
+        if ($teacher && !empty($teacher->data_json)) {
+            $record->data_json = $teacher->data_json;
+            $record->timemodified = time();
+            $DB->update_record('gestionprojet_fast', $record);
+        }
     }
 
     return $record;
@@ -470,7 +482,7 @@ function gestionprojet_is_step_enabled($gestionprojet, $step)
 /**
  * Get the table name for a graded step.
  *
- * @param int $step Step number (4-8)
+ * @param int $step Step number (4-9)
  * @return string|null Table name or null if invalid step
  */
 function gestionprojet_get_step_table($step)
@@ -481,28 +493,29 @@ function gestionprojet_get_step_table($step)
         6 => 'gestionprojet_rapport',
         7 => 'gestionprojet_besoin_eleve',
         8 => 'gestionprojet_carnet',
+        9 => 'gestionprojet_fast',
     ];
     return $tables[$step] ?? null;
 }
 
 /**
  * Map step number to itemnumber for gradebook.
- * Steps 4-8 map to itemnumbers 1-5 (0 is reserved for combined mode).
+ * Steps 4-9 map to itemnumbers 1-6 (0 is reserved for combined mode).
  *
- * @param int $step Step number (4-8)
- * @return int Itemnumber for gradebook (1-5)
+ * @param int $step Step number (4-9)
+ * @return int Itemnumber for gradebook (1-6)
  */
 function gestionprojet_step_to_itemnumber($step)
 {
-    // Map: step 4 => 1, step 5 => 2, step 6 => 3, step 7 => 4, step 8 => 5
+    // Map: step 4 => 1, step 5 => 2, step 6 => 3, step 7 => 4, step 8 => 5, step 9 => 6
     return $step - 3;
 }
 
 /**
  * Map itemnumber back to step number.
  *
- * @param int $itemnumber Itemnumber (1-5)
- * @return int Step number (4-8)
+ * @param int $itemnumber Itemnumber (1-6)
+ * @return int Step number (4-9)
  */
 function gestionprojet_itemnumber_to_step($itemnumber)
 {
@@ -513,7 +526,7 @@ function gestionprojet_itemnumber_to_step($itemnumber)
  * Get grades for a specific step.
  *
  * @param stdClass $gestionprojet The activity instance
- * @param int $step Step number (4-8)
+ * @param int $step Step number (4-9)
  * @param int $userid Optional user ID (0 for all users)
  * @return array Array of grade objects keyed by userid
  */
@@ -676,13 +689,13 @@ function gestionprojet_get_grade_category($gestionprojet)
 
 /**
  * Get the display order for graded steps (matching project workflow).
- * Order: 7 (Student Needs Expression), 4 (Functional Specifications), 5 (Test Sheet), 8 (Logbook), 6 (Report)
+ * Order: 7 (Student Needs Expression), 4 (Functional Specifications), 9 (FAST Diagram), 5 (Test Sheet), 8 (Logbook), 6 (Report)
  *
  * @return array Step numbers in display order
  */
 function gestionprojet_get_graded_steps_order()
 {
-    return [7, 4, 5, 8, 6];
+    return [7, 4, 9, 5, 8, 6];
 }
 
 /**
@@ -1491,4 +1504,56 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
         'icon_home' => \mod_gestionprojet\output\icon::render('home', 'sm', 'inherit'),
         'homelabel' => get_string('home', 'gestionprojet'),
     ];
+}
+
+/**
+ * Serialize a FAST data_json structure into a human/LLM-readable hierarchical text.
+ *
+ * @param string|null $datajson JSON string from gestionprojet_fast(_teacher).data_json
+ * @return string Multiline text representation, or empty string if no data
+ */
+function gestionprojet_fast_to_text($datajson) {
+    if (empty($datajson)) {
+        return '';
+    }
+    $data = json_decode($datajson, true);
+    if (!is_array($data) || empty($data['fonctions'])) {
+        return '';
+    }
+
+    $lines = [];
+    if (!empty($data['fonctionsPrincipales'])) {
+        $fps = array_map(function($fp) {
+            return $fp['description'] ?? '';
+        }, $data['fonctionsPrincipales']);
+        $fps = array_filter($fps);
+        if (!empty($fps)) {
+            $lines[] = 'Fonction principale : ' . implode(' / ', $fps);
+            $lines[] = '';
+        }
+    }
+
+    foreach ($data['fonctions'] as $idx => $ft) {
+        $ftnum = $idx + 1;
+        $ftdesc = $ft['description'] ?? '';
+        $lines[] = "FT{$ftnum} — {$ftdesc}";
+        $sous = $ft['sousFonctions'] ?? [];
+        if (!empty($sous)) {
+            $count = count($sous);
+            foreach ($sous as $sfidx => $sf) {
+                $branch = ($sfidx === $count - 1) ? '└─' : '├─';
+                $sfdesc = $sf['description'] ?? '';
+                $sfsol = $sf['solution'] ?? '';
+                $lines[] = "  {$branch} FT{$ftnum}.".($sfidx + 1)." {$sfdesc}";
+                if (!empty($sfsol)) {
+                    $vert = ($sfidx === $count - 1) ? '   ' : '  │';
+                    $lines[] = "  {$vert}  Solution : {$sfsol}";
+                }
+            }
+        } else if (!empty($ft['solution'])) {
+            $lines[] = '  Solution : ' . $ft['solution'];
+        }
+    }
+
+    return implode("\n", $lines);
 }
