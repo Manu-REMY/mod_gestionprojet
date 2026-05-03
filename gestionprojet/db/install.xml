@@ -25,6 +25,7 @@
         <FIELD NAME="enable_step6" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="enable_step7" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="enable_step8" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="step4_provided" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When 1, the teacher's CDCF (gestionprojet_cdcf_teacher) is displayed read-only to students as a reference document."/>
         <FIELD NAME="ai_provider" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="AI provider: openai, anthropic, mistral"/>
         <FIELD NAME="ai_api_key" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Encrypted API key for AI evaluation"/>
         <FIELD NAME="ai_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=AI evaluation enabled"/>
