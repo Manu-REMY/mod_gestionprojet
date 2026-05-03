@@ -215,6 +215,9 @@ if ($isteacher) {
         ],
     ];
 
+    // Load the gantt AMD module for interactivity.
+    $PAGE->requires->js_call_amd('mod_gestionprojet/gantt', 'init');
+
 } else {
     // Student section.
     if ($teacherpagescomplete && $usergroup == 0) {
