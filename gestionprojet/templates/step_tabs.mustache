@@ -9,6 +9,9 @@
     - correction model pages step4_teacher .. step8_teacher
 
     Context variables required:
+    * homeurl  - URL to the activity home (view.php?id=N, no step param)
+    * icon_home - SVG HTML for the home icon
+    * homelabel - Localised label for the home link (e.g. "Home")
     * tabs - Array of 8 tab objects, in pedagogical order [1, 3, 2, 7, 4, 5, 8, 6]
 
     Each tab object:
@@ -21,6 +24,9 @@
 
     Example context (json):
     {
+        "homeurl": "/mod/gestionprojet/view.php?id=123",
+        "icon_home": "<span class=\"gp-icon\">...</span>",
+        "homelabel": "Home",
         "tabs": [
             {
                 "stepnum": 1,
@@ -34,6 +40,9 @@
     }
 }}
 <div class="step-tabs">
+    <a href="{{homeurl}}" class="step-tab step-tab-home" title="{{homelabel}}">
+        {{{icon_home}}} <span class="step-tab-home-label">{{homelabel}}</span>
+    </a>
     {{#tabs}}
         {{#isenabled}}
             <a href="{{url}}" class="step-tab {{#isactive}}active{{/isactive}}">
