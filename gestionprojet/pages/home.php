@@ -133,7 +133,7 @@ if ($isteacher) {
             'icon' => \mod_gestionprojet\output\icon::render_step($stepnum, 'sm', 'inherit'),
         ];
 
-        // Row 1 cells — only fill for teacher doc steps (steps 1, 2, 3).
+        // Row 1 cells — fill for teacher doc steps (1, 2, 3) and for step 4 in provided mode.
         if ($isteacherdocstep) {
             $iscomplete = $teacherdocfilled($stepnum);
             if ($isenabled) {
@@ -147,9 +147,30 @@ if ($isteacher) {
                 'isfilled' => true,
                 'isenabled' => $isenabled,
                 'iscomplete' => $iscomplete,
-                'haschexkbox' => true,
+                'flag' => 'enable',
                 'name' => get_string('step' . $stepnum, 'gestionprojet'),
                 'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnum]))->out(false),
+            ];
+        } else if ($stepnum === 4) {
+            // Special case: CDCF row 1 cell controls step4_provided (teacher provides reference document).
+            $providedval = isset($gestionprojet->step4_provided) ? (int)$gestionprojet->step4_provided : 0;
+            $providedenabled = ($providedval === 1);
+            $providedrec = $teachermodels[4] ?? null;
+            $providedcomplete = $providedrec && !empty($providedrec->produit);
+            if ($providedenabled) {
+                $totalconfigtargets++;
+                if ($providedcomplete) {
+                    $totalconfigured++;
+                }
+            }
+            $rowdocs[] = [
+                'stepnum' => 4,
+                'isfilled' => true,
+                'isenabled' => $providedenabled,
+                'iscomplete' => $providedcomplete,
+                'flag' => 'provided',
+                'name' => get_string('step4', 'gestionprojet'),
+                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'teacher']))->out(false),
             ];
         } else {
             $rowdocs[] = ['isfilled' => false];

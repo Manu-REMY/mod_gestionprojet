@@ -39,6 +39,7 @@ require_sesskey();
 $cmid = required_param('cmid', PARAM_INT);
 $stepnum = required_param('stepnum', PARAM_INT);
 $enabled = required_param('enabled', PARAM_INT);
+$flag = optional_param('flag', 'enable', PARAM_ALPHA);
 
 if ($stepnum < 1 || $stepnum > 8) {
     throw new \moodle_exception('invalidparameter', 'error');
@@ -49,6 +50,12 @@ if (!in_array($enabled, [0, 1, 2], true)) {
 if ($enabled === 2 && $stepnum !== 4) {
     throw new \moodle_exception('invalidparameter', 'error');
 }
+if (!in_array($flag, ['enable', 'provided'], true)) {
+    throw new \moodle_exception('invalidparameter', 'error');
+}
+if ($flag === 'provided' && $stepnum !== 4) {
+    throw new \moodle_exception('invalidparameter', 'error');
+}
 
 $cm = get_coursemodule_from_id('gestionprojet', $cmid, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
@@ -57,7 +64,7 @@ $context = context_module::instance($cm->id);
 
 require_capability('mod/gestionprojet:configureteacherpages', $context);
 
-$field = 'enable_step' . $stepnum;
+$field = ($flag === 'provided') ? ('step' . $stepnum . '_provided') : ('enable_step' . $stepnum);
 $update = new stdClass();
 $update->id = $gestionprojet->id;
 $update->$field = $enabled;
