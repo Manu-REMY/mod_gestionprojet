@@ -44,6 +44,7 @@ class ai_evaluator {
         6 => 'gestionprojet_rapport',
         7 => 'gestionprojet_besoin_eleve',
         8 => 'gestionprojet_carnet',
+        9 => 'gestionprojet_fast',
     ];
 
     /** @var array Step to teacher table name mapping */
@@ -53,13 +54,14 @@ class ai_evaluator {
         6 => 'gestionprojet_rapport_teacher',
         7 => 'gestionprojet_besoin_eleve_teacher',
         8 => 'gestionprojet_carnet_teacher',
+        9 => 'gestionprojet_fast_teacher',
     ];
 
     /**
      * Queue an evaluation for asynchronous processing.
      *
      * @param int $gestionprojetid Instance ID
-     * @param int $step Step number (4-8)
+     * @param int $step Step number (4-9)
      * @param int $submissionid Submission record ID
      * @param int $groupid Group ID (0 for individual)
      * @param int $userid User ID (0 for group submission)
