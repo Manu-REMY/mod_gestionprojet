@@ -96,6 +96,11 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'timecreated', 'timemodified',
         ]);
 
+        $fastteacher = new backup_nested_element('fast_teacher', ['id'], [
+            'data_json', 'ai_instructions', 'submission_date', 'deadline_date',
+            'timecreated', 'timemodified',
+        ]);
+
         // Student submission tables.
         $cdcfs = new backup_nested_element('cdcfs');
         $cdcf = new backup_nested_element('cdcf', ['id'], [
@@ -131,6 +136,12 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'grade', 'feedback', 'status', 'timesubmitted', 'timecreated', 'timemodified',
         ]);
 
+        $fasts = new backup_nested_element('fasts');
+        $fast = new backup_nested_element('fast', ['id'], [
+            'groupid', 'userid', 'data_json',
+            'status', 'grade', 'feedback', 'timesubmitted', 'timecreated', 'timemodified',
+        ]);
+
         // AI evaluations.
         $aievaluations = new backup_nested_element('ai_evaluations');
         $aievaluation = new backup_nested_element('ai_evaluation', ['id'], [
@@ -151,6 +162,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $gestionprojet->add_child($rapportteacher);
         $gestionprojet->add_child($besointeacher);
         $gestionprojet->add_child($carnetteacher);
+        $gestionprojet->add_child($fastteacher);
 
         $gestionprojet->add_child($cdcfs);
         $cdcfs->add_child($cdcf);
@@ -167,6 +179,9 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $gestionprojet->add_child($carnets);
         $carnets->add_child($carnet);
 
+        $gestionprojet->add_child($fasts);
+        $fasts->add_child($fast);
+
         $gestionprojet->add_child($aievaluations);
         $aievaluations->add_child($aievaluation);
 
@@ -180,6 +195,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $rapportteacher->set_source_table('gestionprojet_rapport_teacher', ['gestionprojetid' => backup::VAR_PARENTID]);
         $besointeacher->set_source_table('gestionprojet_besoin_eleve_teacher', ['gestionprojetid' => backup::VAR_PARENTID]);
         $carnetteacher->set_source_table('gestionprojet_carnet_teacher', ['gestionprojetid' => backup::VAR_PARENTID]);
+        $fastteacher->set_source_table('gestionprojet_fast_teacher', ['gestionprojetid' => backup::VAR_PARENTID]);
 
         // User data sources (only if userinfo is set).
         if ($userinfo) {
@@ -188,6 +204,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             $rapport->set_source_table('gestionprojet_rapport', ['gestionprojetid' => backup::VAR_PARENTID]);
             $besoineleve->set_source_table('gestionprojet_besoin_eleve', ['gestionprojetid' => backup::VAR_PARENTID]);
             $carnet->set_source_table('gestionprojet_carnet', ['gestionprojetid' => backup::VAR_PARENTID]);
+            $fast->set_source_table('gestionprojet_fast', ['gestionprojetid' => backup::VAR_PARENTID]);
             $aievaluation->set_source_table('gestionprojet_ai_evaluations', ['gestionprojetid' => backup::VAR_PARENTID]);
         }
 
@@ -202,6 +219,8 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $besoineleve->annotate_ids('user', 'userid');
         $carnet->annotate_ids('group', 'groupid');
         $carnet->annotate_ids('user', 'userid');
+        $fast->annotate_ids('group', 'groupid');
+        $fast->annotate_ids('user', 'userid');
         $aievaluation->annotate_ids('group', 'groupid');
         $aievaluation->annotate_ids('user', 'userid');
         $aievaluation->annotate_ids('user', 'applied_by');
