@@ -62,14 +62,29 @@ if ($gestionprojet->group_submission && !$groupid && !has_capability('mod/gestio
     throw new \moodle_exception('not_in_group', 'gestionprojet');
 }
 
-// Get or create submission
-$submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'cdcf');
+// Determine display mode based on 2-flag model.
+$step4provided = isset($gestionprojet->step4_provided) ? (int)$gestionprojet->step4_provided : 0;
+$step4studentenabled = isset($gestionprojet->enable_step4) ? (int)$gestionprojet->enable_step4 : 1;
+$showteacherref = ($step4provided === 1);
+$showstudentform = ($step4studentenabled === 1);
 
-// Check if submitted
-$isSubmitted = $submission->status == 1;
+// Both flags off: page should not be accessible (view.php normally handles this,
+// but guard here as well for direct include scenarios).
+if (!$showteacherref && !$showstudentform) {
+    throw new \moodle_exception('stepdisabled', 'gestionprojet');
+}
+
+// Get or create submission (only needed when student form is shown)
+$submission = null;
+if ($showstudentform) {
+    $submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'cdcf');
+}
+
+// Check if submitted (only relevant when student form is shown)
+$isSubmitted = $showstudentform && $submission && ($submission->status == 1);
 $isLocked = $isSubmitted; // Lock if submitted
-$canSubmit = $gestionprojet->enable_submission && !$isSubmitted;
-$canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
+$canSubmit = $showstudentform && $gestionprojet->enable_submission && !$isSubmitted;
+$canRevert = $showstudentform && has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
 // Autosave handled inline at bottom of file
 // $PAGE->requires->js_call_amd('mod_gestionprojet/autosave', 'init', [[
@@ -89,7 +104,49 @@ if ($isSubmitted) {
 $step = 4;
 require_once(__DIR__ . '/student_dates_display.php');
 
+// --- Teacher-provided CDCF reference block (step4_provided = 1) ---
+if ($showteacherref) {
+    $teachercdcf = $DB->get_record('gestionprojet_cdcf_teacher', ['gestionprojetid' => $gestionprojet->id]);
+    if ($teachercdcf) {
+        echo html_writer::start_div('gp-provided-block');
+        echo html_writer::tag('h3', get_string('step4_provided_block_title', 'gestionprojet'));
+        echo html_writer::div(get_string('step4_provided_notice_student', 'gestionprojet'), 'gp-provided-notice');
+
+        echo html_writer::start_div('gp-provided-content');
+        if (!empty($teachercdcf->produit)) {
+            echo html_writer::tag('h4', get_string('step4_produit_label', 'gestionprojet'));
+            echo html_writer::div(format_text($teachercdcf->produit, FORMAT_HTML), 'gp-provided-field');
+        }
+        if (!empty($teachercdcf->milieu)) {
+            echo html_writer::tag('h4', get_string('step4_milieu_label', 'gestionprojet'));
+            echo html_writer::div(format_text($teachercdcf->milieu, FORMAT_HTML), 'gp-provided-field');
+        }
+        if (!empty($teachercdcf->fp)) {
+            echo html_writer::tag('h4', get_string('step4_fp_label', 'gestionprojet'));
+            echo html_writer::div(format_text($teachercdcf->fp, FORMAT_HTML), 'gp-provided-field');
+        }
+        if (!empty($teachercdcf->interacteurs_data)) {
+            $interacteursref = json_decode($teachercdcf->interacteurs_data, true) ?? [];
+            if (!empty($interacteursref)) {
+                echo html_writer::tag('h4', get_string('step4_interacteurs_label', 'gestionprojet'));
+                echo html_writer::start_tag('ul', ['class' => 'gp-provided-interacteurs']);
+                foreach ($interacteursref as $i) {
+                    if (!empty($i['name'])) {
+                        echo html_writer::tag('li', s($i['name']));
+                    }
+                }
+                echo html_writer::end_tag('ul');
+            }
+        }
+        echo html_writer::end_div(); // gp-provided-content
+        echo html_writer::end_div(); // gp-provided-block
+    }
+}
+
 $disabled = $isLocked ? 'disabled readonly' : '';
+
+// --- Student form block (enable_step4 = 1) ---
+if ($showstudentform):
 
 // Get group info
 $group = groups_get_group($groupid);
@@ -100,7 +157,7 @@ if (!$group) {
 
 // Parse interacteurs (stored as JSON array)
 $interacteurs = [];
-if ($submission->interacteurs_data) {
+if ($submission && $submission->interacteurs_data) {
     $interacteurs = json_decode($submission->interacteurs_data, true) ?? [];
 }
 
@@ -251,6 +308,7 @@ $PAGE->requires->jquery();
 ?>
 
 <script>
+// Student-form scripts (only rendered when enable_step4 = 1)
     // Wait for jQuery to be loaded
     // Wait for jQuery to be loaded
     // Wait for RequireJS and jQuery
@@ -646,5 +704,7 @@ $PAGE->requires->jquery();
 </script>
 
 <?php
+endif; // $showstudentform
+
 echo $OUTPUT->footer();
 ?>

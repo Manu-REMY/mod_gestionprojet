@@ -4952,3 +4952,37 @@
     font-weight: 700;
     font-size: 14px;
 }
+
+/* Step 4 - Teacher-provided CDCF reference block */
+.path-mod-gestionprojet .gp-provided-block {
+    background: linear-gradient(180deg, #eef2ff 0%, #fafbff 100%);
+    border: 1px solid #c7d2fe;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+}
+.path-mod-gestionprojet .gp-provided-block h3 {
+    margin-top: 0;
+    color: #4338ca;
+}
+.path-mod-gestionprojet .gp-provided-block h4 {
+    color: #312e81;
+    margin-top: 14px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.path-mod-gestionprojet .gp-provided-content {
+    color: #1e1b4b;
+    line-height: 1.5;
+}
+.path-mod-gestionprojet .gp-provided-field {
+    background: rgba(255, 255, 255, 0.6);
+    border-left: 3px solid #4f46e5;
+    padding: 8px 12px;
+    margin: 6px 0;
+    border-radius: 4px;
+}
+.path-mod-gestionprojet .gp-provided-interacteurs {
+    margin: 8px 0 0 22px;
+}

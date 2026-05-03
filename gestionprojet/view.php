@@ -121,7 +121,10 @@ if ($step > 0) {
 
     // Check availability
     if (!$isteacher && !$enabled) {
-        throw new \moodle_exception('stepdisabled', 'gestionprojet');
+        // Special case: step 4 may still be accessible if step4_provided is enabled.
+        if (!($step === 4 && (int)($gestionprojet->step4_provided ?? 0) === 1)) {
+            throw new \moodle_exception('stepdisabled', 'gestionprojet');
+        }
     }
 
     // Handle teacher correction model mode for steps 4-8.
