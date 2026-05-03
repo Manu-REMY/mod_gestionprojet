@@ -1484,5 +1484,11 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
         ];
     }
 
-    return ['tabs' => $tabs];
+    $homeurl = (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cmid]))->out(false);
+    return [
+        'tabs' => $tabs,
+        'homeurl' => $homeurl,
+        'icon_home' => \mod_gestionprojet\output\icon::render('home', 'sm', 'inherit'),
+        'homelabel' => get_string('home', 'gestionprojet'),
+    ];
 }

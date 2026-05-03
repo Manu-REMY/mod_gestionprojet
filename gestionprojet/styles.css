@@ -3751,6 +3751,17 @@
     cursor: not-allowed;
     pointer-events: none;
 }
+.path-mod-gestionprojet .step-tab-home {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    margin-right: 8px;
+    padding-right: 14px;
+    border-right: 2px solid #d1d5db;
+    border-radius: 8px;
+}
+.path-mod-gestionprojet .step-tab-home:hover {
+    background: #e5e7eb;
+}
 
 .path-mod-gestionprojet .step-tabs-row {
     display: flex;
