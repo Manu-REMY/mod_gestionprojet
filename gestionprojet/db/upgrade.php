@@ -523,6 +523,7 @@ function xmldb_gestionprojet_upgrade($oldversion)
             $studenttable->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
             $studenttable->add_key('gestionprojetid', XMLDB_KEY_FOREIGN, ['gestionprojetid'], 'gestionprojet', ['id']);
             $studenttable->add_key('groupid', XMLDB_KEY_FOREIGN, ['groupid'], 'groups', ['id']);
+            $studenttable->add_index('gestionprojet_submission_idx', XMLDB_INDEX_UNIQUE, ['gestionprojetid', 'groupid', 'userid']);
             $dbman->create_table($studenttable);
         }
 

@@ -380,15 +380,15 @@
       </KEYS>
     </TABLE>
 
-    <!-- Table: Modèle de correction FAST (enseignant) - Step 9 -->
+    <!-- Table: FAST diagram correction model (teacher) - Step 9 -->
     <TABLE NAME="gestionprojet_fast_teacher" COMMENT="Teacher correction model for FAST diagram">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="data_json" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON of FAST diagram (FP, FT, sous-FT, ST)"/>
         <FIELD NAME="ai_instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Instructions for AI evaluation"/>
-        <FIELD NAME="submission_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="deadline_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="submission_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Expected submission date (Unix timestamp)"/>
+        <FIELD NAME="deadline_date" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Deadline date (Unix timestamp) - auto-submit after this"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -398,7 +398,7 @@
       </KEYS>
     </TABLE>
 
-    <!-- Table: Production élève FAST - Step 9 -->
+    <!-- Table: Student FAST diagram submission - Step 9 -->
     <TABLE NAME="gestionprojet_fast" COMMENT="Student FAST diagram submission">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -418,6 +418,9 @@
         <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
         <KEY NAME="groupid" TYPE="foreign" FIELDS="groupid" REFTABLE="groups" REFFIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="gestionprojet_submission_idx" UNIQUE="true" FIELDS="gestionprojetid, groupid, userid"/>
+      </INDEXES>
     </TABLE>
 
     <!-- Table: AI Evaluations (Phase 4) -->
