@@ -60,11 +60,30 @@ if (empty($interacteurs)) {
     ];
 }
 
+// Mode detection: combined state of step4_provided and enable_step4.
+$step4provided = isset($gestionprojet->step4_provided) ? (int)$gestionprojet->step4_provided : 0;
+$step4studentenabled = isset($gestionprojet->enable_step4) ? (int)$gestionprojet->enable_step4 : 1;
+
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, 'model')
 );
+
+// Contextual notice based on the combined state of step4_provided and enable_step4.
+$noticekey = null;
+if ($step4provided === 1 && $step4studentenabled === 0) {
+    $noticekey = 'step4_provided_notice_teacher';
+} else if ($step4provided === 1 && $step4studentenabled === 1) {
+    $noticekey = 'step4_hybrid_notice_teacher';
+}
+if ($noticekey !== null) {
+    echo html_writer::div(
+        get_string($noticekey, 'gestionprojet'),
+        'gp-provided-notice'
+    );
+}
+
 require_once(__DIR__ . '/teacher_model_styles.php');
 
 // Get navigation for teacher steps.
