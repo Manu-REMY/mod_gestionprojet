@@ -1480,7 +1480,7 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
 
     require_once($CFG->dirroot . '/mod/gestionprojet/classes/output/icon.php');
 
-    $order = [1, 3, 2, 7, 4, 5, 8, 6];
+    $order = [1, 3, 2, 7, 4, 9, 5, 8, 6];
     $tabs = [];
 
     foreach ($order as $stepnum) {
@@ -1491,7 +1491,7 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
         // Build the URL according to the destination context.
         $params = ['id' => $cmid, 'step' => $stepnum];
         $isteacherstep = in_array($stepnum, [1, 2, 3], true);
-        $isstudentstep = in_array($stepnum, [4, 5, 6, 7, 8], true);
+        $isstudentstep = in_array($stepnum, [4, 5, 6, 7, 8, 9], true);
 
         if ($context === 'grading' && $isstudentstep) {
             $url = (new \moodle_url('/mod/gestionprojet/grading.php', $params))->out(false);
