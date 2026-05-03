@@ -795,3 +795,28 @@ $string['step4_provided_badge'] = 'Fourni';
 $string['step4_produit_label'] = 'Produit';
 $string['step4_milieu_label'] = 'Milieu';
 $string['step4_interacteurs_label'] = 'Interacteurs';
+
+// Étape 9 : Diagramme FAST.
+$string['step9'] = 'Diagramme FAST';
+$string['step9_desc'] = 'Traduire les fonctions de service en solutions techniques.';
+$string['enable_step9'] = 'Activer l\'étape 9 (Diagramme FAST)';
+$string['step9_provided'] = 'Fournir un diagramme FAST aux élèves';
+$string['step9_provided_desc'] = 'Si coché, les élèves voient le FAST de l\'enseignant comme point de départ.';
+
+// UI FAST.
+$string['fast:diagram_title'] = 'Diagramme FAST';
+$string['fast:diagram_subtitle'] = 'Du besoin à la solution technique';
+$string['fast:populate_from_cdcf'] = 'Pré-remplir depuis le CDCF';
+$string['fast:start_empty'] = 'Commencer vierge';
+$string['fast:add_function'] = 'Ajouter une fonction technique';
+$string['fast:add_subfunction'] = 'Ajouter une sous-fonction';
+$string['fast:split'] = 'Scinder';
+$string['fast:remove'] = 'Supprimer';
+$string['fast:no_cdcf_data'] = 'Aucune fonction de service définie dans le cahier des charges.';
+$string['fast:ft_description_placeholder'] = 'Description de la fonction technique...';
+$string['fast:sf_description_placeholder'] = 'Description de la sous-fonction...';
+$string['fast:solution_placeholder'] = 'Décrivez la solution technique...';
+$string['fast:placeholder'] = 'Diagramme FAST';
+$string['fast:ai_instructions_label'] = 'Consignes pour le correcteur IA';
+$string['fast:ai_instructions_help'] = 'Guidez le correcteur IA sur les critères d\'évaluation.';
+$string['fast:no_data_to_evaluate'] = 'Aucune donnée FAST à évaluer.';
