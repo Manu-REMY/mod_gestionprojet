@@ -26,62 +26,80 @@ Remettre toutes les actions enseignantes à portée de main depuis la home et pe
 
 ## Friction 1 — Mode "CDCF fourni par l'enseignant"
 
+> **Note** : ce design a évolué après livraison de Phase 2. Plutôt qu'un `enable_step4` 3-états, on utilise **deux flags booléens indépendants** pour aligner la sémantique CDCF avec la colonne fusionnée "Expression du Besoin" du Gantt — permettant les 4 combinaisons (désactivé / élève seul / fourni / hybride).
+
 ### Modèle de données
 
-Le champ `enable_step4` change de sémantique :
+Deux booléens contrôlent les 3 rôles de l'étape 4 :
 
-| Valeur | Ancienne sémantique | Nouvelle sémantique |
+| Flag | Sémantique |
+|---|---|
+| `enable_step4` (existant, boolean 0/1) | Active la production par les élèves (rangée "Activités élèves" du Gantt). Inchangé : valeur 1 par défaut, valeur 2 NON utilisée. |
+| `step4_provided` (nouveau, boolean 0/1) | Active le mode "fourni" : le contenu de `gestionprojet_cdcf_teacher` est affiché en lecture seule aux élèves comme document de référence. Valeur par défaut 0. |
+
+**Quatre combinaisons** :
+
+| `step4_provided` | `enable_step4` | Mode |
 |---|---|---|
-| `0` | désactivé | désactivé (inchangé) |
-| `1` | activé | activé en mode élève (l'élève produit son CDCF) |
-| `2` | — (n'existait pas) | activé en mode fourni (l'enseignant fournit le CDCF, l'élève consulte) |
+| 0 | 0 | Désactivé (étape masquée) |
+| 0 | 1 | Élève seul (comportement actuel par défaut) |
+| 1 | 0 | Fourni — l'enseignant produit, l'élève consulte en lecture seule, pas de note |
+| 1 | 1 | **Hybride** — l'enseignant fournit une référence partielle ET l'élève produit son propre CDCF |
 
-- Type SQL actuel : `int(1) NOTNULL DEFAULT 1` dans `db/install.xml`. Capacité suffisante pour stocker 0..2 — **aucune modification de schéma requise**.
-- Migration `db/upgrade.php` : aucune migration de données nécessaire (les valeurs existantes 0 et 1 conservent leur sens). Seul le bump de version est ajouté.
+### Migration DB
 
-Les autres `enable_stepN` (1, 2, 3, 5, 6, 7, 8) restent en booléen.
+- Ajout de la colonne `step4_provided` dans la table `gestionprojet` : `<FIELD NAME="step4_provided" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>` dans `db/install.xml`.
+- Step d'upgrade dans `db/upgrade.php` ajoutant le champ pour les installations existantes (équivalent du pattern utilisé pour les ajouts de champ : `xmldb_field` + `add_field` si absent).
 
 ### Stockage du contenu fourni
 
-Réutilisation de la table existante `gestionprojet_cdcf_teacher`. Cette table contient déjà la structure complète d'un CDCF (produit, fonctions, contraintes, etc.) et un champ `ai_instructions` pour la correction IA. En mode fourni :
+Réutilisation inchangée de la table existante `gestionprojet_cdcf_teacher` :
 
-- Les champs métier (produit, fonctions, contraintes, ...) jouent un double rôle : contenu affiché à l'élève **et** référence pour l'IA lors de la correction des étapes en aval.
-- Le champ `ai_instructions` reste réservé à l'IA et n'est jamais affiché à l'élève (filtrage côté template comme aujourd'hui).
-- Aucune nouvelle table, aucun nouveau champ.
+- Quand `step4_provided = 1`, les champs métier (`produit`, `milieu`, `fp`, `interacteurs_data`) sont affichés en lecture seule aux élèves comme document de référence.
+- Le champ `ai_instructions` reste réservé à l'IA, jamais affiché aux élèves (filtrage côté template).
+- En mode hybride, ce contenu sert simultanément de référence partielle pour les élèves ET de modèle de correction pour l'IA.
+- **Aucune nouvelle table, un seul nouveau champ** (`step4_provided`).
 
 ### Comportement
 
 **Page `step4.php` (vue élève)** :
-- Si `enable_step4 == 2` : afficher le contenu de `gestionprojet_cdcf_teacher` en lecture seule, badge "Fourni par l'enseignant", masquer le bouton "Soumettre", ne pas afficher de zone de note.
-- Si `enable_step4 == 1` : comportement actuel inchangé.
-- Si `enable_step4 == 0` : la page n'est pas accessible (comportement actuel).
+- Si `step4_provided == 1` : afficher en haut le contenu de `gestionprojet_cdcf_teacher` en lecture seule, dans un encart "Document fourni par l'enseignant".
+- Si `enable_step4 == 1` : afficher le formulaire de production élève en dessous.
+- Si les deux sont à 1 (hybride) : les deux blocs s'affichent l'un au-dessus de l'autre (référence en haut, formulaire éditable en bas).
+- Si les deux sont à 0 : la page n'est pas accessible.
 
 **Page `step4_teacher.php`** :
-- Si `enable_step4 == 2` : un encart d'information (div stylé via `styles.css`, classe `path-mod-gestionprojet provided-mode-notice`, pas de balise `<style>` inline) en haut du formulaire, texte du type *"Mode fourni : ce contenu sera visible par les élèves en lecture seule. Le champ Instructions IA n'est pas visible aux élèves."*. Le formulaire reste éditable.
-- Si `enable_step4 == 1` : encart actuel ("modèle de correction") inchangé.
+- Si `step4_provided == 1` ET `enable_step4 == 0` : encart "Mode fourni : ce contenu sera visible par les élèves en lecture seule. Le champ Instructions IA n'est pas visible aux élèves."
+- Si `step4_provided == 1` ET `enable_step4 == 1` : encart "Mode hybride : ce contenu sera visible par les élèves comme document de référence et utilisé comme modèle de correction pour leur production."
+- Si `step4_provided == 0` ET `enable_step4 == 1` : encart actuel ("modèle de correction") inchangé.
+- Si les deux sont à 0 : la page reste accessible mais la persistance n'a pas d'effet visible (édition à blanc d'un modèle qui ne sera ni utilisé ni affiché). Acceptable.
 
-**Page `home.php` (vue enseignant)** :
-- En mode fourni, la carte step 4 du bloc "Modèles de correction" affiche un badge "Fourni" au lieu de l'indicateur de complétion habituel.
+**Page `home.php` (Gantt enseignant)** — colonne CDCF :
+- Cellule **ligne 1** (Documents enseignant) : checkbox indépendant lié à `step4_provided`. Renvoie vers `step4_teacher.php` (édition du document fourni / modèle de correction — même page).
+- Cellule **ligne 2** (Modèles de correction) : checkbox lié à `enable_step4`, partagé avec ligne 3. Renvoie aussi vers `step4_teacher.php`.
+- Cellule **ligne 3** (Activités élèves) : pas de checkbox, contrôlée par celui de la ligne 2. Renvoie vers `grading.php?step=4`.
 
 **Page `home.php` (vue élève)** :
-- En mode fourni, la carte step 4 affiche le badge "Fourni par l'enseignant" et reste cliquable (ouvre la page en lecture seule).
+- Si `step4_provided == 1` ET `enable_step4 == 0` : carte step 4 affiche le badge "Fourni par l'enseignant".
+- Si `enable_step4 == 1` : badge de complétion standard (avec note si attribuée). Si en plus `step4_provided == 1`, badge complémentaire "+ Référence prof".
 
 **Logique de notation et d'évaluation IA** :
-- En mode fourni, step 4 ne génère aucune note (pas de soumission élève).
-- L'évaluation IA des étapes 5, 6, 7, 8 utilise déjà le contenu de `gestionprojet_cdcf_teacher` comme référence ; aucun changement de ce côté.
+- Si `enable_step4 == 0` : pas de note (pas de soumission élève).
+- Si `enable_step4 == 1` : note possible (mode élève seul ou hybride). L'évaluation IA des étapes en aval utilise toujours `gestionprojet_cdcf_teacher` comme référence — comportement inchangé.
 
-**Comptage de complétion (dashboard)** :
-- En mode fourni, la carte step 4 du bloc "Modèles de correction" est considérée comme complète dès que le champ `produit` est renseigné (et non plus `ai_instructions`, qui devient optionnel en mode fourni). Le compteur `modelscomplete/modelstotal` du dashboard reflète cette règle.
+### AJAX endpoint `toggle_step.php`
+
+L'endpoint accepte un paramètre supplémentaire `flag` (PARAM_ALPHA, optionnel, default `enable`) :
+- `flag=enable` : met à jour `enable_step{stepnum}` (comportement actuel).
+- `flag=provided` : met à jour `step{stepnum}_provided` (uniquement si `stepnum=4` à ce stade).
+
+### Module AMD `gantt.js`
+
+Le module lit l'attribut `data-flag` sur la checkbox au moment du `change` et le passe à l'endpoint AJAX. Si absent, la valeur par défaut `enable` est utilisée (rétrocompat avec les autres lignes).
 
 ### Configuration (mod_form)
 
-Dans `mod_form.php`, le `advcheckbox` pour `enable_step4` devient un `select` à 3 valeurs :
-
-- `0` : Désactivé
-- `1` : Production par les élèves
-- `2` : Fourni par l'enseignant
-
-Les libellés sont placés dans `lang/en/gestionprojet.php` et `lang/fr/gestionprojet.php`.
+`mod_form.php` ne contient plus la section "Étapes actives" depuis Phase 2. Aucun changement nécessaire pour Phase 3 — la configuration des deux flags se fait directement depuis la home Gantt.
 
 ## Friction 2 — Refonte de la home enseignant en Gantt
 
