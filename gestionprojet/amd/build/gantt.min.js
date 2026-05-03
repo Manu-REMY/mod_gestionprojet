@@ -44,6 +44,8 @@ define(['jquery', 'core/notification', 'core/str', 'core/config'], function($, N
             var enabled = $cb.is(':checked') ? 1 : 0;
             var $cell = $cb.closest('.gp-cell');
 
+            var flag = $cb.data('flag') || 'enable';
+
             // Optimistic UI update.
             Gantt.applyVisualState($cell, $cb, row, enabled);
 
@@ -55,6 +57,7 @@ define(['jquery', 'core/notification', 'core/str', 'core/config'], function($, N
                     cmid: cmid,
                     stepnum: stepnum,
                     enabled: enabled,
+                    flag: flag,
                     sesskey: sesskey
                 }
             }).done(function(response) {
