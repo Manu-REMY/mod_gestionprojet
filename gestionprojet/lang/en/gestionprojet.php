@@ -772,3 +772,26 @@ $string['step'] = 'Step';
 // Shared error strings for JS
 $string['error_submitting'] = 'Error submitting';
 $string['error_reverting'] = 'Error reverting';
+
+// Gantt dashboard
+$string['gantt_row_teacher_docs'] = 'Teacher documents';
+$string['gantt_row_correction_models'] = 'Correction models';
+$string['gantt_row_student_activities'] = 'Student activities';
+$string['gantt_cell_status_done'] = 'Configured';
+$string['gantt_cell_status_todo'] = 'To configure';
+$string['gantt_cell_status_disabled'] = 'Disabled';
+$string['gantt_toggle_success'] = 'Step updated';
+$string['gantt_toggle_error'] = 'Error while updating step';
+$string['gantt_progress_summary'] = '{$a->configured}/{$a->total} phases configured';
+$string['gantt_ungraded_summary'] = '{$a} submission(s) to grade';
+$string['gantt_ungraded_summary_zero'] = 'No pending submissions';
+
+// Phase 3: CDCF provided / hybrid mode strings.
+$string['step4_provided_block_title'] = 'Document provided by the teacher';
+$string['step4_provided_notice_student'] = 'Your teacher has provided the following Functional Specifications as a reference. You cannot modify it.';
+$string['step4_provided_notice_teacher'] = 'Provided mode: this content will be displayed read-only to students. The "AI Instructions" field is never shown to students.';
+$string['step4_hybrid_notice_teacher'] = 'Hybrid mode: this content will be displayed to students as a reference document AND used as a correction model for their own production. The "AI Instructions" field is never shown to students.';
+$string['step4_provided_badge'] = 'Provided';
+$string['step4_produit_label'] = 'Product';
+$string['step4_milieu_label'] = 'Environment';
+$string['step4_interacteurs_label'] = 'Interactors';

@@ -772,3 +772,26 @@ $string['step'] = 'Étape';
 // Chaînes d'erreur partagées pour le JS
 $string['error_submitting'] = 'Erreur lors de la soumission';
 $string['error_reverting'] = 'Erreur lors du retour au brouillon';
+
+// Tableau de bord Gantt
+$string['gantt_row_teacher_docs'] = 'Documents enseignant';
+$string['gantt_row_correction_models'] = 'Modèles de correction';
+$string['gantt_row_student_activities'] = 'Activités élèves';
+$string['gantt_cell_status_done'] = 'Configuré';
+$string['gantt_cell_status_todo'] = 'À configurer';
+$string['gantt_cell_status_disabled'] = 'Désactivé';
+$string['gantt_toggle_success'] = 'Étape mise à jour';
+$string['gantt_toggle_error'] = 'Erreur lors de la mise à jour';
+$string['gantt_progress_summary'] = '{$a->configured}/{$a->total} phases configurées';
+$string['gantt_ungraded_summary'] = '{$a} soumission(s) à corriger';
+$string['gantt_ungraded_summary_zero'] = 'Aucune soumission en attente';
+
+// Phase 3: CDCF — strings du mode fourni / hybride.
+$string['step4_provided_block_title'] = 'Document fourni par l\'enseignant';
+$string['step4_provided_notice_student'] = 'Votre enseignant a fourni le Cahier des Charges Fonctionnel suivant comme référence. Vous ne pouvez pas le modifier.';
+$string['step4_provided_notice_teacher'] = 'Mode fourni : ce contenu sera affiché en lecture seule aux élèves. Le champ « Instructions IA » n\'est jamais affiché aux élèves.';
+$string['step4_hybrid_notice_teacher'] = 'Mode hybride : ce contenu sera affiché aux élèves comme document de référence ET utilisé comme modèle de correction pour leur propre production. Le champ « Instructions IA » n\'est jamais affiché aux élèves.';
+$string['step4_provided_badge'] = 'Fourni';
+$string['step4_produit_label'] = 'Produit';
+$string['step4_milieu_label'] = 'Milieu';
+$string['step4_interacteurs_label'] = 'Interacteurs';

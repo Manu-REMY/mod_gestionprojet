@@ -8,7 +8,7 @@
     * currentstep - Current step number
     * homeurl - URL to home page
     * aienabled - Boolean if AI is enabled
-    * steptabs - Array of step tab objects
+    * tabs - Array of step tab objects (injected via gestionprojet_build_step_tabs, consumed by step_tabs partial)
     * navid - Current navigation item ID (group or user)
     * paramname - Parameter name for navigation ('groupid' or 'userid')
     * currentindex - Current index (1-based) in navigation
@@ -26,13 +26,6 @@
     * icon_refresh - SVG icon for refresh/reevaluate
     * icon_home - SVG icon for home
 
-    Each steptab object:
-    * stepnum - Step number
-    * icon - SVG HTML for step icon
-    * name - Localized step name
-    * isactive - Boolean if this is the current step
-    * url - URL to navigate to this step tab
-
     Each navitem object:
     * id - Item ID (group or user ID)
     * name - Display name
@@ -45,12 +38,13 @@
         "currentstep": 4,
         "homeurl": "/mod/gestionprojet/view.php?id=123",
         "aienabled": true,
-        "steptabs": [
+        "tabs": [
             {
                 "stepnum": 7,
                 "icon": "<span class=\"gp-icon\">...</span>",
                 "name": "Needs Expression",
                 "isactive": false,
+                "isenabled": true,
                 "url": "/mod/gestionprojet/grading.php?id=123&step=7&groupid=1"
             }
         ],
@@ -73,13 +67,9 @@
     {{{icon_back}}} {{#str}} home, gestionprojet {{/str}}
 </a>
 
-{{! Step tabs }}
-<div class="step-tabs">
-    {{#steptabs}}
-        <a href="{{url}}" class="step-tab {{#isactive}}active{{/isactive}}">
-            {{{icon}}} {{name}}
-        </a>
-    {{/steptabs}}
+{{! Step tabs (shared partial) + grading-specific bulk action button }}
+<div class="step-tabs-row">
+    {{> mod_gestionprojet/step_tabs}}
 
     {{#aienabled}}
     <button type="button" class="bulk-reevaluate-btn" id="btn-bulk-reevaluate"

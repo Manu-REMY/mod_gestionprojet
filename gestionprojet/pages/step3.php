@@ -57,23 +57,15 @@ $showGrade = false;
 
 echo $OUTPUT->header();
 
-// Navigation buttons
+// Render direct step navigation tabs.
+echo $OUTPUT->render_from_template(
+    'mod_gestionprojet/step_tabs',
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 3, 'teacher')
+);
+
+// Keep nav_links available for other uses.
 $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step3');
 
-echo '<div class="navigation-container-flex">';
-echo '<div class="nav-group">';
-echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="nav-button nav-button-prev"><span>🏠</span><span>' . get_string('home', 'gestionprojet') . '</span></a>';
-if ($nav_links['prev']) {
-    echo '<a href="' . $nav_links['prev'] . '" class="nav-button nav-button-prev"><span>←</span><span>' . get_string('previous', 'gestionprojet') . '</span></a>';
-}
-echo '</div>';
-
-echo '<div>';
-if ($nav_links['next']) {
-    echo '<a href="' . $nav_links['next'] . '" class="nav-button"><span>' . get_string('next', 'gestionprojet') . '</span><span>→</span></a>';
-}
-echo '</div>';
-echo '</div>';
 echo '<h2>📋 ' . get_string('step3', 'gestionprojet') . '</h2>';
 
 // Description

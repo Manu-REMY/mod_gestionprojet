@@ -105,10 +105,9 @@ if ($cansubmit && !$isteacher) {
 if ($page !== '') {
     switch ($page) {
         case 'correctionmodels':
-            // Teacher correction models hub - requires teacher capability.
-            require_capability('mod/gestionprojet:configureteacherpages', $context);
-            require_once(__DIR__ . '/pages/correction_models.php');
-            exit;
+            // Deprecated route: correction models are now displayed directly on the home Gantt.
+            redirect(new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]));
+            break;
 
         default:
             throw new \moodle_exception('invalidpage', 'gestionprojet');
@@ -122,7 +121,10 @@ if ($step > 0) {
 
     // Check availability
     if (!$isteacher && !$enabled) {
-        throw new \moodle_exception('stepdisabled', 'gestionprojet');
+        // Special case: step 4 may still be accessible if step4_provided is enabled.
+        if (!($step === 4 && (int)($gestionprojet->step4_provided ?? 0) === 1)) {
+            throw new \moodle_exception('stepdisabled', 'gestionprojet');
+        }
     }
 
     // Handle teacher correction model mode for steps 4-8.

@@ -11,6 +11,7 @@
 
 # Claude Code
 .claude/
+.superpowers/
 
 # Sensitive files
 API-KEY.md
