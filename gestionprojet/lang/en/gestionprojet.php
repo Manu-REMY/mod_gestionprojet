@@ -795,3 +795,28 @@ $string['step4_provided_badge'] = 'Provided';
 $string['step4_produit_label'] = 'Product';
 $string['step4_milieu_label'] = 'Environment';
 $string['step4_interacteurs_label'] = 'Interactors';
+
+// Step 9: FAST diagram.
+$string['step9'] = 'FAST diagram';
+$string['step9_desc'] = 'Translate functional requirements into technical solutions.';
+$string['enable_step9'] = 'Enable step 9 (FAST diagram)';
+$string['step9_provided'] = 'Provide a FAST diagram to students';
+$string['step9_provided_desc'] = 'When checked, students see the teacher\'s FAST diagram as a starting point.';
+
+// FAST UI.
+$string['fast:diagram_title'] = 'FAST diagram';
+$string['fast:diagram_subtitle'] = 'From need to technical solution';
+$string['fast:populate_from_cdcf'] = 'Pre-fill from CDCF';
+$string['fast:start_empty'] = 'Start empty';
+$string['fast:add_function'] = 'Add a technical function';
+$string['fast:add_subfunction'] = 'Add a sub-function';
+$string['fast:split'] = 'Split';
+$string['fast:remove'] = 'Remove';
+$string['fast:no_cdcf_data'] = 'No service function defined in the functional specifications.';
+$string['fast:ft_description_placeholder'] = 'Description of the technical function...';
+$string['fast:sf_description_placeholder'] = 'Description of the sub-function...';
+$string['fast:solution_placeholder'] = 'Describe the technical solution...';
+$string['fast:placeholder'] = 'FAST diagram';
+$string['fast:ai_instructions_label'] = 'AI evaluator instructions';
+$string['fast:ai_instructions_help'] = 'Guide the AI evaluator on what to assess.';
+$string['fast:no_data_to_evaluate'] = 'No FAST data to evaluate.';
