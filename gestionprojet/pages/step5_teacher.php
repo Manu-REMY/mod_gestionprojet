@@ -161,7 +161,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 5, $context, $cm->id);
             <div class="nav-spacer"></div>
             <?php endif; ?>
 
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'page' => 'correctionmodels']); ?>" class="btn-nav btn-hub">
+            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>" class="btn-nav btn-hub">
                 <?php echo get_string('correction_models', 'gestionprojet'); ?>
             </a>
 
@@ -225,7 +225,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 5, $context, $cm->id);
                 Autosave.onSave = function(response) {
                     if (originalOnSave) originalOnSave(response);
                     setTimeout(function() {
-                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid + '&page=correctionmodels';
+                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid;
                     }, 800);
                 };
                 Autosave.save();
