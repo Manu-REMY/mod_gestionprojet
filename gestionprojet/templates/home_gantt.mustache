@@ -52,7 +52,7 @@
         {{#rowdocs}}
             {{#isfilled}}
                 <div class="gp-cell gp-cell-docs {{^isenabled}}gp-cell-disabled{{/isenabled}}">
-                    <input type="checkbox" class="gp-cell-cb" data-stepnum="{{stepnum}}" data-row="docs" {{#isenabled}}checked{{/isenabled}} title="{{name}}">
+                    <input type="checkbox" class="gp-cell-cb" data-stepnum="{{stepnum}}" data-row="docs" data-flag="{{flag}}" {{#isenabled}}checked{{/isenabled}} title="{{name}}">
                     <a href="{{url}}" class="gp-cell-link">
                         {{#isenabled}}
                             {{#iscomplete}}<div class="gp-cell-status gp-status-done">{{#str}}gantt_cell_status_done, gestionprojet{{/str}}</div>{{/iscomplete}}
