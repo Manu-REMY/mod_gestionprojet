@@ -156,6 +156,23 @@ class provider implements
             'privacy:metadata:gestionprojet_carnet'
         );
 
+        // Student submission tables - Step 9: FAST diagram.
+        $collection->add_database_table(
+            'gestionprojet_fast',
+            [
+                'userid' => 'privacy:metadata:gestionprojet_fast:userid',
+                'groupid' => 'privacy:metadata:groupid',
+                'data_json' => 'privacy:metadata:gestionprojet_fast:data_json',
+                'grade' => 'privacy:metadata:grade',
+                'feedback' => 'privacy:metadata:feedback',
+                'status' => 'privacy:metadata:gestionprojet_fast:status',
+                'timesubmitted' => 'privacy:metadata:gestionprojet_fast:timesubmitted',
+                'timecreated' => 'privacy:metadata:timecreated',
+                'timemodified' => 'privacy:metadata:timemodified',
+            ],
+            'privacy:metadata:gestionprojet_fast'
+        );
+
         // AI Evaluations table.
         $collection->add_database_table(
             'gestionprojet_ai_evaluations',
@@ -209,6 +226,7 @@ class provider implements
             'gestionprojet_rapport',
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
+            'gestionprojet_fast',
         ];
 
         foreach ($submissiontables as $table) {
@@ -291,6 +309,7 @@ class provider implements
             'gestionprojet_rapport',
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
+            'gestionprojet_fast',
         ];
 
         foreach ($submissiontables as $table) {
@@ -370,6 +389,7 @@ class provider implements
                 'gestionprojet_rapport' => get_string('step6', 'gestionprojet'),
                 'gestionprojet_besoin_eleve' => get_string('step7', 'gestionprojet'),
                 'gestionprojet_carnet' => get_string('step8', 'gestionprojet'),
+                'gestionprojet_fast' => get_string('step9', 'gestionprojet'),
             ];
 
             foreach ($submissiontables as $table => $stepname) {
@@ -482,6 +502,7 @@ class provider implements
             'gestionprojet_rapport',
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
+            'gestionprojet_fast',
         ];
 
         foreach ($submissiontables as $table) {
@@ -531,6 +552,7 @@ class provider implements
                 'gestionprojet_rapport',
                 'gestionprojet_besoin_eleve',
                 'gestionprojet_carnet',
+                'gestionprojet_fast',
             ];
 
             foreach ($submissiontables as $table) {
@@ -601,6 +623,7 @@ class provider implements
             'gestionprojet_rapport',
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
+            'gestionprojet_fast',
         ];
 
         foreach ($submissiontables as $table) {

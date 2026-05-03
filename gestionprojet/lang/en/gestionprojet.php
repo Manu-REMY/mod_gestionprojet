@@ -820,3 +820,8 @@ $string['fast:placeholder'] = 'FAST diagram';
 $string['fast:ai_instructions_label'] = 'AI evaluator instructions';
 $string['fast:ai_instructions_help'] = 'Guide the AI evaluator on what to assess.';
 $string['fast:no_data_to_evaluate'] = 'No FAST data to evaluate.';
+$string['privacy:metadata:gestionprojet_fast'] = 'Student FAST diagram submissions.';
+$string['privacy:metadata:gestionprojet_fast:userid'] = 'User ID (individual mode).';
+$string['privacy:metadata:gestionprojet_fast:data_json'] = 'FAST diagram data (JSON: FP, FT, sub-FT, ST).';
+$string['privacy:metadata:gestionprojet_fast:status'] = 'Submission status (0=draft, 1=submitted).';
+$string['privacy:metadata:gestionprojet_fast:timesubmitted'] = 'Submission timestamp.';
