@@ -41,147 +41,178 @@ for ($i = 1; $i <= 8; $i++) {
 }
 
 if ($isteacher) {
-    // Get teacher pages data.
-    $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]);
-    $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]);
-    $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);
+    // Build the Gantt dashboard for the teacher home view.
+    // Pedagogical column order: [1, 3, 2, 7, 4, 5, 8, 6].
+    $ganttorder = [1, 3, 2, 7, 4, 5, 8, 6];
+    $teacherdocsteps = [1, 2, 3];
+    $studentsteps = [4, 5, 6, 7, 8];
 
-    $teacherstepsraw = [
-        1 => [
-            'data' => $description,
-            'complete' => $description && !empty($description->intitule),
-        ],
-        3 => [
-            'data' => $planning,
-            'complete' => $planning && !empty($planning->projectname),
-        ],
-        2 => [
-            'data' => $besoin,
-            'complete' => $besoin && !empty($besoin->aqui),
-        ],
+    // Map step number to its data source for "is filled" computation.
+    $teacherdocs = [
+        1 => $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]),
+        2 => $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]),
+        3 => $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]),
     ];
-
-    $teachersteps = [];
-    foreach ($teacherstepsraw as $stepnum => $stepdata) {
-        $islocked = $stepdata['data'] && $stepdata['data']->locked;
-        $teachersteps[] = [
-            'stepnum' => $stepnum,
-            'icon' => $stepicons[$stepnum],
-            'title' => get_string('step' . $stepnum, 'gestionprojet'),
-            'description' => get_string('step' . $stepnum . '_desc', 'gestionprojet'),
-            'islocked' => $islocked,
-            'iscomplete' => !$islocked && $stepdata['complete'],
-            'url' => 'view.php?id=' . $cm->id . '&step=' . $stepnum,
-            'buttonlabel' => $islocked ? get_string('unlock', 'gestionprojet') : get_string('configure', 'gestionprojet'),
-        ];
-    }
-    $templatecontext['teachersteps'] = $teachersteps;
-
-    // Grading steps.
-    if ($cangrade && $teacherpagescomplete) {
-        $studentstepsraw = [
-            7 => get_string('step7', 'gestionprojet'),
-            4 => get_string('step4', 'gestionprojet'),
-            5 => get_string('step5', 'gestionprojet'),
-            8 => get_string('step8', 'gestionprojet'),
-            6 => get_string('step6', 'gestionprojet'),
-        ];
-
-        $gradingsteps = [];
-        foreach ($studentstepsraw as $stepnum => $title) {
-            $field = 'enable_step' . $stepnum;
-            if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
-                continue;
-            }
-            $gradingsteps[] = [
-                'stepnum' => $stepnum,
-                'icon' => $stepicons[$stepnum],
-                'title' => $title,
-                'gradingurl' => $CFG->wwwroot . '/mod/gestionprojet/grading.php?id=' . $cm->id . '&step=' . $stepnum,
-            ];
-        }
-        $templatecontext['gradingsteps'] = $gradingsteps;
-    }
-
-    // Dashboard data: submission counts per step.
+    $teachermodels = [
+        4 => $DB->get_record('gestionprojet_cdcf_teacher', ['gestionprojetid' => $gestionprojet->id]),
+        5 => $DB->get_record('gestionprojet_essai_teacher', ['gestionprojetid' => $gestionprojet->id]),
+        6 => $DB->get_record('gestionprojet_rapport_teacher', ['gestionprojetid' => $gestionprojet->id]),
+        7 => $DB->get_record('gestionprojet_besoin_eleve_teacher', ['gestionprojetid' => $gestionprojet->id]),
+        8 => $DB->get_record('gestionprojet_carnet_teacher', ['gestionprojetid' => $gestionprojet->id]),
+    ];
     $studenttables = [
-        7 => 'gestionprojet_besoin_eleve',
         4 => 'gestionprojet_cdcf',
         5 => 'gestionprojet_essai',
-        8 => 'gestionprojet_carnet',
         6 => 'gestionprojet_rapport',
+        7 => 'gestionprojet_besoin_eleve',
+        8 => 'gestionprojet_carnet',
     ];
 
-    // Count teacher config completion.
-    $teachercomplete = 0;
-    foreach ($teacherstepsraw as $stepdata) {
-        if ($stepdata['complete']) {
-            $teachercomplete++;
+    // Helper closures for cell completion logic.
+    $teacherdocfilled = function($stepnum) use ($teacherdocs) {
+        $rec = $teacherdocs[$stepnum] ?? null;
+        if (!$rec) {
+            return false;
         }
-    }
-    $teachertotal = count($teacherstepsraw);
+        if ($stepnum === 1) {
+            return !empty($rec->intitule);
+        }
+        if ($stepnum === 2) {
+            return !empty($rec->aqui);
+        }
+        if ($stepnum === 3) {
+            return !empty($rec->projectname);
+        }
+        return false;
+    };
+    $teachermodelfilled = function($stepnum) use ($teachermodels, $gestionprojet) {
+        $rec = $teachermodels[$stepnum] ?? null;
+        if (!$rec) {
+            return false;
+        }
+        // For step 4 in provided mode, completion is based on `produit` rather than `ai_instructions`.
+        if ($stepnum === 4 && (int)$gestionprojet->enable_step4 === 2) {
+            return !empty($rec->produit);
+        }
+        return !empty($rec->ai_instructions);
+    };
 
-    // Count correction models completed.
-    $modeltables = [
-        4 => 'gestionprojet_cdcf_teacher',
-        5 => 'gestionprojet_essai_teacher',
-        6 => 'gestionprojet_rapport_teacher',
-        7 => 'gestionprojet_besoin_eleve_teacher',
-        8 => 'gestionprojet_carnet_teacher',
-    ];
-    $modelscomplete = 0;
-    $modelstotal = 0;
-    foreach ($modeltables as $mstep => $mtable) {
-        $mfield = 'enable_step' . $mstep;
-        if (isset($gestionprojet->$mfield) && !$gestionprojet->$mfield) {
-            continue;
-        }
-        $modelstotal++;
-        $mrecord = $DB->get_record($mtable, ['gestionprojetid' => $gestionprojet->id]);
-        if ($mrecord && !empty($mrecord->ai_instructions)) {
-            $modelscomplete++;
-        }
-    }
+    // Build column headers and cells for each row.
+    $ganttcolumns = [];
+    $rowdocs = [];
+    $rowmodels = [];
+    $rowstudent = [];
 
-    // Count submissions and grades per student step.
-    $dashboardsubmissions = [];
+    $totalconfigured = 0;
+    $totalconfigtargets = 0;
     $totalungraded = 0;
-    foreach ($studenttables as $dstep => $dtable) {
-        $dfield = 'enable_step' . $dstep;
-        if (isset($gestionprojet->$dfield) && !$gestionprojet->$dfield) {
-            continue;
-        }
-        $totalsubmitted = $DB->count_records_select(
-            $dtable,
-            'gestionprojetid = :gid AND status = 1',
-            ['gid' => $gestionprojet->id]
-        );
-        $totalgraded = $DB->count_records_select(
-            $dtable,
-            'gestionprojetid = :gid AND grade IS NOT NULL',
-            ['gid' => $gestionprojet->id]
-        );
-        $ungraded = max(0, $totalsubmitted - $totalgraded);
-        $totalungraded += $ungraded;
-        $dashboardsubmissions[] = [
-            'stepnum' => $dstep,
-            'stepname' => get_string('step' . $dstep, 'gestionprojet'),
-            'submitted' => $totalsubmitted,
-            'graded' => $totalgraded,
-            'ungraded' => $ungraded,
-            'hasungraded' => $ungraded > 0,
+
+    foreach ($ganttorder as $stepnum) {
+        $field = 'enable_step' . $stepnum;
+        $enableval = isset($gestionprojet->$field) ? (int)$gestionprojet->$field : 1;
+        $isenabled = ($enableval !== 0);
+        $isteacherdocstep = in_array($stepnum, $teacherdocsteps, true);
+        $isstudentstep = in_array($stepnum, $studentsteps, true);
+
+        // Column header — shows checkbox only for teacher doc steps (independent control).
+        $ganttcolumns[] = [
+            'stepnum' => $stepnum,
+            'name' => get_string('step' . $stepnum, 'gestionprojet'),
+            'icon' => \mod_gestionprojet\output\icon::render_step($stepnum, 'sm', 'inherit'),
         ];
+
+        // Row 1 cells — only fill for teacher doc steps.
+        if ($isteacherdocstep) {
+            $iscomplete = $teacherdocfilled($stepnum);
+            if ($isenabled) {
+                $totalconfigtargets++;
+                if ($iscomplete) {
+                    $totalconfigured++;
+                }
+            }
+            $rowdocs[] = [
+                'stepnum' => $stepnum,
+                'isfilled' => true,
+                'isenabled' => $isenabled,
+                'iscomplete' => $iscomplete,
+                'haschexkbox' => true,
+                'name' => get_string('step' . $stepnum, 'gestionprojet'),
+                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnum]))->out(false),
+            ];
+        } else {
+            $rowdocs[] = ['isfilled' => false];
+        }
+
+        // Row 2 cells — only fill for student steps. Checkbox is here (shared with row 3).
+        if ($isstudentstep) {
+            $iscomplete = $teachermodelfilled($stepnum);
+            $isprovided = ($stepnum === 4 && $enableval === 2);
+            if ($isenabled) {
+                $totalconfigtargets++;
+                if ($iscomplete) {
+                    $totalconfigured++;
+                }
+            }
+            $rowmodels[] = [
+                'stepnum' => $stepnum,
+                'isfilled' => true,
+                'isenabled' => $isenabled,
+                'iscomplete' => $iscomplete,
+                'isprovided' => $isprovided,
+                'hascheckbox' => true,
+                'name' => get_string('step' . $stepnum, 'gestionprojet'),
+                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnum, 'mode' => 'teacher']))->out(false),
+            ];
+        } else {
+            $rowmodels[] = ['isfilled' => false];
+        }
+
+        // Row 3 cells — only fill for student steps. No checkbox here (linked via row 2).
+        if ($isstudentstep) {
+            $table = $studenttables[$stepnum];
+            $totalsubmitted = $DB->count_records_select(
+                $table,
+                'gestionprojetid = :gid AND status = 1',
+                ['gid' => $gestionprojet->id]
+            );
+            $totalgraded = $DB->count_records_select(
+                $table,
+                'gestionprojetid = :gid AND grade IS NOT NULL',
+                ['gid' => $gestionprojet->id]
+            );
+            $ungraded = max(0, $totalsubmitted - $totalgraded);
+            if ($isenabled) {
+                $totalungraded += $ungraded;
+            }
+            $rowstudent[] = [
+                'stepnum' => $stepnum,
+                'isfilled' => true,
+                'isenabled' => $isenabled,
+                'submitted' => $totalsubmitted,
+                'graded' => $totalgraded,
+                'ungraded' => $ungraded,
+                'hasungraded' => $ungraded > 0,
+                'name' => get_string('step' . $stepnum, 'gestionprojet'),
+                'url' => (new \moodle_url('/mod/gestionprojet/grading.php', ['id' => $cm->id, 'step' => $stepnum]))->out(false),
+            ];
+        } else {
+            $rowstudent[] = ['isfilled' => false];
+        }
     }
 
-    $templatecontext['dashboard'] = [
-        'teachercomplete' => $teachercomplete,
-        'teachertotal' => $teachertotal,
-        'modelscomplete' => $modelscomplete,
-        'modelstotal' => $modelstotal,
-        'totalungraded' => $totalungraded,
-        'hasungraded' => $totalungraded > 0,
-        'submissions' => $dashboardsubmissions,
-        'hassubmissions' => !empty($dashboardsubmissions),
+    $templatecontext['gantt'] = [
+        'columns' => $ganttcolumns,
+        'rowdocs' => $rowdocs,
+        'rowmodels' => $rowmodels,
+        'rowstudent' => $rowstudent,
+        'cmid' => $cm->id,
+        'sesskey' => sesskey(),
+        'summary' => [
+            'configured' => $totalconfigured,
+            'total' => $totalconfigtargets,
+            'ungraded' => $totalungraded,
+            'hasungraded' => $totalungraded > 0,
+        ],
     ];
 
 } else {
