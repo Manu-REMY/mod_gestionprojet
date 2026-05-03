@@ -36,16 +36,6 @@ class renderer extends \plugin_renderer_base {
     }
 
     /**
-     * Render the correction models hub page.
-     *
-     * @param array $data Template context data.
-     * @return string Rendered HTML.
-     */
-    public function render_correction_models($data) {
-        return $this->render_from_template('mod_gestionprojet/correction_models', $data);
-    }
-
-    /**
      * Render the grading navigation (step tabs + nav bar).
      *
      * @param array $data Template context data.
