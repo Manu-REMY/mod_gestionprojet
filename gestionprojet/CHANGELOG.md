@@ -5,6 +5,38 @@ All notable changes to the mod_gestionprojet plugin will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] — 2026-05-03
+
+### Ajouts
+
+- **Mode "CDCF fourni par l'enseignant"** pour l'étape 4 — un nouveau flag `step4_provided` permet à l'enseignant de fournir un Cahier des Charges Fonctionnel clé-en-main. Quatre combinaisons sont possibles via deux cases à cocher indépendantes : désactivé, élève seul, fourni intégralement (lecture seule pour l'élève), et hybride (référence partielle prof + production élève).
+- **Refonte de la home enseignant en tableau Gantt** (3 lignes × 7 colonnes) — Documents enseignant / Modèles de correction / Activités élèves. La colonne "Expression du Besoin" fusionne les anciens steps 2 et 7 en une seule colonne. La colonne "Cahier des Charges" expose les modes via les cases à cocher.
+- **Configuration des étapes actives directement depuis la home** via cases à cocher AJAX (mise à jour live, sans rechargement). La section "Étapes actives" est retirée du formulaire d'activité.
+- **Barre de navigation directe à 8 phases** sur les pages enseignant (étapes 1, 2, 3) et les modèles de correction (étapes 4-8 teacher), avec bouton "Accueil" en début de barre. Le composant `step_tabs.mustache` est réutilisé par `grading.php` (refactor sans régression).
+
+### Modifications
+
+- Ajout de la colonne `step4_provided` (INT NOT NULL DEFAULT 0) à la table `gestionprojet`.
+- Le champ `enable_step4` redevient un simple booléen (le mode "fourni" est porté par `step4_provided`, indépendant).
+- La page `step4.php` (vue élève) gère désormais l'affichage combiné référence prof + formulaire élève selon les flags.
+- La page `step4_teacher.php` affiche un encart contextuel selon les modes.
+- La page `correction_models.php` est dépréciée — son URL redirige silencieusement vers la home.
+
+### Suppressions internes
+
+- `pages/correction_models.php`
+- `templates/correction_models.mustache`
+- Méthode `render_correction_models()` du renderer
+- Section "Étapes actives" du formulaire d'activité
+
+### Architecture
+
+- Nouveau partial Mustache `step_tabs.mustache` (composant réutilisable).
+- Nouveau partial Mustache `home_gantt.mustache` (Gantt enseignant).
+- Nouveau endpoint AJAX `ajax/toggle_step.php` (sécurisé : require_login, require_sesskey, require_capability).
+- Nouveau module AMD `mod_gestionprojet/gantt` (gestion des cases à cocher live).
+- Nouveau helper PHP `gestionprojet_build_step_tabs()` dans `lib.php`.
+
 ## [2.1.0] - 2026-02-25
 
 ### Added
