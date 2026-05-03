@@ -772,3 +772,16 @@ $string['step'] = 'Étape';
 // Chaînes d'erreur partagées pour le JS
 $string['error_submitting'] = 'Erreur lors de la soumission';
 $string['error_reverting'] = 'Erreur lors du retour au brouillon';
+
+// Tableau de bord Gantt
+$string['gantt_row_teacher_docs'] = 'Documents enseignant';
+$string['gantt_row_correction_models'] = 'Modèles de correction';
+$string['gantt_row_student_activities'] = 'Activités élèves';
+$string['gantt_cell_status_done'] = 'Configuré';
+$string['gantt_cell_status_todo'] = 'À configurer';
+$string['gantt_cell_status_disabled'] = 'Désactivé';
+$string['gantt_toggle_success'] = 'Étape mise à jour';
+$string['gantt_toggle_error'] = 'Erreur lors de la mise à jour';
+$string['gantt_progress_summary'] = '{$a->configured}/{$a->total} phases configurées';
+$string['gantt_ungraded_summary'] = '{$a} soumission(s) à corriger';
+$string['gantt_ungraded_summary_zero'] = 'Aucune soumission en attente';
