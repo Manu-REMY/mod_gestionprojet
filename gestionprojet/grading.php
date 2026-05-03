@@ -28,7 +28,7 @@ require_once(__DIR__ . '/lib.php');
 use mod_gestionprojet\output\icon;
 
 $id = required_param('id', PARAM_INT); // Course module ID
-$step = required_param('step', PARAM_INT); // Step number (4, 5, or 6)
+$step = required_param('step', PARAM_INT); // Step number (4-9)
 $groupid = optional_param('groupid', 0, PARAM_INT); // Current group being graded
 
 $cm = get_coursemodule_from_id('gestionprojet', $id, 0, false, MUST_EXIST);
@@ -128,6 +128,9 @@ if (optional_param('savegrading', false, PARAM_BOOL) && confirm_sesskey()) {
         case 8:
             $table = 'gestionprojet_carnet';
             break;
+        case 9:
+            $table = 'gestionprojet_fast';
+            break;
     }
 
     if ($table) {
@@ -205,6 +208,7 @@ echo $OUTPUT->header();
 $steps = [
     7 => ['icon' => icon::render_step(7, 'sm', 'purple'), 'name' => get_string('step7', 'gestionprojet')],
     4 => ['icon' => icon::render_step(4, 'sm', 'purple'), 'name' => get_string('step4', 'gestionprojet')],
+    9 => ['icon' => icon::render_step(9, 'sm', 'purple'), 'name' => get_string('step9', 'gestionprojet')],
     5 => ['icon' => icon::render_step(5, 'sm', 'purple'), 'name' => get_string('step5', 'gestionprojet')],
     8 => ['icon' => icon::render_step(8, 'sm', 'purple'), 'name' => get_string('step8', 'gestionprojet')],
     6 => ['icon' => icon::render_step(6, 'sm', 'purple'), 'name' => get_string('step6', 'gestionprojet')],
