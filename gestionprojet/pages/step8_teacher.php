@@ -62,29 +62,6 @@ require_once(__DIR__ . '/teacher_model_styles.php');
 $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 8);
 ?>
 
-<!-- Top navigation (before the dashboard) -->
-<div class="step-navigation step-navigation-top" style="max-width: 1200px; margin: 0 auto 20px auto; padding: 0 20px;">
-    <?php if ($stepnav['prev']): ?>
-    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['prev'], 'mode' => 'teacher']); ?>" class="btn-nav btn-prev">
-        <?php echo icon::render('chevron-left', 'sm', 'inherit'); ?> <?php echo get_string('previous', 'gestionprojet'); ?>
-    </a>
-    <?php else: ?>
-    <div class="nav-spacer"></div>
-    <?php endif; ?>
-
-    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'page' => 'correctionmodels']); ?>" class="btn-nav btn-hub">
-        <?php echo get_string('correction_models', 'gestionprojet'); ?>
-    </a>
-
-    <?php if ($stepnav['next']): ?>
-    <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['next'], 'mode' => 'teacher']); ?>" class="btn-nav btn-next">
-        <?php echo get_string('next', 'gestionprojet'); ?> <?php echo icon::render('chevron-right', 'sm', 'inherit'); ?>
-    </a>
-    <?php else: ?>
-    <div class="nav-spacer"></div>
-    <?php endif; ?>
-</div>
-
 <?php
 // Render teacher dashboard for this step.
 echo gestionprojet_render_step_dashboard($gestionprojet, 8, $context, $cm->id);

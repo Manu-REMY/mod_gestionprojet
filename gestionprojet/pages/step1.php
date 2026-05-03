@@ -75,23 +75,6 @@ echo $OUTPUT->render_from_template(
 
 
 <div class="step1-container">
-    <div class="navigation-container-flex">
-        <div class="nav-group">
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>" class="nav-button nav-button-prev">
-                <span>🏠</span>
-                <span><?php echo get_string('home', 'gestionprojet'); ?></span>
-            </a>
-        </div>
-        <div>
-            <?php if ($nav_links['next']): ?>
-            <a href="<?php echo $nav_links['next']; ?>" class="nav-button">
-                <span><?php echo get_string('next', 'gestionprojet'); ?></span>
-                <span>→</span>
-            </a>
-            <?php endif; ?>
-        </div>
-    </div>
-
     <div class="title-container">
         <h2>📋 <?php echo get_string('step1', 'gestionprojet'); ?></h2>
 
