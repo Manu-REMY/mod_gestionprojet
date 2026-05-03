@@ -4786,3 +4786,169 @@
     }
 }
 
+
+/* ============================================================
+   Home Gantt dashboard (teacher view)
+   ============================================================ */
+.path-mod-gestionprojet .gp-gantt {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+    margin: 16px 0 24px;
+    overflow-x: auto;
+}
+.path-mod-gestionprojet .gp-gantt-summary {
+    display: flex;
+    gap: 24px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #065f46;
+    font-weight: 600;
+    flex-wrap: wrap;
+}
+.path-mod-gestionprojet .gp-gantt-summary-ungraded {
+    color: #92400e;
+}
+.path-mod-gestionprojet .gp-gantt-summary-ungraded.gp-summary-ok {
+    color: #065f46;
+}
+.path-mod-gestionprojet .gp-gantt-grid {
+    display: grid;
+    grid-template-columns: 180px repeat(8, minmax(110px, 1fr));
+    gap: 6px;
+    min-width: 1100px;
+}
+.path-mod-gestionprojet .gp-gantt-corner {
+    background: transparent;
+}
+.path-mod-gestionprojet .gp-col-head {
+    text-align: center;
+    padding: 10px 6px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+.path-mod-gestionprojet .gp-col-name {
+    font-size: 11px;
+    color: #4b5563;
+    font-weight: 600;
+    line-height: 1.2;
+}
+.path-mod-gestionprojet .gp-row-label {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #111827;
+    padding: 12px 14px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+.path-mod-gestionprojet .gp-row-label-docs { border-color: #4f46e5; }
+.path-mod-gestionprojet .gp-row-label-models { border-color: #d97706; }
+.path-mod-gestionprojet .gp-row-label-student { border-color: #059669; }
+.path-mod-gestionprojet .gp-cell {
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid transparent;
+    min-height: 70px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.path-mod-gestionprojet .gp-cell-docs {
+    background: linear-gradient(180deg, #eef2ff 0%, #fafbff 100%);
+    border-color: #c7d2fe;
+}
+.path-mod-gestionprojet .gp-cell-models {
+    background: linear-gradient(180deg, #fffbeb 0%, #fffefa 100%);
+    border-color: #fde68a;
+}
+.path-mod-gestionprojet .gp-cell-student {
+    background: linear-gradient(180deg, #ecfdf5 0%, #f7fefb 100%);
+    border-color: #a7f3d0;
+}
+.path-mod-gestionprojet .gp-cell-empty {
+    background: transparent;
+    border: none;
+}
+.path-mod-gestionprojet .gp-cell-disabled {
+    opacity: 0.45;
+}
+.path-mod-gestionprojet .gp-cell-cb {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 16px;
+    height: 16px;
+    accent-color: #4f46e5;
+    cursor: pointer;
+    z-index: 2;
+}
+.path-mod-gestionprojet .gp-cell-cb-shared {
+    accent-color: #d97706;
+}
+.path-mod-gestionprojet .gp-cell-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    padding: 6px 4px 4px 24px;
+    text-align: center;
+    height: 100%;
+}
+.path-mod-gestionprojet .gp-cell-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+.path-mod-gestionprojet .gp-cell-name {
+    font-weight: 600;
+    color: #111827;
+    font-size: 12px;
+}
+.path-mod-gestionprojet .gp-cell-status {
+    font-size: 10px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+.path-mod-gestionprojet .gp-cell-status.gp-status-done {
+    color: #065f46;
+    font-weight: 700;
+}
+.path-mod-gestionprojet .gp-cell-status.gp-status-todo {
+    color: #92400e;
+    font-weight: 700;
+}
+.path-mod-gestionprojet .gp-cell-status.gp-status-disabled {
+    color: #6b7280;
+    font-weight: 600;
+    font-style: italic;
+}
+.path-mod-gestionprojet .gp-cell-status.gp-status-provided {
+    background: #4f46e5;
+    color: #fff;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    display: inline-block;
+}
+.path-mod-gestionprojet .gp-cell-link-arrow {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #d97706;
+    font-weight: 700;
+    font-size: 14px;
+}
