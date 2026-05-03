@@ -42,8 +42,7 @@ for ($i = 1; $i <= 8; $i++) {
 
 if ($isteacher) {
     // Build the Gantt dashboard for the teacher home view.
-    // Pedagogical column order: [1, 3, 2, 7, 4, 5, 8, 6].
-    $ganttorder = [1, 3, 2, 7, 4, 5, 8, 6];
+    // 7-column layout: steps 2 and 7 are merged into a single column.
     $teacherdocsteps = [1, 2, 3];
     $studentsteps = [4, 5, 6, 7, 8];
 
@@ -107,21 +106,34 @@ if ($isteacher) {
     $totalconfigtargets = 0;
     $totalungraded = 0;
 
-    foreach ($ganttorder as $stepnum) {
+    // Each entry: ['stepnum' => N, 'mergedwith' => M (optional)]
+    // 'mergedwith' indicates that this column also represents step M's correction-model + student rows.
+    $ganttcolumndefs = [
+        ['stepnum' => 1, 'mergedwith' => null],
+        ['stepnum' => 3, 'mergedwith' => null],
+        ['stepnum' => 2, 'mergedwith' => 7], // merged: step 2 (teacher doc) + step 7 (model + student)
+        ['stepnum' => 4, 'mergedwith' => null],
+        ['stepnum' => 5, 'mergedwith' => null],
+        ['stepnum' => 8, 'mergedwith' => null],
+        ['stepnum' => 6, 'mergedwith' => null],
+    ];
+
+    foreach ($ganttcolumndefs as $coldef) {
+        $stepnum = $coldef['stepnum'];
+        $mergedwith = $coldef['mergedwith'];
         $field = 'enable_step' . $stepnum;
         $enableval = isset($gestionprojet->$field) ? (int)$gestionprojet->$field : 1;
         $isenabled = ($enableval !== 0);
         $isteacherdocstep = in_array($stepnum, $teacherdocsteps, true);
-        $isstudentstep = in_array($stepnum, $studentsteps, true);
 
-        // Column header — shows checkbox only for teacher doc steps (independent control).
+        // Column header — uses the primary step's identity (for merged columns, primary is step 2).
         $ganttcolumns[] = [
             'stepnum' => $stepnum,
             'name' => get_string('step' . $stepnum, 'gestionprojet'),
             'icon' => \mod_gestionprojet\output\icon::render_step($stepnum, 'sm', 'inherit'),
         ];
 
-        // Row 1 cells — only fill for teacher doc steps.
+        // Row 1 cells — only fill for teacher doc steps (steps 1, 2, 3).
         if ($isteacherdocstep) {
             $iscomplete = $teacherdocfilled($stepnum);
             if ($isenabled) {
@@ -143,33 +155,41 @@ if ($isteacher) {
             $rowdocs[] = ['isfilled' => false];
         }
 
-        // Row 2 cells — only fill for student steps. Checkbox is here (shared with row 3).
-        if ($isstudentstep) {
-            $iscomplete = $teachermodelfilled($stepnum);
-            $isprovided = ($stepnum === 4 && $enableval === 2);
-            if ($isenabled) {
+        // Determine which step provides rows 2 and 3 (correction model + student activity).
+        // For merged columns, the secondary step (mergedwith) drives rows 2-3.
+        $secondarystepnum = $mergedwith !== null ? $mergedwith : $stepnum;
+        $secondaryfield = 'enable_step' . $secondarystepnum;
+        $secondaryenableval = isset($gestionprojet->$secondaryfield) ? (int)$gestionprojet->$secondaryfield : 1;
+        $secondaryisenabled = ($secondaryenableval !== 0);
+        $secondaryisstudentstep = in_array($secondarystepnum, $studentsteps, true);
+
+        // Row 2 cells — filled when the secondary step is a student step.
+        if ($secondaryisstudentstep) {
+            $iscomplete = $teachermodelfilled($secondarystepnum);
+            $isprovided = ($secondarystepnum === 4 && $secondaryenableval === 2);
+            if ($secondaryisenabled) {
                 $totalconfigtargets++;
                 if ($iscomplete) {
                     $totalconfigured++;
                 }
             }
             $rowmodels[] = [
-                'stepnum' => $stepnum,
+                'stepnum' => $secondarystepnum,
                 'isfilled' => true,
-                'isenabled' => $isenabled,
+                'isenabled' => $secondaryisenabled,
                 'iscomplete' => $iscomplete,
                 'isprovided' => $isprovided,
                 'hascheckbox' => true,
-                'name' => get_string('step' . $stepnum, 'gestionprojet'),
-                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnum, 'mode' => 'teacher']))->out(false),
+                'name' => get_string('step' . $secondarystepnum, 'gestionprojet'),
+                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $secondarystepnum, 'mode' => 'teacher']))->out(false),
             ];
         } else {
             $rowmodels[] = ['isfilled' => false];
         }
 
-        // Row 3 cells — only fill for student steps. No checkbox here (linked via row 2).
-        if ($isstudentstep) {
-            $table = $studenttables[$stepnum];
+        // Row 3 cells — filled when the secondary step is a student step.
+        if ($secondaryisstudentstep) {
+            $table = $studenttables[$secondarystepnum];
             $totalsubmitted = $DB->count_records_select(
                 $table,
                 'gestionprojetid = :gid AND status = 1',
@@ -181,19 +201,19 @@ if ($isteacher) {
                 ['gid' => $gestionprojet->id]
             );
             $ungraded = max(0, $totalsubmitted - $totalgraded);
-            if ($isenabled) {
+            if ($secondaryisenabled) {
                 $totalungraded += $ungraded;
             }
             $rowstudent[] = [
-                'stepnum' => $stepnum,
+                'stepnum' => $secondarystepnum,
                 'isfilled' => true,
-                'isenabled' => $isenabled,
+                'isenabled' => $secondaryisenabled,
                 'submitted' => $totalsubmitted,
                 'graded' => $totalgraded,
                 'ungraded' => $ungraded,
                 'hasungraded' => $ungraded > 0,
-                'name' => get_string('step' . $stepnum, 'gestionprojet'),
-                'url' => (new \moodle_url('/mod/gestionprojet/grading.php', ['id' => $cm->id, 'step' => $stepnum]))->out(false),
+                'name' => get_string('step' . $secondarystepnum, 'gestionprojet'),
+                'url' => (new \moodle_url('/mod/gestionprojet/grading.php', ['id' => $cm->id, 'step' => $secondarystepnum]))->out(false),
             ];
         } else {
             $rowstudent[] = ['isfilled' => false];
