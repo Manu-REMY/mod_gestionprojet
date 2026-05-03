@@ -479,5 +479,55 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026050300, 'gestionprojet');
     }
 
+    if ($oldversion < 2026050400) {
+        $dbman = $DB->get_manager();
+
+        $maintable = new xmldb_table('gestionprojet');
+        $field = new xmldb_field('enable_step9', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'enable_step8');
+        if (!$dbman->field_exists($maintable, $field)) {
+            $dbman->add_field($maintable, $field);
+        }
+        $field = new xmldb_field('step9_provided', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'step4_provided');
+        if (!$dbman->field_exists($maintable, $field)) {
+            $dbman->add_field($maintable, $field);
+        }
+
+        $teachertable = new xmldb_table('gestionprojet_fast_teacher');
+        if (!$dbman->table_exists($teachertable)) {
+            $teachertable->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+            $teachertable->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+            $teachertable->add_field('data_json', XMLDB_TYPE_TEXT, null, null, null, null);
+            $teachertable->add_field('ai_instructions', XMLDB_TYPE_TEXT, null, null, null, null);
+            $teachertable->add_field('submission_date', XMLDB_TYPE_INTEGER, '10', null, null, null);
+            $teachertable->add_field('deadline_date', XMLDB_TYPE_INTEGER, '10', null, null, null);
+            $teachertable->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $teachertable->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $teachertable->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $teachertable->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+            $dbman->create_table($teachertable);
+        }
+
+        $studenttable = new xmldb_table('gestionprojet_fast');
+        if (!$dbman->table_exists($studenttable)) {
+            $studenttable->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+            $studenttable->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+            $studenttable->add_field('groupid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $studenttable->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $studenttable->add_field('data_json', XMLDB_TYPE_TEXT, null, null, null, null);
+            $studenttable->add_field('status', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0');
+            $studenttable->add_field('grade', XMLDB_TYPE_NUMBER, '10, 2', null, null, null);
+            $studenttable->add_field('feedback', XMLDB_TYPE_TEXT, null, null, null, null);
+            $studenttable->add_field('timesubmitted', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $studenttable->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $studenttable->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $studenttable->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $studenttable->add_key('gestionprojetid', XMLDB_KEY_FOREIGN, ['gestionprojetid'], 'gestionprojet', ['id']);
+            $studenttable->add_key('groupid', XMLDB_KEY_FOREIGN, ['groupid'], 'groups', ['id']);
+            $dbman->create_table($studenttable);
+        }
+
+        upgrade_mod_savepoint(true, 2026050400, 'gestionprojet');
+    }
+
     return true;
 }
