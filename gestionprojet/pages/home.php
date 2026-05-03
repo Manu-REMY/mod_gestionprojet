@@ -36,7 +36,7 @@ $templatecontext = [
 
 // Step icons using Lucide SVGs via icon helper.
 $stepicons = [];
-for ($i = 1; $i <= 8; $i++) {
+for ($i = 1; $i <= 9; $i++) {
     $stepicons[$i] = icon::render_step($i, 'xl', 'purple');
 }
 
@@ -44,7 +44,7 @@ if ($isteacher) {
     // Build the Gantt dashboard for the teacher home view.
     // 7-column layout: steps 2 and 7 are merged into a single column.
     $teacherdocsteps = [1, 2, 3];
-    $studentsteps = [4, 5, 6, 7, 8];
+    $studentsteps = [4, 5, 6, 7, 8, 9];
 
     // Map step number to its data source for "is filled" computation.
     $teacherdocs = [
@@ -58,6 +58,7 @@ if ($isteacher) {
         6 => $DB->get_record('gestionprojet_rapport_teacher', ['gestionprojetid' => $gestionprojet->id]),
         7 => $DB->get_record('gestionprojet_besoin_eleve_teacher', ['gestionprojetid' => $gestionprojet->id]),
         8 => $DB->get_record('gestionprojet_carnet_teacher', ['gestionprojetid' => $gestionprojet->id]),
+        9 => $DB->get_record('gestionprojet_fast_teacher', ['gestionprojetid' => $gestionprojet->id]),
     ];
     $studenttables = [
         4 => 'gestionprojet_cdcf',
@@ -65,6 +66,7 @@ if ($isteacher) {
         6 => 'gestionprojet_rapport',
         7 => 'gestionprojet_besoin_eleve',
         8 => 'gestionprojet_carnet',
+        9 => 'gestionprojet_fast',
     ];
 
     // Helper closures for cell completion logic.
@@ -113,6 +115,7 @@ if ($isteacher) {
         ['stepnum' => 3, 'mergedwith' => null],
         ['stepnum' => 2, 'mergedwith' => 7], // merged: step 2 (teacher doc) + step 7 (model + student)
         ['stepnum' => 4, 'mergedwith' => null],
+        ['stepnum' => 9, 'mergedwith' => null],
         ['stepnum' => 5, 'mergedwith' => null],
         ['stepnum' => 8, 'mergedwith' => null],
         ['stepnum' => 6, 'mergedwith' => null],
@@ -171,6 +174,31 @@ if ($isteacher) {
                 'flag' => 'provided',
                 'name' => get_string('step4', 'gestionprojet'),
                 'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'teacher']))->out(false),
+            ];
+        } else if ($stepnum === 9) {
+            // Special case: FAST row 1 cell controls step9_provided.
+            $providedval = isset($gestionprojet->step9_provided) ? (int)$gestionprojet->step9_provided : 0;
+            $providedenabled = ($providedval === 1);
+            $providedrec = $teachermodels[9] ?? null;
+            $providedcomplete = false;
+            if ($providedrec && !empty($providedrec->data_json)) {
+                $decoded = json_decode($providedrec->data_json, true);
+                $providedcomplete = is_array($decoded) && !empty($decoded['fonctions']);
+            }
+            if ($providedenabled) {
+                $totalconfigtargets++;
+                if ($providedcomplete) {
+                    $totalconfigured++;
+                }
+            }
+            $rowdocs[] = [
+                'stepnum' => 9,
+                'isfilled' => true,
+                'isenabled' => $providedenabled,
+                'iscomplete' => $providedcomplete,
+                'flag' => 'provided',
+                'name' => get_string('step9', 'gestionprojet'),
+                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9, 'mode' => 'teacher']))->out(false),
             ];
         } else {
             $rowdocs[] = ['isfilled' => false];
@@ -307,10 +335,18 @@ if ($isteacher) {
             $rapport = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'rapport');
             $besoineleve = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'besoin_eleve');
             $carnet = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'carnet');
+            $fast = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'fast');
 
             $studentstepsraw = [
                 7 => ['data' => $besoineleve, 'complete' => $besoineleve && !empty($besoineleve->aqui)],
                 4 => ['data' => $cdcf, 'complete' => $cdcf && !empty($cdcf->produit)],
+                9 => ['data' => $fast, 'complete' => (function() use ($fast) {
+                    if (!$fast || empty($fast->data_json)) {
+                        return false;
+                    }
+                    $d = json_decode($fast->data_json, true);
+                    return is_array($d) && !empty($d['fonctions']);
+                })()],
                 5 => ['data' => $essai, 'complete' => $essai && !empty($essai->objectif)],
                 8 => ['data' => $carnet, 'complete' => $carnet && !empty($carnet->tasks_data)],
                 6 => ['data' => $rapport, 'complete' => $rapport && !empty($rapport->besoins)],
