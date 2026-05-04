@@ -1,0 +1,166 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Generate AI correction instructions buttons for teacher correction models.
+ *
+ * @module     mod_gestionprojet/generate_ai_instructions
+ * @copyright  2026 Emmanuel REMY
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+define(['jquery', 'core/str', 'core/notification'], function($, Str, Notification) {
+
+    function fetchStrings() {
+        return Str.get_strings([
+            {key: 'ai_instructions_btn_default',       component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_btn_generate',      component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_btn_generating',    component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_tooltip_empty',     component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_tooltip_disabled',  component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_confirm_replace',   component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_error_generic',     component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_error_disabled',    component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_error_no_provider', component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_error_model_empty', component: 'mod_gestionprojet'},
+            {key: 'ai_instructions_success',           component: 'mod_gestionprojet'}
+        ]).then(function(values) {
+            return {
+                btnDefault:        values[0],
+                btnGenerate:       values[1],
+                btnGenerating:     values[2],
+                tooltipEmpty:      values[3],
+                tooltipDisabled:   values[4],
+                confirmReplace:    values[5],
+                errorGeneric:      values[6],
+                errorDisabled:     values[7],
+                errorNoProvider:   values[8],
+                errorModelEmpty:   values[9],
+                success:           values[10]
+            };
+        });
+    }
+
+    function errorMessage(strings, code) {
+        if (code === 'ai_disabled')  { return strings.errorDisabled; }
+        if (code === 'no_provider')  { return strings.errorNoProvider; }
+        if (code === 'model_empty')  { return strings.errorModelEmpty; }
+        return strings.errorGeneric;
+    }
+
+    return {
+        /**
+         * Initialise the two buttons for one teacher page.
+         *
+         * @param {Object} cfg
+         * @param {number} cfg.cmid                Course module id.
+         * @param {number} cfg.step                Step number (4-9).
+         * @param {string} cfg.defaultText         Localised default ai_instructions text.
+         * @param {boolean} cfg.aiEnabled          Whether AI is enabled at activity level.
+         * @param {string} cfg.containerSelector   CSS selector of the buttons container.
+         * @param {string} cfg.textareaSelector    CSS selector of the ai_instructions textarea.
+         * @param {Function} cfg.getModelData      Returns the current model fields object.
+         * @param {Function} cfg.isModelEmpty      Returns true if all model fields are empty.
+         * @param {Function} [cfg.onUpdated]       Optional callback after textarea is filled.
+         */
+        init: function(cfg) {
+            fetchStrings().then(function(strings) {
+                var $container = $(cfg.containerSelector);
+                var $textarea  = $(cfg.textareaSelector);
+
+                if ($container.length === 0 || $textarea.length === 0) {
+                    return;
+                }
+
+                var $btnDefault = $('<button type="button" class="btn btn-secondary btn-ai-default">')
+                    .text(strings.btnDefault);
+
+                var $btnGenerate = $('<button type="button" class="btn btn-primary btn-ai-generate">')
+                    .text(strings.btnGenerate);
+
+                $container.empty().append($btnDefault).append(' ').append($btnGenerate);
+
+                $btnDefault.on('click', function() {
+                    if ($textarea.val().trim() !== '' && !window.confirm(strings.confirmReplace)) {
+                        return;
+                    }
+                    $textarea.val(cfg.defaultText).trigger('change').trigger('input');
+                    if (typeof cfg.onUpdated === 'function') { cfg.onUpdated(); }
+                });
+
+                function refreshGenerateState() {
+                    if (!cfg.aiEnabled) {
+                        $btnGenerate.prop('disabled', true).attr('title', strings.tooltipDisabled);
+                        return;
+                    }
+                    if (cfg.isModelEmpty()) {
+                        $btnGenerate.prop('disabled', true).attr('title', strings.tooltipEmpty);
+                    } else {
+                        $btnGenerate.prop('disabled', false).removeAttr('title');
+                    }
+                }
+                refreshGenerateState();
+                var formEventNs = 'input.aiGen' + cfg.step + ' change.aiGen' + cfg.step;
+                $container.closest('form').off(formEventNs).on(formEventNs, refreshGenerateState);
+
+                $btnGenerate.on('click', function() {
+                    var $btn = $(this);
+                    // Disable immediately to prevent rapid double-clicks during the confirm prompt.
+                    $btn.prop('disabled', true);
+
+                    if ($textarea.val().trim() !== '' && !window.confirm(strings.confirmReplace)) {
+                        refreshGenerateState();
+                        return;
+                    }
+
+                    var originalLabel = $btn.text();
+                    $btn.text(strings.btnGenerating);
+
+                    $.ajax({
+                        url:  M.cfg.wwwroot + '/mod/gestionprojet/ajax/generate_ai_instructions.php',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            id: cfg.cmid,
+                            step: cfg.step,
+                            sesskey: M.cfg.sesskey,
+                            model_data: JSON.stringify(cfg.getModelData())
+                        }
+                    }).done(function(resp) {
+                        if (resp && resp.success) {
+                            $textarea.val(resp.instructions).trigger('change').trigger('input');
+                            if (typeof cfg.onUpdated === 'function') { cfg.onUpdated(); }
+                            Notification.addNotification({message: strings.success, type: 'success'});
+                        } else {
+                            Notification.addNotification({
+                                message: errorMessage(strings, resp && resp.error),
+                                type: 'error'
+                            });
+                        }
+                    }).fail(function(jqXHR) {
+                        // On HTTP 400 the response body is still JSON with an error code.
+                        var resp = jqXHR && jqXHR.responseJSON;
+                        Notification.addNotification({
+                            message: errorMessage(strings, resp && resp.error),
+                            type: 'error'
+                        });
+                    }).always(function() {
+                        $btn.text(originalLabel);
+                        refreshGenerateState();
+                    });
+                });
+            }).catch(Notification.exception);
+        }
+    };
+});

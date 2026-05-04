@@ -127,8 +127,12 @@ class openai_provider extends base_provider {
             ],
         ];
 
-        // Request JSON format for structured output.
-        if (strpos($model, 'gpt-4') !== false || strpos($model, 'gpt-3.5-turbo') !== false) {
+        // Request JSON format for structured output, but only when the prompt
+        // actually asks for JSON (OpenAI rejects requests where response_format
+        // is json_object but the messages do not mention "json").
+        $supportsjson = strpos($model, 'gpt-4') !== false || strpos($model, 'gpt-3.5-turbo') !== false;
+        $promptmentionsjson = stripos($systemprompt, 'json') !== false || stripos($userprompt, 'json') !== false;
+        if ($supportsjson && $promptmentionsjson) {
             $body['response_format'] = ['type' => 'json_object'];
         }
 

@@ -5115,3 +5115,22 @@
     font-family: monospace;
     font-size: 0.875rem;
 }
+
+/* AI instructions buttons (teacher correction models) */
+.path-mod-gestionprojet .ai-instructions-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+    flex-wrap: wrap;
+}
+
+.path-mod-gestionprojet .ai-instructions-actions .btn-ai-default,
+.path-mod-gestionprojet .ai-instructions-actions .btn-ai-generate {
+    font-size: 0.9rem;
+    padding: 0.35rem 0.75rem;
+}
+
+.path-mod-gestionprojet .ai-instructions-actions .btn-ai-generate:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}

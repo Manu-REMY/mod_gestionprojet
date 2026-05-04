@@ -64,6 +64,57 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/fast_editor', 'init', [[
     'sesskey' => sesskey(),
 ]]);
 
+// AI instructions buttons (Generate from model + Default template).
+$cmid = (int)$cm->id;
+$aienabledjs = $gestionprojet->ai_enabled ? 'true' : 'false';
+$defaulttextjs = json_encode(get_string('ai_instructions_default_step9', 'gestionprojet'));
+$PAGE->requires->js_init_code("
+require(['jquery', 'mod_gestionprojet/generate_ai_instructions'], function(\$, GenerateAi) {
+    GenerateAi.init({
+        cmid: {$cmid},
+        step: 9,
+        aiEnabled: {$aienabledjs},
+        defaultText: {$defaulttextjs},
+        containerSelector: '#aiInstructionsActions-{$cmid}',
+        textareaSelector: '#fast-ai-{$cmid}',
+        getModelData: function() {
+            var input = document.getElementById('fast-data-{$cmid}');
+            return { data_json: input ? input.value : '' };
+        },
+        isModelEmpty: function() {
+            var d = this.getModelData();
+            if (!d.data_json) { return true; }
+            try {
+                var obj = JSON.parse(d.data_json);
+                if (!obj || typeof obj !== 'object') { return true; }
+                if (Array.isArray(obj)) { return obj.length === 0; }
+                // FAST data shape: an object with arrays/keys representing the diagram.
+                // Empty if no nodes (heuristic: no own enumerable properties with non-empty values).
+                for (var k in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, k)) {
+                        var v = obj[k];
+                        if (v && (Array.isArray(v) ? v.length > 0 : Object.keys(v).length > 0)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
+        onUpdated: function() {
+            // Trigger fast_editor's autosave on the AI instructions textarea
+            // (fast_editor binds an 'input' listener on this textarea in teacher mode).
+            var ta = document.getElementById('fast-ai-{$cmid}');
+            if (ta) {
+                ta.dispatchEvent(new Event('input', {bubbles: true}));
+            }
+        }
+    });
+});
+");
+
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
