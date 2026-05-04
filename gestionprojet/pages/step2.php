@@ -60,7 +60,7 @@ echo $OUTPUT->header();
 // Render direct step navigation tabs.
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
-    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 2, 'teacher')
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 2, 'consignes')
 );
 
 echo '<h2>🦏 ' . get_string('step2', 'gestionprojet') . '</h2>';
