@@ -112,6 +112,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 8, $context, $cm->id);
 
         <div class="ai-instructions-section">
             <h3><?php echo icon::render('bot', 'sm', 'purple'); ?> <?php echo get_string('ai_instructions', 'gestionprojet'); ?></h3>
+            <div class="ai-instructions-actions" id="aiInstructionsActions"></div>
             <textarea id="ai_instructions" name="ai_instructions"
                       placeholder="<?php echo get_string('ai_instructions_placeholder', 'gestionprojet'); ?>"><?php echo s($model->ai_instructions ?? ''); ?></textarea>
             <p class="ai-instructions-help"><?php echo get_string('ai_instructions_help', 'gestionprojet'); ?></p>
@@ -203,7 +204,7 @@ function removeEntry(index) {
         return;
     }
 
-    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
+    require(['jquery', 'mod_gestionprojet/autosave', 'mod_gestionprojet/generate_ai_instructions'], function($, Autosave, GenerateAi) {
         $(document).ready(function() {
             renderEntries();
 
@@ -230,6 +231,40 @@ function removeEntry(index) {
                 interval: autosaveInterval,
                 formSelector: '#teacherModelForm',
                 serialize: serializeData
+            });
+
+            // AI instructions buttons.
+            GenerateAi.init({
+                cmid: cmid,
+                step: 8,
+                aiEnabled: <?php echo $gestionprojet->ai_enabled ? 'true' : 'false'; ?>,
+                defaultText: <?php echo json_encode(get_string('ai_instructions_default_step8', 'gestionprojet')); ?>,
+                containerSelector: '#aiInstructionsActions',
+                textareaSelector: '#ai_instructions',
+                getModelData: function() {
+                    var data = (typeof tasks !== 'undefined' && Array.isArray(tasks)) ? tasks : [];
+                    return { tasks_data: JSON.stringify(data) };
+                },
+                isModelEmpty: function() {
+                    var d = this.getModelData();
+                    if (!d.tasks_data || d.tasks_data === '[]') { return true; }
+                    try {
+                        var arr = JSON.parse(d.tasks_data);
+                        // Consider non-empty if any entry has at least one non-empty string field.
+                        for (var i = 0; i < arr.length; i++) {
+                            var t = arr[i];
+                            for (var k in t) {
+                                if (Object.prototype.hasOwnProperty.call(t, k) && typeof t[k] === 'string' && t[k].trim() !== '') {
+                                    return false;
+                                }
+                            }
+                        }
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                },
+                onUpdated: function() { Autosave.save(); }
             });
 
             // Manual save button with redirect to hub
