@@ -25,6 +25,7 @@
 define('AJAX_SCRIPT', true);
 
 require_once(__DIR__ . '/../../../config.php');
+require_once($CFG->libdir . '/filelib.php'); // Defines the Moodle curl class used by AI providers.
 require_once($CFG->dirroot . '/mod/gestionprojet/classes/ai_prompt_builder.php');
 require_once($CFG->dirroot . '/mod/gestionprojet/classes/ai_config.php');
 require_once($CFG->dirroot . '/mod/gestionprojet/classes/ai_evaluator.php');
