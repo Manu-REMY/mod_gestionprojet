@@ -1497,12 +1497,13 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
 
     // Tabs ordering depends on the context:
     //   - 'consignes': teacher-provided documents — phases [1, 3, 2, 4, 9].
-    //   - 'correction': teacher correction models — phases [4, 9, 5, 8, 6, 7].
+    //   - 'correction': teacher correction models — phases [7, 4, 9, 5, 8, 6]
+    //                   (matches gestionprojet_get_graded_steps_order pedagogical sequence).
     //   - 'model' (legacy) and 'grading' (legacy): full ordering with all 9 steps.
     if ($context === 'consignes') {
         $order = [1, 3, 2, 4, 9];
     } else if ($context === 'correction') {
-        $order = [4, 9, 5, 8, 6, 7];
+        $order = [7, 4, 9, 5, 8, 6];
     } else {
         $order = [1, 3, 2, 7, 4, 9, 5, 8, 6];
     }
