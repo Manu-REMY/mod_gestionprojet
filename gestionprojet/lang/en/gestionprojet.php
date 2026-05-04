@@ -45,7 +45,7 @@ $string['step3'] = 'Planning';
 $string['step4'] = 'Requirements Specification';
 $string['step5'] = 'Test Sheet';
 $string['step6'] = 'Project Report';
-$string['step7'] = 'Needs Expression (Student)';
+$string['step7'] = 'Needs expression';
 
 $string['step1_desc'] = 'Define the project framework (teacher)';
 $string['step2_desc'] = 'Horn Diagram (teacher)';
@@ -53,7 +53,7 @@ $string['step3_desc'] = 'Planning and timeline (teacher)';
 $string['step4_desc'] = 'Stakeholder diagram (students)';
 $string['step5_desc'] = 'Tests and validation (students)';
 $string['step6_desc'] = 'Final report (students)';
-$string['step7_desc'] = 'Horn Diagram (students)';
+$string['step7_desc'] = 'Horn diagram';
 $string['step8'] = 'Logbook';
 $string['step8_desc'] = 'Daily project log (students)';
 
@@ -536,7 +536,7 @@ $string['error:invalidstep'] = 'Invalid step number';
 $string['step4_title'] = 'Requirements Specification';
 $string['step5_title'] = 'Test Sheet';
 $string['step6_title'] = 'Project Report';
-$string['step7_title'] = 'Needs Expression (Student)';
+$string['step7_title'] = 'Needs expression';
 $string['step8_title'] = 'Logbook';
 
 // AI Log Report
@@ -822,6 +822,12 @@ $string['fast:ai_instructions_help'] = 'Guide the AI evaluator on what to assess
 $string['fast:no_data_to_evaluate'] = 'No FAST data to evaluate.';
 $string['fast:fp_label'] = 'Main function (read-only, from CDCF)';
 $string['fast:fp_help'] = 'The main function comes from the functional specifications and cannot be edited here.';
+
+// Consigne / Correction model split (v2.4.0).
+$string['consigne'] = 'Consigne';
+$string['consignes'] = 'Consignes';
+$string['consigne_desc'] = 'Document provided to students as a starting reference.';
+$string['gantt_row_consignes'] = 'Consignes (teacher-provided documents)';
 $string['privacy:metadata:gestionprojet_fast'] = 'Student FAST diagram submissions.';
 $string['privacy:metadata:gestionprojet_fast:userid'] = 'User ID (individual mode).';
 $string['privacy:metadata:gestionprojet_fast:data_json'] = 'FAST diagram data (JSON: FP, FT, sub-FT, ST).';

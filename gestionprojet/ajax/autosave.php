@@ -56,6 +56,54 @@ $message = '';
 try {
     $time = time();
 
+    // Handle teacher-provided consigne mode (dual-facet steps 4 and 9 only).
+    if ($mode === 'provided') {
+        if (!has_capability('mod/gestionprojet:configureteacherpages', $context)) {
+            throw new moodle_exception('nopermission');
+        }
+
+        $providedtables = [
+            4 => ['table' => 'gestionprojet_cdcf_provided', 'fields' => ['produit', 'milieu', 'fp', 'interacteurs_data']],
+            9 => ['table' => 'gestionprojet_fast_provided', 'fields' => ['data_json']],
+        ];
+
+        if (!isset($providedtables[$step])) {
+            throw new moodle_exception('invalidstep');
+        }
+
+        $tableinfo = $providedtables[$step];
+        $tablename = $tableinfo['table'];
+        $validfields = $tableinfo['fields'];
+
+        $record = $DB->get_record($tablename, ['gestionprojetid' => $gestionprojet->id]);
+        if (!$record) {
+            $record = new stdClass();
+            $record->gestionprojetid = $gestionprojet->id;
+            $record->timecreated = $time;
+        }
+
+        foreach ($formdata as $key => $value) {
+            if ($key !== 'id' && in_array($key, $validfields)) {
+                $record->$key = $value;
+            }
+        }
+
+        $record->timemodified = $time;
+
+        if (isset($record->id)) {
+            $DB->update_record($tablename, $record);
+        } else {
+            $record->id = $DB->insert_record($tablename, $record);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => get_string('autosave_success', 'gestionprojet'),
+            'timestamp' => time(),
+        ]);
+        exit;
+    }
+
     // Handle teacher correction model mode.
     if ($mode === 'teacher') {
         if (!has_capability('mod/gestionprojet:configureteacherpages', $context)) {

@@ -129,6 +129,13 @@ if ($step > 0) {
         }
     }
 
+    // Handle teacher-provided consigne pages for dual-facet steps (4 CDCF, 9 FAST).
+    if ($mode === 'provided' && in_array($step, [4, 9], true)) {
+        require_capability('mod/gestionprojet:configureteacherpages', $context);
+        require_once(__DIR__ . '/pages/step' . $step . '_provided.php');
+        exit;
+    }
+
     // Handle teacher correction model mode for steps 4-9.
     if ($mode === 'teacher' && in_array($step, [4, 5, 6, 7, 8, 9])) {
         require_capability('mod/gestionprojet:configureteacherpages', $context);

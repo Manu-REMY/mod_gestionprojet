@@ -45,7 +45,7 @@ $string['step3'] = 'Planification';
 $string['step4'] = 'Cahier des Charges';
 $string['step5'] = 'Fiche Essai';
 $string['step6'] = 'Rapport de Projet';
-$string['step7'] = 'Expression du Besoin (Élève)';
+$string['step7'] = 'Expression du besoin';
 
 $string['step1_desc'] = 'Définir le cadre du projet (enseignant)';
 $string['step2_desc'] = 'Diagramme Bête à Corne (enseignant)';
@@ -53,7 +53,7 @@ $string['step3_desc'] = 'Planning et timeline (enseignant)';
 $string['step4_desc'] = 'Diagramme des interacteurs (élèves)';
 $string['step5_desc'] = 'Tests et validation (élèves)';
 $string['step6_desc'] = 'Rapport final (élèves)';
-$string['step7_desc'] = 'Diagramme Bête à Corne (élèves)';
+$string['step7_desc'] = 'Diagramme Bête à Corne';
 $string['step8'] = 'Carnet de bord';
 $string['step8_desc'] = 'Journal de bord du projet (élèves)';
 
@@ -536,7 +536,7 @@ $string['error:invalidstep'] = 'Numéro d\'étape invalide';
 $string['step4_title'] = 'Cahier des charges';
 $string['step5_title'] = 'Fiche d\'essai';
 $string['step6_title'] = 'Rapport de projet';
-$string['step7_title'] = 'Expression du besoin (élève)';
+$string['step7_title'] = 'Expression du besoin';
 $string['step8_title'] = 'Carnet de bord';
 
 // Rapport de log IA
@@ -822,6 +822,12 @@ $string['fast:ai_instructions_help'] = 'Guidez le correcteur IA sur les critère
 $string['fast:no_data_to_evaluate'] = 'Aucune donnée FAST à évaluer.';
 $string['fast:fp_label'] = 'Fonction principale (lecture seule, issue du CDCF)';
 $string['fast:fp_help'] = 'La fonction principale provient du cahier des charges fonctionnel et ne peut pas être modifiée ici.';
+
+// Séparation consigne / modèle de correction (v2.4.0).
+$string['consigne'] = 'Consigne';
+$string['consignes'] = 'Consignes';
+$string['consigne_desc'] = 'Document fourni à l\'élève comme référence de départ.';
+$string['gantt_row_consignes'] = 'Consignes (documents fournis par l\'enseignant)';
 $string['privacy:metadata:gestionprojet_fast'] = 'Productions élèves de diagrammes FAST.';
 $string['privacy:metadata:gestionprojet_fast:userid'] = 'ID utilisateur (mode individuel).';
 $string['privacy:metadata:gestionprojet_fast:data_json'] = 'Données du diagramme FAST (JSON : FP, FT, sous-FT, ST).';

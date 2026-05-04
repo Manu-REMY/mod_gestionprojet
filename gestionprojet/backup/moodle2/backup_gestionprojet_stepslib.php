@@ -101,6 +101,16 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'timecreated', 'timemodified',
         ]);
 
+        // Teacher-provided consignes (v2.4.0).
+        $cdcfprovided = new backup_nested_element('cdcf_provided', ['id'], [
+            'produit', 'milieu', 'fp', 'interacteurs_data',
+            'timecreated', 'timemodified',
+        ]);
+
+        $fastprovided = new backup_nested_element('fast_provided', ['id'], [
+            'data_json', 'timecreated', 'timemodified',
+        ]);
+
         // Student submission tables.
         $cdcfs = new backup_nested_element('cdcfs');
         $cdcf = new backup_nested_element('cdcf', ['id'], [
@@ -163,6 +173,8 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $gestionprojet->add_child($besointeacher);
         $gestionprojet->add_child($carnetteacher);
         $gestionprojet->add_child($fastteacher);
+        $gestionprojet->add_child($cdcfprovided);
+        $gestionprojet->add_child($fastprovided);
 
         $gestionprojet->add_child($cdcfs);
         $cdcfs->add_child($cdcf);
@@ -196,6 +208,8 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $besointeacher->set_source_table('gestionprojet_besoin_eleve_teacher', ['gestionprojetid' => backup::VAR_PARENTID]);
         $carnetteacher->set_source_table('gestionprojet_carnet_teacher', ['gestionprojetid' => backup::VAR_PARENTID]);
         $fastteacher->set_source_table('gestionprojet_fast_teacher', ['gestionprojetid' => backup::VAR_PARENTID]);
+        $cdcfprovided->set_source_table('gestionprojet_cdcf_provided', ['gestionprojetid' => backup::VAR_PARENTID]);
+        $fastprovided->set_source_table('gestionprojet_fast_provided', ['gestionprojetid' => backup::VAR_PARENTID]);
 
         // User data sources (only if userinfo is set).
         if ($userinfo) {

@@ -67,8 +67,14 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/fast_editor', 'init', [[
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
-    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'model')
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'correction')
 );
-echo $OUTPUT->heading(get_string('step9', 'gestionprojet'));
+echo $OUTPUT->heading(get_string('step9', 'gestionprojet') . ' — ' . get_string('correction_models', 'gestionprojet'));
+
+// Render the per-step submissions dashboard.
+if (function_exists('gestionprojet_render_step_dashboard')) {
+    echo gestionprojet_render_step_dashboard($gestionprojet, 9, $context, $cm->id);
+}
+
 echo $OUTPUT->render_from_template('mod_gestionprojet/step9_form', $tplcontext);
 echo $OUTPUT->footer();
