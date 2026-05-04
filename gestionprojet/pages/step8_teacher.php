@@ -56,6 +56,13 @@ echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 8, 'correction')
 );
+
+echo $OUTPUT->heading(
+    get_string('step8', 'gestionprojet')
+    . ' <span class="gp-correction-badge">' . get_string('correction_model_badge', 'gestionprojet') . '</span>',
+    2
+);
+
 require_once(__DIR__ . '/teacher_model_styles.php');
 
 // Get navigation for teacher steps.
@@ -67,7 +74,7 @@ $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 8);
 echo gestionprojet_render_step_dashboard($gestionprojet, 8, $context, $cm->id);
 ?>
 
-<div class="teacher-model-container">
+<div class="teacher-model-container gp-correction">
 
     <div class="teacher-model-header">
         <h2><?php echo icon::render('book-open', 'sm', 'purple'); ?> <?php echo get_string('step8', 'gestionprojet'); ?> - <?php echo get_string('correction_models', 'gestionprojet'); ?></h2>
