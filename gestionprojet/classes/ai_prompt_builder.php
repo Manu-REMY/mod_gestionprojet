@@ -41,7 +41,7 @@ class ai_prompt_builder {
         4 => ['produit', 'milieu', 'fp', 'interacteurs_data'],
         5 => ['nom_essai', 'objectif', 'fonction_service', 'niveaux_reussite', 'etapes_protocole',
               'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion'],
-        6 => ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions',
+        6 => ['titre_projet', 'auteurs', 'besoin_projet', 'besoins', 'imperatifs', 'solutions',
               'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives'],
         7 => ['aqui', 'surquoi', 'dansquelbut'],
         8 => ['tasks_data'],
@@ -123,6 +123,7 @@ class ai_prompt_builder {
         'titre_projet' => 'Titre du projet',
         'auteurs' => 'Auteurs',
         'besoin_projet' => 'Besoin du projet',
+        'besoins' => 'Besoins (modèle enseignant)',
         'imperatifs' => 'Impératifs',
         'solutions' => 'Solutions envisagées',
         'justification' => 'Justification du choix',
@@ -166,13 +167,8 @@ class ai_prompt_builder {
      */
     public function build_system_prompt(int $step, object $teachermodel): string {
         $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
-        $criteria = self::STEP_CRITERIA[$step] ?? [];
         $aiinstructions = $teachermodel->ai_instructions ?? '';
-
-        $criteriatext = '';
-        foreach ($criteria as $criterion) {
-            $criteriatext .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$criterion['description']}\n";
-        }
+        $criteriatext = $this->build_criteria_text($step);
 
         $prompt = <<<PROMPT
 Tu es un assistant d'évaluation pédagogique expert en technologie pour le collège et le lycée.
@@ -347,6 +343,21 @@ PROMPT;
     }
 
     /**
+     * Build the formatted text of evaluation criteria for a given step.
+     *
+     * @param int $step Step number
+     * @return string Bullet list of criteria lines, or empty string if none
+     */
+    private function build_criteria_text(int $step): string {
+        $criteria = self::STEP_CRITERIA[$step] ?? [];
+        $text = '';
+        foreach ($criteria as $criterion) {
+            $text .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$criterion['description']}\n";
+        }
+        return $text;
+    }
+
+    /**
      * Format interacteurs data for display.
      *
      * @param string|null $json JSON string
@@ -456,5 +467,45 @@ PROMPT;
         }
 
         return implode("\n", $output);
+    }
+
+    /**
+     * Build a meta-prompt asking the AI to produce correction instructions
+     * tailored to a teacher correction model.
+     *
+     * @param int $step Step number (4-9)
+     * @param object $teachermodel Teacher correction model fields
+     * @return array ['system' => string, 'user' => string]
+     */
+    public function build_meta_prompt(int $step, object $teachermodel): array {
+        $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
+        $criteriatext = $this->build_criteria_text($step);
+        $modeltext = $this->format_teacher_model($step, $teachermodel);
+
+        $system = <<<PROMPT
+Tu es un expert pédagogique en technologie. Ta mission est de rédiger des instructions de correction destinées à un autre IA correcteur, qui évaluera des productions d'élèves de collège/lycée.
+
+Les instructions que tu produis doivent :
+- Être en français, à la 2e personne du singulier ("tu")
+- Préciser les points d'attention spécifiques au modèle fourni
+- Indiquer les éléments obligatoires, les bonus, les pénalités éventuelles
+- Rester concises (8-15 lignes max)
+- Être réutilisables tel quel par l'IA correctrice
+
+Réponds UNIQUEMENT avec le texte des instructions, sans préambule ni balisage Markdown.
+PROMPT;
+
+        $user = <<<PROMPT
+Voici le modèle de correction rempli par l'enseignant pour l'étape "{$stepcontext}".
+
+Critères officiels d'évaluation :
+{$criteriatext}
+Modèle rempli :
+{$modeltext}
+
+Rédige maintenant les instructions de correction adaptées à ce modèle précis.
+PROMPT;
+
+        return ['system' => $system, 'user' => $user];
     }
 }

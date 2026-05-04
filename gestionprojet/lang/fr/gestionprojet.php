@@ -284,6 +284,17 @@ $string['no_student_steps_enabled'] = 'Aucune étape élève n\'est activée pou
 $string['ai_instructions'] = 'Instructions de correction IA';
 $string['ai_instructions_help'] = 'Fournissez des instructions spécifiques pour guider l\'évaluation automatique par IA. Par exemple : critères de notation, points d\'attention, éléments obligatoires ou bonus.';
 $string['ai_instructions_placeholder'] = 'Ex: Vérifier la présence des 3 éléments clés. Accorder des points bonus si l\'élève mentionne des exemples concrets. Pénaliser les réponses hors sujet...';
+$string['ai_instructions_btn_default'] = 'Modèle par défaut';
+$string['ai_instructions_btn_generate'] = 'Générer depuis le modèle';
+$string['ai_instructions_btn_generating'] = 'Génération en cours…';
+$string['ai_instructions_tooltip_empty'] = 'Remplissez d\'abord le modèle de correction';
+$string['ai_instructions_tooltip_disabled'] = 'IA désactivée dans la configuration de l\'activité';
+$string['ai_instructions_confirm_replace'] = 'Remplacer le contenu actuel des instructions ?';
+$string['ai_instructions_error_generic'] = 'Échec de la génération. Réessayez.';
+$string['ai_instructions_error_disabled'] = 'L\'IA est désactivée dans la configuration de l\'activité.';
+$string['ai_instructions_error_no_provider'] = 'Aucun fournisseur d\'IA n\'est configuré.';
+$string['ai_instructions_error_model_empty'] = 'Remplissez d\'abord le modèle de correction.';
+$string['ai_instructions_success'] = 'Instructions générées avec succès.';
 
 // Phase 3.5: Dates de soumission et timeline
 $string['submission_dates'] = 'Dates de soumission';
@@ -651,6 +662,32 @@ Tableau d\'analyse : Un tableau rapide vérifiant les 3 piliers (Besoin, Fonctio
 
 Conseils d\'amélioration : Explique comment transformer une solution en fonction si l\'élève s\'est trompé. Sois encourageant.';
 
+$string['ai_instructions_default_step5'] = 'Rôle : Tu es un professeur de technologie expérimenté au collège.
+
+Contexte de l\'étape : Tu corriges une fiche d\'essai. L\'élève décrit un protocole expérimental visant à valider une fonction de service issue du CDCF (objectif, étapes, matériel, résultats, conclusion).
+
+Critères d\'attention :
+- L\'objectif est explicite et lié à une fonction de service.
+- Le protocole est détaillé, séquentiel et reproductible.
+- Le matériel et les précautions de sécurité sont listés.
+- Les résultats sont présentés clairement.
+- La conclusion répond à l\'objectif initial.
+
+Tonalité : Sois bienveillant, valorise les efforts, propose des pistes d\'amélioration concrètes.';
+
+$string['ai_instructions_default_step6'] = 'Rôle : Tu es un professeur de technologie expérimenté au collège.
+
+Contexte de l\'étape : Tu corriges un rapport de projet (synthèse complète : besoin, solutions envisagées, choix justifié, réalisation, difficultés, validation, bilan, perspectives).
+
+Critères d\'attention :
+- Le besoin et les impératifs sont clairement présentés.
+- Les solutions sont analysées et le choix retenu est justifié.
+- La réalisation est décrite avec précision.
+- Les difficultés rencontrées sont mentionnées.
+- Le bilan est réflexif (ce qui a marché, ce qui pourrait être amélioré).
+
+Tonalité : Sois bienveillant, valorise les efforts, propose des pistes d\'amélioration concrètes.';
+
 $string['ai_instructions_default_step7'] = 'Rôle : Tu es un professeur de technologie expérimenté au collège.
 
 Objectif : Corriger un diagramme d\'expression du besoin (type Bête à cornes ou Pieuvre) réalisé par un élève de 3ème.
@@ -670,6 +707,31 @@ Rigueur de la formulation : La fonction globale doit être précise. Évite les 
 Pédagogie : Ne donne pas la correction brute. Si une réponse est fausse, pose une question de guidage pour que l\'élève trouve l\'erreur (ex: "Est-ce que l\'objet agit vraiment sur l\'utilisateur ou sur l\'objet qu\'il manipule ?").
 
 Ton : Encourageant, clair et adapté à un niveau 14-15 ans.';
+
+$string['ai_instructions_default_step8'] = 'Rôle : Tu es un professeur de technologie expérimenté au collège.
+
+Contexte de l\'étape : Tu corriges un carnet de bord — suivi chronologique des séances et tâches réalisées par l\'élève au fil du projet.
+
+Critères d\'attention :
+- Les séances sont régulièrement documentées (pas de gros trous).
+- Les tâches sont décrites de manière compréhensible.
+- L\'avancement est cohérent et réaliste.
+- Les remarques montrent une réflexion sur le travail (et pas juste une description).
+
+Tonalité : Sois bienveillant, valorise les efforts, propose des pistes d\'amélioration concrètes.';
+
+$string['ai_instructions_default_step9'] = 'Rôle : Tu es un professeur de technologie expérimenté au collège.
+
+Contexte de l\'étape : Tu corriges un diagramme FAST. L\'élève traduit les fonctions de service du CDCF en fonctions techniques (FT), puis en solutions techniques (ST), avec une cohérence FP → FT → ST.
+
+Critères d\'attention :
+- Les fonctions techniques (FT) couvrent les fonctions de service du CDCF.
+- Les FT sont correctement formulées (verbe + complément).
+- Les sous-fonctions, lorsque utilisées, sont judicieuses.
+- Les solutions techniques (ST) proposées sont concrètes et adaptées aux FT.
+- L\'arborescence est cohérente : du « pourquoi » au « comment ».
+
+Tonalité : Sois bienveillant, valorise les efforts, propose des pistes d\'amélioration concrètes.';
 
 $string['logbook_model_desc'] = 'Définissez ici un exemple de carnet de bord attendu. L\'IA utilisera ce modèle pour évaluer les productions des élèves.';
 $string['logbook_status_header'] = 'Statut';

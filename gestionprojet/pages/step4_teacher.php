@@ -157,6 +157,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 4, $context, $cm->id);
 
         <div class="ai-instructions-section">
             <h3><?php echo icon::render('bot', 'sm', 'purple'); ?> <?php echo get_string('ai_instructions', 'gestionprojet'); ?></h3>
+            <div class="ai-instructions-actions" id="aiInstructionsActions"></div>
             <textarea id="ai_instructions" name="ai_instructions"
                       placeholder="<?php echo get_string('ai_instructions_placeholder', 'gestionprojet'); ?>"><?php echo s($model->ai_instructions ?? ''); ?></textarea>
             <p class="ai-instructions-help">
@@ -354,7 +355,7 @@ function addInteractor() {
         return;
     }
 
-    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
+    require(['jquery', 'mod_gestionprojet/autosave', 'mod_gestionprojet/generate_ai_instructions'], function($, Autosave, GenerateAi) {
         $(document).ready(function() {
             renderInteractors();
 
@@ -384,6 +385,30 @@ function addInteractor() {
                 interval: autosaveInterval,
                 formSelector: '#teacherModelForm',
                 serialize: serializeData
+            });
+
+            // AI instructions buttons.
+            GenerateAi.init({
+                cmid: cmid,
+                step: 4,
+                aiEnabled: <?php echo $gestionprojet->ai_enabled ? 'true' : 'false'; ?>,
+                defaultText: <?php echo json_encode(get_string('ai_instructions_default_step4', 'gestionprojet')); ?>,
+                containerSelector: '#aiInstructionsActions',
+                textareaSelector: '#ai_instructions',
+                getModelData: function() {
+                    return {
+                        produit: document.getElementById('produit').value,
+                        milieu: document.getElementById('milieu').value,
+                        fp: document.getElementById('fp').value,
+                        interacteurs_data: JSON.stringify(interacteurs)
+                    };
+                },
+                isModelEmpty: function() {
+                    var d = this.getModelData();
+                    return !d.produit && !d.milieu && !d.fp &&
+                           (!d.interacteurs_data || d.interacteurs_data === '[]');
+                },
+                onUpdated: function() { Autosave.save(); }
             });
 
             // Manual save button with redirect to hub

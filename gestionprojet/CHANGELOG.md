@@ -5,6 +5,31 @@ All notable changes to the mod_gestionprojet plugin will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] — 2026-05-04
+
+### Ajouts
+
+- **Boutons de génération du prompt IA** dans les modèles de correction enseignant (étapes 4-9) :
+  - « Modèle par défaut » : insère le texte d'instructions par défaut de l'étape dans le textarea, en un clic.
+  - « Générer depuis le modèle » : appelle l'IA configurée pour produire des instructions de correction adaptées au modèle de correction actuellement rempli (champs métier de l'étape).
+- Méthode `ai_prompt_builder::build_meta_prompt()` qui assemble le méta-prompt envoyé à l'IA (rôle « expert pédagogique » + critères de l'étape + modèle rempli).
+- Endpoint AJAX `ajax/generate_ai_instructions.php` (sécurisé : `require_login` + `require_sesskey` + capacité `mod/gestionprojet:configureteacherpages`).
+- Module AMD `mod_gestionprojet/generate_ai_instructions` qui câble les deux boutons (gestion d'état désactivé, confirmation avant écrasement, spinner pendant l'appel).
+- Chaînes de langue par défaut `ai_instructions_default_step{5,6,8,9}` (FR + EN) — alignées sur la structure existante des step4/step7 (Rôle / Contexte / Critères / Tonalité).
+- 11 chaînes UI supplémentaires (libellés boutons, tooltips, messages d'erreur, message de succès) en FR + EN.
+- Tests PHPUnit pour `build_meta_prompt()` (tests/ai_meta_prompt_test.php) couvrant les 6 étapes et le cas du modèle vide.
+
+### Modifications
+
+- Refactorisation : extraction d'une méthode privée `ai_prompt_builder::build_criteria_text()` (élimine la duplication entre `build_system_prompt` et `build_meta_prompt`).
+- `STEP_FIELDS[6]` inclut désormais le champ `besoins` (utilisé par le modèle de correction enseignant pour l'étape 6 — `gestionprojet_rapport_teacher.besoins`). Sans cet ajout, le contenu saisi par l'enseignant dans ce champ était silencieusement filtré par le whitelist du méta-prompt.
+
+### Notes techniques
+
+- Aucune modification de schéma de base de données.
+- Conformité Moodle (CLAUDE.md §1-11) : tous les nouveaux fichiers PHP ont l'en-tête GPL deux paragraphes complet ; aucun JS ou CSS inline ; aucune superglobale ; aucun debug code.
+- L'endpoint retourne HTTP 400 sur les chemins d'erreur (cohérent avec les autres endpoints `ajax/`) et un message d'erreur générique localisé (pas de fuite du message brut du provider IA).
+
 ## [2.2.0] — 2026-05-03
 
 ### Ajouts

@@ -150,6 +150,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 6, $context, $cm->id);
 
         <div class="ai-instructions-section">
             <h3><?php echo icon::render('bot', 'sm', 'purple'); ?> <?php echo get_string('ai_instructions', 'gestionprojet'); ?></h3>
+            <div class="ai-instructions-actions" id="aiInstructionsActions"></div>
             <textarea id="ai_instructions" name="ai_instructions"
                       placeholder="<?php echo get_string('ai_instructions_placeholder', 'gestionprojet'); ?>"><?php echo s($model->ai_instructions ?? ''); ?></textarea>
             <p class="ai-instructions-help"><?php echo get_string('ai_instructions_help', 'gestionprojet'); ?></p>
@@ -192,7 +193,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 6, $context, $cm->id);
         return;
     }
 
-    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
+    require(['jquery', 'mod_gestionprojet/autosave', 'mod_gestionprojet/generate_ai_instructions'], function($, Autosave, GenerateAi) {
         $(document).ready(function() {
             var cmid = <?php echo $cm->id; ?>;
             var autosaveInterval = <?php echo ($gestionprojet->autosave_interval ?? 30) * 1000; ?>;
@@ -227,6 +228,37 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 6, $context, $cm->id);
                 interval: autosaveInterval,
                 formSelector: '#teacherModelForm',
                 serialize: serializeData
+            });
+
+            // AI instructions buttons.
+            GenerateAi.init({
+                cmid: cmid,
+                step: 6,
+                aiEnabled: <?php echo $gestionprojet->ai_enabled ? 'true' : 'false'; ?>,
+                defaultText: <?php echo json_encode(get_string('ai_instructions_default_step6', 'gestionprojet')); ?>,
+                containerSelector: '#aiInstructionsActions',
+                textareaSelector: '#ai_instructions',
+                getModelData: function() {
+                    var fields = ['titre_projet', 'besoins', 'imperatifs', 'solutions',
+                                  'justification', 'realisation', 'difficultes', 'validation',
+                                  'ameliorations', 'bilan', 'perspectives'];
+                    var d = {};
+                    fields.forEach(function(f) {
+                        var el = document.getElementById(f);
+                        d[f] = el ? el.value : '';
+                    });
+                    return d;
+                },
+                isModelEmpty: function() {
+                    var d = this.getModelData();
+                    for (var k in d) {
+                        if (Object.prototype.hasOwnProperty.call(d, k) && d[k] && String(d[k]).trim() !== '') {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                onUpdated: function() { Autosave.save(); }
             });
 
             // Manual save button with redirect to hub
