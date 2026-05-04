@@ -70,11 +70,5 @@ echo $OUTPUT->render_from_template(
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'model')
 );
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet'));
-if ((int)$gestionprojet->step9_provided === 1) {
-    echo $OUTPUT->notification(
-        get_string('step9_provided_desc', 'gestionprojet'),
-        \core\output\notification::NOTIFY_INFO
-    );
-}
 echo $OUTPUT->render_from_template('mod_gestionprojet/step9_form', $tplcontext);
 echo $OUTPUT->footer();
