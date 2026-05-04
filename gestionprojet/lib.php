@@ -1226,8 +1226,8 @@ function gestionprojet_get_navigation_links($gestionprojet, $cmid, $current_step
 function gestionprojet_render_step_dashboard($gestionprojet, $step, $context, $cmid) {
     global $OUTPUT, $PAGE;
 
-    // Only show dashboard for student submission steps (4-8).
-    if ($step < 4 || $step > 8) {
+    // Only show dashboard for student submission steps (4-9).
+    if ($step < 4 || $step > 9) {
         return '';
     }
 

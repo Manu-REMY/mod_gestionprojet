@@ -67,7 +67,7 @@ $step4studentenabled = isset($gestionprojet->enable_step4) ? (int)$gestionprojet
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
-    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, 'model')
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, 'correction')
 );
 
 // Contextual notice based on the combined state of step4_provided and enable_step4.
