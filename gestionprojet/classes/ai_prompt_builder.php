@@ -457,4 +457,50 @@ PROMPT;
 
         return implode("\n", $output);
     }
+
+    /**
+     * Build a meta-prompt asking the AI to produce correction instructions
+     * tailored to a teacher correction model.
+     *
+     * @param int $step Step number (4-9)
+     * @param object $teachermodel Teacher correction model fields
+     * @return array ['system' => string, 'user' => string]
+     */
+    public function build_meta_prompt(int $step, object $teachermodel): array {
+        $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
+        $criteria = self::STEP_CRITERIA[$step] ?? [];
+
+        $criteriatext = '';
+        foreach ($criteria as $criterion) {
+            $criteriatext .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$criterion['description']}\n";
+        }
+
+        $modeltext = $this->format_teacher_model($step, $teachermodel);
+
+        $system = <<<PROMPT
+Tu es un expert pédagogique en technologie. Ta mission est de rédiger des instructions de correction destinées à un autre IA correcteur, qui évaluera des productions d'élèves de collège/lycée.
+
+Les instructions que tu produis doivent :
+- Être en français, à la 2e personne du singulier ("tu")
+- Préciser les points d'attention spécifiques au modèle fourni
+- Indiquer les éléments obligatoires, les bonus, les pénalités éventuelles
+- Rester concises (8-15 lignes max)
+- Être réutilisables tel quel par l'IA correctrice
+
+Réponds UNIQUEMENT avec le texte des instructions, sans préambule ni balisage Markdown.
+PROMPT;
+
+        $user = <<<PROMPT
+Voici le modèle de correction rempli par l'enseignant pour l'étape "{$stepcontext}".
+
+Critères officiels d'évaluation :
+{$criteriatext}
+Modèle rempli :
+{$modeltext}
+
+Rédige maintenant les instructions de correction adaptées à ce modèle précis.
+PROMPT;
+
+        return ['system' => $system, 'user' => $user];
+    }
 }
