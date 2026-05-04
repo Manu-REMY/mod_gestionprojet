@@ -63,6 +63,10 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/fast_editor', 'init', [[
 ]]);
 
 echo $OUTPUT->header();
+echo $OUTPUT->render_from_template(
+    'mod_gestionprojet/step_tabs',
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'student')
+);
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet'));
 echo $OUTPUT->render_from_template('mod_gestionprojet/step9_form', $tplcontext);
 echo $OUTPUT->footer();
