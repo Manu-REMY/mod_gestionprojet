@@ -102,6 +102,14 @@ require(['jquery', 'mod_gestionprojet/generate_ai_instructions'], function(\$, G
             } catch (e) {
                 return false;
             }
+        },
+        onUpdated: function() {
+            // Trigger fast_editor's autosave on the AI instructions textarea
+            // (fast_editor binds an 'input' listener on this textarea in teacher mode).
+            var ta = document.getElementById('fast-ai-{$cmid}');
+            if (ta) {
+                ta.dispatchEvent(new Event('input', {bubbles: true}));
+            }
         }
     });
 });
