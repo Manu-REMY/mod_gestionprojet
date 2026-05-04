@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+define('AJAX_SCRIPT', true);
+
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/mod/gestionprojet/classes/ai_prompt_builder.php');
 require_once($CFG->dirroot . '/mod/gestionprojet/classes/ai_config.php');
@@ -43,6 +45,9 @@ require_capability('mod/gestionprojet:configureteacherpages', $context);
 header('Content-Type: application/json; charset=utf-8');
 
 $respond = function (array $payload) {
+    if (empty($payload['success'])) {
+        http_response_code(400);
+    }
     echo json_encode($payload);
     exit;
 };
@@ -53,7 +58,7 @@ if (!in_array($step, [4, 5, 6, 7, 8, 9], true)) {
 
 $decoded = json_decode($modeldata, true);
 if (!is_array($decoded)) {
-    $respond(['success' => false, 'error' => 'invalid_step']);
+    $respond(['success' => false, 'error' => 'invalid_payload']);
 }
 
 // Whitelist fields against STEP_FIELDS for the requested step.
@@ -100,14 +105,14 @@ try {
 
     $instructions = trim($response['content'] ?? '');
     if ($instructions === '') {
-        $respond(['success' => false, 'error' => 'ai_failed', 'message' => 'Empty response']);
+        $respond(['success' => false, 'error' => 'ai_failed']);
     }
 
     $respond(['success' => true, 'instructions' => $instructions]);
 } catch (\Throwable $e) {
+    debugging('generate_ai_instructions: ' . $e->getMessage(), DEBUG_DEVELOPER);
     $respond([
         'success' => false,
         'error' => 'ai_failed',
-        'message' => mb_substr($e->getMessage(), 0, 200),
     ]);
 }
