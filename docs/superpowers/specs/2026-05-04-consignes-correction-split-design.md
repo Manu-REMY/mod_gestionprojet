@@ -213,7 +213,7 @@ Inchangé. Le flag `stepN_provided` toggle juste 0/1 ; le contenu est désormais
 - `pages/step4_teacher.php`, `step5_teacher.php`, ..., `step9_teacher.php` (step_tabs context = `correction`, wording « Modèle de correction »)
 - `view.php` (route `mode=provided`)
 - `ajax/autosave.php` (mode `'provided'`)
-- `lang/en/gestionprojet.php` + `lang/fr/gestionprojet.php` (strings)
+- `lang/en/gestionprojet.php` + `lang/fr/gestionprojet.php` (strings — incluant le renommage de `step7` et `step7_desc`)
 - `version.php`
 - `backup/moodle2/backup_gestionprojet_stepslib.php` + `restore_gestionprojet_stepslib.php` (2 nouvelles tables)
 
@@ -228,11 +228,39 @@ Inchangé. Le flag `stepN_provided` toggle juste 0/1 ; le contenu est désormais
 7. Aucune mention `ai_instructions` sur les pages consignes.
 8. Suppression d'instance purge les 2 nouvelles tables.
 
+## Cas particulier — Expression du besoin (étapes 2 + 7)
+
+La séparation consigne/correction **existe déjà structurellement** pour cette phase :
+- **Étape 2** (`gestionprojet_besoin`) : consigne enseignant (description du besoin global du projet, pas d'`ai_instructions`).
+- **Étape 7** (`gestionprojet_besoin_eleve_teacher` + `gestionprojet_besoin_eleve`) : modèle de correction enseignant + production élève.
+
+**Aucune nouvelle table à créer.** Il suffit de bien router :
+- Étape 2 → contexte `consignes` (tabs {1, 3, 2, 4, 9}).
+- Étape 7 (mode teacher) → contexte `correction` (tabs {4, 9, 5, 8, 6, 7}).
+
+### Renommage
+
+L'étape 7 s'intitule aujourd'hui « Expression du Besoin (Élève) » — le suffixe « (Élève) » sera **supprimé** (cohérence avec les autres modèles de correction qui ne portent pas de tel suffixe : on parle de « Cahier des charges » et non de « CDCF (Élève) »).
+
+| Step | Avant | Après |
+|------|-------|-------|
+| step7 (FR) | Expression du Besoin (Élève) | Expression du besoin |
+| step7 (EN) | Needs Expression (Student) | Needs expression |
+| step7_desc (FR) | Diagramme Bête à Corne (élèves) | Diagramme Bête à Corne |
+| step7_desc (EN) | Horn Diagram (students) | Horn diagram |
+
+Pas d'ambiguïté visuelle : les 2 phases (2 et 7) ne coexistent jamais dans la même barre `step_tabs` (consignes ≠ correction).
+
+## Wording
+
+Préférence validée : **« Consigne »** (singulier) plutôt que « Document fourni » dans toutes les UI / strings.
+
 ## Hors-scope
 
 - L'assistant IA « Suggérer consignes IA » (Spec 2 — toujours à planifier après).
-- Pour les phases 1, 2, 3 (consignes pures) : pas de fork structurel — juste ajustement du wording et du context `step_tabs`.
-- La fusion des numéros 2 et 7 en une phase logique unique « Expression du besoin » (consigne 2 + correction 7) : reste 2 numéros distincts pour ne pas casser la migration.
+- Pour les phases 1, 3 (consignes pures) : pas de fork structurel — juste ajustement du wording et du context `step_tabs`.
+- Pour les phases 5, 6, 8 (corrections pures) : idem — ajustement du wording et du context `step_tabs`.
+- La fusion des numéros 2 et 7 en une seule phase logique : reste 2 numéros distincts pour ne pas casser la migration et préserver les flags `enable_step2` / `enable_step7`.
 
 ## Tests manuels (préprod après déploiement)
 
