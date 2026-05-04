@@ -166,13 +166,8 @@ class ai_prompt_builder {
      */
     public function build_system_prompt(int $step, object $teachermodel): string {
         $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
-        $criteria = self::STEP_CRITERIA[$step] ?? [];
         $aiinstructions = $teachermodel->ai_instructions ?? '';
-
-        $criteriatext = '';
-        foreach ($criteria as $criterion) {
-            $criteriatext .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$criterion['description']}\n";
-        }
+        $criteriatext = $this->build_criteria_text($step);
 
         $prompt = <<<PROMPT
 Tu es un assistant d'évaluation pédagogique expert en technologie pour le collège et le lycée.
@@ -347,6 +342,21 @@ PROMPT;
     }
 
     /**
+     * Build the formatted text of evaluation criteria for a given step.
+     *
+     * @param int $step Step number
+     * @return string Bullet list of criteria lines, or empty string if none
+     */
+    private function build_criteria_text(int $step): string {
+        $criteria = self::STEP_CRITERIA[$step] ?? [];
+        $text = '';
+        foreach ($criteria as $criterion) {
+            $text .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$criterion['description']}\n";
+        }
+        return $text;
+    }
+
+    /**
      * Format interacteurs data for display.
      *
      * @param string|null $json JSON string
@@ -468,13 +478,7 @@ PROMPT;
      */
     public function build_meta_prompt(int $step, object $teachermodel): array {
         $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
-        $criteria = self::STEP_CRITERIA[$step] ?? [];
-
-        $criteriatext = '';
-        foreach ($criteria as $criterion) {
-            $criteriatext .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$criterion['description']}\n";
-        }
-
+        $criteriatext = $this->build_criteria_text($step);
         $modeltext = $this->format_teacher_model($step, $teachermodel);
 
         $system = <<<PROMPT
