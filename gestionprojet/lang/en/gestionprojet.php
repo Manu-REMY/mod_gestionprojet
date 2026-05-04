@@ -45,7 +45,7 @@ $string['step3'] = 'Planning';
 $string['step4'] = 'Requirements Specification';
 $string['step5'] = 'Test Sheet';
 $string['step6'] = 'Project Report';
-$string['step7'] = 'Needs Expression (Student)';
+$string['step7'] = 'Needs expression';
 
 $string['step1_desc'] = 'Define the project framework (teacher)';
 $string['step2_desc'] = 'Horn Diagram (teacher)';
@@ -53,7 +53,7 @@ $string['step3_desc'] = 'Planning and timeline (teacher)';
 $string['step4_desc'] = 'Stakeholder diagram (students)';
 $string['step5_desc'] = 'Tests and validation (students)';
 $string['step6_desc'] = 'Final report (students)';
-$string['step7_desc'] = 'Horn Diagram (students)';
+$string['step7_desc'] = 'Horn diagram';
 $string['step8'] = 'Logbook';
 $string['step8_desc'] = 'Daily project log (students)';
 
@@ -536,7 +536,7 @@ $string['error:invalidstep'] = 'Invalid step number';
 $string['step4_title'] = 'Requirements Specification';
 $string['step5_title'] = 'Test Sheet';
 $string['step6_title'] = 'Project Report';
-$string['step7_title'] = 'Needs Expression (Student)';
+$string['step7_title'] = 'Needs expression';
 $string['step8_title'] = 'Logbook';
 
 // AI Log Report
@@ -795,3 +795,43 @@ $string['step4_provided_badge'] = 'Provided';
 $string['step4_produit_label'] = 'Product';
 $string['step4_milieu_label'] = 'Environment';
 $string['step4_interacteurs_label'] = 'Interactors';
+
+// Step 9: FAST diagram.
+$string['step9'] = 'FAST diagram';
+$string['step9_desc'] = 'Translate functional requirements into technical solutions.';
+$string['enable_step9'] = 'Enable step 9 (FAST diagram)';
+$string['step9_provided'] = 'Provide a FAST diagram to students';
+$string['step9_provided_desc'] = 'When checked, students see the teacher\'s FAST diagram as a starting point.';
+
+// FAST UI.
+$string['fast:diagram_title'] = 'FAST diagram';
+$string['fast:diagram_subtitle'] = 'From need to technical solution';
+$string['fast:populate_from_cdcf'] = 'Pre-fill from CDCF';
+$string['fast:start_empty'] = 'Start empty';
+$string['fast:add_function'] = 'Add a technical function';
+$string['fast:add_subfunction'] = 'Add a sub-function';
+$string['fast:split'] = 'Split';
+$string['fast:remove'] = 'Remove';
+$string['fast:no_cdcf_data'] = 'No service function defined in the functional specifications.';
+$string['fast:ft_description_placeholder'] = 'Description of the technical function...';
+$string['fast:sf_description_placeholder'] = 'Description of the sub-function...';
+$string['fast:solution_placeholder'] = 'Describe the technical solution...';
+$string['fast:placeholder'] = 'FAST diagram';
+$string['fast:ai_instructions_label'] = 'AI evaluator instructions';
+$string['fast:ai_instructions_help'] = 'Guide the AI evaluator on what to assess.';
+$string['fast:no_data_to_evaluate'] = 'No FAST data to evaluate.';
+$string['fast:fp_label'] = 'Main function (read-only, from CDCF)';
+$string['fast:fp_help'] = 'The main function comes from the functional specifications and cannot be edited here.';
+
+// Consigne / Correction model split (v2.4.0).
+$string['consigne'] = 'Consigne';
+$string['consignes'] = 'Consignes';
+$string['consigne_desc'] = 'Document provided to students as a starting reference.';
+$string['gantt_row_consignes'] = 'Consignes (teacher-provided documents)';
+$string['step4_provided_desc'] = 'Define the elements of the functional specifications you want to provide to your students as a starting point.';
+$string['step9_provided_desc'] = 'Define the FAST diagram you want to provide to your students as a starting point.';
+$string['privacy:metadata:gestionprojet_fast'] = 'Student FAST diagram submissions.';
+$string['privacy:metadata:gestionprojet_fast:userid'] = 'User ID (individual mode).';
+$string['privacy:metadata:gestionprojet_fast:data_json'] = 'FAST diagram data (JSON: FP, FT, sub-FT, ST).';
+$string['privacy:metadata:gestionprojet_fast:status'] = 'Submission status (0=draft, 1=submitted).';
+$string['privacy:metadata:gestionprojet_fast:timesubmitted'] = 'Submission timestamp.';

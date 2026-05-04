@@ -22,11 +22,6 @@ require_once(__DIR__ . '/../lib.php');
 // Ensure JSON headers
 header('Content-Type: application/json');
 
-// Debug logging
-$debug_log = __DIR__ . '/../../../moodledata/temp/autosave_debug.log';
-@file_put_contents($debug_log, "\n=== " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
-@file_put_contents($debug_log, "POST: " . print_r($_POST, true), FILE_APPEND);
-
 // Support both 'cmid' and 'id' parameter names for compatibility.
 $cmid = optional_param('cmid', 0, PARAM_INT);
 if (!$cmid) {
@@ -49,10 +44,8 @@ require_sesskey();
 
 // Decode JSON data
 $formdata = json_decode($data, true);
-@file_put_contents($debug_log, "Data received: " . $data . "\n", FILE_APPEND);
 
 if (!$formdata) {
-    @file_put_contents($debug_log, "ERROR: Invalid JSON\n", FILE_APPEND);
     echo json_encode(['success' => false, 'message' => 'Invalid data']);
     exit;
 }
@@ -62,6 +55,54 @@ $message = '';
 
 try {
     $time = time();
+
+    // Handle teacher-provided consigne mode (dual-facet steps 4 and 9 only).
+    if ($mode === 'provided') {
+        if (!has_capability('mod/gestionprojet:configureteacherpages', $context)) {
+            throw new moodle_exception('nopermission');
+        }
+
+        $providedtables = [
+            4 => ['table' => 'gestionprojet_cdcf_provided', 'fields' => ['produit', 'milieu', 'fp', 'interacteurs_data']],
+            9 => ['table' => 'gestionprojet_fast_provided', 'fields' => ['data_json']],
+        ];
+
+        if (!isset($providedtables[$step])) {
+            throw new moodle_exception('invalidstep');
+        }
+
+        $tableinfo = $providedtables[$step];
+        $tablename = $tableinfo['table'];
+        $validfields = $tableinfo['fields'];
+
+        $record = $DB->get_record($tablename, ['gestionprojetid' => $gestionprojet->id]);
+        if (!$record) {
+            $record = new stdClass();
+            $record->gestionprojetid = $gestionprojet->id;
+            $record->timecreated = $time;
+        }
+
+        foreach ($formdata as $key => $value) {
+            if ($key !== 'id' && in_array($key, $validfields)) {
+                $record->$key = $value;
+            }
+        }
+
+        $record->timemodified = $time;
+
+        if (isset($record->id)) {
+            $DB->update_record($tablename, $record);
+        } else {
+            $record->id = $DB->insert_record($tablename, $record);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => get_string('autosave_success', 'gestionprojet'),
+            'timestamp' => time(),
+        ]);
+        exit;
+    }
 
     // Handle teacher correction model mode.
     if ($mode === 'teacher') {
@@ -76,6 +117,7 @@ try {
             6 => ['table' => 'gestionprojet_rapport_teacher', 'fields' => ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions', 'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives', 'besoins', 'ai_instructions', 'submission_date', 'deadline_date']],
             7 => ['table' => 'gestionprojet_besoin_eleve_teacher', 'fields' => ['aqui', 'surquoi', 'dansquelbut', 'ai_instructions', 'submission_date', 'deadline_date']],
             8 => ['table' => 'gestionprojet_carnet_teacher', 'fields' => ['tasks_data', 'ai_instructions', 'submission_date', 'deadline_date']],
+            9 => ['table' => 'gestionprojet_fast_teacher', 'fields' => ['data_json', 'ai_instructions', 'submission_date', 'deadline_date']],
         ];
 
         if (!isset($teachertables[$step])) {
@@ -383,6 +425,36 @@ try {
 
             $record->timemodified = $time;
             $DB->update_record('gestionprojet_carnet', $record);
+
+            $success = true;
+            break;
+
+        case 9: // FAST diagram
+            if (!has_capability('mod/gestionprojet:submit', $context)) {
+                throw new moodle_exception('nopermission');
+            }
+
+            $record = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, 'fast');
+
+            // Check if locked.
+            if ($record->status == 1) {
+                throw new moodle_exception('submissionlocked', 'gestionprojet');
+            }
+
+            // List of valid fields for fast table.
+            $validfields = ['data_json'];
+
+            foreach ($formdata as $key => $value) {
+                if ($key !== 'id' && in_array($key, $validfields)) {
+                    $oldvalue = isset($record->$key) ? $record->$key : null;
+                    $record->$key = $value;
+
+                    gestionprojet_log_change($gestionprojet->id, 'fast', $record->id, $key, $oldvalue, $value, $USER->id, $groupid);
+                }
+            }
+
+            $record->timemodified = $time;
+            $DB->update_record('gestionprojet_fast', $record);
 
             $success = true;
             break;

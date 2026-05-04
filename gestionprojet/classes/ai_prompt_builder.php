@@ -28,6 +28,9 @@ namespace mod_gestionprojet;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+require_once($CFG->dirroot . '/mod/gestionprojet/lib.php');
+
 /**
  * Builds prompts for AI evaluation of student submissions.
  */
@@ -42,6 +45,7 @@ class ai_prompt_builder {
               'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives'],
         7 => ['aqui', 'surquoi', 'dansquelbut'],
         8 => ['tasks_data'],
+        9 => ['data_json'],
     ];
 
     /** @var array Step descriptions in French */
@@ -51,6 +55,7 @@ class ai_prompt_builder {
         6 => 'Rapport de Projet - Synthèse complète du projet avec besoin, solutions, réalisation et bilan',
         7 => 'Expression du Besoin - Diagramme Bête à Cornes (À qui? Sur quoi? Dans quel but?)',
         8 => 'Carnet de Bord - Suivi chronologique des séances et tâches réalisées',
+        9 => 'Diagramme FAST - Analyse fonctionnelle traduisant les fonctions de service en solutions techniques',
     ];
 
     /** @var array Step-specific evaluation criteria */
@@ -90,6 +95,13 @@ class ai_prompt_builder {
             ['name' => 'Suivi de l\'avancement', 'weight' => 5, 'description' => 'L\'avancement est cohérent et réaliste'],
             ['name' => 'Réflexivité', 'weight' => 6, 'description' => 'Les remarques montrent une réflexion sur le travail'],
         ],
+        9 => [
+            ['name' => 'Décomposition fonctionnelle', 'weight' => 4, 'description' => 'Les fonctions techniques (FT) couvrent les fonctions de service du CDCF'],
+            ['name' => 'Pertinence des FT', 'weight' => 4, 'description' => 'Les FT sont correctement formulées et clairement identifiées'],
+            ['name' => 'Sous-fonctions', 'weight' => 3, 'description' => 'La scission en sous-fonctions, lorsque utilisée, est judicieuse'],
+            ['name' => 'Solutions techniques', 'weight' => 5, 'description' => 'Les solutions techniques (ST) proposées sont concrètes et adaptées aux FT/sous-FT'],
+            ['name' => 'Cohérence FP → FT → ST', 'weight' => 4, 'description' => 'L\'arborescence est cohérente : du « pourquoi » au « comment »'],
+        ],
     ];
 
     /** @var array Field labels in French */
@@ -124,12 +136,13 @@ class ai_prompt_builder {
         'surquoi' => 'Sur quoi agit-il?',
         'dansquelbut' => 'Dans quel but?',
         'tasks_data' => 'Entrées du carnet de bord',
+        'data_json' => 'Diagramme FAST',
     ];
 
     /**
      * Build the complete evaluation prompt.
      *
-     * @param int $step Step number (4-8)
+     * @param int $step Step number (4-9)
      * @param object $studentdata Student submission data
      * @param object $teachermodel Teacher correction model
      * @return array ['system' => string, 'user' => string]
@@ -319,6 +332,9 @@ PROMPT;
         }
         if ($field === 'tasks_data') {
             return $this->format_tasks($value);
+        }
+        if ($field === 'data_json') {
+            return gestionprojet_fast_to_text($value);
         }
         if ($field === 'precautions') {
             return $this->format_json_array($value);

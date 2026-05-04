@@ -19,8 +19,9 @@
  *
  * Inputs (POST):
  *   cmid    int  Course module ID
- *   stepnum int  Step number (1..8)
+ *   stepnum int  Step number (1..9)
  *   enabled int  0 to disable, 1 to enable (mode student); 2 reserved for step4 provided mode
+ *   flag    str  'enable' (default) or 'provided' (only valid for steps 4 and 9)
  *
  * Output: JSON {success: bool, message?: string}
  *
@@ -41,7 +42,7 @@ $stepnum = required_param('stepnum', PARAM_INT);
 $enabled = required_param('enabled', PARAM_INT);
 $flag = optional_param('flag', 'enable', PARAM_ALPHA);
 
-if ($stepnum < 1 || $stepnum > 8) {
+if ($stepnum < 1 || $stepnum > 9) {
     throw new \moodle_exception('invalidparameter', 'error');
 }
 if (!in_array($enabled, [0, 1, 2], true)) {
@@ -53,7 +54,7 @@ if ($enabled === 2 && $stepnum !== 4) {
 if (!in_array($flag, ['enable', 'provided'], true)) {
     throw new \moodle_exception('invalidparameter', 'error');
 }
-if ($flag === 'provided' && $stepnum !== 4) {
+if ($flag === 'provided' && !in_array($stepnum, [4, 9], true)) {
     throw new \moodle_exception('invalidparameter', 'error');
 }
 
