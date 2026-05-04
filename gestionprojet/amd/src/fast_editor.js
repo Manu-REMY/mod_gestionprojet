@@ -265,6 +265,14 @@ function($, Notification, Str, FastDiagram) {
                 scheduleSave();
             });
 
+            // Schedule autosave when the AI instructions textarea changes (teacher only).
+            if (mode === 'teacher') {
+                var aiTextarea = document.getElementById('fast-ai-' + cmid);
+                if (aiTextarea) {
+                    $(aiTextarea).on('input change', scheduleSave);
+                }
+            }
+
             $(formContainer).on('click', '[data-action]', function(e) {
                 var action = $(e.currentTarget).data('action');
                 var $ft = $(e.currentTarget).closest('.fast-ft');
