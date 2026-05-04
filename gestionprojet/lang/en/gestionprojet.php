@@ -830,6 +830,7 @@ $string['consigne_desc'] = 'Document provided to students as a starting referenc
 $string['gantt_row_consignes'] = 'Consignes (teacher-provided documents)';
 $string['step4_provided_desc'] = 'Define the elements of the functional specifications you want to provide to your students as a starting point.';
 $string['step9_provided_desc'] = 'Define the FAST diagram you want to provide to your students as a starting point.';
+$string['correction_model_badge'] = 'Correction model';
 $string['privacy:metadata:gestionprojet_fast'] = 'Student FAST diagram submissions.';
 $string['privacy:metadata:gestionprojet_fast:userid'] = 'User ID (individual mode).';
 $string['privacy:metadata:gestionprojet_fast:data_json'] = 'FAST diagram data (JSON: FP, FT, sub-FT, ST).';

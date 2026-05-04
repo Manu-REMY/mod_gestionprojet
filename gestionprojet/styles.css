@@ -2705,6 +2705,37 @@
     max-width: none;
 }
 
+/* Correction model pages: full-width with subtle amber identity. */
+.path-mod-gestionprojet .teacher-model-container.gp-correction {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+.path-mod-gestionprojet .gp-correction .teacher-model-header {
+    display: none;
+}
+.path-mod-gestionprojet .gp-correction-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.15em 0.55em;
+    font-size: 0.55em;
+    font-weight: 600;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: 999px;
+    vertical-align: middle;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+.path-mod-gestionprojet .gp-correction .model-form-section {
+    border-left: 3px solid #f59e0b;
+    padding-left: 1rem;
+}
+.path-mod-gestionprojet .gp-correction-page .fast-diagram-card {
+    border-left: 3px solid #f59e0b;
+}
+
 /* Header */
 .path-mod-gestionprojet .teacher-model-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

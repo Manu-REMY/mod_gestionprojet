@@ -830,6 +830,7 @@ $string['consigne_desc'] = 'Document fourni à l\'élève comme référence de d
 $string['gantt_row_consignes'] = 'Consignes (documents fournis par l\'enseignant)';
 $string['step4_provided_desc'] = 'Définissez les éléments du cahier des charges que vous souhaitez fournir à vos élèves comme point de départ.';
 $string['step9_provided_desc'] = 'Définissez le diagramme FAST que vous souhaitez fournir à vos élèves comme point de départ.';
+$string['correction_model_badge'] = 'Modèle de correction';
 $string['privacy:metadata:gestionprojet_fast'] = 'Productions élèves de diagrammes FAST.';
 $string['privacy:metadata:gestionprojet_fast:userid'] = 'ID utilisateur (mode individuel).';
 $string['privacy:metadata:gestionprojet_fast:data_json'] = 'Données du diagramme FAST (JSON : FP, FT, sous-FT, ST).';

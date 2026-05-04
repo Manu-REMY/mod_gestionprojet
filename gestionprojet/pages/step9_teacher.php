@@ -69,12 +69,18 @@ echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'correction')
 );
-echo $OUTPUT->heading(get_string('step9', 'gestionprojet') . ' — ' . get_string('correction_models', 'gestionprojet'));
+echo $OUTPUT->heading(
+    get_string('step9', 'gestionprojet')
+        . ' <span class="gp-correction-badge">' . get_string('correction_model_badge', 'gestionprojet') . '</span>',
+    2
+);
 
 // Render the per-step submissions dashboard.
 if (function_exists('gestionprojet_render_step_dashboard')) {
     echo gestionprojet_render_step_dashboard($gestionprojet, 9, $context, $cm->id);
 }
 
+echo '<div class="gp-correction-page">';
 echo $OUTPUT->render_from_template('mod_gestionprojet/step9_form', $tplcontext);
+echo '</div>';
 echo $OUTPUT->footer();
