@@ -55,12 +55,12 @@ $tplcontext = [
     'mode' => 'student',
 ];
 
-$PAGE->requires->js_call_amd('mod_gestionprojet/fast_editor', 'init', [
+$PAGE->requires->js_call_amd('mod_gestionprojet/fast_editor', 'init', [[
     'cmid' => (int)$cm->id,
     'mode' => 'student',
     'sesskey' => sesskey(),
     'groupid' => (int)$effectivegroupid,
-]);
+]]);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet'));
