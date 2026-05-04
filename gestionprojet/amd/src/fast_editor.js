@@ -129,6 +129,25 @@ function($, Notification, Str, FastDiagram) {
 
     function buildForm(data, strings) {
         var frag = document.createDocumentFragment();
+
+        // Fonction Principale (read-only, sourced from CDCF).
+        var fps = (data && data.fonctionsPrincipales) || [];
+        var nonEmptyFps = fps.filter(function(fp) {
+            return fp && fp.description && String(fp.description).trim() !== '';
+        });
+        if (nonEmptyFps.length > 0) {
+            var fpSection = el('div', { 'class': 'fast-fp-section mb-3' });
+            fpSection.appendChild(el('label', { 'class': 'font-weight-bold mb-1' }, strings.fpLabel));
+            nonEmptyFps.forEach(function(fp, idx) {
+                var fpItem = el('div', { 'class': 'fast-fp-item d-flex align-items-center gap-2 mb-1' });
+                fpItem.appendChild(el('span', { 'class': 'badge badge-primary' }, 'FP' + (idx + 1)));
+                fpItem.appendChild(el('span', { 'class': 'fast-fp-text' }, fp.description));
+                fpSection.appendChild(fpItem);
+            });
+            fpSection.appendChild(el('small', { 'class': 'form-text text-muted' }, strings.fpHelp));
+            frag.appendChild(fpSection);
+        }
+
         var list = el('div', { 'class': 'fast-fonctions' });
 
         if (!data.fonctions || data.fonctions.length === 0) {
@@ -164,7 +183,9 @@ function($, Notification, Str, FastDiagram) {
             { key: 'fast:solution_placeholder', component: 'mod_gestionprojet' },
             { key: 'fast:add_function', component: 'mod_gestionprojet' },
             { key: 'fast:add_subfunction', component: 'mod_gestionprojet' },
-            { key: 'fast:split', component: 'mod_gestionprojet' }
+            { key: 'fast:split', component: 'mod_gestionprojet' },
+            { key: 'fast:fp_label', component: 'mod_gestionprojet' },
+            { key: 'fast:fp_help', component: 'mod_gestionprojet' }
         ];
 
         Str.get_strings(stringRequests).then(function(loaded) {
@@ -175,7 +196,9 @@ function($, Notification, Str, FastDiagram) {
                 solPlaceholder: loaded[3],
                 addFn: loaded[4],
                 addSub: loaded[5],
-                split: loaded[6]
+                split: loaded[6],
+                fpLabel: loaded[7],
+                fpHelp: loaded[8]
             };
             startEditor(strings);
             return null;

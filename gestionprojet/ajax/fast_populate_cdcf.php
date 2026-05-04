@@ -57,11 +57,13 @@ if ($cdcfteacher) {
         if (is_array($interacteurs)) {
             $idcounter = 1;
             foreach ($interacteurs as $interacteur) {
-                $intname = $interacteur['nom'] ?? '';
+                $intname = $interacteur['name'] ?? $interacteur['nom'] ?? '';
                 $fcs = $interacteur['fcs'] ?? $interacteur['fonctions'] ?? [];
                 if (is_array($fcs)) {
                     foreach ($fcs as $fc) {
-                        $desc = is_string($fc) ? $fc : ($fc['description'] ?? $fc['nom'] ?? '');
+                        $desc = is_string($fc)
+                            ? $fc
+                            : ($fc['value'] ?? $fc['description'] ?? $fc['name'] ?? $fc['nom'] ?? '');
                         if (!empty($desc)) {
                             $fonctionsservice[] = [
                                 'id' => $idcounter++,
