@@ -48,6 +48,8 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $paths[] = new restore_path_element('gestionprojet_besoin_eleve_teacher', '/activity/gestionprojet/besoin_eleve_teacher');
         $paths[] = new restore_path_element('gestionprojet_carnet_teacher', '/activity/gestionprojet/carnet_teacher');
         $paths[] = new restore_path_element('gestionprojet_fast_teacher', '/activity/gestionprojet/fast_teacher');
+        $paths[] = new restore_path_element('gestionprojet_cdcf_provided', '/activity/gestionprojet/cdcf_provided');
+        $paths[] = new restore_path_element('gestionprojet_fast_provided', '/activity/gestionprojet/fast_provided');
 
         if ($userinfo) {
             $paths[] = new restore_path_element('gestionprojet_cdcf', '/activity/gestionprojet/cdcfs/cdcf');
@@ -235,6 +237,38 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
         $DB->insert_record('gestionprojet_fast_teacher', $data);
+    }
+
+    /**
+     * Process the cdcf_provided element (teacher consigne, no ai_instructions, no dates).
+     *
+     * @param array $data
+     */
+    protected function process_gestionprojet_cdcf_provided($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
+        $data->timecreated = $this->apply_date_offset($data->timecreated);
+        $data->timemodified = $this->apply_date_offset($data->timemodified);
+
+        $DB->insert_record('gestionprojet_cdcf_provided', $data);
+    }
+
+    /**
+     * Process the fast_provided element (teacher consigne, no ai_instructions, no dates).
+     *
+     * @param array $data
+     */
+    protected function process_gestionprojet_fast_provided($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
+        $data->timecreated = $this->apply_date_offset($data->timecreated);
+        $data->timemodified = $this->apply_date_offset($data->timemodified);
+
+        $DB->insert_record('gestionprojet_fast_provided', $data);
     }
 
     /**

@@ -139,6 +139,8 @@ function gestionprojet_delete_instance($id)
     $DB->delete_records('gestionprojet_carnet', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_fast', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_fast_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_fast_provided', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_cdcf_provided', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
 
     // Delete the instance
@@ -250,13 +252,26 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
         $record->id = $DB->insert_record($tablename, $record);
     }
 
-    // For FAST phase: when teacher provides their diagram, seed student submission with it.
+    // For FAST phase: when teacher provides a consigne, seed student submission with it.
     if ($table === 'fast' && (int)$gestionprojet->step9_provided === 1 && empty($record->data_json)) {
-        $teacher = $DB->get_record('gestionprojet_fast_teacher', ['gestionprojetid' => $gestionprojet->id]);
-        if ($teacher && !empty($teacher->data_json)) {
-            $record->data_json = $teacher->data_json;
+        $provided = $DB->get_record('gestionprojet_fast_provided', ['gestionprojetid' => $gestionprojet->id]);
+        if ($provided && !empty($provided->data_json)) {
+            $record->data_json = $provided->data_json;
             $record->timemodified = time();
             $DB->update_record('gestionprojet_fast', $record);
+        }
+    }
+
+    // For CDCF phase: when teacher provides a consigne, seed student submission with it.
+    if ($table === 'cdcf' && (int)$gestionprojet->step4_provided === 1 && empty($record->produit) && empty($record->milieu) && empty($record->fp) && empty($record->interacteurs_data)) {
+        $provided = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
+        if ($provided) {
+            $record->produit = $provided->produit ?? '';
+            $record->milieu = $provided->milieu ?? '';
+            $record->fp = $provided->fp ?? '';
+            $record->interacteurs_data = $provided->interacteurs_data ?? '';
+            $record->timemodified = time();
+            $DB->update_record('gestionprojet_cdcf', $record);
         }
     }
 
@@ -1480,7 +1495,17 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
 
     require_once($CFG->dirroot . '/mod/gestionprojet/classes/output/icon.php');
 
-    $order = [1, 3, 2, 7, 4, 9, 5, 8, 6];
+    // Tabs ordering depends on the context:
+    //   - 'consignes': teacher-provided documents — phases [1, 3, 2, 4, 9].
+    //   - 'correction': teacher correction models — phases [4, 9, 5, 8, 6, 7].
+    //   - 'model' (legacy) and 'grading' (legacy): full ordering with all 9 steps.
+    if ($context === 'consignes') {
+        $order = [1, 3, 2, 4, 9];
+    } else if ($context === 'correction') {
+        $order = [4, 9, 5, 8, 6, 7];
+    } else {
+        $order = [1, 3, 2, 7, 4, 9, 5, 8, 6];
+    }
     $tabs = [];
 
     foreach ($order as $stepnum) {
@@ -1490,16 +1515,27 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
 
         // Build the URL according to the destination context.
         $params = ['id' => $cmid, 'step' => $stepnum];
-        $isteacherstep = in_array($stepnum, [1, 2, 3], true);
+        $isconsigneonlystep = in_array($stepnum, [1, 2, 3], true);
+        $iscorrectiononlystep = in_array($stepnum, [5, 6, 7, 8], true);
+        $isdualstep = in_array($stepnum, [4, 9], true);
         $isstudentstep = in_array($stepnum, [4, 5, 6, 7, 8, 9], true);
 
         if ($context === 'grading' && $isstudentstep) {
             $url = (new \moodle_url('/mod/gestionprojet/grading.php', $params))->out(false);
-        } else if ($isteacherstep) {
-            // Teacher pages always go to view.php?step=N (no mode).
+        } else if ($context === 'consignes') {
+            // Consigne tabs: 1/2/3 use bare URL, 4/9 add mode=provided.
+            if ($isdualstep) {
+                $params['mode'] = 'provided';
+            }
+            $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
+        } else if ($context === 'correction') {
+            // Correction tabs always add mode=teacher.
+            $params['mode'] = 'teacher';
+            $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
+        } else if ($isconsigneonlystep) {
             $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
         } else {
-            // Student steps in non-grading context: go to teacher correction model page.
+            // Legacy 'model' context for student/dual steps.
             $params['mode'] = 'teacher';
             $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
         }

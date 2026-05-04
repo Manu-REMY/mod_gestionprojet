@@ -530,5 +530,94 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026050400, 'gestionprojet');
     }
 
+    if ($oldversion < 2026050500) {
+        $dbman = $DB->get_manager();
+
+        // Create gestionprojet_cdcf_provided.
+        $cdcfprovided = new xmldb_table('gestionprojet_cdcf_provided');
+        if (!$dbman->table_exists($cdcfprovided)) {
+            $cdcfprovided->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+            $cdcfprovided->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+            $cdcfprovided->add_field('produit', XMLDB_TYPE_CHAR, '255', null, null, null);
+            $cdcfprovided->add_field('milieu', XMLDB_TYPE_CHAR, '255', null, null, null);
+            $cdcfprovided->add_field('fp', XMLDB_TYPE_TEXT, null, null, null, null);
+            $cdcfprovided->add_field('interacteurs_data', XMLDB_TYPE_TEXT, null, null, null, null);
+            $cdcfprovided->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $cdcfprovided->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $cdcfprovided->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $cdcfprovided->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+            $dbman->create_table($cdcfprovided);
+        }
+
+        // Create gestionprojet_fast_provided.
+        $fastprovided = new xmldb_table('gestionprojet_fast_provided');
+        if (!$dbman->table_exists($fastprovided)) {
+            $fastprovided->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+            $fastprovided->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+            $fastprovided->add_field('data_json', XMLDB_TYPE_TEXT, null, null, null, null);
+            $fastprovided->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $fastprovided->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $fastprovided->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $fastprovided->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+            $dbman->create_table($fastprovided);
+        }
+
+        // Migrate existing CDCF teacher data → cdcf_provided for instances with step4_provided=1.
+        $now = time();
+        $providedcdcfinstances = $DB->get_records_select(
+            'gestionprojet',
+            'step4_provided = ?',
+            [1],
+            '',
+            'id'
+        );
+        foreach ($providedcdcfinstances as $instance) {
+            $existing = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $instance->id]);
+            if ($existing) {
+                continue;
+            }
+            $teacher = $DB->get_record('gestionprojet_cdcf_teacher', ['gestionprojetid' => $instance->id]);
+            if (!$teacher) {
+                continue;
+            }
+            $record = new stdClass();
+            $record->gestionprojetid = $instance->id;
+            $record->produit = $teacher->produit ?? '';
+            $record->milieu = $teacher->milieu ?? '';
+            $record->fp = $teacher->fp ?? '';
+            $record->interacteurs_data = $teacher->interacteurs_data ?? '';
+            $record->timecreated = $now;
+            $record->timemodified = $now;
+            $DB->insert_record('gestionprojet_cdcf_provided', $record);
+        }
+
+        // Migrate existing FAST teacher data → fast_provided for instances with step9_provided=1.
+        $providedfastinstances = $DB->get_records_select(
+            'gestionprojet',
+            'step9_provided = ?',
+            [1],
+            '',
+            'id'
+        );
+        foreach ($providedfastinstances as $instance) {
+            $existing = $DB->get_record('gestionprojet_fast_provided', ['gestionprojetid' => $instance->id]);
+            if ($existing) {
+                continue;
+            }
+            $teacher = $DB->get_record('gestionprojet_fast_teacher', ['gestionprojetid' => $instance->id]);
+            if (!$teacher) {
+                continue;
+            }
+            $record = new stdClass();
+            $record->gestionprojetid = $instance->id;
+            $record->data_json = $teacher->data_json ?? '';
+            $record->timecreated = $now;
+            $record->timemodified = $now;
+            $DB->insert_record('gestionprojet_fast_provided', $record);
+        }
+
+        upgrade_mod_savepoint(true, 2026050500, 'gestionprojet');
+    }
+
     return true;
 }

@@ -155,10 +155,10 @@ if ($isteacher) {
                 'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnum]))->out(false),
             ];
         } else if ($stepnum === 4) {
-            // Special case: CDCF row 1 cell controls step4_provided (teacher provides reference document).
+            // Special case: CDCF row 1 cell controls step4_provided (teacher-provided consigne).
             $providedval = isset($gestionprojet->step4_provided) ? (int)$gestionprojet->step4_provided : 0;
             $providedenabled = ($providedval === 1);
-            $providedrec = $teachermodels[4] ?? null;
+            $providedrec = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
             $providedcomplete = $providedrec && !empty($providedrec->produit);
             if ($providedenabled) {
                 $totalconfigtargets++;
@@ -173,13 +173,13 @@ if ($isteacher) {
                 'iscomplete' => $providedcomplete,
                 'flag' => 'provided',
                 'name' => get_string('step4', 'gestionprojet'),
-                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'teacher']))->out(false),
+                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'provided']))->out(false),
             ];
         } else if ($stepnum === 9) {
-            // Special case: FAST row 1 cell controls step9_provided.
+            // Special case: FAST row 1 cell controls step9_provided (teacher-provided consigne).
             $providedval = isset($gestionprojet->step9_provided) ? (int)$gestionprojet->step9_provided : 0;
             $providedenabled = ($providedval === 1);
-            $providedrec = $teachermodels[9] ?? null;
+            $providedrec = $DB->get_record('gestionprojet_fast_provided', ['gestionprojetid' => $gestionprojet->id]);
             $providedcomplete = false;
             if ($providedrec && !empty($providedrec->data_json)) {
                 $decoded = json_decode($providedrec->data_json, true);
@@ -198,7 +198,7 @@ if ($isteacher) {
                 'iscomplete' => $providedcomplete,
                 'flag' => 'provided',
                 'name' => get_string('step9', 'gestionprojet'),
-                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9, 'mode' => 'teacher']))->out(false),
+                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9, 'mode' => 'provided']))->out(false),
             ];
         } else {
             $rowdocs[] = ['isfilled' => false];
