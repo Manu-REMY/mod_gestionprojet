@@ -137,6 +137,10 @@ function gestionprojet_delete_instance($id)
     $DB->delete_records('gestionprojet_rapport', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_besoin_eleve', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_carnet', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_fast', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_fast_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_fast_provided', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_cdcf_provided', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
 
     // Delete the instance
@@ -246,6 +250,29 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
         $record->timemodified = time();
 
         $record->id = $DB->insert_record($tablename, $record);
+    }
+
+    // For FAST phase: when teacher provides a consigne, seed student submission with it.
+    if ($table === 'fast' && (int)$gestionprojet->step9_provided === 1 && empty($record->data_json)) {
+        $provided = $DB->get_record('gestionprojet_fast_provided', ['gestionprojetid' => $gestionprojet->id]);
+        if ($provided && !empty($provided->data_json)) {
+            $record->data_json = $provided->data_json;
+            $record->timemodified = time();
+            $DB->update_record('gestionprojet_fast', $record);
+        }
+    }
+
+    // For CDCF phase: when teacher provides a consigne, seed student submission with it.
+    if ($table === 'cdcf' && (int)$gestionprojet->step4_provided === 1 && empty($record->produit) && empty($record->milieu) && empty($record->fp) && empty($record->interacteurs_data)) {
+        $provided = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
+        if ($provided) {
+            $record->produit = $provided->produit ?? '';
+            $record->milieu = $provided->milieu ?? '';
+            $record->fp = $provided->fp ?? '';
+            $record->interacteurs_data = $provided->interacteurs_data ?? '';
+            $record->timemodified = time();
+            $DB->update_record('gestionprojet_cdcf', $record);
+        }
     }
 
     return $record;
@@ -470,7 +497,7 @@ function gestionprojet_is_step_enabled($gestionprojet, $step)
 /**
  * Get the table name for a graded step.
  *
- * @param int $step Step number (4-8)
+ * @param int $step Step number (4-9)
  * @return string|null Table name or null if invalid step
  */
 function gestionprojet_get_step_table($step)
@@ -481,28 +508,29 @@ function gestionprojet_get_step_table($step)
         6 => 'gestionprojet_rapport',
         7 => 'gestionprojet_besoin_eleve',
         8 => 'gestionprojet_carnet',
+        9 => 'gestionprojet_fast',
     ];
     return $tables[$step] ?? null;
 }
 
 /**
  * Map step number to itemnumber for gradebook.
- * Steps 4-8 map to itemnumbers 1-5 (0 is reserved for combined mode).
+ * Steps 4-9 map to itemnumbers 1-6 (0 is reserved for combined mode).
  *
- * @param int $step Step number (4-8)
- * @return int Itemnumber for gradebook (1-5)
+ * @param int $step Step number (4-9)
+ * @return int Itemnumber for gradebook (1-6)
  */
 function gestionprojet_step_to_itemnumber($step)
 {
-    // Map: step 4 => 1, step 5 => 2, step 6 => 3, step 7 => 4, step 8 => 5
+    // Map: step 4 => 1, step 5 => 2, step 6 => 3, step 7 => 4, step 8 => 5, step 9 => 6
     return $step - 3;
 }
 
 /**
  * Map itemnumber back to step number.
  *
- * @param int $itemnumber Itemnumber (1-5)
- * @return int Step number (4-8)
+ * @param int $itemnumber Itemnumber (1-6)
+ * @return int Step number (4-9)
  */
 function gestionprojet_itemnumber_to_step($itemnumber)
 {
@@ -513,7 +541,7 @@ function gestionprojet_itemnumber_to_step($itemnumber)
  * Get grades for a specific step.
  *
  * @param stdClass $gestionprojet The activity instance
- * @param int $step Step number (4-8)
+ * @param int $step Step number (4-9)
  * @param int $userid Optional user ID (0 for all users)
  * @return array Array of grade objects keyed by userid
  */
@@ -676,13 +704,13 @@ function gestionprojet_get_grade_category($gestionprojet)
 
 /**
  * Get the display order for graded steps (matching project workflow).
- * Order: 7 (Student Needs Expression), 4 (Functional Specifications), 5 (Test Sheet), 8 (Logbook), 6 (Report)
+ * Order: 7 (Student Needs Expression), 4 (Functional Specifications), 9 (FAST Diagram), 5 (Test Sheet), 8 (Logbook), 6 (Report)
  *
  * @return array Step numbers in display order
  */
 function gestionprojet_get_graded_steps_order()
 {
-    return [7, 4, 5, 8, 6];
+    return [7, 4, 9, 5, 8, 6];
 }
 
 /**
@@ -691,7 +719,7 @@ function gestionprojet_get_graded_steps_order()
  * @param stdClass $gestionprojet The activity instance
  * @param int $userid Optional user ID (0 for all users)
  * @param bool $nullifnone If true, return null grade for users with no submission
- * @param int|null $step Optional step number for per_step mode (4-8)
+ * @param int|null $step Optional step number for per_step mode (4-9)
  */
 function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = true, $step = null)
 {
@@ -790,7 +818,7 @@ function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = 
  *
  * @param stdClass $gestionprojet The activity instance
  * @param mixed $grades Array of grades or 'reset'
- * @param int|null $step Step number for per_step mode (4-8), null for combined mode
+ * @param int|null $step Step number for per_step mode (4-9), null for combined mode
  * @param int|null $categoryid Grade category ID to assign the item to
  * @param int|null $sortorder Sort order within the category
  * @return int 0 if ok, error code otherwise
@@ -1029,6 +1057,14 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
                     $totalgrade += $carnet->grade;
                     $count++;
                 }
+                $fast = $DB->get_record('gestionprojet_fast', [
+                    'gestionprojetid' => $gestionprojet->id,
+                    'userid' => $member->id
+                ]);
+                if ($fast && $fast->grade !== null && (!isset($gestionprojet->enable_step9) || $gestionprojet->enable_step9)) {
+                    $totalgrade += $fast->grade;
+                    $count++;
+                }
 
                 if ($count > 0 && ($userid == 0 || $userid == $member->id)) {
                     $avggrade = $totalgrade / $count;
@@ -1090,6 +1126,15 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
         ]);
         if ($carnet && $carnet->grade !== null && (!isset($gestionprojet->enable_step8) || $gestionprojet->enable_step8)) {
             $totalgrade += $carnet->grade;
+            $count++;
+        }
+        $fast = $DB->get_record('gestionprojet_fast', [
+            'gestionprojetid' => $gestionprojet->id,
+            'groupid' => $group->id,
+            'userid' => 0
+        ]);
+        if ($fast && $fast->grade !== null && (!isset($gestionprojet->enable_step9) || $gestionprojet->enable_step9)) {
+            $totalgrade += $fast->grade;
             $count++;
         }
 
@@ -1181,8 +1226,8 @@ function gestionprojet_get_navigation_links($gestionprojet, $cmid, $current_step
 function gestionprojet_render_step_dashboard($gestionprojet, $step, $context, $cmid) {
     global $OUTPUT, $PAGE;
 
-    // Only show dashboard for student submission steps (4-8).
-    if ($step < 4 || $step > 8) {
+    // Only show dashboard for student submission steps (4-9).
+    if ($step < 4 || $step > 9) {
         return '';
     }
 
@@ -1450,7 +1495,19 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
 
     require_once($CFG->dirroot . '/mod/gestionprojet/classes/output/icon.php');
 
-    $order = [1, 3, 2, 7, 4, 5, 8, 6];
+    // Tabs ordering depends on the context:
+    //   - 'consignes': teacher-provided documents — phases [1, 3, 2, 4, 9].
+    //   - 'correction': teacher correction models — phases [7, 4, 9, 5, 8, 6]
+    //                   (matches gestionprojet_get_graded_steps_order pedagogical sequence).
+    //   - 'grading': student submissions to grade — same order as 'correction'.
+    //   - 'model' (legacy) and other: full ordering with all 9 steps.
+    if ($context === 'consignes') {
+        $order = [1, 3, 2, 4, 9];
+    } else if ($context === 'correction' || $context === 'grading') {
+        $order = [7, 4, 9, 5, 8, 6];
+    } else {
+        $order = [1, 3, 2, 7, 4, 9, 5, 8, 6];
+    }
     $tabs = [];
 
     foreach ($order as $stepnum) {
@@ -1460,16 +1517,27 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
 
         // Build the URL according to the destination context.
         $params = ['id' => $cmid, 'step' => $stepnum];
-        $isteacherstep = in_array($stepnum, [1, 2, 3], true);
-        $isstudentstep = in_array($stepnum, [4, 5, 6, 7, 8], true);
+        $isconsigneonlystep = in_array($stepnum, [1, 2, 3], true);
+        $iscorrectiononlystep = in_array($stepnum, [5, 6, 7, 8], true);
+        $isdualstep = in_array($stepnum, [4, 9], true);
+        $isstudentstep = in_array($stepnum, [4, 5, 6, 7, 8, 9], true);
 
         if ($context === 'grading' && $isstudentstep) {
             $url = (new \moodle_url('/mod/gestionprojet/grading.php', $params))->out(false);
-        } else if ($isteacherstep) {
-            // Teacher pages always go to view.php?step=N (no mode).
+        } else if ($context === 'consignes') {
+            // Consigne tabs: 1/2/3 use bare URL, 4/9 add mode=provided.
+            if ($isdualstep) {
+                $params['mode'] = 'provided';
+            }
+            $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
+        } else if ($context === 'correction') {
+            // Correction tabs always add mode=teacher.
+            $params['mode'] = 'teacher';
+            $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
+        } else if ($isconsigneonlystep) {
             $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
         } else {
-            // Student steps in non-grading context: go to teacher correction model page.
+            // Legacy 'model' context for student/dual steps.
             $params['mode'] = 'teacher';
             $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
         }
@@ -1491,4 +1559,56 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
         'icon_home' => \mod_gestionprojet\output\icon::render('home', 'sm', 'inherit'),
         'homelabel' => get_string('home', 'gestionprojet'),
     ];
+}
+
+/**
+ * Serialize a FAST data_json structure into a human/LLM-readable hierarchical text.
+ *
+ * @param string|null $datajson JSON string from gestionprojet_fast(_teacher).data_json
+ * @return string Multiline text representation, or empty string if no data
+ */
+function gestionprojet_fast_to_text($datajson) {
+    if (empty($datajson)) {
+        return '';
+    }
+    $data = json_decode($datajson, true);
+    if (!is_array($data) || empty($data['fonctions'])) {
+        return '';
+    }
+
+    $lines = [];
+    if (!empty($data['fonctionsPrincipales'])) {
+        $fps = array_map(function($fp) {
+            return $fp['description'] ?? '';
+        }, $data['fonctionsPrincipales']);
+        $fps = array_filter($fps);
+        if (!empty($fps)) {
+            $lines[] = 'Fonction principale : ' . implode(' / ', $fps);
+            $lines[] = '';
+        }
+    }
+
+    foreach ($data['fonctions'] as $idx => $ft) {
+        $ftnum = $idx + 1;
+        $ftdesc = $ft['description'] ?? '';
+        $lines[] = "FT{$ftnum} — {$ftdesc}";
+        $sous = $ft['sousFonctions'] ?? [];
+        if (!empty($sous)) {
+            $count = count($sous);
+            foreach ($sous as $sfidx => $sf) {
+                $branch = ($sfidx === $count - 1) ? '└─' : '├─';
+                $sfdesc = $sf['description'] ?? '';
+                $sfsol = $sf['solution'] ?? '';
+                $lines[] = "  {$branch} FT{$ftnum}.".($sfidx + 1)." {$sfdesc}";
+                if (!empty($sfsol)) {
+                    $vert = ($sfidx === $count - 1) ? '   ' : '  │';
+                    $lines[] = "  {$vert}  Solution : {$sfsol}";
+                }
+            }
+        } else if (!empty($ft['solution'])) {
+            $lines[] = '  Solution : ' . $ft['solution'];
+        }
+    }
+
+    return implode("\n", $lines);
 }

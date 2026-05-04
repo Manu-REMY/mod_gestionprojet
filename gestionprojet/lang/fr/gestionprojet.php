@@ -45,7 +45,7 @@ $string['step3'] = 'Planification';
 $string['step4'] = 'Cahier des Charges';
 $string['step5'] = 'Fiche Essai';
 $string['step6'] = 'Rapport de Projet';
-$string['step7'] = 'Expression du Besoin (Élève)';
+$string['step7'] = 'Expression du besoin';
 
 $string['step1_desc'] = 'Définir le cadre du projet (enseignant)';
 $string['step2_desc'] = 'Diagramme Bête à Corne (enseignant)';
@@ -53,7 +53,7 @@ $string['step3_desc'] = 'Planning et timeline (enseignant)';
 $string['step4_desc'] = 'Diagramme des interacteurs (élèves)';
 $string['step5_desc'] = 'Tests et validation (élèves)';
 $string['step6_desc'] = 'Rapport final (élèves)';
-$string['step7_desc'] = 'Diagramme Bête à Corne (élèves)';
+$string['step7_desc'] = 'Diagramme Bête à Corne';
 $string['step8'] = 'Carnet de bord';
 $string['step8_desc'] = 'Journal de bord du projet (élèves)';
 
@@ -536,7 +536,7 @@ $string['error:invalidstep'] = 'Numéro d\'étape invalide';
 $string['step4_title'] = 'Cahier des charges';
 $string['step5_title'] = 'Fiche d\'essai';
 $string['step6_title'] = 'Rapport de projet';
-$string['step7_title'] = 'Expression du besoin (élève)';
+$string['step7_title'] = 'Expression du besoin';
 $string['step8_title'] = 'Carnet de bord';
 
 // Rapport de log IA
@@ -795,3 +795,43 @@ $string['step4_provided_badge'] = 'Fourni';
 $string['step4_produit_label'] = 'Produit';
 $string['step4_milieu_label'] = 'Milieu';
 $string['step4_interacteurs_label'] = 'Interacteurs';
+
+// Étape 9 : Diagramme FAST.
+$string['step9'] = 'Diagramme FAST';
+$string['step9_desc'] = 'Traduire les fonctions de service en solutions techniques.';
+$string['enable_step9'] = 'Activer l\'étape 9 (Diagramme FAST)';
+$string['step9_provided'] = 'Fournir un diagramme FAST aux élèves';
+$string['step9_provided_desc'] = 'Si coché, les élèves voient le FAST de l\'enseignant comme point de départ.';
+
+// UI FAST.
+$string['fast:diagram_title'] = 'Diagramme FAST';
+$string['fast:diagram_subtitle'] = 'Du besoin à la solution technique';
+$string['fast:populate_from_cdcf'] = 'Pré-remplir depuis le CDCF';
+$string['fast:start_empty'] = 'Commencer vierge';
+$string['fast:add_function'] = 'Ajouter une fonction technique';
+$string['fast:add_subfunction'] = 'Ajouter une sous-fonction';
+$string['fast:split'] = 'Scinder';
+$string['fast:remove'] = 'Supprimer';
+$string['fast:no_cdcf_data'] = 'Aucune fonction de service définie dans le cahier des charges.';
+$string['fast:ft_description_placeholder'] = 'Description de la fonction technique...';
+$string['fast:sf_description_placeholder'] = 'Description de la sous-fonction...';
+$string['fast:solution_placeholder'] = 'Décrivez la solution technique...';
+$string['fast:placeholder'] = 'Diagramme FAST';
+$string['fast:ai_instructions_label'] = 'Consignes pour le correcteur IA';
+$string['fast:ai_instructions_help'] = 'Guidez le correcteur IA sur les critères d\'évaluation.';
+$string['fast:no_data_to_evaluate'] = 'Aucune donnée FAST à évaluer.';
+$string['fast:fp_label'] = 'Fonction principale (lecture seule, issue du CDCF)';
+$string['fast:fp_help'] = 'La fonction principale provient du cahier des charges fonctionnel et ne peut pas être modifiée ici.';
+
+// Séparation consigne / modèle de correction (v2.4.0).
+$string['consigne'] = 'Consigne';
+$string['consignes'] = 'Consignes';
+$string['consigne_desc'] = 'Document fourni à l\'élève comme référence de départ.';
+$string['gantt_row_consignes'] = 'Consignes (documents fournis par l\'enseignant)';
+$string['step4_provided_desc'] = 'Définissez les éléments du cahier des charges que vous souhaitez fournir à vos élèves comme point de départ.';
+$string['step9_provided_desc'] = 'Définissez le diagramme FAST que vous souhaitez fournir à vos élèves comme point de départ.';
+$string['privacy:metadata:gestionprojet_fast'] = 'Productions élèves de diagrammes FAST.';
+$string['privacy:metadata:gestionprojet_fast:userid'] = 'ID utilisateur (mode individuel).';
+$string['privacy:metadata:gestionprojet_fast:data_json'] = 'Données du diagramme FAST (JSON : FP, FT, sous-FT, ST).';
+$string['privacy:metadata:gestionprojet_fast:status'] = 'Statut de soumission (0=brouillon, 1=soumis).';
+$string['privacy:metadata:gestionprojet_fast:timesubmitted'] = 'Date de soumission.';

@@ -15,7 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Step 4 Teacher Correction Model: Functional Specifications
+ * Step 4 Teacher Consigne (Provided Document): Functional Specifications
+ *
+ * This page lets the teacher fill in the CDCF consigne (produit, milieu, fp,
+ * interacteurs) that will be displayed read-only to students. It does NOT
+ * contain AI instructions, submission dates, deadline dates, or a student
+ * dashboard — those belong to the correction model page (step4_teacher.php).
  *
  * @package    mod_gestionprojet
  * @copyright  2026 Emmanuel REMY
@@ -27,14 +32,11 @@ defined('MOODLE_INTERNAL') || die();
 use mod_gestionprojet\output\icon;
 
 // Page setup.
-$PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'teacher']);
-$PAGE->set_title(get_string('step4', 'gestionprojet') . ' - ' . get_string('correction_models', 'gestionprojet'));
+$PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'provided']);
+$PAGE->set_title(get_string('step4', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
 
-// Default AI instructions for CdCF (Functional Specifications).
-$defaultaiinstructions = get_string('ai_instructions_default_step4', 'gestionprojet');
-
-// Get or create teacher model.
-$model = $DB->get_record('gestionprojet_cdcf_teacher', ['gestionprojetid' => $gestionprojet->id]);
+// Get or create the provided consigne record.
+$model = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
 if (!$model) {
     $model = new stdClass();
     $model->gestionprojetid = $gestionprojet->id;
@@ -42,10 +44,9 @@ if (!$model) {
     $model->milieu = '';
     $model->fp = '';
     $model->interacteurs_data = '';
-    $model->ai_instructions = $defaultaiinstructions;
     $model->timecreated = time();
     $model->timemodified = time();
-    $model->id = $DB->insert_record('gestionprojet_cdcf_teacher', $model);
+    $model->id = $DB->insert_record('gestionprojet_cdcf_provided', $model);
 }
 
 // Parse interacteurs.
@@ -60,62 +61,29 @@ if (empty($interacteurs)) {
     ];
 }
 
-// Mode detection: combined state of step4_provided and enable_step4.
-$step4provided = isset($gestionprojet->step4_provided) ? (int)$gestionprojet->step4_provided : 0;
-$step4studentenabled = isset($gestionprojet->enable_step4) ? (int)$gestionprojet->enable_step4 : 1;
-
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
-    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, 'correction')
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, 'consignes')
 );
-
-// Contextual notice based on the combined state of step4_provided and enable_step4.
-$noticekey = null;
-if ($step4provided === 1 && $step4studentenabled === 0) {
-    $noticekey = 'step4_provided_notice_teacher';
-} else if ($step4provided === 1 && $step4studentenabled === 1) {
-    $noticekey = 'step4_hybrid_notice_teacher';
-}
-if ($noticekey !== null) {
-    echo html_writer::div(
-        get_string($noticekey, 'gestionprojet'),
-        'gp-provided-notice'
-    );
-}
 
 require_once(__DIR__ . '/teacher_model_styles.php');
 
-// Get navigation for teacher steps.
+// Get navigation for teacher consigne steps (reuse teacher step navigation order).
 $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 4);
-?>
-
-<?php
-// Render teacher dashboard for this step.
-echo gestionprojet_render_step_dashboard($gestionprojet, 4, $context, $cm->id);
 ?>
 
 <div class="teacher-model-container">
 
     <div class="teacher-model-header">
-        <h2><?php echo icon::render('clipboard-list', 'sm', 'purple'); ?> <?php echo get_string('step4', 'gestionprojet'); ?> - <?php echo get_string('correction_models', 'gestionprojet'); ?></h2>
-        <p><?php echo get_string('correction_models_hub_desc', 'gestionprojet'); ?></p>
+        <h2><?php echo icon::render('clipboard-list', 'sm', 'purple'); ?> <?php echo get_string('step4', 'gestionprojet'); ?> — <?php echo get_string('consigne', 'gestionprojet'); ?></h2>
+        <p><?php echo get_string('step4_provided_desc', 'gestionprojet'); ?></p>
     </div>
-
-    <?php if ($gestionprojet->ai_enabled): ?>
-        <div class="ai-status-indicator enabled">
-            <?php echo icon::render('check-circle', 'sm', 'green'); ?> <?php echo get_string('ai_evaluation_enabled', 'gestionprojet'); ?>
-            (<?php echo ucfirst($gestionprojet->ai_provider); ?>)
-        </div>
-    <?php else: ?>
-        <div class="ai-status-indicator disabled">
-            <?php echo icon::render('alert-triangle', 'sm', 'orange'); ?> <?php echo get_string('ai_evaluation_disabled_hint', 'gestionprojet'); ?>
-        </div>
-    <?php endif; ?>
 
     <form id="teacherModelForm">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
         <input type="hidden" name="step" value="4">
+        <input type="hidden" name="mode" value="provided">
 
         <div class="model-form-section">
             <h3><?php echo icon::render('clipboard-list', 'sm', 'purple'); ?> <?php echo get_string('step4', 'gestionprojet'); ?></h3>
@@ -144,20 +112,6 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 4, $context, $cm->id);
             <button type="button" class="btn-add" onclick="addInteractor()">+ <?php echo get_string('add_interactor', 'gestionprojet'); ?></button>
         </div>
 
-        <?php
-        $step = 4;
-        require_once(__DIR__ . '/teacher_dates_section.php');
-        ?>
-
-        <div class="ai-instructions-section">
-            <h3><?php echo icon::render('bot', 'sm', 'purple'); ?> <?php echo get_string('ai_instructions', 'gestionprojet'); ?></h3>
-            <textarea id="ai_instructions" name="ai_instructions"
-                      placeholder="<?php echo get_string('ai_instructions_placeholder', 'gestionprojet'); ?>"><?php echo s($model->ai_instructions ?? ''); ?></textarea>
-            <p class="ai-instructions-help">
-                <?php echo get_string('ai_instructions_help', 'gestionprojet'); ?>
-            </p>
-        </div>
-
         <div class="save-section">
             <button type="button" class="btn-save" id="saveButton">
                 <?php echo icon::render('save', 'sm', 'inherit'); ?> <?php echo get_string('save', 'gestionprojet'); ?>
@@ -168,7 +122,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 4, $context, $cm->id);
         <!-- Step navigation -->
         <div class="step-navigation">
             <?php if ($stepnav['prev']): ?>
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['prev'], 'mode' => 'teacher']); ?>" class="btn-nav btn-prev">
+            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['prev'], 'mode' => 'provided']); ?>" class="btn-nav btn-prev">
                 <?php echo icon::render('chevron-left', 'sm', 'inherit'); ?> <?php echo get_string('previous', 'gestionprojet'); ?>
             </a>
             <?php else: ?>
@@ -176,11 +130,11 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 4, $context, $cm->id);
             <?php endif; ?>
 
             <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>" class="btn-nav btn-hub">
-                <?php echo get_string('correction_models', 'gestionprojet'); ?>
+                <?php echo get_string('consigne', 'gestionprojet'); ?>
             </a>
 
             <?php if ($stepnav['next']): ?>
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['next'], 'mode' => 'teacher']); ?>" class="btn-nav btn-next">
+            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnav['next'], 'mode' => 'provided']); ?>" class="btn-nav btn-next">
                 <?php echo get_string('next', 'gestionprojet'); ?> <?php echo icon::render('chevron-right', 'sm', 'inherit'); ?>
             </a>
             <?php else: ?>
@@ -287,7 +241,7 @@ function renderInteractors() {
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
                 removeBtn.className = 'btn-remove';
-                removeBtn.textContent = '\u2715';
+                removeBtn.textContent = '✕';
                 removeBtn.onclick = () => {
                     if (fc.criteres.length > 1) {
                         interacteurs[iIndex].fcs[fcIndex].criteres.splice(cIndex, 1);
@@ -355,32 +309,28 @@ function addInteractor() {
             var cmid = <?php echo $cm->id; ?>;
             var autosaveInterval = <?php echo ($gestionprojet->autosave_interval ?? 30) * 1000; ?>;
 
-            // Custom serialization for step 4 teacher model
+            // Custom serialization for step 4 provided consigne (no ai_instructions, no dates).
             var serializeData = function() {
-                var dates = getDateValues();
                 return {
                     produit: document.getElementById('produit').value,
                     milieu: document.getElementById('milieu').value,
                     fp: document.getElementById('fp').value,
-                    interacteurs_data: JSON.stringify(interacteurs),
-                    ai_instructions: document.getElementById('ai_instructions').value,
-                    submission_date: dates.submission_date,
-                    deadline_date: dates.deadline_date
+                    interacteurs_data: JSON.stringify(interacteurs)
                 };
             };
 
-            // Initialize Autosave for teacher mode
+            // Initialize Autosave for provided consigne mode.
             Autosave.init({
                 cmid: cmid,
                 step: 4,
                 groupid: 0,
-                mode: 'teacher',
+                mode: 'provided',
                 interval: autosaveInterval,
                 formSelector: '#teacherModelForm',
                 serialize: serializeData
             });
 
-            // Manual save button with redirect to hub
+            // Manual save button with redirect to hub.
             document.getElementById('saveButton').addEventListener('click', function() {
                 var originalOnSave = Autosave.onSave;
                 Autosave.onSave = function(response) {

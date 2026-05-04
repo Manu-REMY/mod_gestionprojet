@@ -47,7 +47,7 @@ if (!$model) {
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
-    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 7, 'model')
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 7, 'correction')
 );
 require_once(__DIR__ . '/teacher_model_styles.php');
 

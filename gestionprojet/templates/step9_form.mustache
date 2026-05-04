@@ -1,0 +1,55 @@
+{{!
+    @template mod_gestionprojet/step9_form
+
+    Form + diagram container for step 9 (FAST).
+
+    Context variables:
+    * cmid - course module id
+    * sesskey - Moodle session key
+    * isteacher - true if teacher view
+    * datajson - JSON-encoded FAST data (escaped)
+    * aiinstructions - AI evaluator instructions text (teacher only, escaped)
+    * canpopulatecdcf - whether the populate-from-CDCF button is shown
+    * isprovided - whether step9_provided is enabled
+    * mode - 'teacher' or 'student'
+    * submitted - whether the student already submitted
+
+    Example context (json):
+    { "cmid": 42, "sesskey": "abc", "isteacher": true, "datajson": "{}",
+      "aiinstructions": "", "canpopulatecdcf": true, "isprovided": false,
+      "mode": "teacher" }
+}}
+<div class="path-mod-gestionprojet path-mod-gestionprojet-fast" data-cmid="{{cmid}}" data-mode="{{mode}}" data-sesskey="{{sesskey}}">
+
+    <div class="fast-toolbar mb-3">
+        {{#canpopulatecdcf}}
+            <button type="button" class="btn btn-outline-primary" data-action="populate-cdcf">
+                {{#str}}fast:populate_from_cdcf, mod_gestionprojet{{/str}}
+            </button>
+        {{/canpopulatecdcf}}
+    </div>
+
+    <div class="fast-form" id="fast-form-{{cmid}}"></div>
+
+    <div class="fast-diagram-card card mt-4">
+        <div class="card-header">
+            <strong>{{#str}}fast:diagram_title, mod_gestionprojet{{/str}}</strong>
+            <div class="text-muted small">{{#str}}fast:diagram_subtitle, mod_gestionprojet{{/str}}</div>
+        </div>
+        <div class="card-body">
+            <div class="fast-diagram" id="fast-diagram-{{cmid}}"></div>
+        </div>
+    </div>
+
+    {{#isteacher}}
+    <div class="fast-ai-instructions mt-4">
+        <label for="fast-ai-{{cmid}}" class="font-weight-bold">
+            {{#str}}fast:ai_instructions_label, mod_gestionprojet{{/str}}
+        </label>
+        <textarea id="fast-ai-{{cmid}}" name="ai_instructions" rows="6" class="form-control">{{aiinstructions}}</textarea>
+        <small class="form-text text-muted">{{#str}}fast:ai_instructions_help, mod_gestionprojet{{/str}}</small>
+    </div>
+    {{/isteacher}}
+
+    <input type="hidden" id="fast-data-{{cmid}}" name="data_json" value="{{datajson}}">
+</div>
