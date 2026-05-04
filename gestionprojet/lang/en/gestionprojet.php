@@ -284,6 +284,17 @@ $string['no_student_steps_enabled'] = 'No student steps are enabled for this act
 $string['ai_instructions'] = 'AI Correction Instructions';
 $string['ai_instructions_help'] = 'Provide specific instructions to guide automatic AI evaluation. For example: grading criteria, key points, mandatory or bonus elements.';
 $string['ai_instructions_placeholder'] = 'E.g.: Check for the presence of 3 key elements. Award bonus points if student mentions concrete examples. Penalize off-topic answers...';
+$string['ai_instructions_btn_default'] = 'Default template';
+$string['ai_instructions_btn_generate'] = 'Generate from model';
+$string['ai_instructions_btn_generating'] = 'Generating…';
+$string['ai_instructions_tooltip_empty'] = 'Fill in the correction model first';
+$string['ai_instructions_tooltip_disabled'] = 'AI is disabled in the activity settings';
+$string['ai_instructions_confirm_replace'] = 'Replace the current instructions?';
+$string['ai_instructions_error_generic'] = 'Generation failed. Please retry.';
+$string['ai_instructions_error_disabled'] = 'AI is disabled in the activity settings.';
+$string['ai_instructions_error_no_provider'] = 'No AI provider is configured.';
+$string['ai_instructions_error_model_empty'] = 'Fill in the correction model first.';
+$string['ai_instructions_success'] = 'Instructions generated successfully.';
 
 // Phase 3.5: Submission dates and timeline
 $string['submission_dates'] = 'Submission Dates';
@@ -651,6 +662,32 @@ Analysis table: A quick table checking the 3 pillars (Need, Functions, Criteria)
 
 Improvement advice: Explain how to transform a solution into a function if the student made a mistake. Be encouraging.';
 
+$string['ai_instructions_default_step5'] = 'Role: You are an experienced technology teacher in middle school.
+
+Context for this step: You are grading an experiment sheet. The student describes an experimental protocol aimed at validating a service function from the functional specification (objective, steps, materials, results, conclusion).
+
+Attention points:
+- The objective is explicit and tied to a service function.
+- The protocol is detailed, sequential and reproducible.
+- Materials and safety precautions are listed.
+- Results are presented clearly.
+- The conclusion answers the initial objective.
+
+Tone: Be benevolent, value efforts, propose concrete avenues for improvement.';
+
+$string['ai_instructions_default_step6'] = 'Role: You are an experienced technology teacher in middle school.
+
+Context for this step: You are grading a project report (full synthesis: need, considered solutions, justified choice, implementation, difficulties, validation, assessment, perspectives).
+
+Attention points:
+- The need and constraints are clearly presented.
+- Solutions are analysed and the chosen one is justified.
+- The implementation is described accurately.
+- Encountered difficulties are mentioned.
+- The assessment is reflective (what worked, what could be improved).
+
+Tone: Be benevolent, value efforts, propose concrete avenues for improvement.';
+
 $string['ai_instructions_default_step7'] = 'Role: You are an experienced technology teacher at a middle school.
 
 Objective: Correct a needs expression diagram (Horn Diagram or Octopus type) completed by a 9th grade student.
@@ -670,6 +707,31 @@ Precision of formulation: The overall function must be precise. Avoid vague form
 Pedagogy: Do not give the raw correction. If an answer is wrong, ask a guiding question so the student finds the error (e.g., "Does the object really act on the user or on the object it manipulates?").
 
 Tone: Encouraging, clear and appropriate for a 14-15 year old level.';
+
+$string['ai_instructions_default_step8'] = 'Role: You are an experienced technology teacher in middle school.
+
+Context for this step: You are grading a logbook — chronological tracking of sessions and tasks performed by the student throughout the project.
+
+Attention points:
+- Sessions are regularly documented (no large gaps).
+- Tasks are described understandably.
+- Progress is coherent and realistic.
+- Remarks show reflection on the work (not just a description).
+
+Tone: Be benevolent, value efforts, propose concrete avenues for improvement.';
+
+$string['ai_instructions_default_step9'] = 'Role: You are an experienced technology teacher in middle school.
+
+Context for this step: You are grading a FAST diagram. The student translates service functions from the functional specification into technical functions (TF), then into technical solutions (TS), with coherent SF -> TF -> TS structure.
+
+Attention points:
+- Technical functions (TF) cover the service functions from the spec.
+- TFs are correctly formulated (verb + complement).
+- Sub-functions, when used, are judicious.
+- Proposed technical solutions (TS) are concrete and suited to the TFs.
+- The hierarchy is coherent: from "why" to "how".
+
+Tone: Be benevolent, value efforts, propose concrete avenues for improvement.';
 
 $string['logbook_model_desc'] = 'Define here a sample logbook expected from students. The AI will use this model to evaluate student submissions.';
 $string['logbook_status_header'] = 'Status';
