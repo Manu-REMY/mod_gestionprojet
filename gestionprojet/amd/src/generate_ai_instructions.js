@@ -111,16 +111,21 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     }
                 }
                 refreshGenerateState();
-                $container.closest('form').on('input change', refreshGenerateState);
+                var formEventNs = 'input.aiGen' + cfg.step + ' change.aiGen' + cfg.step;
+                $container.closest('form').off(formEventNs).on(formEventNs, refreshGenerateState);
 
                 $btnGenerate.on('click', function() {
+                    var $btn = $(this);
+                    // Disable immediately to prevent rapid double-clicks during the confirm prompt.
+                    $btn.prop('disabled', true);
+
                     if ($textarea.val().trim() !== '' && !window.confirm(strings.confirmReplace)) {
+                        refreshGenerateState();
                         return;
                     }
 
-                    var $btn = $(this);
                     var originalLabel = $btn.text();
-                    $btn.prop('disabled', true).text(strings.btnGenerating);
+                    $btn.text(strings.btnGenerating);
 
                     $.ajax({
                         url:  M.cfg.wwwroot + '/mod/gestionprojet/ajax/generate_ai_instructions.php',
