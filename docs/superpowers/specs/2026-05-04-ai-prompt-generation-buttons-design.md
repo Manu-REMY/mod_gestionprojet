@@ -187,14 +187,10 @@ require_capability('mod/gestionprojet:configureteacherpages', $context);
 6. Instancier le provider : `ai_evaluator::get_provider($aiconfig->provider, $apikey)` (méthode statique existante).
 7. Appeler `$builder->build_meta_prompt($step, $tmpmodel)` → `['system', 'user']`.
 8. Appeler `$provider->evaluate($system, $user, ai_evaluator::get_model_for_provider($aiconfig->provider), $maxtokens=1500)`. Capture exception → `ai_failed`.
-9. Le provider retourne un tableau structuré (cf. `evaluate()` du base_provider). Récupérer le **contenu textuel brut** de la réponse (pas le `parse_response` qui attend du JSON d'évaluation) → cela impose un point d'attention : voir §14.
+9. Le provider retourne `['content' => 'texte brut', 'prompt_tokens' => N, 'completion_tokens' => M]`. Lire `$response['content']` directement.
 10. Retourner ce texte comme `instructions`.
 
-**Point d'attention §6.4 étape 9** : le `base_provider::evaluate()` actuel appelle `parse_response()` qui parse du JSON d'évaluation élève. Pour le méta-prompt, on veut du texte libre. Deux options à trancher en implémentation :
-- **(i)** Ajouter une méthode `base_provider::generate_text(string $system, string $user)` qui appelle l'API mais retourne le texte brut sans parsing JSON.
-- **(ii)** Demander à l'IA de renvoyer du JSON `{"instructions": "..."}` et utiliser le pipeline existant.
-
-Option (i) est plus propre et recommandée. À acter dans le plan d'implémentation.
+**Note : pas de nouvelle méthode `generate_text` nécessaire.** Le `parse_response()` de chaque provider concret retourne déjà le contenu textuel brut sous la clé `content`. Le parsing JSON spécifique à l'évaluation élève (note, critères, feedback) se fait *après*, dans `ai_response_parser::parse()`, appelé uniquement par `ai_evaluator`. Notre endpoint court-circuite ce parsing JSON et utilise directement le `content`.
 
 ## 7. Méta-prompt — `ai_prompt_builder::build_meta_prompt()`
 
