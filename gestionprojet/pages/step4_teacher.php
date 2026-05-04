@@ -84,6 +84,12 @@ if ($noticekey !== null) {
     );
 }
 
+echo $OUTPUT->heading(
+    get_string('step4', 'gestionprojet')
+    . ' <span class="gp-correction-badge">' . get_string('correction_model_badge', 'gestionprojet') . '</span>',
+    2
+);
+
 require_once(__DIR__ . '/teacher_model_styles.php');
 
 // Get navigation for teacher steps.
@@ -95,7 +101,7 @@ $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 4);
 echo gestionprojet_render_step_dashboard($gestionprojet, 4, $context, $cm->id);
 ?>
 
-<div class="teacher-model-container">
+<div class="teacher-model-container gp-correction">
 
     <div class="teacher-model-header">
         <h2><?php echo icon::render('clipboard-list', 'sm', 'purple'); ?> <?php echo get_string('step4', 'gestionprojet'); ?> - <?php echo get_string('correction_models', 'gestionprojet'); ?></h2>
