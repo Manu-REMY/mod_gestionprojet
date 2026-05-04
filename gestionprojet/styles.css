@@ -2692,6 +2692,19 @@
     padding: 20px;
 }
 
+/* Consigne pages: full-width, no decorative header. */
+.path-mod-gestionprojet .teacher-model-container.gp-consigne {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+.path-mod-gestionprojet .gp-consigne .teacher-model-header {
+    display: none;
+}
+.path-mod-gestionprojet-fast {
+    max-width: none;
+}
+
 /* Header */
 .path-mod-gestionprojet .teacher-model-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

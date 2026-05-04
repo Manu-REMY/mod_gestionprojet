@@ -66,6 +66,7 @@ echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, 'consignes')
 );
+echo $OUTPUT->heading(get_string('step4', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
 
 require_once(__DIR__ . '/teacher_model_styles.php');
 
@@ -73,12 +74,7 @@ require_once(__DIR__ . '/teacher_model_styles.php');
 $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 4);
 ?>
 
-<div class="teacher-model-container">
-
-    <div class="teacher-model-header">
-        <h2><?php echo icon::render('clipboard-list', 'sm', 'purple'); ?> <?php echo get_string('step4', 'gestionprojet'); ?> — <?php echo get_string('consigne', 'gestionprojet'); ?></h2>
-        <p><?php echo get_string('step4_provided_desc', 'gestionprojet'); ?></p>
-    </div>
+<div class="teacher-model-container gp-consigne">
 
     <form id="teacherModelForm">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
