@@ -2682,8 +2682,7 @@
 
 /* Dashboard and form container alignment */
 .path-mod-gestionprojet .gestionprojet-dashboard {
-    max-width: 1200px;
-    margin: 0 auto 20px auto;
+    margin: 0 0 20px 0;
 }
 
 .path-mod-gestionprojet .teacher-model-container {
@@ -2734,6 +2733,24 @@
 }
 .path-mod-gestionprojet .gp-correction-page .fast-diagram-card {
     border-left: 3px solid #f59e0b;
+}
+
+/* Correction model: align save / nav buttons with the amber identity. */
+.path-mod-gestionprojet .gp-correction .btn-save {
+    background: #f59e0b;
+}
+.path-mod-gestionprojet .gp-correction .btn-save:hover {
+    background: #d97706;
+}
+.path-mod-gestionprojet .gp-correction .btn-prev,
+.path-mod-gestionprojet .gp-correction .btn-next {
+    color: #b45309;
+    border-color: #f59e0b;
+}
+.path-mod-gestionprojet .gp-correction .btn-prev:hover,
+.path-mod-gestionprojet .gp-correction .btn-next:hover {
+    background: #f59e0b;
+    color: white;
 }
 
 /* Header */
