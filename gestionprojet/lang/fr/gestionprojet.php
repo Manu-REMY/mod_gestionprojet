@@ -771,6 +771,31 @@ $string['step4_add_critere'] = '+ Critère';
 $string['step4_add_fc'] = '+ Fonction Contrainte';
 $string['step4_product_fallback'] = 'Produit';
 
+// Step 4 - Norm-aligned editor (NF EN 16271).
+$string['step4_norm_intro'] = 'Le Cahier des Charges Fonctionnel décrit les fonctions que doit assurer le produit (FS) et les contraintes à respecter (C), en s\'appuyant sur l\'analyse des interacteurs.';
+$string['step4_interactors_title'] = 'Interacteurs';
+$string['step4_interactors_norm'] = 'Identifiez les éléments du milieu extérieur en interaction avec le produit.';
+$string['step4_interactor_placeholder'] = 'Nom de l\'interacteur';
+$string['step4_diagram_title'] = 'Diagramme pieuvre';
+$string['step4_fs_title'] = 'Fonctions de service (FS)';
+$string['step4_fs_norm'] = 'Une FS exprime une relation entre deux interacteurs (ou un interacteur et le produit). Précisez les critères et niveaux attendus.';
+$string['step4_fs_desc_placeholder'] = 'Décrire la fonction de service…';
+$string['step4_fs_desc_label'] = 'Description';
+$string['step4_fs_interactors_label'] = 'Interacteurs liés';
+$string['step4_add_fs'] = 'Ajouter une fonction de service';
+$string['step4_flex_none'] = 'Sans flexibilité';
+$string['step4_flex_f0'] = 'F0 — Impératif';
+$string['step4_flex_f1'] = 'F1 — Peu négociable';
+$string['step4_flex_f2'] = 'F2 — Négociable';
+$string['step4_flex_f3'] = 'F3 — Très négociable';
+$string['step4_none_option'] = '— Aucun —';
+$string['step4_contraintes_title'] = 'Contraintes (C)';
+$string['step4_contraintes_norm'] = 'Précisez les contraintes (réglementaires, techniques, économiques…) et leur justification. Liez-les éventuellement à une FS.';
+$string['step4_contrainte_placeholder'] = 'Décrire la contrainte…';
+$string['step4_justification_placeholder'] = 'Justification';
+$string['step4_no_fs_link'] = '— Sans lien à une FS —';
+$string['step4_add_contrainte'] = 'Ajouter une contrainte';
+
 // Step 5 - Page Fiche Essai (élève)
 $string['step5_page_title'] = 'FICHE ESSAI';
 $string['step5_page_subtitle'] = 'Démarche expérimentale - Technologie';

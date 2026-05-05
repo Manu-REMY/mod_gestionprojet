@@ -771,6 +771,31 @@ $string['step4_add_critere'] = '+ Criterion';
 $string['step4_add_fc'] = '+ Constraint Function';
 $string['step4_product_fallback'] = 'Product';
 
+// Step 4 - Norm-aligned editor (NF EN 16271).
+$string['step4_norm_intro'] = 'The functional specification document describes the service functions (FS) the product must provide and the constraints (C) it must respect, derived from the analysis of the interactors.';
+$string['step4_interactors_title'] = 'Interactors';
+$string['step4_interactors_norm'] = 'Identify the elements of the external environment that interact with the product.';
+$string['step4_interactor_placeholder'] = 'Interactor name';
+$string['step4_diagram_title'] = 'Octopus diagram';
+$string['step4_fs_title'] = 'Service functions (FS)';
+$string['step4_fs_norm'] = 'A service function expresses a relationship between two interactors (or one interactor and the product). Specify the expected criteria and levels.';
+$string['step4_fs_desc_placeholder'] = 'Describe the service function…';
+$string['step4_fs_desc_label'] = 'Description';
+$string['step4_fs_interactors_label'] = 'Linked interactors';
+$string['step4_add_fs'] = 'Add a service function';
+$string['step4_flex_none'] = 'No flexibility';
+$string['step4_flex_f0'] = 'F0 — Mandatory';
+$string['step4_flex_f1'] = 'F1 — Barely negotiable';
+$string['step4_flex_f2'] = 'F2 — Negotiable';
+$string['step4_flex_f3'] = 'F3 — Highly negotiable';
+$string['step4_none_option'] = '— None —';
+$string['step4_contraintes_title'] = 'Constraints (C)';
+$string['step4_contraintes_norm'] = 'List the constraints (regulatory, technical, economical…) and their justification. Optionally link a constraint to an FS.';
+$string['step4_contrainte_placeholder'] = 'Describe the constraint…';
+$string['step4_justification_placeholder'] = 'Justification';
+$string['step4_no_fs_link'] = '— No link to a FS —';
+$string['step4_add_contrainte'] = 'Add a constraint';
+
 // Step 5 - Test Sheet page (student)
 $string['step5_page_title'] = 'TEST SHEET';
 $string['step5_page_subtitle'] = 'Experimental approach - Technology';
