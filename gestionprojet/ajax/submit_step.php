@@ -50,6 +50,7 @@ $steptables = [
     6 => 'gestionprojet_rapport',
     7 => 'gestionprojet_besoin_eleve',
     8 => 'gestionprojet_carnet',
+    9 => 'gestionprojet_fast',
 ];
 
 if (!isset($steptables[$step])) {
