@@ -252,6 +252,9 @@ class ai_evaluator {
             // Log the error.
             debugging('AI evaluation failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
 
+            // Notify teachers (best-effort, errors swallowed inside).
+            self::notify_teachers_of_failure($evaluation, $e->getMessage());
+
             return false;
         }
     }
