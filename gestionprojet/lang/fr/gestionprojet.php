@@ -847,6 +847,18 @@ $string['gantt_toggle_error'] = 'Erreur lors de la mise à jour';
 $string['gantt_progress_summary'] = '{$a->configured}/{$a->total} phases configurées';
 $string['gantt_ungraded_summary'] = '{$a} soumission(s) à corriger';
 $string['gantt_ungraded_summary_zero'] = 'Aucune soumission en attente';
+$string['gantt_student_row_consult'] = 'Consultation';
+$string['gantt_student_row_work'] = 'Mes activités';
+$string['gantt_student_summary'] = '{$a->done}/{$a->total} étapes complétées';
+$string['gantt_student_summary_all_done'] = 'Toutes les étapes sont complétées';
+$string['gantt_student_status_pending'] = 'En attente';
+$string['gantt_student_status_todo'] = 'À compléter';
+$string['gantt_student_status_done'] = 'Complété';
+$string['gantt_student_cell_consult'] = 'Consulter';
+$string['gantt_student_cell_work'] = 'Travailler';
+$string['gantt_student_cell_view_brief'] = 'Voir la consigne';
+$string['gantt_student_provided_badge'] = 'Consigne fournie';
+$string['gantt_student_grade_label'] = 'Note : {$a}';
 
 // Phase 3: CDCF — strings du mode fourni / hybride.
 $string['step4_provided_block_title'] = 'Document fourni par l\'enseignant';
