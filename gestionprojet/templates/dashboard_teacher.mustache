@@ -57,9 +57,13 @@
 }}
 
 <div class="gestionprojet-dashboard card mb-4" id="dashboard-step-{{step}}" data-step="{{step}}" data-cmid="{{cmid}}">
-    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <div class="card-header gestionprojet-dashboard-toggle collapsed"
+         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer;"
+         data-bs-toggle="collapse" data-bs-target="#dashboard-body-{{step}}"
+         role="button" aria-expanded="false" aria-controls="dashboard-body-{{step}}">
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
+                <i class="fa fa-chevron-down gestionprojet-dashboard-chevron mr-2"></i>
                 <i class="fa fa-chart-bar mr-2"></i>
                 {{#str}}dashboard:title, gestionprojet{{/str}}
             </h5>
@@ -67,7 +71,7 @@
         </div>
     </div>
 
-    <div class="card-body">
+    <div class="card-body collapse" id="dashboard-body-{{step}}">
         {{! Section 1: Submission Progress }}
         <div class="dashboard-section mb-4">
             <h6 class="text-muted mb-3">

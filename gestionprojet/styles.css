@@ -2685,6 +2685,14 @@
     margin: 0 0 20px 0;
 }
 
+/* Collapsible header: chevron rotates when expanded. */
+.path-mod-gestionprojet .gestionprojet-dashboard-toggle .gestionprojet-dashboard-chevron {
+    transition: transform 0.2s ease;
+}
+.path-mod-gestionprojet .gestionprojet-dashboard-toggle.collapsed .gestionprojet-dashboard-chevron {
+    transform: rotate(-90deg);
+}
+
 .path-mod-gestionprojet .teacher-model-container {
     max-width: 900px;
     margin: 0 auto;
@@ -5366,6 +5374,12 @@
     background: #f9fafb;
     border-radius: 8px;
     padding: 12px;
+}
+.path-mod-gestionprojet .gp-cdcf-diagram > svg {
+    width: auto;
+    height: 500px;
+    max-width: 100%;
+    max-height: 500px;
 }
 .path-mod-gestionprojet .gp-cdcf-readonly input,
 .path-mod-gestionprojet .gp-cdcf-readonly textarea,

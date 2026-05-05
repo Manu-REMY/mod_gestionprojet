@@ -65,8 +65,8 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
 
         function render() {
             container.replaceChildren(
-                renderInteractors(),
                 renderDiagram(),
+                renderInteractors(),
                 renderFs(),
                 renderContraintes()
             );

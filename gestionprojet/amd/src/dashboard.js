@@ -224,6 +224,16 @@ function($, Ajax, Notification, Str, Templates) {
             var buttonStep = button.data('step');
             refreshSummary(buttonCmid, buttonStep, button);
         });
+
+        // Resize chart when the collapsible body becomes visible.
+        // Chart.js renders 0x0 inside a hidden Bootstrap collapse; resize on shown.
+        $('#dashboard-body-' + step)
+            .off('shown.bs.collapse.dashboard-' + step)
+            .on('shown.bs.collapse.dashboard-' + step, function() {
+                if (charts[step]) {
+                    charts[step].resize();
+                }
+            });
     };
 
     return {
