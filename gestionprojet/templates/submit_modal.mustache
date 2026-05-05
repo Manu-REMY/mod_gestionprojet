@@ -1,0 +1,36 @@
+{{!
+    @template mod_gestionprojet/submit_modal
+
+    Confirmation modal body for student work submission.
+
+    Context variables:
+        isgroup    - bool: true if in group submission mode
+        aienabled  - bool: true if AI evaluation is enabled for this instance
+
+    Example context (json):
+    {
+        "isgroup": false,
+        "aienabled": true
+    }
+}}
+<div class="submit-confirm-modal">
+    <p>{{#str}}submit_modal_intro, mod_gestionprojet{{/str}}</p>
+    <ul>
+        <li>{{#str}}submit_modal_lock, mod_gestionprojet{{/str}}</li>
+        {{#aienabled}}
+        <li>{{#str}}submit_modal_ai, mod_gestionprojet{{/str}}</li>
+        {{/aienabled}}
+        <li>{{#str}}submit_modal_irreversible, mod_gestionprojet{{/str}}</li>
+    </ul>
+    {{#isgroup}}
+    <div class="alert alert-warning" role="alert">
+        {{#str}}submit_modal_group_warning, mod_gestionprojet{{/str}}
+    </div>
+    {{/isgroup}}
+    <div class="form-check mt-3">
+        <input class="form-check-input" type="checkbox" id="submit-confirm-checkbox">
+        <label class="form-check-label" for="submit-confirm-checkbox">
+            {{#str}}submit_modal_checkbox, mod_gestionprojet{{/str}}
+        </label>
+    </div>
+</div>
