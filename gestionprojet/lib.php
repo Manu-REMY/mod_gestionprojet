@@ -1612,3 +1612,26 @@ function gestionprojet_fast_to_text($datajson) {
 
     return implode("\n", $lines);
 }
+
+/**
+ * Returns the column definitions for the Gantt-style home view.
+ *
+ * Each entry: ['stepnum' => N, 'mergedwith' => M|null].
+ * 'mergedwith' indicates that the column also represents another step's row 2/3 cells.
+ *
+ * Order matches the visual layout: 1 · 3 · 2(+7) · 4 · 9 · 5 · 8 · 6.
+ *
+ * @return array
+ */
+function gestionprojet_get_gantt_column_defs(): array {
+    return [
+        ['stepnum' => 1, 'mergedwith' => null],
+        ['stepnum' => 3, 'mergedwith' => null],
+        ['stepnum' => 2, 'mergedwith' => 7],
+        ['stepnum' => 4, 'mergedwith' => null],
+        ['stepnum' => 9, 'mergedwith' => null],
+        ['stepnum' => 5, 'mergedwith' => null],
+        ['stepnum' => 8, 'mergedwith' => null],
+        ['stepnum' => 6, 'mergedwith' => null],
+    ];
+}
