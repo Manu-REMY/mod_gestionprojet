@@ -881,6 +881,8 @@ $string['step9_desc'] = 'Translate functional requirements into technical soluti
 $string['enable_step9'] = 'Enable step 9 (FAST diagram)';
 $string['step9_provided'] = 'Provide a FAST diagram to students';
 $string['step9_provided_desc'] = 'When checked, students see the teacher\'s FAST diagram as a starting point.';
+$string['step9_desc_title'] = 'What is a FAST diagram?';
+$string['step9_desc_text'] = 'The FAST diagram (Function Analysis System Technique) breaks down each service function from the requirements specification into technical functions (TF) then into technical solutions (TS). It bridges the expressed need and the implementation choices.';
 
 // FAST UI.
 $string['fast:diagram_title'] = 'FAST diagram';
