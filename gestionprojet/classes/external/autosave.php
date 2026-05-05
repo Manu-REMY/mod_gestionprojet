@@ -105,7 +105,7 @@ class autosave extends external_api {
                 $teachertables = [
                     4 => [
                         'table' => 'gestionprojet_cdcf_teacher',
-                        'fields' => ['produit', 'milieu', 'fp', 'interacteurs_data', 'ai_instructions',
+                        'fields' => ['interacteurs_data', 'ai_instructions',
                                      'submission_date', 'deadline_date'],
                     ],
                     5 => [
@@ -287,7 +287,7 @@ class autosave extends external_api {
                         throw new \moodle_exception('submissionlocked', 'gestionprojet');
                     }
 
-                    $validfields = ['produit', 'milieu', 'fp', 'interacteurs_data'];
+                    $validfields = ['interacteurs_data'];
 
                     foreach ($formdata as $key => $value) {
                         if ($key !== 'id' && in_array($key, $validfields)) {

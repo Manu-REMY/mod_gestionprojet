@@ -26,6 +26,7 @@ define('AJAX_SCRIPT', true);
 
 require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../lib.php');
+require_once(__DIR__ . '/../classes/cdcf_helper.php');
 
 header('Content-Type: application/json');
 
@@ -46,35 +47,32 @@ $fonctionsprincipales = [];
 $fonctionsservice = [];
 
 if ($cdcfteacher) {
-    if (!empty($cdcfteacher->fp)) {
-        $fonctionsprincipales[] = ['id' => 1, 'description' => $cdcfteacher->fp];
+    // New CDCF schema: all data lives in interacteurs_data ({interactors, fonctionsService, contraintes}).
+    // The teacher's fonctions de service become FAST pre-fill candidates. The legacy "fp" text field has
+    // been removed; FS now play the role of fonctions principales for FAST seeding.
+    $cdcfdata = \mod_gestionprojet\cdcf_helper::decode($cdcfteacher->interacteurs_data ?? null);
+
+    // Build a map of interactor id -> name for FS labelling.
+    $interactornames = [];
+    foreach ($cdcfdata['interactors'] as $interacteur) {
+        $interactornames[(int)$interacteur['id']] = (string)$interacteur['name'];
     }
 
-    // interacteurs_data is a JSON array of interactors. Each interactor's "fcs" (or
-    // "fonctions") becomes a Service Function candidate for FAST pre-fill.
-    if (!empty($cdcfteacher->interacteurs_data)) {
-        $interacteurs = json_decode($cdcfteacher->interacteurs_data, true);
-        if (is_array($interacteurs)) {
-            $idcounter = 1;
-            foreach ($interacteurs as $interacteur) {
-                $intname = $interacteur['name'] ?? $interacteur['nom'] ?? '';
-                $fcs = $interacteur['fcs'] ?? $interacteur['fonctions'] ?? [];
-                if (is_array($fcs)) {
-                    foreach ($fcs as $fc) {
-                        $desc = is_string($fc)
-                            ? $fc
-                            : ($fc['value'] ?? $fc['description'] ?? $fc['name'] ?? $fc['nom'] ?? '');
-                        if (!empty($desc)) {
-                            $fonctionsservice[] = [
-                                'id' => $idcounter++,
-                                'description' => $desc,
-                                'interactor' => $intname,
-                            ];
-                        }
-                    }
-                }
-            }
+    foreach ($cdcfdata['fonctionsService'] as $idx => $fs) {
+        $description = (string)$fs['description'];
+        if ($description === '') {
+            continue;
         }
+        $fonctionsprincipales[] = [
+            'id' => $idx + 1,
+            'description' => $description,
+        ];
+        $intname1 = $interactornames[(int)($fs['interactor1Id'] ?? 0)] ?? '';
+        $fonctionsservice[] = [
+            'id' => $idx + 1,
+            'description' => $description,
+            'interactor' => $intname1,
+        ];
     }
 }
 

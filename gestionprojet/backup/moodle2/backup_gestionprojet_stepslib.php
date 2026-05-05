@@ -68,7 +68,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
 
         // Teacher correction models.
         $cdcfteacher = new backup_nested_element('cdcf_teacher', ['id'], [
-            'produit', 'milieu', 'fp', 'interacteurs_data', 'ai_instructions',
+            'interacteurs_data', 'ai_instructions',
             'submission_date', 'deadline_date', 'timecreated', 'timemodified',
         ]);
 
@@ -103,7 +103,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
 
         // Teacher-provided consignes (v2.4.0).
         $cdcfprovided = new backup_nested_element('cdcf_provided', ['id'], [
-            'produit', 'milieu', 'fp', 'interacteurs_data',
+            'interacteurs_data',
             'timecreated', 'timemodified',
         ]);
 
@@ -114,7 +114,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         // Student submission tables.
         $cdcfs = new backup_nested_element('cdcfs');
         $cdcf = new backup_nested_element('cdcf', ['id'], [
-            'groupid', 'userid', 'produit', 'milieu', 'fp', 'interacteurs_data',
+            'groupid', 'userid', 'interacteurs_data',
             'grade', 'feedback', 'status', 'timesubmitted', 'timecreated', 'timemodified',
         ]);
 

@@ -447,9 +447,6 @@ $string['privacy:metadata:timemodified'] = 'The time when the record was last mo
 
 // CDCF (Step 4)
 $string['privacy:metadata:gestionprojet_cdcf:userid'] = 'The ID of the user who submitted the requirements specification';
-$string['privacy:metadata:gestionprojet_cdcf:produit'] = 'The product defined by the student';
-$string['privacy:metadata:gestionprojet_cdcf:milieu'] = 'The environment of use defined by the student';
-$string['privacy:metadata:gestionprojet_cdcf:fp'] = 'The main function defined by the student';
 $string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'JSON data containing stakeholders, constraint functions and criteria';
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'The time when the work was submitted';
@@ -750,26 +747,36 @@ $string['step4_page_title'] = 'FUNCTIONAL REQUIREMENTS SPECIFICATION';
 $string['step4_page_subtitle'] = 'Functional analysis - Technology';
 $string['step4_desc_title'] = 'What is a Functional Requirements Specification?';
 $string['step4_desc_text'] = 'The Functional Requirements Specification (FRS) defines what the product must do without specifying how.';
-$string['step4_fp_label'] = 'MF (Main Function)';
-$string['step4_fp_desc'] = 'Connects the product to the first 2 elements of the external environment';
-$string['step4_fc_label'] = 'CF (Constraint Function)';
-$string['step4_fc_desc'] = 'Connects the product to 1 element of the external environment';
-$string['step4_produit_placeholder'] = 'Product name';
-$string['step4_fp_placeholder'] = 'Describe the main function of the product...';
-$string['step4_milieu_placeholder'] = 'Environment of use';
 $string['step4_diagram_title'] = 'Stakeholder Diagram';
-$string['step4_interactors_section'] = 'Stakeholders and Constraint Functions';
-$string['step4_add_interactor'] = '+ Add a stakeholder';
-$string['step4_interactor_default'] = 'Stakeholder {$a}';
-$string['step4_interactor_name_placeholder'] = 'Stakeholder name';
-$string['step4_delete'] = 'Delete';
-$string['step4_fc_value_placeholder'] = 'Constraint function description';
+$string['step4_add_interactor'] = 'Add a stakeholder';
 $string['step4_critere_placeholder'] = 'Appreciation criterion';
 $string['step4_niveau_placeholder'] = 'Level';
-$string['step4_unite_placeholder'] = 'Unit';
-$string['step4_add_critere'] = '+ Criterion';
-$string['step4_add_fc'] = '+ Constraint Function';
-$string['step4_product_fallback'] = 'Product';
+$string['step4_add_critere'] = 'Add a criterion';
+
+// Step 4 - Norm-aligned editor (NF EN 16271).
+$string['step4_norm_intro'] = 'The functional specification document describes the service functions (FS) the product must provide and the constraints (C) it must respect, derived from the analysis of the interactors.';
+$string['step4_interactors_title'] = 'Interactors';
+$string['step4_interactors_norm'] = 'Identify the elements of the external environment that interact with the product.';
+$string['step4_interactor_placeholder'] = 'Interactor name';
+$string['step4_diagram_title'] = 'Octopus diagram';
+$string['step4_fs_title'] = 'Service functions (FS)';
+$string['step4_fs_norm'] = 'A service function expresses a relationship between two interactors (or one interactor and the product). Specify the expected criteria and levels.';
+$string['step4_fs_desc_placeholder'] = 'Describe the service function…';
+$string['step4_fs_desc_label'] = 'Description';
+$string['step4_fs_interactors_label'] = 'Linked interactors';
+$string['step4_add_fs'] = 'Add a service function';
+$string['step4_flex_none'] = 'No flexibility';
+$string['step4_flex_f0'] = 'F0 — Mandatory';
+$string['step4_flex_f1'] = 'F1 — Barely negotiable';
+$string['step4_flex_f2'] = 'F2 — Negotiable';
+$string['step4_flex_f3'] = 'F3 — Highly negotiable';
+$string['step4_none_option'] = '— None —';
+$string['step4_contraintes_title'] = 'Constraints (C)';
+$string['step4_contraintes_norm'] = 'List the constraints (regulatory, technical, economical…) and their justification. Optionally link a constraint to an FS.';
+$string['step4_contrainte_placeholder'] = 'Describe the constraint…';
+$string['step4_justification_placeholder'] = 'Justification';
+$string['step4_no_fs_link'] = '— No link to a FS —';
+$string['step4_add_contrainte'] = 'Add a constraint';
 
 // Step 5 - Test Sheet page (student)
 $string['step5_page_title'] = 'TEST SHEET';
@@ -866,8 +873,6 @@ $string['step4_provided_notice_student'] = 'Your teacher has provided the follow
 $string['step4_provided_notice_teacher'] = 'Provided mode: this content will be displayed read-only to students. The "AI Instructions" field is never shown to students.';
 $string['step4_hybrid_notice_teacher'] = 'Hybrid mode: this content will be displayed to students as a reference document AND used as a correction model for their own production. The "AI Instructions" field is never shown to students.';
 $string['step4_provided_badge'] = 'Provided';
-$string['step4_produit_label'] = 'Product';
-$string['step4_milieu_label'] = 'Environment';
 $string['step4_interacteurs_label'] = 'Interactors';
 
 // Step 9: FAST diagram.
@@ -876,6 +881,8 @@ $string['step9_desc'] = 'Translate functional requirements into technical soluti
 $string['enable_step9'] = 'Enable step 9 (FAST diagram)';
 $string['step9_provided'] = 'Provide a FAST diagram to students';
 $string['step9_provided_desc'] = 'When checked, students see the teacher\'s FAST diagram as a starting point.';
+$string['step9_desc_title'] = 'What is a FAST diagram?';
+$string['step9_desc_text'] = 'The FAST diagram (Function Analysis System Technique) breaks down each service function from the requirements specification into technical functions (TF) then into technical solutions (TS). It bridges the expressed need and the implementation choices.';
 
 // FAST UI.
 $string['fast:diagram_title'] = 'FAST diagram';

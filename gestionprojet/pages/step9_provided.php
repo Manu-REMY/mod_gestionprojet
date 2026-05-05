@@ -73,6 +73,12 @@ echo $OUTPUT->render_from_template(
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, $canedit ? 'consignes' : 'student')
 );
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
+
+echo '<div class="alert alert-info">';
+echo '<h4>' . get_string('step9_desc_title', 'gestionprojet') . '</h4>';
+echo '<p>' . get_string('step9_desc_text', 'gestionprojet') . '</p>';
+echo '</div>';
+
 if ($readonly) {
     // Wrap the form in a read-only container; CSS disables pointer events on descendants.
     echo '<div class="gp-fast-readonly">';
