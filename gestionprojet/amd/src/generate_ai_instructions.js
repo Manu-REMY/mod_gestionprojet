@@ -130,10 +130,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     return defaultIsCdcfEmpty(readJsonField(cfg.modelDataField));
                 };
             } else {
+                // Legacy callbacks: bind `this` to cfg so internal references
+                // such as `this.getModelData()` keep resolving.
                 getModelData = typeof cfg.getModelData === 'function'
-                    ? cfg.getModelData : function() { return {}; };
+                    ? cfg.getModelData.bind(cfg) : function() { return {}; };
                 isModelEmpty = typeof cfg.isModelEmpty === 'function'
-                    ? cfg.isModelEmpty : function() { return true; };
+                    ? cfg.isModelEmpty.bind(cfg) : function() { return true; };
             }
 
             fetchStrings().then(function(strings) {
