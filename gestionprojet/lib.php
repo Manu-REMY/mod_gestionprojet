@@ -1635,3 +1635,51 @@ function gestionprojet_get_gantt_column_defs(): array {
         ['stepnum' => 6, 'mergedwith' => null],
     ];
 }
+
+/**
+ * Builds a single cell for the student Gantt view.
+ *
+ * Pure function — accepts pre-resolved data, returns the array consumed by the
+ * home_gantt_student Mustache template.
+ *
+ * Expected $input keys when isfilled is true:
+ * - role: 'consult' or 'work'
+ * - isenabled: bool
+ * - iscomplete: bool
+ * - name: string
+ * - url: string
+ * - isprovided: bool (only for role='consult', columns 4 and 9)
+ * - grade: float|null (only for role='work')
+ *
+ * @param array $input
+ * @return array
+ */
+function gestionprojet_build_student_gantt_cell(array $input): array {
+    if (empty($input['isfilled'])) {
+        return ['isfilled' => false];
+    }
+
+    $cell = [
+        'isfilled' => true,
+        'isenabled' => (bool)($input['isenabled'] ?? false),
+        'iscomplete' => (bool)($input['iscomplete'] ?? false),
+        'name' => $input['name'] ?? '',
+        'url' => $input['url'] ?? '#',
+    ];
+
+    if (($input['role'] ?? '') === 'consult') {
+        $cell['isprovided'] = (bool)($input['isprovided'] ?? false);
+    }
+
+    if (($input['role'] ?? '') === 'work') {
+        $grade = $input['grade'] ?? null;
+        if ($grade !== null) {
+            $cell['hasgrade'] = true;
+            $cell['gradeformatted'] = number_format((float)$grade, 1) . ' / 20';
+        } else {
+            $cell['hasgrade'] = false;
+        }
+    }
+
+    return $cell;
+}
