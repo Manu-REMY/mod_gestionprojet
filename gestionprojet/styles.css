@@ -5083,6 +5083,23 @@
    Step 9 — FAST diagram
    ============================================================ */
 
+/* Read-only display for students viewing a provided FAST brief. */
+.path-mod-gestionprojet .gp-fast-readonly .fast-toolbar,
+.path-mod-gestionprojet .gp-fast-readonly button,
+.path-mod-gestionprojet .gp-fast-readonly [data-action] {
+    display: none !important;
+}
+.path-mod-gestionprojet .gp-fast-readonly input,
+.path-mod-gestionprojet .gp-fast-readonly textarea {
+    pointer-events: none;
+    background: #f9fafb;
+    border-color: #e5e7eb;
+    color: #1f2937;
+}
+.path-mod-gestionprojet .gp-fast-readonly .fast-form {
+    pointer-events: none;
+}
+
 .path-mod-gestionprojet-fast .fast-toolbar {
     display: flex;
     gap: 0.5rem;

@@ -31,6 +31,10 @@ defined('MOODLE_INTERNAL') || die();
 
 use mod_gestionprojet\output\icon;
 
+// Read-only when the user lacks teacher-edit capability — students see the brief but cannot edit it.
+$canedit = has_capability('mod/gestionprojet:configureteacherpages', $context);
+$readonly = !$canedit;
+
 // Page setup.
 $PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'provided']);
 $PAGE->set_title(get_string('step4', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
@@ -62,16 +66,18 @@ if (empty($interacteurs)) {
 }
 
 echo $OUTPUT->header();
+
+// Tabs: teacher gets consignes navigation (1, 3, 2, 4, 9); student gets work navigation (7, 4, 9, 5, 8, 6).
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
-    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, 'consignes')
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, $canedit ? 'consignes' : 'student')
 );
 echo $OUTPUT->heading(get_string('step4', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
 
 require_once(__DIR__ . '/teacher_model_styles.php');
 
-// Get navigation for teacher consigne steps (reuse teacher step navigation order).
-$stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 4);
+// Get navigation for teacher consigne steps (reuse teacher step navigation order, only for editors).
+$stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 4) : ['prev' => null, 'next' => null];
 ?>
 
 <div class="teacher-model-container gp-consigne">
@@ -105,9 +111,12 @@ $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 4);
         <div class="model-form-section">
             <h3><?php echo icon::render('settings', 'sm', 'gray'); ?> <?php echo get_string('interacteurs', 'gestionprojet'); ?></h3>
             <div id="interactorsContainer"></div>
+            <?php if (!$readonly): ?>
             <button type="button" class="btn-add" onclick="addInteractor()">+ <?php echo get_string('add_interactor', 'gestionprojet'); ?></button>
+            <?php endif; ?>
         </div>
 
+        <?php if (!$readonly): ?>
         <div class="save-section">
             <button type="button" class="btn-save" id="saveButton">
                 <?php echo icon::render('save', 'sm', 'inherit'); ?> <?php echo get_string('save', 'gestionprojet'); ?>
@@ -137,6 +146,7 @@ $stepnav = gestionprojet_get_teacher_step_navigation($gestionprojet, 4);
             <div class="nav-spacer"></div>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
     </form>
 
 </div>
@@ -302,6 +312,10 @@ function addInteractor() {
         $(document).ready(function() {
             renderInteractors();
 
+            <?php if ($readonly): ?>
+            // Read-only display for students: disable every input/textarea/button inside the form.
+            $('#teacherModelForm').find('input, textarea, select, button').prop('disabled', true).attr('readonly', 'readonly');
+            <?php else: ?>
             var cmid = <?php echo $cm->id; ?>;
             var autosaveInterval = <?php echo ($gestionprojet->autosave_interval ?? 30) * 1000; ?>;
 
@@ -337,6 +351,7 @@ function addInteractor() {
                 };
                 Autosave.save();
             });
+            <?php endif; ?>
         });
     });
 })();
