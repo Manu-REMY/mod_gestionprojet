@@ -626,4 +626,70 @@ class ai_evaluator {
 
         return $info;
     }
+
+    /**
+     * Notify all teachers of the course about a failed AI evaluation.
+     *
+     * Sends a Moodle message (popup + email per teacher prefs) to every user
+     * holding the mod/gestionprojet:grade capability in this module's context.
+     * Failure to send notifications is logged via debugging() and does not
+     * propagate (this method is best-effort).
+     *
+     * @param object $evaluation Evaluation record (after being flagged 'failed')
+     * @param string $errorMessage The exception message
+     * @return void
+     */
+    private static function notify_teachers_of_failure(object $evaluation, string $errorMessage): void {
+        $cm = get_coursemodule_from_instance('gestionprojet', $evaluation->gestionprojetid, 0, false, IGNORE_MISSING);
+        if (!$cm) {
+            return;
+        }
+        $context = \context_module::instance($cm->id);
+
+        $teachers = get_users_by_capability(
+            $context,
+            'mod/gestionprojet:grade',
+            'u.id, u.firstname, u.lastname, u.email, u.lang, u.maildisplay, u.mailformat, u.deleted, u.suspended, u.confirmed, u.auth, u.username'
+        );
+        if (empty($teachers)) {
+            return;
+        }
+
+        $url = (new \moodle_url('/mod/gestionprojet/grading.php', ['id' => $cm->id]))->out(false);
+        $activityname = format_string($cm->name);
+
+        foreach ($teachers as $teacher) {
+            try {
+                $message = new \core\message\message();
+                $message->component = 'mod_gestionprojet';
+                $message->name = 'ai_evaluation_failed';
+                $message->userfrom = \core_user::get_noreply_user();
+                $message->userto = $teacher;
+                $message->subject = get_string(
+                    'ai_failure_notif_subject',
+                    'gestionprojet',
+                    (object)['activityname' => $activityname]
+                );
+                $message->fullmessage = get_string(
+                    'ai_failure_notif_body',
+                    'gestionprojet',
+                    (object)[
+                        'step' => $evaluation->step,
+                        'error' => $errorMessage,
+                        'url' => $url,
+                    ]
+                );
+                $message->fullmessageformat = FORMAT_PLAIN;
+                $message->fullmessagehtml = '';
+                $message->smallmessage = get_string('ai_failure_notif_small', 'gestionprojet');
+                $message->notification = 1;
+                $message->contexturl = $url;
+                $message->contexturlname = get_string('grading', 'gestionprojet');
+
+                \message_send($message);
+            } catch (\Exception $e) {
+                debugging('Failed to notify teacher of AI failure: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
+    }
 }
