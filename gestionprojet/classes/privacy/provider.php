@@ -60,9 +60,6 @@ class provider implements
             [
                 'userid' => 'privacy:metadata:gestionprojet_cdcf:userid',
                 'groupid' => 'privacy:metadata:groupid',
-                'produit' => 'privacy:metadata:gestionprojet_cdcf:produit',
-                'milieu' => 'privacy:metadata:gestionprojet_cdcf:milieu',
-                'fp' => 'privacy:metadata:gestionprojet_cdcf:fp',
                 'interacteurs_data' => 'privacy:metadata:gestionprojet_cdcf:interacteurs_data',
                 'grade' => 'privacy:metadata:grade',
                 'feedback' => 'privacy:metadata:feedback',

@@ -18,7 +18,18 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/mod/gestionprojet/classes/cdcf_helper.php');
+
 use mod_gestionprojet\output\icon;
+
+// Helper: a CDCF record is "started" if it has at least one fonction de service or contrainte.
+$cdcfstarted = function($rec) {
+    if (!$rec || empty($rec->interacteurs_data)) {
+        return false;
+    }
+    $data = \mod_gestionprojet\cdcf_helper::decode($rec->interacteurs_data);
+    return !empty($data['fonctionsService']) || !empty($data['contraintes']);
+};
 
 // Check if teacher pages are complete.
 $teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id);
@@ -86,14 +97,14 @@ if ($isteacher) {
         }
         return false;
     };
-    $teachermodelfilled = function($stepnum) use ($teachermodels, $gestionprojet) {
+    $teachermodelfilled = function($stepnum) use ($teachermodels, $gestionprojet, $cdcfstarted) {
         $rec = $teachermodels[$stepnum] ?? null;
         if (!$rec) {
             return false;
         }
-        // For step 4 in provided mode, completion is based on `produit` rather than `ai_instructions`.
+        // For step 4 in provided mode, completion is based on the CDCF JSON rather than `ai_instructions`.
         if ($stepnum === 4 && (int)$gestionprojet->enable_step4 === 2) {
-            return !empty($rec->produit);
+            return $cdcfstarted($rec);
         }
         return !empty($rec->ai_instructions);
     };
@@ -148,7 +159,7 @@ if ($isteacher) {
             $providedval = isset($gestionprojet->step4_provided) ? (int)$gestionprojet->step4_provided : 0;
             $providedenabled = ($providedval === 1);
             $providedrec = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
-            $providedcomplete = $providedrec && !empty($providedrec->produit);
+            $providedcomplete = $cdcfstarted($providedrec);
             if ($providedenabled) {
                 $totalconfigtargets++;
                 if ($providedcomplete) {
@@ -328,9 +339,9 @@ if ($isteacher) {
             };
 
             // Helper: provided-brief completion (steps 4 and 9).
-            $providedcomplete = function($stepnum) use ($cdcfprovided, $fastprovided) {
+            $providedcomplete = function($stepnum) use ($cdcfprovided, $fastprovided, $cdcfstarted) {
                 if ($stepnum === 4) {
-                    return $cdcfprovided && !empty($cdcfprovided->produit);
+                    return $cdcfstarted($cdcfprovided);
                 }
                 if ($stepnum === 9) {
                     if (!$fastprovided || empty($fastprovided->data_json)) {
@@ -343,11 +354,11 @@ if ($isteacher) {
             };
 
             // Helper: student-work completion + grade for one step.
-            $workdata = function($stepnum) use ($cdcf, $essai, $rapport, $besoineleve, $carnet, $fast) {
+            $workdata = function($stepnum) use ($cdcf, $essai, $rapport, $besoineleve, $carnet, $fast, $cdcfstarted) {
                 $rec = null;
                 $complete = false;
                 switch ($stepnum) {
-                    case 4: $rec = $cdcf; $complete = $rec && !empty($rec->produit); break;
+                    case 4: $rec = $cdcf; $complete = $cdcfstarted($rec); break;
                     case 5: $rec = $essai; $complete = $rec && !empty($rec->objectif); break;
                     case 6: $rec = $rapport; $complete = $rec && !empty($rec->besoins); break;
                     case 7: $rec = $besoineleve; $complete = $rec && !empty($rec->aqui); break;

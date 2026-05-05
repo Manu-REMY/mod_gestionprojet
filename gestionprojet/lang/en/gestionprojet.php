@@ -447,9 +447,6 @@ $string['privacy:metadata:timemodified'] = 'The time when the record was last mo
 
 // CDCF (Step 4)
 $string['privacy:metadata:gestionprojet_cdcf:userid'] = 'The ID of the user who submitted the requirements specification';
-$string['privacy:metadata:gestionprojet_cdcf:produit'] = 'The product defined by the student';
-$string['privacy:metadata:gestionprojet_cdcf:milieu'] = 'The environment of use defined by the student';
-$string['privacy:metadata:gestionprojet_cdcf:fp'] = 'The main function defined by the student';
 $string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'JSON data containing stakeholders, constraint functions and criteria';
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'The time when the work was submitted';
