@@ -33,34 +33,7 @@ define(['jquery', 'core/ajax', 'mod_gestionprojet/cdcf', 'mod_gestionprojet/auto
 function($, Ajax, Cdcf, Autosave) {
     'use strict';
 
-    function bootProvidedReadOnly() {
-        var providedRoot = document.getElementById('cdcfProvidedRoot');
-        if (!providedRoot) { return; }
-        var raw = providedRoot.getAttribute('data-cdcf');
-        if (!raw) { return; }
-        var data;
-        try {
-            data = JSON.parse(raw);
-        } catch (e) {
-            return;
-        }
-        Cdcf.init({
-            container: providedRoot,
-            initialData: data,
-            lang: window._gpCdcfLang || {},
-            projetNom: providedRoot.getAttribute('data-projet') || '',
-            isLocked: true,
-            onChange: function() {},
-        });
-    }
-
     function init(cfg) {
-        // Cache lang strings on window so the read-only mount (which has no cfg
-        // of its own) can reuse them.
-        window._gpCdcfLang = cfg.lang;
-
-        bootProvidedReadOnly();
-
         var dataField = document.getElementById('cdcfDataField');
         var root = document.getElementById('cdcfRoot');
         if (!root || !dataField) {
