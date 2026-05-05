@@ -14,14 +14,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Submission handling for student step pages.
+ * Submission handling for student step pages — modal confirmation + AJAX submit.
  *
  * @module     mod_gestionprojet/submission
  * @copyright  2026 Emmanuel REMY
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['core/ajax', 'core/str'], function(Ajax, Str) {
+define([
+    'jquery',
+    'core/ajax',
+    'core/modal_factory',
+    'core/modal_events',
+    'core/templates',
+    'core/notification'
+], function($, Ajax, ModalFactory, ModalEvents, Templates, Notification) {
 
     var config = {};
 
@@ -32,45 +39,57 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
      */
     function init(cfg) {
         config = cfg || {};
-
-        var submitBtn = document.getElementById('submitStepBtn');
-        if (!submitBtn) {
+        var btn = document.getElementById('submitStepBtn');
+        if (!btn) {
             return;
         }
-
-        submitBtn.addEventListener('click', function() {
-            submitStep(this);
-        });
+        btn.addEventListener('click', openModal);
     }
 
     /**
-     * Handle step submission.
-     *
-     * @param {HTMLElement} btn The submit button.
+     * Open the confirmation modal.
      */
-    function submitStep(btn) {
-        var confirmMsg = config.strings.confirm_submit || 'Are you sure?';
-        if (!confirm(confirmMsg)) {
-            return;
-        }
+    function openModal() {
+        Templates.render('mod_gestionprojet/submit_modal', {
+            isgroup: !!config.isGroup,
+            aienabled: !!config.aiEnabled
+        }).then(function(html) {
+            return ModalFactory.create({
+                type: ModalFactory.types.SAVE_CANCEL,
+                title: config.strings.modal_title,
+                body: html,
+                large: false
+            });
+        }).then(function(modal) {
+            modal.setSaveButtonText(config.strings.confirm_submit_btn);
 
-        // Save original children for restoration.
-        var originalNodes = [];
-        var i;
-        for (i = 0; i < btn.childNodes.length; i++) {
-            originalNodes.push(btn.childNodes[i].cloneNode(true));
-        }
+            // Disable save button until checkbox is checked.
+            modal.getRoot().on('change', '#submit-confirm-checkbox', function() {
+                modal.getRoot().find('[data-action="save"]').prop('disabled', !this.checked);
+            });
 
-        // Set loading state.
-        btn.disabled = true;
-        while (btn.firstChild) {
-            btn.removeChild(btn.firstChild);
-        }
-        var spinner = document.createElement('span');
-        spinner.className = 'spinner-border spinner-border-sm';
-        spinner.setAttribute('role', 'status');
-        btn.appendChild(spinner);
-        btn.appendChild(document.createTextNode(' ' + (config.strings.submitting || 'Submitting...')));
+            modal.getRoot().on(ModalEvents.shown, function() {
+                modal.getRoot().find('[data-action="save"]').prop('disabled', true);
+            });
+
+            modal.getRoot().on(ModalEvents.save, function(e) {
+                e.preventDefault();
+                doSubmit(modal);
+            });
+
+            modal.show();
+            return modal;
+        }).catch(Notification.exception);
+    }
+
+    /**
+     * Perform the AJAX submission.
+     *
+     * @param {Object} modal The modal instance.
+     */
+    function doSubmit(modal) {
+        var saveBtn = modal.getRoot().find('[data-action="save"]');
+        saveBtn.prop('disabled', true).text(config.strings.submitting);
 
         Ajax.call([{
             methodname: 'mod_gestionprojet_submit_step',
@@ -83,31 +102,13 @@ define(['core/ajax', 'core/str'], function(Ajax, Str) {
             if (data.success) {
                 window.location.reload();
             } else {
-                restoreButton(btn, originalNodes);
-                var errorMsg = config.strings.submission_error || 'Error';
-                alert(data.message || errorMsg);
+                modal.hide();
+                window.alert(data.message || config.strings.submission_error);
             }
         }).fail(function() {
-            restoreButton(btn, originalNodes);
-            alert(config.strings.submission_error || 'Error');
+            modal.hide();
+            window.alert(config.strings.submission_error);
         });
-    }
-
-    /**
-     * Restore a button from loading state.
-     *
-     * @param {HTMLElement} btn The button element.
-     * @param {Array} originalNodes The saved child nodes.
-     */
-    function restoreButton(btn, originalNodes) {
-        btn.disabled = false;
-        while (btn.firstChild) {
-            btn.removeChild(btn.firstChild);
-        }
-        var i;
-        for (i = 0; i < originalNodes.length; i++) {
-            btn.appendChild(originalNodes[i]);
-        }
     }
 
     return {
