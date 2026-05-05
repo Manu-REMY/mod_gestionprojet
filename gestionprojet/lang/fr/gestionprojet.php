@@ -910,3 +910,19 @@ $string['privacy:metadata:gestionprojet_fast:userid'] = 'ID utilisateur (mode in
 $string['privacy:metadata:gestionprojet_fast:data_json'] = 'Données du diagramme FAST (JSON : FP, FT, sous-FT, ST).';
 $string['privacy:metadata:gestionprojet_fast:status'] = 'Statut de soumission (0=brouillon, 1=soumis).';
 $string['privacy:metadata:gestionprojet_fast:timesubmitted'] = 'Date de soumission.';
+
+// Modale soumission + déclenchement auto IA (v2.6.3).
+$string['submit_modal_title'] = 'Soumettre votre travail';
+$string['submit_modal_intro'] = 'Avant de soumettre, prends connaissance de ces conséquences :';
+$string['submit_modal_lock'] = 'Ton travail sera verrouillé — tu ne pourras plus le modifier.';
+$string['submit_modal_ai'] = 'La correction IA automatique démarrera immédiatement.';
+$string['submit_modal_irreversible'] = 'Seul ton professeur peut déverrouiller ta soumission.';
+$string['submit_modal_group_warning'] = 'Attention : cette action soumet le travail pour tout le groupe — préviens d\'abord tes coéquipiers.';
+$string['submit_modal_checkbox'] = 'J\'ai relu mon travail et je veux le soumettre définitivement.';
+$string['confirm_submit_btn'] = 'Soumettre définitivement';
+$string['ai_progress_pending'] = 'Évaluation IA en attente…';
+$string['ai_progress_failed_student'] = 'Évaluation IA indisponible. Ton professeur corrigera ton travail.';
+$string['messageprovider:ai_evaluation_failed'] = 'Notifications d\'échec d\'évaluation IA';
+$string['ai_failure_notif_subject'] = 'Échec de l\'évaluation IA dans {$a->activityname}';
+$string['ai_failure_notif_body'] = 'Une évaluation IA a échoué pour l\'étape {$a->step}. Erreur : {$a->error}. Vérifie la soumission ici : {$a->url}';
+$string['ai_failure_notif_small'] = 'Échec de l\'évaluation IA';
