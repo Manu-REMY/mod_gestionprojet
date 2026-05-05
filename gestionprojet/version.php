@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_gestionprojet';
-$plugin->version = 2026050506;  // YYYYMMDDXX format
+$plugin->version = 2026050601;  // YYYYMMDDXX format
 $plugin->requires = 2024100700; // Moodle 5.0+
 $plugin->maturity = MATURITY_BETA;
-$plugin->release = '2.6.4';
+$plugin->release = '2.7.0';
 $plugin->url = 'https://forge.apps.education.fr/moodle-ai-plugins/plugin-gestion-de-projet';
