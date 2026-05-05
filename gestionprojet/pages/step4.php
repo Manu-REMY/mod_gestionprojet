@@ -127,38 +127,12 @@ if (!$group) {
 
 
 
-<div class="step4-container">
-    <!-- Navigation -->
+<div class="step4-container gp-student">
     <?php
-    $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step4');
+    // Moodle-native heading + subtitle (replaces legacy colored banner).
+    echo $OUTPUT->heading(get_string('step4_page_title', 'gestionprojet'), 2);
     ?>
-    <div class="navigation-top">
-        <div style="display: flex; gap: 10px;">
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>"
-                class="nav-button nav-button-prev">
-                <span>🏠</span>
-                <span><?php echo get_string('home', 'gestionprojet'); ?></span>
-            </a>
-            <?php if ($nav_links['prev']): ?>
-                <a href="<?php echo $nav_links['prev']; ?>" class="nav-button nav-button-prev">
-                    <span>←</span>
-                    <span><?php echo get_string('previous', 'gestionprojet'); ?></span>
-                </a>
-            <?php endif; ?>
-        </div>
-        <?php if ($nav_links['next']): ?>
-            <a href="<?php echo $nav_links['next']; ?>" class="nav-button">
-                <span><?php echo get_string('next', 'gestionprojet'); ?></span>
-                <span>→</span>
-            </a>
-        <?php endif; ?>
-    </div>
-
-    <!-- Header -->
-    <div class="header-section">
-        <h2><?php echo get_string('step4_page_title', 'gestionprojet'); ?></h2>
-        <p><?php echo get_string('step4_page_subtitle', 'gestionprojet'); ?></p>
-    </div>
+    <p class="text-muted small"><?php echo get_string('step4_page_subtitle', 'gestionprojet'); ?></p>
 
     <!-- Group info -->
     <div class="group-info">
