@@ -54,6 +54,21 @@ $deadlineDate = $teacherModel->deadline_date ?? 0;
 $now = time();
 $isOverdue = ($deadlineDate > 0 && $now > $deadlineDate && !$isSubmitted);
 $isDueSoon = ($submissionDate > 0 && $now < $submissionDate && ($submissionDate - $now) < (3 * 24 * 60 * 60)); // 3 days
+
+// Derive group submission flag locally (variable not present in this shared file).
+$isGroupSubmission = !empty($gestionprojet->group_submission) && !empty($groupid);
+
+// Load pending AI evaluation if AI is enabled and submission was made.
+$pendingEval = null;
+if ($isSubmitted && !empty($submission) && !empty($gestionprojet->ai_enabled)
+        && in_array($step, [4, 5, 6, 7, 8, 9])) {
+    require_once(__DIR__ . '/../classes/ai_evaluator.php');
+    $pendingEval = \mod_gestionprojet\ai_evaluator::get_evaluation(
+        $gestionprojet->id,
+        $step,
+        $submission->id
+    );
+}
 ?>
 
 <?php if ($submissionEnabled): ?>
@@ -62,8 +77,11 @@ $isDueSoon = ($submissionDate > 0 && $now < $submissionDate && ($submissionDate 
 $PAGE->requires->js_call_amd('mod_gestionprojet/submission', 'init', [[
     'cmid' => $cm->id,
     'step' => $step,
+    'isGroup' => $isGroupSubmission,
+    'aiEnabled' => !empty($gestionprojet->ai_enabled),
     'strings' => [
-        'confirm_submit' => get_string('confirm_submit', 'gestionprojet'),
+        'modal_title' => get_string('submit_modal_title', 'gestionprojet'),
+        'confirm_submit_btn' => get_string('confirm_submit_btn', 'gestionprojet'),
         'submitting' => get_string('submitting', 'gestionprojet'),
         'submission_error' => get_string('submissionerror', 'gestionprojet'),
     ],
@@ -114,4 +132,27 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/submission', 'init', [[
         </div>
     </div>
 </div>
+
+<?php if ($isSubmitted && $pendingEval && in_array($pendingEval->status, ['pending', 'processing', 'failed'])): ?>
+<div id="ai-progress-banner" class="ai-progress-banner status-<?php echo s($pendingEval->status); ?>" data-status="<?php echo s($pendingEval->status); ?>">
+    <span class="ai-progress-icon"><?php echo icon::render('zap', 'sm', 'inherit'); ?></span>
+    <span class="ai-progress-label">
+        <?php echo get_string('ai_progress_' . $pendingEval->status . '_student', 'gestionprojet'); ?>
+    </span>
+</div>
+<?php
+if (in_array($pendingEval->status, ['pending', 'processing'])) {
+    $PAGE->requires->js_call_amd('mod_gestionprojet/student_ai_progress', 'init', [[
+        'evaluationid' => (int)$pendingEval->id,
+        'cmid' => (int)$cm->id,
+        'statusUrl' => (new moodle_url('/mod/gestionprojet/ajax/get_evaluation_status.php'))->out(false),
+        'strings' => [
+            'pending_student' => get_string('ai_progress_pending_student', 'gestionprojet'),
+            'processing_student' => get_string('ai_progress_processing_student', 'gestionprojet'),
+            'failed_student' => get_string('ai_progress_failed_student', 'gestionprojet'),
+        ],
+    ]]);
+}
+?>
+<?php endif; ?>
 <?php endif; ?>
