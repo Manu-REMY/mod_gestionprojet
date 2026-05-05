@@ -68,5 +68,11 @@ echo $OUTPUT->render_from_template(
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'student')
 );
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet'));
+echo html_writer::start_div('description');
+echo html_writer::tag('h3', get_string('step9_desc_title', 'gestionprojet'));
+echo html_writer::tag('p', get_string('step9_desc_text', 'gestionprojet'));
+echo html_writer::end_div();
+echo html_writer::start_div('gp-student');
 echo $OUTPUT->render_from_template('mod_gestionprojet/step9_form', $tplcontext);
+echo html_writer::end_div();
 echo $OUTPUT->footer();

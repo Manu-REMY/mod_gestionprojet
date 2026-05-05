@@ -881,6 +881,8 @@ $string['step9_desc'] = 'Traduire les fonctions de service en solutions techniqu
 $string['enable_step9'] = 'Activer l\'étape 9 (Diagramme FAST)';
 $string['step9_provided'] = 'Fournir un diagramme FAST aux élèves';
 $string['step9_provided_desc'] = 'Si coché, les élèves voient le FAST de l\'enseignant comme point de départ.';
+$string['step9_desc_title'] = 'Qu\'est-ce qu\'un diagramme FAST ?';
+$string['step9_desc_text'] = 'Le diagramme FAST (Function Analysis System Technique) décompose chaque fonction de service du CDCF en fonctions techniques (FT) puis en solutions techniques (ST). Il fait le lien entre le besoin exprimé et les choix de réalisation.';
 
 // UI FAST.
 $string['fast:diagram_title'] = 'Diagramme FAST';
