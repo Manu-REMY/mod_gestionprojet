@@ -1500,10 +1500,11 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
     //   - 'correction': teacher correction models — phases [7, 4, 9, 5, 8, 6]
     //                   (matches gestionprojet_get_graded_steps_order pedagogical sequence).
     //   - 'grading': student submissions to grade — same order as 'correction'.
+    //   - 'student': student work pages — phases [7, 4, 9, 5, 8, 6] with bare URLs.
     //   - 'model' (legacy) and other: full ordering with all 9 steps.
     if ($context === 'consignes') {
         $order = [1, 3, 2, 4, 9];
-    } else if ($context === 'correction' || $context === 'grading') {
+    } else if ($context === 'correction' || $context === 'grading' || $context === 'student') {
         $order = [7, 4, 9, 5, 8, 6];
     } else {
         $order = [1, 3, 2, 7, 4, 9, 5, 8, 6];
@@ -1533,6 +1534,9 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
         } else if ($context === 'correction') {
             // Correction tabs always add mode=teacher.
             $params['mode'] = 'teacher';
+            $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
+        } else if ($context === 'student') {
+            // Student work tabs: bare URLs to step pages 4..9 (and 7 via merged column).
             $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);
         } else if ($isconsigneonlystep) {
             $url = (new \moodle_url('/mod/gestionprojet/view.php', $params))->out(false);

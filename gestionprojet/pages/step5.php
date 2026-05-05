@@ -81,6 +81,12 @@ $canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted
 
 echo $OUTPUT->header();
 
+// Render student step navigation tabs.
+echo $OUTPUT->render_from_template(
+    'mod_gestionprojet/step_tabs',
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 5, 'student')
+);
+
 // Status display
 if ($isSubmitted) {
     echo $OUTPUT->notification(get_string('submitted_on', 'gestionprojet', userdate($submission->timesubmitted)), 'success');
