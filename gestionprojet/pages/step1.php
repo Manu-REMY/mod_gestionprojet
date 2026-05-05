@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Step 1: Project Description Sheet
@@ -283,87 +291,23 @@ echo $OUTPUT->render_from_template(
     </form>
 
     <div class="button-container">
-        <button type="button" class="btn-export btn-export-margin" onclick="exportToPDF()">
+        <button type="button" id="exportPdfBtn" class="btn-export btn-export-margin">
             📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
         </button>
     </div>
 </div>
 
 <?php
-// Ensure jQuery is loaded
-$PAGE->requires->jquery();
-?>
+$PAGE->requires->js_call_amd('mod_gestionprojet/step1', 'init', [[
+    'cmid' => (int)$cm->id,
+    'step' => 1,
+    'groupid' => 0,
+    'autosaveInterval' => (int)$gestionprojet->autosave_interval * 1000,
+    'isReadonly' => (bool)$readonly,
+    'strings' => [
+        'export_pdf_coming_soon' => get_string('step1_export_pdf_todo', 'gestionprojet'),
+    ],
+]]);
 
-
-<script>
-// Wait for jQuery to be loaded
-// Wait for RequireJS to be loaded
-(function waitRequire() {
-    if (typeof require === 'undefined') {
-        setTimeout(waitRequire, 50);
-        return;
-    }
-    
-    require(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
-        <?php if (!$readonly): ?>
-        var cmid = <?php echo $cm->id; ?>;
-        var step = 1;
-        var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-
-        // Custom serialization for step 1 (handling competences array)
-        var serializeData = function() {
-            var formData = {};
-            var form = document.getElementById('descriptionForm');
-
-            // Collect regular fields
-            form.querySelectorAll('input[type="text"], select, textarea').forEach(function(field) {
-                if (field.name && !field.name.includes('[]')) {
-                    formData[field.name] = field.value;
-                }
-            });
-
-            // Collect competences as array
-            var competences = [];
-            form.querySelectorAll('input[name="competences[]"]:checked').forEach(function(cb) {
-                competences.push(cb.value);
-            });
-            formData['competences'] = JSON.stringify(competences);
-
-            // Include lock state if present
-            // Lock state removed
-
-            
-            return formData;
-        };
-
-        Autosave.init({
-            cmid: cmid,
-            step: step,
-            groupid: 0,
-            interval: autosaveInterval,
-            formSelector: '#descriptionForm',
-            serialize: serializeData
-        });
-        <?php endif; ?>
-
-        // Lock form elements if readonly
-        <?php if ($readonly): ?>
-        $('#descriptionForm input, #descriptionForm select, #descriptionForm textarea').prop('disabled', true);
-        <?php endif; ?>
-    });
-})();
-
-
-// Export PDF functionality (to be implemented with TCPDF)
-function exportToPDF() {
-    alert('<?php echo addslashes_js(get_string('step1_export_pdf_todo', 'gestionprojet')); ?>');
-    // TODO: Implement server-side PDF generation
-    window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/export_pdf.php?id=<?php echo $cm->id; ?>&step=1';
-}
-
-// Custom handling for checkbox arrays
-</script>
-
-<?php
 echo $OUTPUT->footer();
 ?>

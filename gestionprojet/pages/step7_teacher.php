@@ -150,79 +150,16 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 7, $context, $cm->id);
     </form>
 </div>
 
-<script>
-(function waitRequire() {
-    if (typeof require === 'undefined') {
-        setTimeout(waitRequire, 50);
-        return;
-    }
-
-    require(['jquery', 'mod_gestionprojet/autosave', 'mod_gestionprojet/generate_ai_instructions'], function($, Autosave, GenerateAi) {
-        $(document).ready(function() {
-            var cmid = <?php echo $cm->id; ?>;
-            var autosaveInterval = <?php echo ($gestionprojet->autosave_interval ?? 30) * 1000; ?>;
-
-            // Custom serialization for step 7 teacher model
-            var serializeData = function() {
-                var dates = getDateValues();
-                return {
-                    aqui: document.getElementById('aqui').value,
-                    surquoi: document.getElementById('surquoi').value,
-                    dansquelbut: document.getElementById('dansquelbut').value,
-                    ai_instructions: document.getElementById('ai_instructions').value,
-                    submission_date: dates.submission_date,
-                    deadline_date: dates.deadline_date
-                };
-            };
-
-            // Initialize Autosave for teacher mode
-            Autosave.init({
-                cmid: cmid,
-                step: 7,
-                groupid: 0,
-                mode: 'teacher',
-                interval: autosaveInterval,
-                formSelector: '#teacherModelForm',
-                serialize: serializeData
-            });
-
-            // AI instructions buttons.
-            GenerateAi.init({
-                cmid: cmid,
-                step: 7,
-                aiEnabled: <?php echo $gestionprojet->ai_enabled ? 'true' : 'false'; ?>,
-                defaultText: <?php echo json_encode(get_string('ai_instructions_default_step7', 'gestionprojet')); ?>,
-                containerSelector: '#aiInstructionsActions',
-                textareaSelector: '#ai_instructions',
-                getModelData: function() {
-                    return {
-                        aqui: document.getElementById('aqui').value,
-                        surquoi: document.getElementById('surquoi').value,
-                        dansquelbut: document.getElementById('dansquelbut').value
-                    };
-                },
-                isModelEmpty: function() {
-                    var d = this.getModelData();
-                    return !d.aqui.trim() && !d.surquoi.trim() && !d.dansquelbut.trim();
-                },
-                onUpdated: function() { Autosave.save(); }
-            });
-
-            // Manual save button with redirect to hub
-            document.getElementById('saveButton').addEventListener('click', function() {
-                var originalOnSave = Autosave.onSave;
-                Autosave.onSave = function(response) {
-                    if (originalOnSave) originalOnSave(response);
-                    setTimeout(function() {
-                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid;
-                    }, 800);
-                };
-                Autosave.save();
-            });
-        });
-    });
-})();
-</script>
-
 <?php
+$step7fields = ['aqui', 'surquoi', 'dansquelbut'];
+$PAGE->requires->js_call_amd('mod_gestionprojet/teacher_step_init', 'init', [[
+    'cmid' => (int)$cm->id,
+    'step' => 7,
+    'autosaveInterval' => (int)($gestionprojet->autosave_interval ?? 30) * 1000,
+    'fields' => array_merge($step7fields, ['ai_instructions']),
+    'aiFields' => $step7fields,
+    'aiEnabled' => (bool)$gestionprojet->ai_enabled,
+    'defaultText' => get_string('ai_instructions_default_step7', 'gestionprojet'),
+]]);
+
 echo $OUTPUT->footer();

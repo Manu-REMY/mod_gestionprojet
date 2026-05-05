@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Library of interface functions and constants for module gestionprojet.
@@ -128,22 +136,34 @@ function gestionprojet_delete_instance($id)
         return false;
     }
 
-    // Delete all related data
+    // Delete all related data.
+    // Teacher-authored content (configuration steps 1-3).
     $DB->delete_records('gestionprojet_description', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_besoin', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_planning', ['gestionprojetid' => $id]);
+    // Student submissions (steps 4-9).
     $DB->delete_records('gestionprojet_cdcf', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_essai', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_rapport', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_besoin_eleve', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_carnet', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_fast', ['gestionprojetid' => $id]);
+    // Teacher correction models (steps 4-9).
+    $DB->delete_records('gestionprojet_cdcf_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_essai_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_rapport_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_besoin_eleve_teacher', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_carnet_teacher', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_fast_teacher', ['gestionprojetid' => $id]);
-    $DB->delete_records('gestionprojet_fast_provided', ['gestionprojetid' => $id]);
+    // Teacher-provided ready-to-use content.
     $DB->delete_records('gestionprojet_cdcf_provided', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_fast_provided', ['gestionprojetid' => $id]);
+    // AI evaluations and history.
+    $DB->delete_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_ai_summaries', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
 
-    // Delete the instance
+    // Delete the instance.
     $DB->delete_records('gestionprojet', ['id' => $id]);
 
     return true;

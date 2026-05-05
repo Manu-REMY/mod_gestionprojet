@@ -16,6 +16,10 @@
 
 define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
 
+    // Localised strings injected from PHP via init(config.strings).
+    // Fallbacks are kept in French to preserve current behaviour if PHP omits them.
+    var STRINGS = {};
+
     /**
      * Wrap text into lines that fit a given max character length.
      *
@@ -181,7 +185,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             'font-size': '15',
             'font-weight': '700'
         });
-        leftTitle.textContent = '\u00C0 qui le produit rend-il service ?';
+        leftTitle.textContent = STRINGS.aquiTitle || '\u00C0 qui le produit rend-il service ?';
         svg.appendChild(leftTitle);
 
         var leftSubtitle = svgEl('text', {
@@ -191,7 +195,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             'fill': '#666',
             'font-size': '12'
         });
-        leftSubtitle.textContent = '(utilisateur)';
+        leftSubtitle.textContent = STRINGS.aquiSubtitle || '(utilisateur)';
         svg.appendChild(leftSubtitle);
 
         // ------- Right ellipse: Sur quoi agit-il ? -------
@@ -224,7 +228,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             'font-size': '15',
             'font-weight': '700'
         });
-        rightTitle.textContent = 'Sur quoi agit-il ?';
+        rightTitle.textContent = STRINGS.surquoiTitle || 'Sur quoi agit-il ?';
         svg.appendChild(rightTitle);
 
         var rightSubtitle = svgEl('text', {
@@ -234,7 +238,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             'fill': '#666',
             'font-size': '12'
         });
-        rightSubtitle.textContent = '(mati\u00E8re d\'oeuvre)';
+        rightSubtitle.textContent = STRINGS.surquoiSubtitle || '(mati\u00E8re d\'oeuvre)';
         svg.appendChild(rightSubtitle);
 
         // ------- Product box (centre) -------
@@ -260,7 +264,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             'font-size': '20',
             'font-weight': 'bold'
         });
-        productLabel.textContent = 'Produit';
+        productLabel.textContent = STRINGS.productLabel || 'Produit';
         svg.appendChild(productLabel);
 
         var productSubLabel = svgEl('text', {
@@ -270,7 +274,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             'fill': 'white',
             'font-size': '14'
         });
-        productSubLabel.textContent = '(objet technique)';
+        productSubLabel.textContent = STRINGS.productSubtitle || '(objet technique)';
         svg.appendChild(productSubLabel);
 
         // ------- Bottom rectangle: Dans quel but ? -------
@@ -303,7 +307,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             'font-size': '15',
             'font-weight': '700'
         });
-        bottomTitle.textContent = 'Dans quel but ?';
+        bottomTitle.textContent = STRINGS.dansquelbutTitle || 'Dans quel but ?';
         svg.appendChild(bottomTitle);
 
         var bottomSubtitle = svgEl('text', {
@@ -313,7 +317,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             'fill': '#666',
             'font-size': '12'
         });
-        bottomSubtitle.textContent = '(fonction d\'usage ou besoin)';
+        bottomSubtitle.textContent = STRINGS.dansquelbutSubtitle || '(fonction d\'usage ou besoin)';
         svg.appendChild(bottomSubtitle);
 
         // ------- Top "horn" curve connecting left and right ellipses -------
@@ -392,6 +396,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             var step = config.step;
             var autosaveInterval = config.autosaveInterval;
             var readonly = config.readonly;
+            STRINGS = config.strings || {};
 
             // Update diagram when textarea values change.
             $('#besoinForm textarea').on('input', function() {
