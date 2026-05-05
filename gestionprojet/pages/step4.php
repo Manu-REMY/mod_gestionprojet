@@ -110,27 +110,9 @@ if ($isSubmitted) {
 $step = 4;
 require_once(__DIR__ . '/student_dates_display.php');
 
-// --- Teacher-provided CDCF reference block (step4_provided = 1) ---
-if ($showteacherref) {
-    $teachercdcf = $DB->get_record('gestionprojet_cdcf_teacher', ['gestionprojetid' => $gestionprojet->id]);
-    if ($teachercdcf && !empty($teachercdcf->interacteurs_data)) {
-        require_once($CFG->dirroot . '/mod/gestionprojet/classes/cdcf_helper.php');
-        $providedcdcf = \mod_gestionprojet\cdcf_helper::decode($teachercdcf->interacteurs_data);
-
-        echo html_writer::start_div('gp-provided-block');
-        echo html_writer::tag('h3', get_string('step4_provided_block_title', 'gestionprojet'));
-        echo html_writer::div(get_string('step4_provided_notice_student', 'gestionprojet'), 'gp-provided-notice');
-        echo html_writer::start_div('gp-provided-content');
-        echo html_writer::tag('div', '', [
-            'id' => 'cdcfProvidedRoot',
-            'class' => 'gp-cdcf-root gp-cdcf-readonly',
-            'data-cdcf' => json_encode($providedcdcf, JSON_UNESCAPED_UNICODE),
-            'data-projet' => format_string($gestionprojet->name),
-        ]);
-        echo html_writer::end_div(); // gp-provided-content
-        echo html_writer::end_div(); // gp-provided-block
-    }
-}
+// When step4_provided=1, the consigne is seeded into the student's record on first
+// open (see gestionprojet_get_or_create_submission in lib.php). No separate read-only
+// block: the editable form below is pre-populated with the teacher's content.
 
 // --- Student form block (enable_step4 = 1) ---
 if ($showstudentform):
