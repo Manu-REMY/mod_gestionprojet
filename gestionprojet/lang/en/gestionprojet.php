@@ -847,6 +847,18 @@ $string['gantt_toggle_error'] = 'Error while updating step';
 $string['gantt_progress_summary'] = '{$a->configured}/{$a->total} phases configured';
 $string['gantt_ungraded_summary'] = '{$a} submission(s) to grade';
 $string['gantt_ungraded_summary_zero'] = 'No pending submissions';
+$string['gantt_student_row_consult'] = 'Consult';
+$string['gantt_student_row_work'] = 'My activities';
+$string['gantt_student_summary'] = '{$a->done}/{$a->total} steps completed';
+$string['gantt_student_summary_all_done'] = 'All steps completed';
+$string['gantt_student_status_pending'] = 'Pending';
+$string['gantt_student_status_todo'] = 'To complete';
+$string['gantt_student_status_done'] = 'Completed';
+$string['gantt_student_cell_consult'] = 'View';
+$string['gantt_student_cell_work'] = 'Work';
+$string['gantt_student_cell_view_brief'] = 'View brief';
+$string['gantt_student_provided_badge'] = 'Brief provided';
+$string['gantt_student_grade_label'] = 'Grade: {$a}';
 
 // Phase 3: CDCF provided / hybrid mode strings.
 $string['step4_provided_block_title'] = 'Document provided by the teacher';
