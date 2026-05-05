@@ -2,12 +2,18 @@
     @template mod_gestionprojet/home_gantt_student
 
     Student home Gantt-style dashboard: 2 rows × 8 columns.
-    Row 1: consultation (teacher docs steps 1, 3, 2 and provided briefs steps 4, 9)
-    Row 2: student activities (steps 7, 4, 9, 5, 8, 6) — step 7 merged into column 3
+    Row 1 — consultation: cells for teacher steps 1, 3, 2 (always when enabled)
+            and for steps 4, 9 when the teacher has activated the "provided brief"
+            mode (isprovided=true). Other columns render an empty cell.
+    Row 2 — student activities: cells for steps 7, 4, 9, 5, 8, 6
+            (step 7 is rendered in the column merged with step 2).
+
+    rowconsult[i] and rowwork[i] align 1:1 with columns[i].
 
     Context variables required:
     * cmid - Course module ID
     * columns - Array of 8 column header objects {stepnum, name, icon}
+        (icon is trusted SVG markup produced by mod_gestionprojet\output\icon)
     * rowconsult - Array of 8 cell objects (row 1)
     * rowwork - Array of 8 cell objects (row 2)
     * summary - {done, total, allcomplete}
@@ -44,17 +50,21 @@
         {{#rowconsult}}
             {{#isfilled}}
                 <div class="gp-cell gp-cell-docs {{^isenabled}}gp-cell-disabled{{/isenabled}}">
-                    <a href="{{#isenabled}}{{url}}{{/isenabled}}{{^isenabled}}#{{/isenabled}}" class="gp-cell-link gp-cell-link-nocheck" {{^isenabled}}aria-disabled="true" tabindex="-1"{{/isenabled}}>
-                        {{#isenabled}}
+                    {{#isenabled}}
+                        <a href="{{url}}" class="gp-cell-link gp-cell-link-nocheck">
                             {{#isprovided}}<div class="gp-cell-status gp-status-provided">{{#str}}gantt_student_provided_badge, gestionprojet{{/str}}</div>{{/isprovided}}
                             {{^isprovided}}
                                 {{#iscomplete}}<div class="gp-cell-status gp-status-done">{{#str}}gantt_student_status_done, gestionprojet{{/str}}</div>{{/iscomplete}}
                                 {{^iscomplete}}<div class="gp-cell-status gp-status-todo">{{#str}}gantt_student_status_pending, gestionprojet{{/str}}</div>{{/iscomplete}}
                             {{/isprovided}}
                             <div class="gp-cell-action">{{#str}}gantt_student_cell_consult, gestionprojet{{/str}}</div>
-                        {{/isenabled}}
-                        {{^isenabled}}<div class="gp-cell-status gp-status-disabled">{{#str}}gantt_cell_status_disabled, gestionprojet{{/str}}</div>{{/isenabled}}
-                    </a>
+                        </a>
+                    {{/isenabled}}
+                    {{^isenabled}}
+                        <span class="gp-cell-link gp-cell-link-nocheck" aria-disabled="true">
+                            <div class="gp-cell-status gp-status-disabled">{{#str}}gantt_cell_status_disabled, gestionprojet{{/str}}</div>
+                        </span>
+                    {{/isenabled}}
                 </div>
             {{/isfilled}}
             {{^isfilled}}<div class="gp-cell gp-cell-empty"></div>{{/isfilled}}
@@ -67,15 +77,19 @@
         {{#rowwork}}
             {{#isfilled}}
                 <div class="gp-cell gp-cell-student {{^isenabled}}gp-cell-disabled{{/isenabled}}">
-                    <a href="{{#isenabled}}{{url}}{{/isenabled}}{{^isenabled}}#{{/isenabled}}" class="gp-cell-link gp-cell-link-nocheck" {{^isenabled}}aria-disabled="true" tabindex="-1"{{/isenabled}}>
-                        {{#isenabled}}
+                    {{#isenabled}}
+                        <a href="{{url}}" class="gp-cell-link gp-cell-link-nocheck">
                             {{#iscomplete}}<div class="gp-cell-status gp-status-done">{{#str}}gantt_student_status_done, gestionprojet{{/str}}</div>{{/iscomplete}}
                             {{^iscomplete}}<div class="gp-cell-status gp-status-todo">{{#str}}gantt_student_status_todo, gestionprojet{{/str}}</div>{{/iscomplete}}
                             {{#hasgrade}}<div class="gp-cell-grade">{{#str}}gantt_student_grade_label, gestionprojet, {{gradeformatted}}{{/str}}</div>{{/hasgrade}}
                             <div class="gp-cell-action">{{#str}}gantt_student_cell_work, gestionprojet{{/str}}</div>
-                        {{/isenabled}}
-                        {{^isenabled}}<div class="gp-cell-status gp-status-disabled">{{#str}}gantt_cell_status_disabled, gestionprojet{{/str}}</div>{{/isenabled}}
-                    </a>
+                        </a>
+                    {{/isenabled}}
+                    {{^isenabled}}
+                        <span class="gp-cell-link gp-cell-link-nocheck" aria-disabled="true">
+                            <div class="gp-cell-status gp-status-disabled">{{#str}}gantt_cell_status_disabled, gestionprojet{{/str}}</div>
+                        </span>
+                    {{/isenabled}}
                 </div>
             {{/isfilled}}
             {{^isfilled}}<div class="gp-cell gp-cell-empty"></div>{{/isfilled}}
