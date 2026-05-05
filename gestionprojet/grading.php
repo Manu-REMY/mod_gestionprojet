@@ -460,40 +460,52 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
                         </div>
 
                     <?php elseif ($step == 4): // CDCF
-                        $interacteursData = [];
-                        if ($submission->interacteurs_data) {
-                            $interacteursData = json_decode($submission->interacteurs_data, true) ?? [];
-                        }
+                        require_once($CFG->dirroot . '/mod/gestionprojet/classes/cdcf_helper.php');
+                        $cdcfdata = \mod_gestionprojet\cdcf_helper::decode($submission->interacteurs_data ?? null);
                     ?>
                         <div class="field-display">
-                            <h4><?php echo get_string('produit', 'gestionprojet'); ?></h4>
-                            <p><?php echo s($submission->produit ?? ''); ?></p>
+                            <h4><?php echo get_string('step4_interactors_title', 'gestionprojet'); ?></h4>
+                            <ul>
+                                <?php foreach ($cdcfdata['interactors'] as $i): ?>
+                                    <li><?php echo s($i['name'] !== '' ? $i['name'] : ('Interacteur ' . $i['id'])); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
                         </div>
                         <div class="field-display">
-                            <h4><?php echo get_string('milieu', 'gestionprojet'); ?></h4>
-                            <p><?php echo s($submission->milieu ?? ''); ?></p>
-                        </div>
-                        <div class="field-display">
-                            <h4><?php echo get_string('fonction_principale', 'gestionprojet'); ?> (FP)</h4>
-                            <p><?php echo s($submission->fp ?? ''); ?></p>
-                        </div>
-                        <?php if (!empty($interacteursData)): ?>
-                            <div class="field-display">
-                                <h4><?php echo get_string('interacteurs', 'gestionprojet'); ?></h4>
-                                <?php foreach ($interacteursData as $idx => $interacteur): ?>
-                                    <div class="interacteur-card">
-                                        <strong><?php echo s($interacteur['name'] ?? 'Interacteur ' . ($idx + 1)); ?></strong>
-                                        <?php if (!empty($interacteur['fcs'])): ?>
+                            <h4><?php echo get_string('step4_fs_title', 'gestionprojet'); ?></h4>
+                            <ul>
+                                <?php foreach ($cdcfdata['fonctionsService'] as $idx => $fs): ?>
+                                    <li>
+                                        <strong>FS<?php echo $idx + 1; ?> :</strong> <?php echo s($fs['description']); ?>
+                                        <?php if (!empty($fs['criteres'])): ?>
                                             <ul>
-                                                <?php foreach ($interacteur['fcs'] as $fcIdx => $fc): ?>
-                                                    <?php if (!empty($fc['value'])): ?>
-                                                        <li><strong>FC<?php echo ($fcIdx + 1); ?>:</strong> <?php echo s($fc['value']); ?></li>
-                                                    <?php endif; ?>
+                                                <?php foreach ($fs['criteres'] as $c): ?>
+                                                    <li>
+                                                        <?php echo s($c['description']); ?> &mdash; <?php echo s($c['niveau']); ?>
+                                                        <?php if ($c['flexibilite'] !== ''): ?>
+                                                            (<?php echo s($c['flexibilite']); ?>)
+                                                        <?php endif; ?>
+                                                    </li>
                                                 <?php endforeach; ?>
                                             </ul>
                                         <?php endif; ?>
-                                    </div>
+                                    </li>
                                 <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php if (!empty($cdcfdata['contraintes'])): ?>
+                            <div class="field-display">
+                                <h4><?php echo get_string('step4_contraintes_title', 'gestionprojet'); ?></h4>
+                                <ul>
+                                    <?php foreach ($cdcfdata['contraintes'] as $idx => $c): ?>
+                                        <li>
+                                            <strong>C<?php echo $idx + 1; ?> :</strong> <?php echo s($c['description']); ?>
+                                            <?php if ($c['justification'] !== ''): ?>
+                                                &mdash; <em><?php echo s($c['justification']); ?></em>
+                                            <?php endif; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
                             </div>
                         <?php endif; ?>
 

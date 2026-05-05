@@ -447,9 +447,6 @@ $string['privacy:metadata:timemodified'] = 'Date et heure de dernière modificat
 
 // CDCF (Étape 4)
 $string['privacy:metadata:gestionprojet_cdcf:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le cahier des charges';
-$string['privacy:metadata:gestionprojet_cdcf:produit'] = 'Le produit défini par l\'élève';
-$string['privacy:metadata:gestionprojet_cdcf:milieu'] = 'Le milieu d\'utilisation défini par l\'élève';
-$string['privacy:metadata:gestionprojet_cdcf:fp'] = 'La fonction principale définie par l\'élève';
 $string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'Données JSON contenant les interacteurs, fonctions contraintes et critères';
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'Le statut de la soumission (brouillon ou soumis)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'Date et heure de soumission du travail';

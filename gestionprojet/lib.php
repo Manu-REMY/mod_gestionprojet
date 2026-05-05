@@ -263,12 +263,9 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
     }
 
     // For CDCF phase: when teacher provides a consigne, seed student submission with it.
-    if ($table === 'cdcf' && (int)$gestionprojet->step4_provided === 1 && empty($record->produit) && empty($record->milieu) && empty($record->fp) && empty($record->interacteurs_data)) {
+    if ($table === 'cdcf' && (int)$gestionprojet->step4_provided === 1 && empty($record->interacteurs_data)) {
         $provided = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
         if ($provided) {
-            $record->produit = $provided->produit ?? '';
-            $record->milieu = $provided->milieu ?? '';
-            $record->fp = $provided->fp ?? '';
             $record->interacteurs_data = $provided->interacteurs_data ?? '';
             $record->timemodified = time();
             $DB->update_record('gestionprojet_cdcf', $record);
