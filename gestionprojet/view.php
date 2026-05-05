@@ -130,8 +130,9 @@ if ($step > 0) {
     }
 
     // Handle teacher-provided consigne pages for dual-facet steps (4 CDCF, 9 FAST).
+    // Polymorphic: teacher gets the editor; student gets a read-only view of the brief.
+    // The provided page checks the user's capability and renders accordingly.
     if ($mode === 'provided' && in_array($step, [4, 9], true)) {
-        require_capability('mod/gestionprojet:configureteacherpages', $context);
         require_once(__DIR__ . '/pages/step' . $step . '_provided.php');
         exit;
     }

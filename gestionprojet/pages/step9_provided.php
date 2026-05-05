@@ -24,7 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_capability('mod/gestionprojet:configureteacherpages', $context);
+// Read-only when the user lacks teacher-edit capability — students see the brief but cannot edit it.
+$canedit = has_capability('mod/gestionprojet:configureteacherpages', $context);
+$readonly = !$canedit;
 
 $PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9, 'mode' => 'provided']);
 $PAGE->set_title(get_string('step9', 'gestionprojet') . ' - ' . get_string('consigne', 'gestionprojet'));
@@ -52,7 +54,8 @@ $tplcontext = [
     'isteacher' => false, // Hides the AI instructions textarea from the form template.
     'datajson' => $provided->data_json ?? '',
     'aiinstructions' => '',
-    'canpopulatecdcf' => $hascdcffs,
+    // Students cannot trigger the populate-from-CDCF action; only teachers can.
+    'canpopulatecdcf' => $canedit && $hascdcffs,
     'isprovided' => true,
     'mode' => 'provided',
 ];
@@ -64,10 +67,18 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/fast_editor', 'init', [[
 ]]);
 
 echo $OUTPUT->header();
+// Tabs: teacher gets consignes navigation; student gets work navigation.
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
-    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'consignes')
+    gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, $canedit ? 'consignes' : 'student')
 );
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
+if ($readonly) {
+    // Wrap the form in a read-only container; CSS disables pointer events on descendants.
+    echo '<div class="gp-fast-readonly">';
+}
 echo $OUTPUT->render_from_template('mod_gestionprojet/step9_form', $tplcontext);
+if ($readonly) {
+    echo '</div>';
+}
 echo $OUTPUT->footer();
