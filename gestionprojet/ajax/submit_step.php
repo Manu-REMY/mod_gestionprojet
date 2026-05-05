@@ -103,6 +103,25 @@ try {
             $groupid
         );
 
+        // Try to queue AI evaluation. Failure is non-fatal — submission stays valid.
+        $evaluationid = null;
+        $aiAvailable = false;
+        if (!empty($gestionprojet->ai_enabled)) {
+            try {
+                require_once(__DIR__ . '/../classes/ai_evaluator.php');
+                $evaluationid = \mod_gestionprojet\ai_evaluator::queue_evaluation(
+                    $gestionprojet->id,
+                    $step,
+                    $record->id,
+                    $record->groupid ?? 0,
+                    $record->userid ?? 0
+                );
+                $aiAvailable = true;
+            } catch (\Exception $e) {
+                debugging('AI evaluation skipped on submit: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
+
         $success = true;
         $message = get_string('submissionsuccess', 'gestionprojet');
 
@@ -170,5 +189,7 @@ try {
 echo json_encode([
     'success' => $success,
     'message' => $message,
-    'timestamp' => time()
+    'evaluationid' => $evaluationid ?? null,
+    'ai_available' => $aiAvailable ?? false,
+    'timestamp' => time(),
 ]);
