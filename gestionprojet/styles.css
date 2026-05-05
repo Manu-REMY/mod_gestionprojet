@@ -5014,6 +5014,37 @@
     font-size: 14px;
 }
 
+/* ============================================================
+   Student Gantt view — variants without checkbox.
+   ============================================================ */
+.path-mod-gestionprojet .gp-gantt-student .gp-cell-link-nocheck {
+    padding: 8px 6px 6px 6px;
+}
+.path-mod-gestionprojet .gp-gantt-student .gp-cell-action {
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #4f46e5;
+    text-decoration: underline;
+}
+.path-mod-gestionprojet .gp-gantt-student .gp-cell-student .gp-cell-action {
+    color: #047857;
+}
+.path-mod-gestionprojet .gp-gantt-student .gp-cell-grade {
+    font-size: 11px;
+    color: #1f2937;
+    font-weight: 600;
+    margin-top: 2px;
+}
+.path-mod-gestionprojet .gp-gantt-student .gp-cell-link[aria-disabled="true"] {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.path-mod-gestionprojet .gp-gantt-student .gp-gantt-summary.gp-summary-ok {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #6ee7b7;
+}
+
 /* Step 4 - Teacher-provided CDCF reference block */
 .path-mod-gestionprojet .gp-provided-block {
     background: linear-gradient(180deg, #eef2ff 0%, #fafbff 100%);
