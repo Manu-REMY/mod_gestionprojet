@@ -188,8 +188,6 @@ if (!$group) {
     <div class="description">
         <h3><?php echo get_string('step4_desc_title', 'gestionprojet'); ?></h3>
         <p><?php echo get_string('step4_desc_text', 'gestionprojet'); ?></p>
-        <p><strong><?php echo get_string('step4_fp_label', 'gestionprojet'); ?></strong> : <?php echo get_string('step4_fp_desc', 'gestionprojet'); ?></p>
-        <p><strong><?php echo get_string('step4_fc_label', 'gestionprojet'); ?></strong> : <?php echo get_string('step4_fc_desc', 'gestionprojet'); ?></p>
     </div>
 
     <!-- AI Evaluation Feedback Display -->
