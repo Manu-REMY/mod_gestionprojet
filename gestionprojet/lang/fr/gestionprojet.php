@@ -750,26 +750,11 @@ $string['step4_page_title'] = 'CAHIER DES CHARGES FONCTIONNEL';
 $string['step4_page_subtitle'] = 'Analyse fonctionnelle - Technologie';
 $string['step4_desc_title'] = 'Qu\'est-ce qu\'un Cahier des Charges Fonctionnel ?';
 $string['step4_desc_text'] = 'Le Cahier des Charges Fonctionnel (CDCF) définit ce que doit faire le produit sans dire comment.';
-$string['step4_fp_label'] = 'FP (Fonction Principale)';
-$string['step4_fp_desc'] = 'Relie le produit aux 2 premiers éléments du milieu extérieur';
-$string['step4_fc_label'] = 'FC (Fonction Contrainte)';
-$string['step4_fc_desc'] = 'Relie le produit à 1 élément du milieu extérieur';
-$string['step4_produit_placeholder'] = 'Nom du produit';
-$string['step4_fp_placeholder'] = 'Décrivez la fonction principale du produit...';
-$string['step4_milieu_placeholder'] = 'Milieu d\'utilisation';
 $string['step4_diagram_title'] = 'Diagramme des Interacteurs';
-$string['step4_interactors_section'] = 'Interacteurs et Fonctions Contraintes';
 $string['step4_add_interactor'] = 'Ajouter un interacteur';
-$string['step4_interactor_default'] = 'Interacteur {$a}';
-$string['step4_interactor_name_placeholder'] = 'Nom de l\'interacteur';
-$string['step4_delete'] = 'Supprimer';
-$string['step4_fc_value_placeholder'] = 'Description de la fonction contrainte';
 $string['step4_critere_placeholder'] = 'Critère d\'appréciation';
 $string['step4_niveau_placeholder'] = 'Niveau';
-$string['step4_unite_placeholder'] = 'Unité';
 $string['step4_add_critere'] = 'Ajouter un critère';
-$string['step4_add_fc'] = '+ Fonction Contrainte';
-$string['step4_product_fallback'] = 'Produit';
 
 // Step 4 - Norm-aligned editor (NF EN 16271).
 $string['step4_norm_intro'] = 'Le Cahier des Charges Fonctionnel décrit les fonctions que doit assurer le produit (FS) et les contraintes à respecter (C), en s\'appuyant sur l\'analyse des interacteurs.';
@@ -891,8 +876,6 @@ $string['step4_provided_notice_student'] = 'Votre enseignant a fourni le Cahier 
 $string['step4_provided_notice_teacher'] = 'Mode fourni : ce contenu sera affiché en lecture seule aux élèves. Le champ « Instructions IA » n\'est jamais affiché aux élèves.';
 $string['step4_hybrid_notice_teacher'] = 'Mode hybride : ce contenu sera affiché aux élèves comme document de référence ET utilisé comme modèle de correction pour leur propre production. Le champ « Instructions IA » n\'est jamais affiché aux élèves.';
 $string['step4_provided_badge'] = 'Fourni';
-$string['step4_produit_label'] = 'Produit';
-$string['step4_milieu_label'] = 'Milieu';
 $string['step4_interacteurs_label'] = 'Interacteurs';
 
 // Étape 9 : Diagramme FAST.

@@ -750,26 +750,11 @@ $string['step4_page_title'] = 'FUNCTIONAL REQUIREMENTS SPECIFICATION';
 $string['step4_page_subtitle'] = 'Functional analysis - Technology';
 $string['step4_desc_title'] = 'What is a Functional Requirements Specification?';
 $string['step4_desc_text'] = 'The Functional Requirements Specification (FRS) defines what the product must do without specifying how.';
-$string['step4_fp_label'] = 'MF (Main Function)';
-$string['step4_fp_desc'] = 'Connects the product to the first 2 elements of the external environment';
-$string['step4_fc_label'] = 'CF (Constraint Function)';
-$string['step4_fc_desc'] = 'Connects the product to 1 element of the external environment';
-$string['step4_produit_placeholder'] = 'Product name';
-$string['step4_fp_placeholder'] = 'Describe the main function of the product...';
-$string['step4_milieu_placeholder'] = 'Environment of use';
 $string['step4_diagram_title'] = 'Stakeholder Diagram';
-$string['step4_interactors_section'] = 'Stakeholders and Constraint Functions';
 $string['step4_add_interactor'] = 'Add a stakeholder';
-$string['step4_interactor_default'] = 'Stakeholder {$a}';
-$string['step4_interactor_name_placeholder'] = 'Stakeholder name';
-$string['step4_delete'] = 'Delete';
-$string['step4_fc_value_placeholder'] = 'Constraint function description';
 $string['step4_critere_placeholder'] = 'Appreciation criterion';
 $string['step4_niveau_placeholder'] = 'Level';
-$string['step4_unite_placeholder'] = 'Unit';
 $string['step4_add_critere'] = 'Add a criterion';
-$string['step4_add_fc'] = '+ Constraint Function';
-$string['step4_product_fallback'] = 'Product';
 
 // Step 4 - Norm-aligned editor (NF EN 16271).
 $string['step4_norm_intro'] = 'The functional specification document describes the service functions (FS) the product must provide and the constraints (C) it must respect, derived from the analysis of the interactors.';
@@ -891,8 +876,6 @@ $string['step4_provided_notice_student'] = 'Your teacher has provided the follow
 $string['step4_provided_notice_teacher'] = 'Provided mode: this content will be displayed read-only to students. The "AI Instructions" field is never shown to students.';
 $string['step4_hybrid_notice_teacher'] = 'Hybrid mode: this content will be displayed to students as a reference document AND used as a correction model for their own production. The "AI Instructions" field is never shown to students.';
 $string['step4_provided_badge'] = 'Provided';
-$string['step4_produit_label'] = 'Product';
-$string['step4_milieu_label'] = 'Environment';
 $string['step4_interacteurs_label'] = 'Interactors';
 
 // Step 9: FAST diagram.
