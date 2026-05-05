@@ -16,9 +16,14 @@
 /**
  * Bootstrap glue between step4*.php pages and the cdcf editor.
  *
- * The submit button is intentionally NOT bound here: it is owned by
- * mod_gestionprojet/submission, loaded via student_submit_helper.php,
- * which opens a Bootstrap modal and triggers the AI evaluation server-side.
+ * Supports both the student page (submit/revert wiring) and the teacher
+ * correction model page (manual save button + AI instructions textarea +
+ * submission/deadline date inputs included in the autosave payload).
+ *
+ * The submit button is intentionally NOT bound here on the student page:
+ * it is owned by mod_gestionprojet/submission, loaded via
+ * student_submit_helper.php, which opens a Bootstrap modal and triggers
+ * the AI evaluation server-side.
  *
  * @module     mod_gestionprojet/cdcf_bootstrap
  * @copyright  2026 Emmanuel REMY
@@ -92,12 +97,37 @@ function($, Ajax, Cdcf, Autosave) {
                 cmid: cfg.cmid,
                 step: cfg.step,
                 groupid: cfg.groupid,
+                mode: cfg.mode || undefined,
                 interval: cfg.autosaveMs,
                 formSelector: '#cdcfForm',
                 serialize: function() {
-                    return { interacteurs_data: dataField.value };
+                    var payload = { interacteurs_data: dataField.value };
+                    var aiTextarea = document.getElementById('ai_instructions');
+                    if (aiTextarea) { payload.ai_instructions = aiTextarea.value; }
+                    var subDate = document.getElementById('submission_date');
+                    if (subDate) { payload.submission_date = subDate.value; }
+                    var deadDate = document.getElementById('deadline_date');
+                    if (deadDate) { payload.deadline_date = deadDate.value; }
+                    return payload;
                 },
             });
+
+            // Optional manual save button (teacher correction model flow):
+            // saves immediately, then redirects back to the hub once the
+            // request resolves so the teacher sees their model is persisted.
+            var $saveBtn = $('#saveButton');
+            if ($saveBtn.length && cfg.redirectAfterSave) {
+                $saveBtn.on('click', function() {
+                    var prev = Autosave.onSave;
+                    Autosave.onSave = function(response) {
+                        if (prev) { prev(response); }
+                        window.setTimeout(function() {
+                            window.location.href = cfg.redirectAfterSave;
+                        }, 800);
+                    };
+                    Autosave.save();
+                });
+            }
         }
     }
 

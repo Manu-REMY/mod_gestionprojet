@@ -59,9 +59,51 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         return strings.errorGeneric;
     }
 
+    /**
+     * Read and parse JSON from a hidden input identified by its DOM id.
+     *
+     * @param {string} fieldId
+     * @returns {Object|null} Parsed object, or null on missing/invalid input.
+     */
+    function readJsonField(fieldId) {
+        var el = document.getElementById(fieldId);
+        if (!el) { return null; }
+        var raw = (el.value || '').trim();
+        if (raw === '') { return null; }
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Default emptiness check for a CDCF-style payload read from a hidden
+     * JSON field: empty when there are neither service functions nor
+     * constraints declared.
+     *
+     * @param {Object|null} obj
+     * @returns {boolean}
+     */
+    function defaultIsCdcfEmpty(obj) {
+        if (!obj || typeof obj !== 'object') { return true; }
+        var fs = Array.isArray(obj.fonctionsService) ? obj.fonctionsService : [];
+        var co = Array.isArray(obj.contraintes) ? obj.contraintes : [];
+        return fs.length === 0 && co.length === 0;
+    }
+
     return {
         /**
          * Initialise the two buttons for one teacher page.
+         *
+         * Two ways to expose model data to the AI generator:
+         *   1. Pass `modelDataField` (id of a hidden input whose value is JSON).
+         *      The whole parsed object is sent as `model_data`. Emptiness is
+         *      derived heuristically (no service functions and no constraints).
+         *   2. Pass `getModelData` / `isModelEmpty` callbacks (legacy API,
+         *      still used by step5..step9 teacher pages).
+         *
+         * If both are provided, `modelDataField` takes precedence.
          *
          * @param {Object} cfg
          * @param {number} cfg.cmid                Course module id.
@@ -70,11 +112,30 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * @param {boolean} cfg.aiEnabled          Whether AI is enabled at activity level.
          * @param {string} cfg.containerSelector   CSS selector of the buttons container.
          * @param {string} cfg.textareaSelector    CSS selector of the ai_instructions textarea.
-         * @param {Function} cfg.getModelData      Returns the current model fields object.
-         * @param {Function} cfg.isModelEmpty      Returns true if all model fields are empty.
+         * @param {string} [cfg.modelDataField]    DOM id of a hidden input holding model JSON.
+         * @param {Function} [cfg.getModelData]    Legacy: returns the current model fields object.
+         * @param {Function} [cfg.isModelEmpty]    Legacy: returns true if all model fields are empty.
          * @param {Function} [cfg.onUpdated]       Optional callback after textarea is filled.
          */
         init: function(cfg) {
+            // Resolve the model-data accessor depending on which API the caller
+            // provided. `modelDataField` (new) wins over legacy callbacks.
+            var getModelData;
+            var isModelEmpty;
+            if (cfg.modelDataField) {
+                getModelData = function() {
+                    return readJsonField(cfg.modelDataField) || {};
+                };
+                isModelEmpty = function() {
+                    return defaultIsCdcfEmpty(readJsonField(cfg.modelDataField));
+                };
+            } else {
+                getModelData = typeof cfg.getModelData === 'function'
+                    ? cfg.getModelData : function() { return {}; };
+                isModelEmpty = typeof cfg.isModelEmpty === 'function'
+                    ? cfg.isModelEmpty : function() { return true; };
+            }
+
             fetchStrings().then(function(strings) {
                 var $container = $(cfg.containerSelector);
                 var $textarea  = $(cfg.textareaSelector);
@@ -104,7 +165,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         $btnGenerate.prop('disabled', true).attr('title', strings.tooltipDisabled);
                         return;
                     }
-                    if (cfg.isModelEmpty()) {
+                    if (isModelEmpty()) {
                         $btnGenerate.prop('disabled', true).attr('title', strings.tooltipEmpty);
                     } else {
                         $btnGenerate.prop('disabled', false).removeAttr('title');
@@ -135,7 +196,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                             id: cfg.cmid,
                             step: cfg.step,
                             sesskey: M.cfg.sesskey,
-                            model_data: JSON.stringify(cfg.getModelData())
+                            model_data: JSON.stringify(getModelData())
                         }
                     }).done(function(resp) {
                         if (resp && resp.success) {
