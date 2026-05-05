@@ -18,8 +18,9 @@
     * groupnotfounderrorid - The group ID that was not found
     * teachersteps - Array of teacher step cards
     * gradingsteps - Array of grading step cards (for teacher)
-    * consultationsteps - Array of read-only step cards (for student)
-    * studentsteps - Array of student work step cards
+    * gantt_student - Student Gantt context (only for student with group):
+    *   * columns, rowconsult, rowwork, summary, cmid
+    *   * see home_gantt_student.mustache for cell structure
 
     Icon template variables (rendered SVG HTML):
     * icon_lock - Lock icon (red, sm)
@@ -136,54 +137,9 @@
                     {{{icon_users}}} {{#str}} your_group, gestionprojet {{/str}}: <strong>{{usergroupname}}</strong>
                 </div>
 
-                <div class="gestionprojet-cards">
-                    {{! Consultation steps (read-only for students) }}
-                    {{#consultationsteps}}
-                        <div class="gestionprojet-card student consultation">
-                            <div class="card-icon">{{{icon}}}</div>
-                            <h3 class="card-title">{{title}}</h3>
-                            <p class="card-description">{{description}}</p>
-
-                            <div class="card-status view-only">
-                                {{{icon_eye}}} {{#str}} view_only, gestionprojet {{/str}}
-                            </div>
-
-                            <a href="{{url}}" class="card-button">
-                                {{#str}} view, gestionprojet {{/str}}
-                            </a>
-                        </div>
-                    {{/consultationsteps}}
-
-                    {{! Student work steps }}
-                    {{#studentsteps}}
-                        <div class="gestionprojet-card student">
-                            <div class="card-icon">{{{icon}}}</div>
-                            <h3 class="card-title">{{title}}</h3>
-                            <p class="card-description">{{description}}</p>
-
-                            {{#iscomplete}}
-                                <div class="card-status complete">
-                                    {{{icon_check}}} {{#str}} status_complete, gestionprojet {{/str}}
-                                </div>
-                            {{/iscomplete}}
-                            {{^iscomplete}}
-                                <div class="card-status incomplete">
-                                    {{{icon_incomplete}}} {{#str}} status_incomplete, gestionprojet {{/str}}
-                                </div>
-                            {{/iscomplete}}
-
-                            {{#hasgrade}}
-                                <div class="card-status">
-                                    {{#str}} grade, gestionprojet {{/str}}: {{gradeformatted}}
-                                </div>
-                            {{/hasgrade}}
-
-                            <a href="{{url}}" class="card-button">
-                                {{#str}} work, gestionprojet {{/str}}
-                            </a>
-                        </div>
-                    {{/studentsteps}}
-                </div>
+                {{#gantt_student}}
+                    {{> mod_gestionprojet/home_gantt_student}}
+                {{/gantt_student}}
             {{/hasusergroup}}
         {{/teacherpagescomplete}}
 
