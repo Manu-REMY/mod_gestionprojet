@@ -22,10 +22,11 @@
  */
 
 define(['jquery', 'core/notification', 'core/str',
-        'mod_gestionprojet/fast_diagram'],
-function($, Notification, Str, FastDiagram) {
+        'mod_gestionprojet/fast_diagram', 'mod_gestionprojet/toast'],
+function($, Notification, Str, FastDiagram, Toast) {
 
     var STEP = 9;
+    var AUTOSAVE_DELAY_MS = 10000;
 
     function emptyData() {
         return {
@@ -185,7 +186,10 @@ function($, Notification, Str, FastDiagram) {
             { key: 'fast:add_subfunction', component: 'mod_gestionprojet' },
             { key: 'fast:split', component: 'mod_gestionprojet' },
             { key: 'fast:fp_label', component: 'mod_gestionprojet' },
-            { key: 'fast:fp_help', component: 'mod_gestionprojet' }
+            { key: 'fast:fp_help', component: 'mod_gestionprojet' },
+            { key: 'autosave_status_saving', component: 'mod_gestionprojet' },
+            { key: 'autosave_status_saved', component: 'mod_gestionprojet' },
+            { key: 'autosave_error', component: 'mod_gestionprojet' }
         ];
 
         Str.get_strings(stringRequests).then(function(loaded) {
@@ -198,7 +202,10 @@ function($, Notification, Str, FastDiagram) {
                 addSub: loaded[5],
                 split: loaded[6],
                 fpLabel: loaded[7],
-                fpHelp: loaded[8]
+                fpHelp: loaded[8],
+                savingLabel: loaded[9],
+                savedLabel: loaded[10],
+                errorLabel: loaded[11]
             };
             startEditor(strings);
             return null;
@@ -219,7 +226,11 @@ function($, Notification, Str, FastDiagram) {
                 dataInput.value = JSON.stringify(data);
             }
 
-            function autosave() {
+            var isDirty = false;
+            var saveInFlight = false;
+
+            function autosave(opts) {
+                opts = opts || {};
                 var payload = { data_json: JSON.stringify(data) };
                 if (mode === 'teacher') {
                     var aiInput = document.getElementById('fast-ai-' + cmid);
@@ -227,21 +238,59 @@ function($, Notification, Str, FastDiagram) {
                         payload.ai_instructions = aiInput.value;
                     }
                 }
-                $.post(M.cfg.wwwroot + '/mod/gestionprojet/ajax/autosave.php', {
+                if (opts.showSaving) {
+                    Toast.info(strings.savingLabel || 'Enregistrement...', 1500);
+                }
+                saveInFlight = true;
+                return $.post(M.cfg.wwwroot + '/mod/gestionprojet/ajax/autosave.php', {
                     cmid: cmid,
                     step: STEP,
                     mode: mode === 'teacher' ? 'teacher' : '',
                     groupid: groupid,
                     sesskey: sesskey,
                     data: JSON.stringify(payload)
+                }).done(function(response) {
+                    if (response && response.success) {
+                        isDirty = false;
+                        if (opts.showSaved !== false) {
+                            Toast.success(strings.savedLabel || 'Enregistré', 1800);
+                        }
+                    } else {
+                        Toast.error((response && response.message) || strings.errorLabel || 'Erreur de sauvegarde', 4000);
+                    }
+                }).fail(function(xhr) {
+                    Toast.error(strings.errorLabel || 'Erreur de sauvegarde', 4000);
+                }).always(function() {
+                    saveInFlight = false;
                 });
             }
 
             var saveTimer = null;
             function scheduleSave() {
+                isDirty = true;
                 if (saveTimer) { clearTimeout(saveTimer); }
-                saveTimer = setTimeout(autosave, 30000);
+                saveTimer = setTimeout(function() {
+                    autosave({ showSaving: false, showSaved: true });
+                }, AUTOSAVE_DELAY_MS);
             }
+
+            function saveNow() {
+                if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+                autosave({ showSaving: true, showSaved: true });
+            }
+
+            // Manual "Save" button (rendered in templates/step9_form.mustache).
+            $(document).on('click', '#fast-save-' + cmid, function(e) {
+                e.preventDefault();
+                saveNow();
+            });
+
+            // Try to flush pending changes when the user navigates away.
+            $(window).on('beforeunload', function() {
+                if (isDirty && !saveInFlight) {
+                    autosave({ showSaving: false, showSaved: false });
+                }
+            });
 
             $(formContainer).on('input', 'input', function(e) {
                 var $input = $(e.target);
