@@ -21,12 +21,15 @@
 }}
 <div class="path-mod-gestionprojet path-mod-gestionprojet-fast" data-cmid="{{cmid}}" data-mode="{{mode}}" data-sesskey="{{sesskey}}">
 
-    <div class="fast-toolbar mb-3">
+    <div class="fast-toolbar mb-3 d-flex gap-2 align-items-center">
         {{#canpopulatecdcf}}
             <button type="button" class="btn btn-outline-primary" data-action="populate-cdcf">
                 {{#str}}fast:populate_from_cdcf, mod_gestionprojet{{/str}}
             </button>
         {{/canpopulatecdcf}}
+        <button type="button" class="btn btn-primary" data-action="save-now" id="fast-save-{{cmid}}">
+            {{#str}}save, mod_gestionprojet{{/str}}
+        </button>
     </div>
 
     <div class="fast-form" id="fast-form-{{cmid}}"></div>
