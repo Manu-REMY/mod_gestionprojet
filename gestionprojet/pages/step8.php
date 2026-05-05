@@ -221,6 +221,10 @@ if (empty($tasks_data)) {
 </div>
 
 <?php
+// Wire the new modal-based submit flow + AI progress banner.
+$isSubmitted = ($submission && (int)$submission->status === 1);
+require __DIR__ . '/student_submit_helper.php';
+
 // Ensure jQuery is loaded
 $PAGE->requires->jquery();
 ?>
@@ -252,27 +256,7 @@ $PAGE->requires->jquery();
 
             var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
 
-            // Handle Submission
-            $('#submitButton').on('click', function () {
-                if (confirm('<?php echo get_string('confirm_submission', 'gestionprojet'); ?>')) {
-                    Ajax.call([{
-                        methodname: 'mod_gestionprojet_submit_step',
-                        args: {
-                            cmid: cmid,
-                            step: step,
-                            action: 'submit'
-                        }
-                    }])[0].done(function (data) {
-                        if (data.success) {
-                            window.location.reload();
-                        } else {
-                            alert('Error submitting');
-                        }
-                    }).fail(function () {
-                        alert('Error submitting');
-                    });
-                }
-            });
+            // Submit handled by mod_gestionprojet/submission AMD module (loaded via student_submit_helper.php).
 
             // Handle Revert
             $('#revertButton').on('click', function () {

@@ -39,7 +39,8 @@ define([
      */
     function init(cfg) {
         config = cfg || {};
-        var btn = document.getElementById('submitStepBtn');
+        // Target the actual submit button ID used in step pages (step4-step8).
+        var btn = document.getElementById('submitButton') || document.getElementById('submitStepBtn');
         if (!btn) {
             return;
         }
@@ -96,7 +97,8 @@ define([
             args: {
                 cmid: config.cmid,
                 step: config.step,
-                action: 'submit'
+                action: 'submit',
+                groupid: config.groupId || 0
             }
         }])[0].done(function(data) {
             if (data.success) {
