@@ -291,34 +291,14 @@ if ($isteacher) {
             $templatecontext['hasusergroup'] = true;
             $templatecontext['usergroupname'] = s($groupinfo->name);
 
-            // Consultation steps (read-only for students).
+            // Consultation row data sources.
             $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojet->id]);
             $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojet->id]);
             $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);
+            $cdcfprovided = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
+            $fastprovided = $DB->get_record('gestionprojet_fast_provided', ['gestionprojetid' => $gestionprojet->id]);
 
-            $consultationstepsraw = [
-                1 => ['data' => $description, 'complete' => $description && !empty($description->intitule)],
-                3 => ['data' => $planning, 'complete' => $planning && !empty($planning->projectname)],
-                2 => ['data' => $besoin, 'complete' => $besoin && !empty($besoin->aqui)],
-            ];
-
-            $consultationsteps = [];
-            foreach ($consultationstepsraw as $stepnum => $stepdata) {
-                $field = 'enable_step' . $stepnum;
-                if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
-                    continue;
-                }
-                $consultationsteps[] = [
-                    'stepnum' => $stepnum,
-                    'icon' => $stepicons[$stepnum],
-                    'title' => get_string('step' . $stepnum, 'gestionprojet'),
-                    'description' => get_string('step' . $stepnum . '_desc', 'gestionprojet'),
-                    'url' => 'view.php?id=' . $cm->id . '&step=' . $stepnum,
-                ];
-            }
-            $templatecontext['consultationsteps'] = $consultationsteps;
-
-            // Student work steps.
+            // Student work data sources.
             $cdcf = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'cdcf');
             $essai = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'essai');
             $rapport = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'rapport');
@@ -326,44 +306,164 @@ if ($isteacher) {
             $carnet = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'carnet');
             $fast = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'fast');
 
-            $studentstepsraw = [
-                7 => ['data' => $besoineleve, 'complete' => $besoineleve && !empty($besoineleve->aqui)],
-                4 => ['data' => $cdcf, 'complete' => $cdcf && !empty($cdcf->produit)],
-                9 => ['data' => $fast, 'complete' => (function() use ($fast) {
-                    if (!$fast || empty($fast->data_json)) {
+            // Helper: column "is enabled" check (enable_stepX != 0).
+            $stepenabled = function($stepnum) use ($gestionprojet) {
+                $field = 'enable_step' . $stepnum;
+                $val = isset($gestionprojet->$field) ? (int)$gestionprojet->$field : 1;
+                return $val !== 0;
+            };
+
+            // Helper: completion check for consultation steps (1, 2, 3).
+            $consultcomplete = function($stepnum) use ($description, $besoin, $planning) {
+                if ($stepnum === 1) {
+                    return $description && !empty($description->intitule);
+                }
+                if ($stepnum === 2) {
+                    return $besoin && !empty($besoin->aqui);
+                }
+                if ($stepnum === 3) {
+                    return $planning && !empty($planning->projectname);
+                }
+                return false;
+            };
+
+            // Helper: provided-brief completion (steps 4 and 9).
+            $providedcomplete = function($stepnum) use ($cdcfprovided, $fastprovided) {
+                if ($stepnum === 4) {
+                    return $cdcfprovided && !empty($cdcfprovided->produit);
+                }
+                if ($stepnum === 9) {
+                    if (!$fastprovided || empty($fastprovided->data_json)) {
                         return false;
                     }
-                    $d = json_decode($fast->data_json, true);
-                    return is_array($d) && !empty($d['fonctions']);
-                })()],
-                5 => ['data' => $essai, 'complete' => $essai && !empty($essai->objectif)],
-                8 => ['data' => $carnet, 'complete' => $carnet && !empty($carnet->tasks_data)],
-                6 => ['data' => $rapport, 'complete' => $rapport && !empty($rapport->besoins)],
-            ];
+                    $decoded = json_decode($fastprovided->data_json, true);
+                    return is_array($decoded) && !empty($decoded['fonctions']);
+                }
+                return false;
+            };
 
-            $studentsteps = [];
-            foreach ($studentstepsraw as $stepnum => $stepdata) {
-                $field = 'enable_step' . $stepnum;
-                if (isset($gestionprojet->$field) && !$gestionprojet->$field) {
-                    continue;
+            // Helper: student-work completion + grade for one step.
+            $workdata = function($stepnum) use ($cdcf, $essai, $rapport, $besoineleve, $carnet, $fast) {
+                $rec = null;
+                $complete = false;
+                switch ($stepnum) {
+                    case 4: $rec = $cdcf; $complete = $rec && !empty($rec->produit); break;
+                    case 5: $rec = $essai; $complete = $rec && !empty($rec->objectif); break;
+                    case 6: $rec = $rapport; $complete = $rec && !empty($rec->besoins); break;
+                    case 7: $rec = $besoineleve; $complete = $rec && !empty($rec->aqui); break;
+                    case 8: $rec = $carnet; $complete = $rec && !empty($rec->tasks_data); break;
+                    case 9:
+                        $rec = $fast;
+                        if ($rec && !empty($rec->data_json)) {
+                            $decoded = json_decode($rec->data_json, true);
+                            $complete = is_array($decoded) && !empty($decoded['fonctions']);
+                        }
+                        break;
                 }
-                $hasgrade = $stepdata['data'] && $stepdata['data']->grade !== null;
-                $gradeformatted = '';
-                if ($hasgrade) {
-                    $gradeformatted = number_format($stepdata['data']->grade, 1) . ' / 20';
-                }
-                $studentsteps[] = [
+                $grade = ($rec && $rec->grade !== null) ? (float)$rec->grade : null;
+                return ['complete' => $complete, 'grade' => $grade];
+            };
+
+            // Build Gantt columns and cells.
+            $ganttcolumndefs = gestionprojet_get_gantt_column_defs();
+            $ganttcolumns = [];
+            $rowconsult = [];
+            $rowwork = [];
+            $totaldone = 0;
+            $totalwork = 0;
+
+            foreach ($ganttcolumndefs as $coldef) {
+                $stepnum = $coldef['stepnum'];
+                $mergedwith = $coldef['mergedwith'];
+
+                // Column header (uses primary step identity).
+                $ganttcolumns[] = [
                     'stepnum' => $stepnum,
-                    'icon' => $stepicons[$stepnum],
-                    'title' => get_string('step' . $stepnum, 'gestionprojet'),
-                    'description' => get_string('step' . $stepnum . '_desc', 'gestionprojet'),
-                    'iscomplete' => $stepdata['complete'],
-                    'hasgrade' => $hasgrade,
-                    'gradeformatted' => $gradeformatted,
-                    'url' => 'view.php?id=' . $cm->id . '&step=' . $stepnum,
+                    'name' => get_string('step' . $stepnum, 'gestionprojet'),
+                    'icon' => icon::render_step($stepnum, 'sm', 'inherit'),
                 ];
+
+                // Row 1 — consultation cell.
+                if (in_array($stepnum, [1, 2, 3], true)) {
+                    $rowconsult[] = gestionprojet_build_student_gantt_cell([
+                        'isfilled' => true,
+                        'role' => 'consult',
+                        'isenabled' => $stepenabled($stepnum),
+                        'iscomplete' => $consultcomplete($stepnum),
+                        'name' => get_string('step' . $stepnum, 'gestionprojet'),
+                        'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $stepnum]))->out(false),
+                        'isprovided' => false,
+                    ]);
+                } else if ($stepnum === 4) {
+                    $providedflag = isset($gestionprojet->step4_provided) ? (int)$gestionprojet->step4_provided : 0;
+                    if ($providedflag === 1) {
+                        $rowconsult[] = gestionprojet_build_student_gantt_cell([
+                            'isfilled' => true,
+                            'role' => 'consult',
+                            'isenabled' => $stepenabled(4),
+                            'iscomplete' => $providedcomplete(4),
+                            'name' => get_string('step4', 'gestionprojet'),
+                            'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'provided']))->out(false),
+                            'isprovided' => true,
+                        ]);
+                    } else {
+                        $rowconsult[] = ['isfilled' => false];
+                    }
+                } else if ($stepnum === 9) {
+                    $providedflag = isset($gestionprojet->step9_provided) ? (int)$gestionprojet->step9_provided : 0;
+                    if ($providedflag === 1) {
+                        $rowconsult[] = gestionprojet_build_student_gantt_cell([
+                            'isfilled' => true,
+                            'role' => 'consult',
+                            'isenabled' => $stepenabled(9),
+                            'iscomplete' => $providedcomplete(9),
+                            'name' => get_string('step9', 'gestionprojet'),
+                            'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9, 'mode' => 'provided']))->out(false),
+                            'isprovided' => true,
+                        ]);
+                    } else {
+                        $rowconsult[] = ['isfilled' => false];
+                    }
+                } else {
+                    $rowconsult[] = ['isfilled' => false];
+                }
+
+                // Row 2 — student work cell. Use mergedwith if set (column 3 → step 7).
+                $workstep = $mergedwith !== null ? $mergedwith : $stepnum;
+                if (in_array($workstep, [4, 5, 6, 7, 8, 9], true)) {
+                    $work = $workdata($workstep);
+                    $isenabled = $stepenabled($workstep);
+                    if ($isenabled) {
+                        $totalwork++;
+                        if ($work['complete']) {
+                            $totaldone++;
+                        }
+                    }
+                    $rowwork[] = gestionprojet_build_student_gantt_cell([
+                        'isfilled' => true,
+                        'role' => 'work',
+                        'isenabled' => $isenabled,
+                        'iscomplete' => $work['complete'],
+                        'name' => get_string('step' . $workstep, 'gestionprojet'),
+                        'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => $workstep]))->out(false),
+                        'grade' => $work['grade'],
+                    ]);
+                } else {
+                    $rowwork[] = ['isfilled' => false];
+                }
             }
-            $templatecontext['studentsteps'] = $studentsteps;
+
+            $templatecontext['gantt_student'] = [
+                'columns' => $ganttcolumns,
+                'rowconsult' => $rowconsult,
+                'rowwork' => $rowwork,
+                'cmid' => $cm->id,
+                'summary' => [
+                    'done' => $totaldone,
+                    'total' => $totalwork,
+                    'allcomplete' => $totalwork > 0 && $totaldone === $totalwork,
+                ],
+            ];
         }
     }
 }
