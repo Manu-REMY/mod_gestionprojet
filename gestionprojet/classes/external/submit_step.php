@@ -44,7 +44,7 @@ class submit_step extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'cmid' => new external_value(PARAM_INT, 'Course module ID'),
-            'step' => new external_value(PARAM_INT, 'Step number (4-8)'),
+            'step' => new external_value(PARAM_INT, 'Step number (4-9)'),
             'action' => new external_value(PARAM_TEXT, 'Action: submit or unlock'),
             'groupid' => new external_value(PARAM_INT, 'Group ID (0 for individual)', VALUE_DEFAULT, 0),
             'userid' => new external_value(PARAM_INT, 'User ID (for unlock, 0 for group)', VALUE_DEFAULT, 0),
@@ -91,6 +91,7 @@ class submit_step extends external_api {
             6 => 'gestionprojet_rapport',
             7 => 'gestionprojet_besoin_eleve',
             8 => 'gestionprojet_carnet',
+            9 => 'gestionprojet_fast',
         ];
 
         if (!isset($steptables[$params['step']])) {
@@ -142,9 +143,30 @@ class submit_step extends external_api {
                     $params['groupid']
                 );
 
+                // Try to queue AI evaluation. Failure is non-fatal — submission stays valid.
+                $evaluationid = 0;
+                $aiAvailable = false;
+                if (!empty($gestionprojet->ai_enabled)) {
+                    try {
+                        require_once(__DIR__ . '/../ai_evaluator.php');
+                        $evaluationid = (int)\mod_gestionprojet\ai_evaluator::queue_evaluation(
+                            $gestionprojet->id,
+                            $params['step'],
+                            $record->id,
+                            $record->groupid ?? 0,
+                            $record->userid ?? 0
+                        );
+                        $aiAvailable = true;
+                    } catch (\Exception $e) {
+                        debugging('AI evaluation skipped on submit: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                    }
+                }
+
                 return [
                     'success' => true,
                     'message' => get_string('submissionsuccess', 'gestionprojet'),
+                    'evaluationid' => $evaluationid,
+                    'ai_available' => $aiAvailable,
                     'timestamp' => time(),
                 ];
 
@@ -218,6 +240,8 @@ class submit_step extends external_api {
         return new external_single_structure([
             'success' => new external_value(PARAM_BOOL, 'Whether the operation succeeded'),
             'message' => new external_value(PARAM_TEXT, 'Status or error message'),
+            'evaluationid' => new external_value(PARAM_INT, 'Queued AI evaluation ID (0 if no AI)', VALUE_OPTIONAL),
+            'ai_available' => new external_value(PARAM_BOOL, 'Whether AI evaluation was queued', VALUE_OPTIONAL),
             'timestamp' => new external_value(PARAM_INT, 'Server timestamp'),
         ]);
     }
