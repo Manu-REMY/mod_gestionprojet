@@ -5222,3 +5222,184 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+/* === CDCF (NF EN 16271) — step 4 === */
+.path-mod-gestionprojet .gp-cdcf-norm-block {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-size: 0.9em;
+}
+.path-mod-gestionprojet .gp-cdcf-section { margin-bottom: 24px; }
+.path-mod-gestionprojet .gp-cdcf-section h3 { margin: 0 0 6px 0; }
+.path-mod-gestionprojet .gp-cdcf-norm {
+    font-size: 0.82em;
+    color: #6b5e34;
+    background: #fef9c3;
+    padding: 8px 10px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+.path-mod-gestionprojet .gp-cdcf-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.path-mod-gestionprojet .gp-cdcf-row > input { flex: 1; }
+.path-mod-gestionprojet .gp-cdcf-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    min-width: 36px;
+    padding: 0 8px;
+    border-radius: 14px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+.path-mod-gestionprojet .gp-cdcf-badge-i { background: #dbeafe; color: #1e40af; }
+.path-mod-gestionprojet .gp-cdcf-badge-fs {
+    background: #fef3c7;
+    color: #92400e;
+    height: 32px;
+    min-width: 44px;
+}
+.path-mod-gestionprojet .gp-cdcf-badge-c { background: #fee2e2; color: #991b1b; }
+.path-mod-gestionprojet .gp-cdcf-fs-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+.path-mod-gestionprojet .gp-cdcf-fs-head {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+.path-mod-gestionprojet .gp-cdcf-fs-arrows {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 4px;
+}
+.path-mod-gestionprojet .gp-cdcf-fs-desc-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.path-mod-gestionprojet .gp-cdcf-fs-desc { width: 100%; resize: vertical; }
+.path-mod-gestionprojet .gp-cdcf-fs-selects {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.path-mod-gestionprojet .gp-cdcf-criteres {
+    margin-left: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+}
+.path-mod-gestionprojet .gp-cdcf-critere {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+.path-mod-gestionprojet .gp-cdcf-critere > input:first-child { flex: 1; }
+.path-mod-gestionprojet .gp-cdcf-critere > input:nth-child(2) { width: 160px; }
+.path-mod-gestionprojet .gp-cdcf-critere > select { width: 140px; }
+.path-mod-gestionprojet .gp-cdcf-flex-F0 { background: #fee2e2; border-color: #fca5a5; }
+.path-mod-gestionprojet .gp-cdcf-flex-F1 { background: #fed7aa; border-color: #fdba74; }
+.path-mod-gestionprojet .gp-cdcf-flex-F2 { background: #fef3c7; border-color: #fde68a; }
+.path-mod-gestionprojet .gp-cdcf-flex-F3 { background: #d1fae5; border-color: #6ee7b7; }
+.path-mod-gestionprojet .gp-cdcf-btn-add,
+.path-mod-gestionprojet .gp-cdcf-btn-add-sm {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.85em;
+}
+.path-mod-gestionprojet .gp-cdcf-btn-add-sm {
+    padding: 4px 8px;
+    font-size: 0.78em;
+    background: #6b7280;
+}
+.path-mod-gestionprojet .gp-cdcf-btn-remove {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1em;
+    padding: 4px 8px;
+}
+.path-mod-gestionprojet .gp-cdcf-btn-remove:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+}
+.path-mod-gestionprojet .gp-cdcf-icon-btn {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 1px 4px;
+    line-height: 1;
+}
+.path-mod-gestionprojet .gp-cdcf-icon-btn:disabled {
+    color: #e5e7eb;
+    cursor: not-allowed;
+}
+.path-mod-gestionprojet .gp-cdcf-diagram {
+    display: flex;
+    justify-content: center;
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 12px;
+}
+.path-mod-gestionprojet .gp-cdcf-readonly input,
+.path-mod-gestionprojet .gp-cdcf-readonly textarea,
+.path-mod-gestionprojet .gp-cdcf-readonly select,
+.path-mod-gestionprojet .gp-cdcf-readonly button {
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+/* === Student activity pages: full-width with subtle blue identity === */
+.path-mod-gestionprojet .gp-student {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+.path-mod-gestionprojet .step4-container.gp-student,
+.path-mod-gestionprojet .step-container.gp-student,
+.path-mod-gestionprojet .step8-container.gp-student {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+}
+.path-mod-gestionprojet .gp-student .description,
+.path-mod-gestionprojet .gp-student .info-section,
+.path-mod-gestionprojet .gp-student .logbook-section {
+    border-left: 3px solid #2563eb;
+    padding-left: 1rem;
+}
+.path-mod-gestionprojet .gp-student .group-info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin-bottom: 16px;
+    color: #1e40af;
+    font-size: 0.95em;
+}

@@ -447,9 +447,6 @@ $string['privacy:metadata:timemodified'] = 'Date et heure de dernière modificat
 
 // CDCF (Étape 4)
 $string['privacy:metadata:gestionprojet_cdcf:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le cahier des charges';
-$string['privacy:metadata:gestionprojet_cdcf:produit'] = 'Le produit défini par l\'élève';
-$string['privacy:metadata:gestionprojet_cdcf:milieu'] = 'Le milieu d\'utilisation défini par l\'élève';
-$string['privacy:metadata:gestionprojet_cdcf:fp'] = 'La fonction principale définie par l\'élève';
 $string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'Données JSON contenant les interacteurs, fonctions contraintes et critères';
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'Le statut de la soumission (brouillon ou soumis)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'Date et heure de soumission du travail';
@@ -750,26 +747,36 @@ $string['step4_page_title'] = 'CAHIER DES CHARGES FONCTIONNEL';
 $string['step4_page_subtitle'] = 'Analyse fonctionnelle - Technologie';
 $string['step4_desc_title'] = 'Qu\'est-ce qu\'un Cahier des Charges Fonctionnel ?';
 $string['step4_desc_text'] = 'Le Cahier des Charges Fonctionnel (CDCF) définit ce que doit faire le produit sans dire comment.';
-$string['step4_fp_label'] = 'FP (Fonction Principale)';
-$string['step4_fp_desc'] = 'Relie le produit aux 2 premiers éléments du milieu extérieur';
-$string['step4_fc_label'] = 'FC (Fonction Contrainte)';
-$string['step4_fc_desc'] = 'Relie le produit à 1 élément du milieu extérieur';
-$string['step4_produit_placeholder'] = 'Nom du produit';
-$string['step4_fp_placeholder'] = 'Décrivez la fonction principale du produit...';
-$string['step4_milieu_placeholder'] = 'Milieu d\'utilisation';
 $string['step4_diagram_title'] = 'Diagramme des Interacteurs';
-$string['step4_interactors_section'] = 'Interacteurs et Fonctions Contraintes';
-$string['step4_add_interactor'] = '+ Ajouter un interacteur';
-$string['step4_interactor_default'] = 'Interacteur {$a}';
-$string['step4_interactor_name_placeholder'] = 'Nom de l\'interacteur';
-$string['step4_delete'] = 'Supprimer';
-$string['step4_fc_value_placeholder'] = 'Description de la fonction contrainte';
+$string['step4_add_interactor'] = 'Ajouter un interacteur';
 $string['step4_critere_placeholder'] = 'Critère d\'appréciation';
 $string['step4_niveau_placeholder'] = 'Niveau';
-$string['step4_unite_placeholder'] = 'Unité';
-$string['step4_add_critere'] = '+ Critère';
-$string['step4_add_fc'] = '+ Fonction Contrainte';
-$string['step4_product_fallback'] = 'Produit';
+$string['step4_add_critere'] = 'Ajouter un critère';
+
+// Step 4 - Norm-aligned editor (NF EN 16271).
+$string['step4_norm_intro'] = 'Le Cahier des Charges Fonctionnel décrit les fonctions que doit assurer le produit (FS) et les contraintes à respecter (C), en s\'appuyant sur l\'analyse des interacteurs.';
+$string['step4_interactors_title'] = 'Interacteurs';
+$string['step4_interactors_norm'] = 'Identifiez les éléments du milieu extérieur en interaction avec le produit.';
+$string['step4_interactor_placeholder'] = 'Nom de l\'interacteur';
+$string['step4_diagram_title'] = 'Diagramme pieuvre';
+$string['step4_fs_title'] = 'Fonctions de service (FS)';
+$string['step4_fs_norm'] = 'Une FS exprime une relation entre deux interacteurs (ou un interacteur et le produit). Précisez les critères et niveaux attendus.';
+$string['step4_fs_desc_placeholder'] = 'Décrire la fonction de service…';
+$string['step4_fs_desc_label'] = 'Description';
+$string['step4_fs_interactors_label'] = 'Interacteurs liés';
+$string['step4_add_fs'] = 'Ajouter une fonction de service';
+$string['step4_flex_none'] = 'Sans flexibilité';
+$string['step4_flex_f0'] = 'F0 — Impératif';
+$string['step4_flex_f1'] = 'F1 — Peu négociable';
+$string['step4_flex_f2'] = 'F2 — Négociable';
+$string['step4_flex_f3'] = 'F3 — Très négociable';
+$string['step4_none_option'] = '— Aucun —';
+$string['step4_contraintes_title'] = 'Contraintes (C)';
+$string['step4_contraintes_norm'] = 'Précisez les contraintes (réglementaires, techniques, économiques…) et leur justification. Liez-les éventuellement à une FS.';
+$string['step4_contrainte_placeholder'] = 'Décrire la contrainte…';
+$string['step4_justification_placeholder'] = 'Justification';
+$string['step4_no_fs_link'] = '— Sans lien à une FS —';
+$string['step4_add_contrainte'] = 'Ajouter une contrainte';
 
 // Step 5 - Page Fiche Essai (élève)
 $string['step5_page_title'] = 'FICHE ESSAI';
@@ -866,8 +873,6 @@ $string['step4_provided_notice_student'] = 'Votre enseignant a fourni le Cahier 
 $string['step4_provided_notice_teacher'] = 'Mode fourni : ce contenu sera affiché en lecture seule aux élèves. Le champ « Instructions IA » n\'est jamais affiché aux élèves.';
 $string['step4_hybrid_notice_teacher'] = 'Mode hybride : ce contenu sera affiché aux élèves comme document de référence ET utilisé comme modèle de correction pour leur propre production. Le champ « Instructions IA » n\'est jamais affiché aux élèves.';
 $string['step4_provided_badge'] = 'Fourni';
-$string['step4_produit_label'] = 'Produit';
-$string['step4_milieu_label'] = 'Milieu';
 $string['step4_interacteurs_label'] = 'Interacteurs';
 
 // Étape 9 : Diagramme FAST.
@@ -876,6 +881,8 @@ $string['step9_desc'] = 'Traduire les fonctions de service en solutions techniqu
 $string['enable_step9'] = 'Activer l\'étape 9 (Diagramme FAST)';
 $string['step9_provided'] = 'Fournir un diagramme FAST aux élèves';
 $string['step9_provided_desc'] = 'Si coché, les élèves voient le FAST de l\'enseignant comme point de départ.';
+$string['step9_desc_title'] = 'Qu\'est-ce qu\'un diagramme FAST ?';
+$string['step9_desc_text'] = 'Le diagramme FAST (Function Analysis System Technique) décompose chaque fonction de service du CDCF en fonctions techniques (FT) puis en solutions techniques (ST). Il fait le lien entre le besoin exprimé et les choix de réalisation.';
 
 // UI FAST.
 $string['fast:diagram_title'] = 'Diagramme FAST';

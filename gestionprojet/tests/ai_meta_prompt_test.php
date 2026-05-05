@@ -37,10 +37,22 @@ class mod_gestionprojet_ai_meta_prompt_test extends advanced_testcase {
     public function test_step4_meta_prompt_includes_model_fields(): void {
         $builder = new \mod_gestionprojet\ai_prompt_builder();
         $model = (object)[
-            'produit' => 'Trottinette électrique',
-            'milieu'  => 'Espace urbain',
-            'fp'      => 'Permettre à un usager de se déplacer en ville',
-            'interacteurs_data' => '',
+            'interacteurs_data' => json_encode([
+                'interactors' => [
+                    ['id' => 1, 'name' => 'Usager'],
+                    ['id' => 2, 'name' => 'Espace urbain'],
+                ],
+                'fonctionsService' => [
+                    [
+                        'id' => 1,
+                        'description' => 'Permettre à un usager de se déplacer en ville',
+                        'interactor1Id' => 1,
+                        'interactor2Id' => 2,
+                        'criteres' => [],
+                    ],
+                ],
+                'contraintes' => [],
+            ]),
         ];
         $result = $builder->build_meta_prompt(4, $model);
 
@@ -48,8 +60,9 @@ class mod_gestionprojet_ai_meta_prompt_test extends advanced_testcase {
         $this->assertArrayHasKey('system', $result);
         $this->assertArrayHasKey('user', $result);
         $this->assertStringContainsString('expert pédagogique', $result['system']);
-        $this->assertStringContainsString('Trottinette électrique', $result['user']);
-        $this->assertStringContainsString('Espace urbain', $result['user']);
+        $this->assertStringContainsString('INTERACTEURS', $result['user']);
+        $this->assertStringContainsString('Usager', $result['user']);
+        $this->assertStringContainsString('Permettre à un usager de se déplacer en ville', $result['user']);
     }
 
     public static function each_step_provider(): array {

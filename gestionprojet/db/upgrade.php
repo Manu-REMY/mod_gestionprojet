@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 function xmldb_gestionprojet_upgrade($oldversion)
 {
-    global $DB;
+    global $CFG, $DB;
 
     $dbman = $DB->get_manager();
 
@@ -617,6 +617,57 @@ function xmldb_gestionprojet_upgrade($oldversion)
         }
 
         upgrade_mod_savepoint(true, 2026050500, 'gestionprojet');
+    }
+
+    if ($oldversion < 2026050601) {
+        // CDCF norm-aligned schema migration (NF EN 16271):
+        // 1. Convert legacy "fcs nested in interactors" + separate "fp" column
+        //    into the unified {interactors, fonctionsService, contraintes} structure
+        //    inside interacteurs_data.
+        // 2. Drop deprecated columns produit, milieu, fp from the 3 CDCF tables.
+        // Idempotent: cdcf_helper::migrate_legacy short-circuits already-new schema,
+        // so a re-run after a partial failure is safe.
+
+        require_once($CFG->dirroot . '/mod/gestionprojet/classes/cdcf_helper.php');
+
+        $cdcftables = ['gestionprojet_cdcf', 'gestionprojet_cdcf_teacher', 'gestionprojet_cdcf_provided'];
+
+        // Migrate JSON content of all CDCF rows (3 tables) using cdcf_helper::migrate_legacy.
+        foreach ($cdcftables as $tname) {
+            $rs = $DB->get_recordset($tname);
+            try {
+                foreach ($rs as $rec) {
+                    $hadcontent = !empty(trim((string)($rec->interacteurs_data ?? '')))
+                        || !empty(trim((string)($rec->fp ?? '')));
+                    $newdata = \mod_gestionprojet\cdcf_helper::migrate_legacy(
+                        $rec->interacteurs_data ?? null,
+                        $rec->fp ?? null
+                    );
+                    if ($hadcontent && empty($newdata['fonctionsService']) && empty($newdata['contraintes'])) {
+                        mtrace("gestionprojet: CDCF row {$tname}#{$rec->id} migrated to empty structure"
+                            . ' (legacy input may be malformed)');
+                    }
+                    $rec->interacteurs_data = json_encode($newdata, JSON_UNESCAPED_UNICODE);
+                    $DB->update_record($tname, $rec);
+                }
+            } finally {
+                $rs->close();
+            }
+        }
+
+        // Drop deprecated columns from each CDCF table.
+        $deprecated = ['produit', 'milieu', 'fp'];
+        foreach ($cdcftables as $tname) {
+            $table = new xmldb_table($tname);
+            foreach ($deprecated as $fname) {
+                $field = new xmldb_field($fname);
+                if ($dbman->field_exists($table, $field)) {
+                    $dbman->drop_field($table, $field);
+                }
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2026050601, 'gestionprojet');
     }
 
     return true;

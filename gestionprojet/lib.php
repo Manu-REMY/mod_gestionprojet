@@ -263,15 +263,19 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
     }
 
     // For CDCF phase: when teacher provides a consigne, seed student submission with it.
-    if ($table === 'cdcf' && (int)$gestionprojet->step4_provided === 1 && empty($record->produit) && empty($record->milieu) && empty($record->fp) && empty($record->interacteurs_data)) {
-        $provided = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
-        if ($provided) {
-            $record->produit = $provided->produit ?? '';
-            $record->milieu = $provided->milieu ?? '';
-            $record->fp = $provided->fp ?? '';
-            $record->interacteurs_data = $provided->interacteurs_data ?? '';
-            $record->timemodified = time();
-            $DB->update_record('gestionprojet_cdcf', $record);
+    // "Empty" means no fonctions de service AND no contraintes — the default skeleton
+    // (2 blank interactors) produced by the migration counts as empty.
+    if ($table === 'cdcf' && (int)$gestionprojet->step4_provided === 1) {
+        require_once(__DIR__ . '/classes/cdcf_helper.php');
+        $current = \mod_gestionprojet\cdcf_helper::decode($record->interacteurs_data ?? null);
+        $isempty = empty($current['fonctionsService']) && empty($current['contraintes']);
+        if ($isempty) {
+            $provided = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
+            if ($provided && !empty($provided->interacteurs_data)) {
+                $record->interacteurs_data = $provided->interacteurs_data;
+                $record->timemodified = time();
+                $DB->update_record('gestionprojet_cdcf', $record);
+            }
         }
     }
 

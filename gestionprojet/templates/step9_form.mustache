@@ -21,16 +21,13 @@
 }}
 <div class="path-mod-gestionprojet path-mod-gestionprojet-fast" data-cmid="{{cmid}}" data-mode="{{mode}}" data-sesskey="{{sesskey}}">
 
+    {{#canpopulatecdcf}}
     <div class="fast-toolbar mb-3 d-flex gap-2 align-items-center">
-        {{#canpopulatecdcf}}
-            <button type="button" class="btn btn-outline-primary" data-action="populate-cdcf">
-                {{#str}}fast:populate_from_cdcf, mod_gestionprojet{{/str}}
-            </button>
-        {{/canpopulatecdcf}}
-        <button type="button" class="btn btn-primary" data-action="save-now" id="fast-save-{{cmid}}">
-            {{#str}}save, mod_gestionprojet{{/str}}
+        <button type="button" class="btn btn-outline-primary" data-action="populate-cdcf">
+            {{#str}}fast:populate_from_cdcf, mod_gestionprojet{{/str}}
         </button>
     </div>
+    {{/canpopulatecdcf}}
 
     <div class="fast-form" id="fast-form-{{cmid}}"></div>
 
@@ -54,6 +51,13 @@
         <small class="form-text text-muted">{{#str}}fast:ai_instructions_help, mod_gestionprojet{{/str}}</small>
     </div>
     {{/isteacher}}
+
+    <div class="save-section">
+        <button type="button" class="btn-save" data-action="save-now" id="fast-save-{{cmid}}">
+            {{#str}}save, mod_gestionprojet{{/str}}
+        </button>
+        <div id="saveStatus" class="save-status"></div>
+    </div>
 
     <input type="hidden" id="fast-data-{{cmid}}" name="data_json" value="{{datajson}}">
 </div>

@@ -38,7 +38,7 @@ class ai_prompt_builder {
 
     /** @var array Step-specific field mappings */
     const STEP_FIELDS = [
-        4 => ['produit', 'milieu', 'fp', 'interacteurs_data'],
+        4 => ['interacteurs_data'],
         5 => ['nom_essai', 'objectif', 'fonction_service', 'niveaux_reussite', 'etapes_protocole',
               'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion'],
         6 => ['titre_projet', 'auteurs', 'besoin_projet', 'besoins', 'imperatifs', 'solutions',
@@ -50,7 +50,7 @@ class ai_prompt_builder {
 
     /** @var array Step descriptions in French */
     const STEP_CONTEXT = [
-        4 => 'Cahier des Charges Fonctionnel - Analyse fonctionnelle avec diagramme des interacteurs et fonctions contraintes',
+        4 => 'Cahier des Charges Fonctionnel - Analyse fonctionnelle conforme NF EN 16271 (interacteurs, fonctions de service avec critères et flexibilité, contraintes)',
         5 => 'Fiche d\'Essai - Protocole expérimental avec objectifs, étapes, matériel et résultats',
         6 => 'Rapport de Projet - Synthèse complète du projet avec besoin, solutions, réalisation et bilan',
         7 => 'Expression du Besoin - Diagramme Bête à Cornes (À qui? Sur quoi? Dans quel but?)',
@@ -61,12 +61,11 @@ class ai_prompt_builder {
     /** @var array Step-specific evaluation criteria */
     const STEP_CRITERIA = [
         4 => [
-            ['name' => 'Identification du produit', 'weight' => 2, 'description' => 'Le produit est clairement identifié et décrit'],
-            ['name' => 'Identification du milieu', 'weight' => 2, 'description' => 'Le milieu environnant est bien défini'],
-            ['name' => 'Fonction principale', 'weight' => 3, 'description' => 'La FP est correctement formulée (verbe infinitif + COD)'],
             ['name' => 'Interacteurs', 'weight' => 4, 'description' => 'Les interacteurs sont pertinents et complets'],
-            ['name' => 'Fonctions contraintes', 'weight' => 5, 'description' => 'Les FC sont bien formulées avec critères et niveaux'],
-            ['name' => 'Cohérence globale', 'weight' => 4, 'description' => 'L\'ensemble est cohérent et bien structuré'],
+            ['name' => 'Fonctions de service', 'weight' => 6, 'description' => 'Chaque FS exprime un service rendu, est rattachée à 1 ou 2 interacteurs et utilise un verbe d\'action à l\'infinitif'],
+            ['name' => 'Critères', 'weight' => 4, 'description' => 'Chaque critère a un niveau quantifié et une flexibilité (F0–F3) cohérente'],
+            ['name' => 'Contraintes', 'weight' => 3, 'description' => 'Les contraintes sont identifiées avec justification'],
+            ['name' => 'Cohérence globale', 'weight' => 3, 'description' => 'L\'ensemble est cohérent avec la norme NF EN 16271'],
         ],
         5 => [
             ['name' => 'Objectif de l\'essai', 'weight' => 3, 'description' => 'L\'objectif est clairement défini'],
@@ -106,10 +105,7 @@ class ai_prompt_builder {
 
     /** @var array Field labels in French */
     const FIELD_LABELS = [
-        'produit' => 'Produit',
-        'milieu' => 'Milieu environnant',
-        'fp' => 'Fonction Principale',
-        'interacteurs_data' => 'Interacteurs et Fonctions Contraintes',
+        'interacteurs_data' => 'Cahier des Charges Fonctionnel (interacteurs, fonctions de service, contraintes)',
         'nom_essai' => 'Nom de l\'essai',
         'objectif' => 'Objectif',
         'fonction_service' => 'Fonction de service testée',
@@ -358,46 +354,75 @@ PROMPT;
     }
 
     /**
-     * Format interacteurs data for display.
+     * Format CDCF data for AI prompt display.
      *
-     * @param string|null $json JSON string
-     * @return string Formatted text
+     * @param string|null $json
+     * @return string
      */
     private function format_interacteurs(?string $json): string {
         if (empty($json)) {
             return '';
         }
 
-        $data = json_decode($json, true);
-        if (!is_array($data)) {
-            return '';
+        require_once(__DIR__ . '/cdcf_helper.php');
+        $data = \mod_gestionprojet\cdcf_helper::decode($json);
+
+        $out = [];
+
+        $out[] = 'INTERACTEURS :';
+        foreach ($data['interactors'] as $i) {
+            $out[] = '  • [I' . $i['id'] . '] ' . ($i['name'] !== '' ? $i['name'] : '(sans nom)');
         }
 
-        $output = [];
-        foreach ($data as $index => $interacteur) {
-            $name = $interacteur['name'] ?? 'Interacteur ' . ($index + 1);
-            $output[] = "• Interacteur: $name";
+        $byid = [];
+        foreach ($data['interactors'] as $i) {
+            $byid[$i['id']] = $i['name'] !== '' ? $i['name'] : ('Interacteur ' . $i['id']);
+        }
 
-            if (!empty($interacteur['fcs']) && is_array($interacteur['fcs'])) {
-                foreach ($interacteur['fcs'] as $fcindex => $fc) {
-                    $fcname = $fc['name'] ?? 'FC' . ($fcindex + 1);
-                    $output[] = "  - FC: $fcname";
+        // Map persisted FS id → human-visible "FS<n>" label so contraintes can reference
+        // the same label the FS section prints, regardless of insertion order or deletes.
+        $fslabelbyid = [];
+        foreach ($data['fonctionsService'] as $idx => $fs) {
+            $fslabelbyid[$fs['id']] = 'FS' . ($idx + 1);
+        }
 
-                    if (!empty($fc['criteres']) && is_array($fc['criteres'])) {
-                        foreach ($fc['criteres'] as $critere) {
-                            $cname = $critere['name'] ?? '';
-                            $niveau = $critere['niveau'] ?? '';
-                            $flexibilite = $critere['flexibilite'] ?? '';
-                            if ($cname) {
-                                $output[] = "    * Critère: $cname | Niveau: $niveau | Flexibilité: $flexibilite";
-                            }
-                        }
-                    }
+        if (!empty($data['fonctionsService'])) {
+            $out[] = '';
+            $out[] = 'FONCTIONS DE SERVICE :';
+            foreach ($data['fonctionsService'] as $idx => $fs) {
+                $i1 = $byid[$fs['interactor1Id']] ?? '?';
+                $tail = $fs['interactor2Id'] > 0 ? (' ↔ ' . ($byid[$fs['interactor2Id']] ?? '?')) : '';
+                $out[] = sprintf('  • FS%d : %s [%s%s]',
+                    $idx + 1,
+                    $fs['description'] !== '' ? $fs['description'] : '(énoncé manquant)',
+                    $i1, $tail);
+                foreach ($fs['criteres'] as $cidx => $c) {
+                    $out[] = sprintf('      - C%d.%d : %s | niveau : %s | flexibilité : %s',
+                        $idx + 1, $cidx + 1,
+                        $c['description'] !== '' ? $c['description'] : '(critère vide)',
+                        $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)',
+                        $c['flexibilite'] !== '' ? $c['flexibilite'] : '(non précisée)');
                 }
             }
         }
 
-        return implode("\n", $output);
+        if (!empty($data['contraintes'])) {
+            $out[] = '';
+            $out[] = 'CONTRAINTES :';
+            foreach ($data['contraintes'] as $cidx => $c) {
+                $linked = '';
+                if ($c['linkedFsId'] > 0 && isset($fslabelbyid[$c['linkedFsId']])) {
+                    $linked = ' (liée à ' . $fslabelbyid[$c['linkedFsId']] . ')';
+                }
+                $out[] = sprintf('  • C%d : %s%s | Justification : %s',
+                    $cidx + 1,
+                    $c['description'] !== '' ? $c['description'] : '(énoncé manquant)',
+                    $linked,
+                    $c['justification'] !== '' ? $c['justification'] : '(non précisée)');
+            }
+        }
+
+        return implode("\n", $out);
     }
 
     /**
