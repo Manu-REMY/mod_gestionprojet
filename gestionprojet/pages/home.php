@@ -108,18 +108,7 @@ if ($isteacher) {
     $totalconfigtargets = 0;
     $totalungraded = 0;
 
-    // Each entry: ['stepnum' => N, 'mergedwith' => M (optional)]
-    // 'mergedwith' indicates that this column also represents step M's correction-model + student rows.
-    $ganttcolumndefs = [
-        ['stepnum' => 1, 'mergedwith' => null],
-        ['stepnum' => 3, 'mergedwith' => null],
-        ['stepnum' => 2, 'mergedwith' => 7], // merged: step 2 (teacher doc) + step 7 (model + student)
-        ['stepnum' => 4, 'mergedwith' => null],
-        ['stepnum' => 9, 'mergedwith' => null],
-        ['stepnum' => 5, 'mergedwith' => null],
-        ['stepnum' => 8, 'mergedwith' => null],
-        ['stepnum' => 6, 'mergedwith' => null],
-    ];
+    $ganttcolumndefs = gestionprojet_get_gantt_column_defs();
 
     foreach ($ganttcolumndefs as $coldef) {
         $stepnum = $coldef['stepnum'];
