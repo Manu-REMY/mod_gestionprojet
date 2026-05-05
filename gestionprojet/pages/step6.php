@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Step 6: Project Report (Student group page)
@@ -261,7 +269,7 @@ if ($submission->auteurs) {
                 </button>
             <?php endif; ?>
 
-            <button type="button" class="btn-export btn-export-margin" onclick="exportPDF()">
+            <button type="button" id="exportPdfBtn" class="btn-export btn-export-margin">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?>
             </button>
             <p class="export-notice">
@@ -272,202 +280,22 @@ if ($submission->auteurs) {
 </div>
 
 <?php
-// Wire the new modal-based submit flow + AI progress banner.
-$isSubmitted = ($submission && (int)$submission->status === 1);
-require __DIR__ . '/student_submit_helper.php';
+$PAGE->requires->js_call_amd('mod_gestionprojet/step6', 'init', [[
+    'cmid' => (int)$cm->id,
+    'step' => 6,
+    'groupid' => (int)$groupid,
+    'autosaveInterval' => (int)$gestionprojet->autosave_interval * 1000,
+    'isLocked' => (bool)$isLocked,
+    'auteurs' => $auteurs ?: [''],
+    'strings' => [
+        'confirm_submission' => get_string('confirm_submission', 'gestionprojet'),
+        'confirm_revert' => get_string('confirm_revert', 'gestionprojet'),
+        'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet'),
+        'memberPlaceholder' => get_string('step6_member_placeholder', 'gestionprojet'),
+        'addMember' => get_string('step6_add_member', 'gestionprojet'),
+        'removeMember' => get_string('step6_remove_member', 'gestionprojet'),
+    ],
+]]);
 
-// Ensure jQuery is loaded
-$PAGE->requires->jquery();
-?>
-
-<script>
-    // Wait for jQuery to be loaded
-    // Wait for RequireJS and jQuery
-    (function waitRequire() {
-        if (typeof require === 'undefined' || typeof jQuery === 'undefined') {
-            setTimeout(waitRequire, 50);
-            return;
-        }
-
-        require(['jquery', 'core/ajax', 'mod_gestionprojet/autosave'], function ($, Ajax, Autosave) {
-            var cmid = <?php echo $cm->id; ?>;
-            var step = 6;
-            var autosaveInterval = <?php echo $gestionprojet->autosave_interval * 1000; ?>;
-            var groupid = <?php echo $groupid; ?>;
-            var stepContainer = document.querySelector('.step-container');
-            var strErrorSubmitting = stepContainer.dataset.strErrorSubmitting;
-            var strErrorReverting = stepContainer.dataset.strErrorReverting;
-
-            // Custom serialization for step 6
-            var serializeData = function () {
-                var formData = {};
-
-                // Collect regular fields (text inputs, textareas)
-                $('#rapportForm').find('input[type="text"], textarea').each(function () {
-                    if (this.name) {
-                        formData[this.name] = this.value;
-                    }
-                });
-
-                // Collect authors as JSON array
-                // members is defined globally in the script below
-                if (typeof members !== 'undefined') {
-                    formData['auteurs'] = JSON.stringify(members.filter(function (m) {
-                        return m.trim() !== '';
-                    }));
-                } else {
-                    formData['auteurs'] = '[]';
-                }
-
-                return formData;
-            };
-
-            var isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
-
-            // Submit handled by mod_gestionprojet/submission AMD module (loaded via student_submit_helper.php).
-
-            // Handle Revert
-            $('#revertButton').on('click', function () {
-                if (confirm('<?php echo get_string('confirm_revert', 'gestionprojet'); ?>')) {
-                    Ajax.call([{
-                        methodname: 'mod_gestionprojet_submit_step',
-                        args: {
-                            cmid: cmid,
-                            step: step,
-                            action: 'revert'
-                        }
-                    }])[0].done(function (data) {
-                        if (data.success) {
-                            window.location.reload();
-                        } else {
-                            alert(strErrorReverting);
-                        }
-                    }).fail(function () {
-                        alert(strErrorReverting);
-                    });
-                }
-            });
-
-            if (!isLocked) {
-                Autosave.init({
-                    cmid: cmid,
-                    step: step,
-                    groupid: groupid, // Note: Autosave might need update if groupid is 0 but we kept groupid var
-                    interval: autosaveInterval,
-                    formSelector: '#rapportForm',
-                    serialize: serializeData
-                });
-            }
-
-            // We need to trigger autosave when members change
-            // The Autosave module listens for 'change input' on the form, so this should work automatically if not locked.
-        });
-    })();
-
-    // Members management
-    let members = <?php echo json_encode($auteurs); ?>;
-    let isLocked = <?php echo $isLocked ? 'true' : 'false'; ?>;
-
-    // Get translated strings from data attributes
-    const step6Container = document.querySelector('.step-container');
-    const STR6 = {
-        memberPlaceholder: step6Container.dataset.strMemberPlaceholder,
-        addMember: step6Container.dataset.strAddMember,
-        removeMember: step6Container.dataset.strRemoveMember
-    };
-
-    if (members.length === 0) {
-        members = [''];
-    }
-
-    function renderMembers() {
-        const container = document.getElementById('membersContainer');
-        container.innerHTML = '';
-
-        members.forEach((member, index) => {
-            const memberGroup = document.createElement('div');
-            memberGroup.className = 'member-group';
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = STR6.memberPlaceholder;
-            input.value = member;
-            if (isLocked) {
-                input.disabled = true;
-                input.readOnly = true;
-            } else {
-                input.onchange = (e) => {
-                    members[index] = e.target.value;
-                    // Trigger auto-save
-                    const event = new Event('change', { bubbles: true });
-                    document.getElementById('rapportForm').dispatchEvent(event);
-                };
-            }
-
-            memberGroup.appendChild(input);
-
-            if (!isLocked) {
-                if (index === members.length - 1) {
-                    const addBtn = document.createElement('button');
-                    addBtn.type = 'button';
-                    addBtn.className = 'btn-circle btn-add-circle';
-                    addBtn.innerHTML = '+';
-                    addBtn.title = STR6.addMember;
-                    addBtn.onclick = () => {
-                        members.push('');
-                        renderMembers();
-                    };
-                    memberGroup.appendChild(addBtn);
-                } else {
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'btn-circle btn-remove-circle';
-                    removeBtn.innerHTML = '✕';
-                    removeBtn.title = STR6.removeMember;
-                    removeBtn.onclick = () => {
-                        if (members.length > 1) {
-                            members.splice(index, 1);
-                            renderMembers();
-                        }
-                    };
-                    memberGroup.appendChild(removeBtn);
-                }
-            }
-
-            container.appendChild(memberGroup);
-        });
-    }
-
-    // Custom data collection for auto-save (auteurs as JSON array)
-    window.collectFormData = function () {
-        const formData = {};
-        const form = document.getElementById('rapportForm');
-
-        // Regular fields (text inputs, textareas)
-        form.querySelectorAll('input[type="text"], textarea').forEach(field => {
-            if (field.name) {
-                formData[field.name] = field.value;
-            }
-        });
-
-        // Collect authors as JSON array
-        formData['auteurs'] = JSON.stringify(members.filter(m => m.trim() !== ''));
-
-        return formData;
-    };
-
-    // PDF Export placeholder (will use TCPDF server-side in future)
-    function exportPDF() {
-        alert('<?php echo get_string('export_pdf_coming_soon', 'gestionprojet'); ?>');
-        // TODO: Implement server-side PDF generation with TCPDF
-    }
-
-    // Initialize members on page load
-    document.addEventListener('DOMContentLoaded', function () {
-        renderMembers();
-    });
-</script>
-
-<?php
 echo $OUTPUT->footer();
 ?>

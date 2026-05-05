@@ -186,96 +186,20 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 6, $context, $cm->id);
     </form>
 </div>
 
-<script>
-(function waitRequire() {
-    if (typeof require === 'undefined') {
-        setTimeout(waitRequire, 50);
-        return;
-    }
-
-    require(['jquery', 'mod_gestionprojet/autosave', 'mod_gestionprojet/generate_ai_instructions'], function($, Autosave, GenerateAi) {
-        $(document).ready(function() {
-            var cmid = <?php echo $cm->id; ?>;
-            var autosaveInterval = <?php echo ($gestionprojet->autosave_interval ?? 30) * 1000; ?>;
-
-            // Custom serialization for step 6 teacher model
-            var serializeData = function() {
-                var dates = getDateValues();
-                return {
-                    titre_projet: document.getElementById('titre_projet').value,
-                    besoins: document.getElementById('besoins').value,
-                    imperatifs: document.getElementById('imperatifs').value,
-                    solutions: document.getElementById('solutions').value,
-                    justification: document.getElementById('justification').value,
-                    realisation: document.getElementById('realisation').value,
-                    difficultes: document.getElementById('difficultes').value,
-                    validation: document.getElementById('validation').value,
-                    ameliorations: document.getElementById('ameliorations').value,
-                    bilan: document.getElementById('bilan').value,
-                    perspectives: document.getElementById('perspectives').value,
-                    ai_instructions: document.getElementById('ai_instructions').value,
-                    submission_date: dates.submission_date,
-                    deadline_date: dates.deadline_date
-                };
-            };
-
-            // Initialize Autosave for teacher mode
-            Autosave.init({
-                cmid: cmid,
-                step: 6,
-                groupid: 0,
-                mode: 'teacher',
-                interval: autosaveInterval,
-                formSelector: '#teacherModelForm',
-                serialize: serializeData
-            });
-
-            // AI instructions buttons.
-            GenerateAi.init({
-                cmid: cmid,
-                step: 6,
-                aiEnabled: <?php echo $gestionprojet->ai_enabled ? 'true' : 'false'; ?>,
-                defaultText: <?php echo json_encode(get_string('ai_instructions_default_step6', 'gestionprojet')); ?>,
-                containerSelector: '#aiInstructionsActions',
-                textareaSelector: '#ai_instructions',
-                getModelData: function() {
-                    var fields = ['titre_projet', 'besoins', 'imperatifs', 'solutions',
-                                  'justification', 'realisation', 'difficultes', 'validation',
-                                  'ameliorations', 'bilan', 'perspectives'];
-                    var d = {};
-                    fields.forEach(function(f) {
-                        var el = document.getElementById(f);
-                        d[f] = el ? el.value : '';
-                    });
-                    return d;
-                },
-                isModelEmpty: function() {
-                    var d = this.getModelData();
-                    for (var k in d) {
-                        if (Object.prototype.hasOwnProperty.call(d, k) && d[k] && String(d[k]).trim() !== '') {
-                            return false;
-                        }
-                    }
-                    return true;
-                },
-                onUpdated: function() { Autosave.save(); }
-            });
-
-            // Manual save button with redirect to hub
-            document.getElementById('saveButton').addEventListener('click', function() {
-                var originalOnSave = Autosave.onSave;
-                Autosave.onSave = function(response) {
-                    if (originalOnSave) originalOnSave(response);
-                    setTimeout(function() {
-                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid;
-                    }, 800);
-                };
-                Autosave.save();
-            });
-        });
-    });
-})();
-</script>
-
 <?php
+$step6fields = [
+    'titre_projet', 'besoins', 'imperatifs', 'solutions',
+    'justification', 'realisation', 'difficultes', 'validation',
+    'ameliorations', 'bilan', 'perspectives',
+];
+$PAGE->requires->js_call_amd('mod_gestionprojet/teacher_step_init', 'init', [[
+    'cmid' => (int)$cm->id,
+    'step' => 6,
+    'autosaveInterval' => (int)($gestionprojet->autosave_interval ?? 30) * 1000,
+    'fields' => array_merge($step6fields, ['ai_instructions']),
+    'aiFields' => $step6fields,
+    'aiEnabled' => (bool)$gestionprojet->ai_enabled,
+    'defaultText' => get_string('ai_instructions_default_step6', 'gestionprojet'),
+]]);
+
 echo $OUTPUT->footer();

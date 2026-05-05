@@ -102,7 +102,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 8, $context, $cm->id);
             </p>
 
             <div id="logbookContainer"></div>
-            <button type="button" class="btn-add-entry" onclick="addEntry()">+ <?php echo get_string('logbook_add_line', 'gestionprojet'); ?></button>
+            <button type="button" id="addEntryBtn" class="btn-add-entry">+ <?php echo get_string('logbook_add_line', 'gestionprojet'); ?></button>
         </div>
 
         <?php
@@ -148,140 +148,13 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 8, $context, $cm->id);
     </form>
 </div>
 
-<script>
-let tasks = <?php echo json_encode($tasks); ?>;
-
-function renderEntries() {
-    const container = document.getElementById('logbookContainer');
-    container.innerHTML = '';
-
-    tasks.forEach((task, index) => {
-        const entry = document.createElement('div');
-        entry.className = 'logbook-entry';
-
-        entry.innerHTML = `
-            <div class="logbook-entry-header">
-                <input type="date" value="${task.date || ''}" onchange="tasks[${index}].date = this.value">
-                <select onchange="tasks[${index}].status = this.value">
-                    <option value="ahead" ${task.status === 'ahead' ? 'selected' : ''}><?php echo get_string('logbook_status_ahead', 'gestionprojet'); ?></option>
-                    <option value="ontime" ${task.status === 'ontime' ? 'selected' : ''}><?php echo get_string('logbook_status_ontime', 'gestionprojet'); ?></option>
-                    <option value="late" ${task.status === 'late' ? 'selected' : ''}><?php echo get_string('logbook_status_late', 'gestionprojet'); ?></option>
-                </select>
-                ${tasks.length > 1 ? `<button type="button" class="btn-remove-entry" onclick="removeEntry(${index})">\u2715</button>` : ''}
-            </div>
-            <div class="logbook-row">
-                <div>
-                    <label style="font-weight:600; margin-bottom:5px; display:block;"><?php echo get_string('logbook_tasks_today', 'gestionprojet'); ?></label>
-                    <textarea onchange="tasks[${index}].tasks_today = this.value">${task.tasks_today || ''}</textarea>
-                </div>
-                <div>
-                    <label style="font-weight:600; margin-bottom:5px; display:block;"><?php echo get_string('logbook_tasks_future', 'gestionprojet'); ?></label>
-                    <textarea onchange="tasks[${index}].tasks_future = this.value">${task.tasks_future || ''}</textarea>
-                </div>
-            </div>
-        `;
-
-        container.appendChild(entry);
-    });
-}
-
-function addEntry() {
-    tasks.push({date: '', tasks_today: '', tasks_future: '', status: 'ontime'});
-    renderEntries();
-}
-
-function removeEntry(index) {
-    if (tasks.length > 1) {
-        tasks.splice(index, 1);
-        renderEntries();
-    }
-}
-
-// Wait for RequireJS
-(function waitRequire() {
-    if (typeof require === 'undefined') {
-        setTimeout(waitRequire, 50);
-        return;
-    }
-
-    require(['jquery', 'mod_gestionprojet/autosave', 'mod_gestionprojet/generate_ai_instructions'], function($, Autosave, GenerateAi) {
-        $(document).ready(function() {
-            renderEntries();
-
-            var cmid = <?php echo $cm->id; ?>;
-            var autosaveInterval = <?php echo ($gestionprojet->autosave_interval ?? 30) * 1000; ?>;
-
-            // Custom serialization for step 8 teacher model
-            var serializeData = function() {
-                var dates = getDateValues();
-                return {
-                    tasks_data: JSON.stringify(tasks),
-                    ai_instructions: document.getElementById('ai_instructions').value,
-                    submission_date: dates.submission_date,
-                    deadline_date: dates.deadline_date
-                };
-            };
-
-            // Initialize Autosave for teacher mode
-            Autosave.init({
-                cmid: cmid,
-                step: 8,
-                groupid: 0,
-                mode: 'teacher',
-                interval: autosaveInterval,
-                formSelector: '#teacherModelForm',
-                serialize: serializeData
-            });
-
-            // AI instructions buttons.
-            GenerateAi.init({
-                cmid: cmid,
-                step: 8,
-                aiEnabled: <?php echo $gestionprojet->ai_enabled ? 'true' : 'false'; ?>,
-                defaultText: <?php echo json_encode(get_string('ai_instructions_default_step8', 'gestionprojet')); ?>,
-                containerSelector: '#aiInstructionsActions',
-                textareaSelector: '#ai_instructions',
-                getModelData: function() {
-                    var data = (typeof tasks !== 'undefined' && Array.isArray(tasks)) ? tasks : [];
-                    return { tasks_data: JSON.stringify(data) };
-                },
-                isModelEmpty: function() {
-                    var d = this.getModelData();
-                    if (!d.tasks_data || d.tasks_data === '[]') { return true; }
-                    try {
-                        var arr = JSON.parse(d.tasks_data);
-                        // Consider non-empty if any entry has at least one non-empty string field.
-                        for (var i = 0; i < arr.length; i++) {
-                            var t = arr[i];
-                            for (var k in t) {
-                                if (Object.prototype.hasOwnProperty.call(t, k) && typeof t[k] === 'string' && t[k].trim() !== '') {
-                                    return false;
-                                }
-                            }
-                        }
-                        return true;
-                    } catch (e) {
-                        return false;
-                    }
-                },
-                onUpdated: function() { Autosave.save(); }
-            });
-
-            // Manual save button with redirect to hub
-            document.getElementById('saveButton').addEventListener('click', function() {
-                var originalOnSave = Autosave.onSave;
-                Autosave.onSave = function(response) {
-                    if (originalOnSave) originalOnSave(response);
-                    setTimeout(function() {
-                        window.location.href = M.cfg.wwwroot + '/mod/gestionprojet/view.php?id=' + cmid;
-                    }, 800);
-                };
-                Autosave.save();
-            });
-        });
-    });
-})();
-</script>
-
 <?php
+$PAGE->requires->js_call_amd('mod_gestionprojet/step8_teacher_init', 'init', [[
+    'cmid' => (int)$cm->id,
+    'autosaveInterval' => (int)($gestionprojet->autosave_interval ?? 30) * 1000,
+    'tasks' => $tasks,
+    'aiEnabled' => (bool)$gestionprojet->ai_enabled,
+    'defaultText' => get_string('ai_instructions_default_step8', 'gestionprojet'),
+]]);
+
 echo $OUTPUT->footer();

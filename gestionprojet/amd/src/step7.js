@@ -193,7 +193,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification',
                 leftTitle.setAttribute('fill', '#333');
                 leftTitle.setAttribute('font-size', '15');
                 leftTitle.setAttribute('font-weight', '700');
-                leftTitle.textContent = 'À qui le produit rend-il service ?';
+                leftTitle.textContent = STRINGS.aquiTitle || 'À qui le produit rend-il service ?';
                 svg.appendChild(leftTitle);
 
                 const leftSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -202,7 +202,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification',
                 leftSubtitle.setAttribute('text-anchor', 'middle');
                 leftSubtitle.setAttribute('fill', '#666');
                 leftSubtitle.setAttribute('font-size', '12');
-                leftSubtitle.textContent = '(utilisateur)';
+                leftSubtitle.textContent = STRINGS.aquiSubtitle || '(utilisateur)';
                 svg.appendChild(leftSubtitle);
 
                 // Right ellipse - Sur quoi agit-il ?
@@ -243,7 +243,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification',
                 rightTitle.setAttribute('fill', '#333');
                 rightTitle.setAttribute('font-size', '15');
                 rightTitle.setAttribute('font-weight', '700');
-                rightTitle.textContent = 'Sur quoi agit-il ?';
+                rightTitle.textContent = STRINGS.surquoiTitle || 'Sur quoi agit-il ?';
                 svg.appendChild(rightTitle);
 
                 const rightSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -252,7 +252,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification',
                 rightSubtitle.setAttribute('text-anchor', 'middle');
                 rightSubtitle.setAttribute('fill', '#666');
                 rightSubtitle.setAttribute('font-size', '12');
-                rightSubtitle.textContent = '(matière d\'œuvre)';
+                rightSubtitle.textContent = STRINGS.surquoiSubtitle || '(matière d\'œuvre)';
                 svg.appendChild(rightSubtitle);
 
                 // Product box in center
@@ -277,7 +277,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification',
                 productLabel.setAttribute('fill', 'white');
                 productLabel.setAttribute('font-size', '20');
                 productLabel.setAttribute('font-weight', 'bold');
-                productLabel.textContent = 'Produit';
+                productLabel.textContent = STRINGS.productLabel || 'Produit';
                 svg.appendChild(productLabel);
 
                 const productSubLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -286,7 +286,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification',
                 productSubLabel.setAttribute('text-anchor', 'middle');
                 productSubLabel.setAttribute('fill', 'white');
                 productSubLabel.setAttribute('font-size', '14');
-                productSubLabel.textContent = '(objet technique)';
+                productSubLabel.textContent = STRINGS.productSubtitle || '(objet technique)';
                 svg.appendChild(productSubLabel);
 
                 // Bottom rectangle - Dans quel but ?
@@ -328,7 +328,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification',
                 bottomTitle.setAttribute('fill', '#333');
                 bottomTitle.setAttribute('font-size', '15');
                 bottomTitle.setAttribute('font-weight', '700');
-                bottomTitle.textContent = 'Dans quel but ?';
+                bottomTitle.textContent = STRINGS.dansquelbutTitle || 'Dans quel but ?';
                 svg.appendChild(bottomTitle);
 
                 const bottomSubtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -337,7 +337,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/notification',
                 bottomSubtitle.setAttribute('text-anchor', 'middle');
                 bottomSubtitle.setAttribute('fill', '#666');
                 bottomSubtitle.setAttribute('font-size', '12');
-                bottomSubtitle.textContent = '(fonction d\'usage ou besoin)';
+                bottomSubtitle.textContent = STRINGS.dansquelbutSubtitle || '(fonction d\'usage ou besoin)';
                 svg.appendChild(bottomSubtitle);
 
                 // "Horn" curve - top arc connecting left and right ellipses

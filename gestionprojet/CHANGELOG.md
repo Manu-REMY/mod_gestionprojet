@@ -5,6 +5,122 @@ All notable changes to the mod_gestionprojet plugin will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1] — 2026-05-05
+
+Release de conformité à la checklist de contribution Moodle (sans changement fonctionnel).
+
+### Conformité
+
+- **Fin du JavaScript inline** : les onze pages PHP qui contenaient encore un `<script>` inline (`pages/step1.php`, `step2.php`, `step3.php`, `step5.php`, `step6.php`, `step7.php`, `step8.php`, `step5_teacher.php`, `step6_teacher.php`, `step7_teacher.php`, `step8_teacher.php`) sont désormais câblées via `$PAGE->requires->js_call_amd()` sur les modules AMD existants ou de nouveaux modules glue.
+- Nouveaux modules AMD :
+  - `mod_gestionprojet/teacher_step_init` — wrapper qui combine `teacher_model` + `generate_ai_instructions` pour les pages de modèles de correction (étapes 5 à 7).
+  - `mod_gestionprojet/step8_teacher_init` — variante spécifique pour la page modèle de l'étape 8 (logbook avec tasks_data).
+- Modules `step2`, `step6` et `step7` étendus pour accepter les chaînes localisées via `config.strings` (suppression des dernières chaînes françaises codées en dur).
+- **Header GPL complet sur tous les fichiers PHP** — ajout du second paragraphe « distributed in the hope that it will be useful » sur les 18 fichiers où il manquait.
+- **`gestionprojet_delete_instance()` purge les 21 tables** (au lieu de 14) : ajout des cinq tables `*_teacher` (cdcf, essai, rapport, besoin_eleve, carnet) ainsi que des deux tables `gestionprojet_ai_evaluations` et `gestionprojet_ai_summaries`.
+- Boutons côté élève : remplacement des `onclick="..."` par des `id` câblés dans les modules AMD (`#exportPdfBtn`, `#addLogEntryButton`, `#exportPdfButton`, `#addEntryBtn`).
+
+### Notes techniques
+
+- Aucune modification de schéma de base de données — pas de nouvelle étape `db/upgrade.php`.
+- Les modules AMD sont compilés avec `terser` et committés dans `amd/build/`.
+- Tous les checks rapides de la checklist Moodle passent : pas de superglobales, pas de debug code, pas de CSS/JS inline, parité FR/EN sur 705 chaînes.
+
+## [2.7.0] — 2026-05-05
+
+### Ajouts
+
+- **CDCF aligné sur la norme NF EN 16271** — refonte complète de l'étape 4 autour du vocabulaire normatif :
+  - Nouvelle structure de données `{interactors, fonctionsService (FS), contraintes}` à l'intérieur de `interacteurs_data` (la colonne `fp` et les colonnes `produit`/`milieu` sont supprimées).
+  - Chaque FS porte son nom, sa description, ses critères et son niveau de flexibilité (F0–F3).
+  - Nouveau diagramme « pieuvre » (module AMD `cdcf_diagram`) qui dessine le produit au centre, les interacteurs autour et les courbes des FS.
+  - Nouvel éditeur AMD `cdcf` : ajout/modification d'interacteurs, FS, critères et contraintes avec rendu live.
+- **Module `cdcf_helper`** (`classes/cdcf_helper.php`) qui centralise `normalize`, `decode` et `migrate_legacy` pour garantir la cohérence des trois tables CDCF (élève, enseignant, fourni).
+- **Migration BDD idempotente** (`db/upgrade.php`, étape `2026050601`) qui convertit les anciennes données « FC nichées dans interactors + FP séparé » vers la nouvelle structure pour les trois tables `gestionprojet_cdcf*`, puis supprime les colonnes obsolètes (`produit`, `milieu`, `fp`).
+- **Bloc « Description » sur la page consigne FAST élève** (étape 9) — cohérent avec CDCF et besoin.
+
+### Modifications
+
+- Pages élève des étapes 4 à 8 unifiées sur le chrome `gp-student` (suppression de la nav legacy et du bandeau coloré, mise en pleine largeur).
+- Prompt IA de l'étape 4 reconstruit pour la nouvelle structure (sections FS / flexibilité / contraintes), avec garde sur la section FS et résolution `linkedFsId` par index dans la liste des FS.
+- Whitelist autosave de l'étape 4 réduite au seul champ `interacteurs_data`.
+- Page `step4_provided` (consigne) et page `step4_teacher` (modèle de correction) réécrites avec l'éditeur normalisé (lecture seule pour l'élève sur la consigne).
+- Vocabulaire FP/FC retiré de l'UI et des chaînes de langue (suppression des chaînes obsolètes `fp/fc/produit/milieu/unite`).
+- PHPDoc reformulés en anglais (Moodle CS §4) sur les fichiers CDCF.
+
+### Corrections
+
+- `step4` : suppression du bloc « provided » dupliqué et amorçage du formulaire éditable quand le CDCF est effectivement vide.
+- `step9` : reliage des callbacks legacy + bouton « Enregistrer » déplacé dans la section bas de page.
+- Recordset `cdcf_helper` enveloppé dans un `try/finally` (fermeture garantie) avec log des migrations vides (`mtrace`).
+- Préfixe « + » dupliqué retiré des chaînes `addX` de l'étape 4.
+
+### Notes techniques
+
+- Conformité Moodle (CLAUDE.md §1-11) : tous les nouveaux fichiers PHP ont l'en-tête GPL deux paragraphes complet ; aucun JS ou CSS inline ; aucune superglobale ; aucun debug code.
+- Tests PHPUnit couvrant `cdcf_helper::migrate_legacy` et `cdcf_helper::normalize` (`tests/cdcf_helper_test.php`).
+
+## [2.6.4] — 2026-05-05
+
+### Modifications
+
+- Modale de soumission élève + bandeau de progression IA branchés sur les pages d'étapes 4 à 8 (Phase 2 du chantier C1).
+- Webservice `submit_step` étendu : déclenche l'évaluation IA et inclut désormais l'étape 9 (FAST).
+- Compatibilité Moodle 5+ : utilisation de `MESSAGE_DEFAULT_ENABLED` dans le provider de messages.
+
+### Documentation
+
+- Scénarios de tests manuels v2.6.3 ajoutés à `TESTING.md` (sans credentials).
+
+## [2.6.3] — 2026-05-05
+
+### Ajouts
+
+- **Bouton « Soumettre pour évaluation » côté élève** avec déclenchement automatique de l'évaluation IA :
+  - Modale Moodle de confirmation avec checkbox d'engagement (template `submit_modal.mustache`).
+  - Module AMD `student_ai_progress` qui sonde l'état de l'évaluation et affiche un bandeau de progression.
+  - Endpoint `ajax/get_evaluation_status.php` autorisant l'élève à interroger sa propre évaluation.
+- **Notifications enseignants en cas d'échec d'évaluation IA** :
+  - Nouveau message provider `ai_evaluation_failed` (lang FR + EN).
+  - Helper `notify_teachers_of_failure()` dans le moteur d'évaluation IA.
+
+### Modifications
+
+- Réécriture de `submission.js` autour de la modale Moodle et du gate « checkbox cochée ».
+- Étape 9 (FAST) ajoutée à la table de soumission.
+- Styles CSS du bandeau de progression IA.
+
+### Corrections
+
+- Suffixe `_student` ajouté aux clés des chaînes du bandeau IA pour éviter les conflits côté enseignant.
+
+## [2.6.2] — 2026-05-05
+
+### Corrections
+
+- Étape 9 (FAST) : bouton d'enregistrement manuel restauré, autosave passé à 10 s, retour visuel via toast.
+
+## [2.6.1] — 2026-05-05
+
+### Corrections
+
+- Mode « contenu fourni » accessible en lecture seule pour les élèves sur CDCF et FAST.
+- Navigation par onglets cohérente entre les pages d'étapes côté élève.
+
+## [2.6.0] — 2026-05-05
+
+### Ajouts
+
+- **Vue Gantt côté élève** sur la page d'accueil — l'élève visualise l'avancement du projet sous forme de tableau de cellules par étape.
+  - Nouveau template Mustache `home_gantt_student.mustache`.
+  - Helper pur `gestionprojet_build_student_gantt_cells()` (lib.php) — extrait des définitions de colonnes via `gestionprojet_get_gantt_columns()`.
+  - Variantes CSS pour les cellules désactivées (sans padding de checkbox), rendu via `<span>`.
+  - Chaînes de langue dédiées (FR + EN).
+
+### Documentation
+
+- Spécification de design + plan d'implémentation pour la vue Gantt élève.
+
 ## [2.5.0] — 2026-05-04
 
 ### Ajouts

@@ -70,7 +70,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/ajax'], functi
 
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.placeholder = 'Nom et prénom';
+                    input.placeholder = STRINGS.memberPlaceholder || 'Nom et prénom';
                     input.value = member;
                     input.readOnly = isLocked;
 
@@ -95,7 +95,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/ajax'], functi
                             addBtn.type = 'button';
                             addBtn.className = 'btn-add';
                             addBtn.innerHTML = '+';
-                            addBtn.title = 'Ajouter un membre';
+                            addBtn.title = STRINGS.addMember || 'Ajouter un membre';
                             addBtn.onclick = () => {
                                 members.push('');
                                 renderMembers();
@@ -106,7 +106,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/ajax'], functi
                             removeBtn.type = 'button';
                             removeBtn.className = 'btn-remove';
                             removeBtn.innerHTML = '✕';
-                            removeBtn.title = 'Retirer ce membre';
+                            removeBtn.title = STRINGS.removeMember || 'Retirer ce membre';
                             removeBtn.onclick = () => {
                                 if (members.length > 1) {
                                     members.splice(index, 1);
