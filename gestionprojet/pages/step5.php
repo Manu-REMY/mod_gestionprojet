@@ -114,46 +114,15 @@ if ($submission->precautions) {
 
 
 
-<div class="step-container"
+<div class="step-container gp-student"
     data-str-error-submitting="<?php echo s(get_string('error_submitting', 'gestionprojet')); ?>"
     data-str-error-reverting="<?php echo s(get_string('error_reverting', 'gestionprojet')); ?>"
 >
-    <!-- Navigation -->
-<?php
-    $nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step5');
+    <?php
+    // Moodle-native heading + subtitle (replaces legacy colored banner).
+    echo $OUTPUT->heading(get_string('step5_page_title', 'gestionprojet'), 2);
     ?>
-    <div class="navigation-top">
-        <div style="display: flex; gap: 10px;">
-            <a href="<?php echo new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]); ?>"
-                class="nav-button nav-button-prev">
-                <span>🏠</span>
-                <span><?php echo get_string('home', 'gestionprojet'); ?></span>
-            </a>
-            <?php if ($nav_links['prev']): ?>
-            <a href="<?php echo $nav_links['prev']; ?>"
-                class="nav-button nav-button-prev">
-                <span>←</span>
-                <span><?php echo get_string('previous', 'gestionprojet'); ?></span>
-            </a>
-            <?php endif; ?>
-        </div>
-        <?php if ($nav_links['next']): ?>
-        <a href="<?php echo $nav_links['next']; ?>"
-            class="nav-button">
-            <span><?php echo get_string('next', 'gestionprojet'); ?></span>
-            <span>→</span>
-        </a>
-        <?php endif; ?>
-    </div>
-
-    <!-- Header -->
-    <div class="header-section">
-        <div class="header-title">
-            <h2><?php echo get_string('step5_page_title', 'gestionprojet'); ?></h2>
-            <div class="header-subtitle"><?php echo get_string('step5_page_subtitle', 'gestionprojet'); ?></div>
-        </div>
-        <div class="header-logo">🔬</div>
-    </div>
+    <p class="text-muted small"><?php echo get_string('step5_page_subtitle', 'gestionprojet'); ?></p>
 
     <!-- Group info -->
     <div class="group-info">

@@ -93,25 +93,11 @@ if ($isSubmitted) {
 $step = 7;
 require_once(__DIR__ . '/student_dates_display.php');
 
-// Navigation buttons
-// Navigation buttons
-$nav_links = gestionprojet_get_navigation_links($gestionprojet, $cm->id, 'step7');
+// Open student wrapper for full-width + blue accent.
+echo '<div class="gp-student">';
 
-echo '<div class="navigation-container-flex">';
-echo '<div class="nav-group">';
-echo '<a href="' . new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]) . '" class="nav-button nav-button-prev"><span>🏠</span><span>' . get_string('home', 'gestionprojet') . '</span></a>';
-if ($nav_links['prev']) {
-    echo '<a href="' . $nav_links['prev'] . '" class="nav-button nav-button-prev"><span>←</span><span>' . get_string('previous', 'gestionprojet') . '</span></a>';
-}
-echo '</div>';
-
-if ($nav_links['next']) {
-    echo '<a href="' . $nav_links['next'] . '" class="nav-button"><span>' . get_string('next', 'gestionprojet') . '</span><span>→</span></a>';
-}
-echo '</div>';
-
-
-echo '<h2>🦏 ' . get_string('step7', 'gestionprojet') . '</h2>';
+// Moodle-native heading (replaces legacy emoji-prefixed h2).
+echo $OUTPUT->heading(get_string('step7', 'gestionprojet'), 2);
 
 // Description
 echo '<div class="alert alert-info">';
@@ -192,6 +178,7 @@ require_once(__DIR__ . '/student_ai_feedback_display.php');
         <div id="autosaveIndicator" class="text-muted small" style="margin-top: 10px;"></div>
     </div>
 </div>
+</div><?php // /.gp-student ?>
 
 <?php
 // Wire the new modal-based submit flow + AI progress banner.
