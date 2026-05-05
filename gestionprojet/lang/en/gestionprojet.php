@@ -910,3 +910,19 @@ $string['privacy:metadata:gestionprojet_fast:userid'] = 'User ID (individual mod
 $string['privacy:metadata:gestionprojet_fast:data_json'] = 'FAST diagram data (JSON: FP, FT, sub-FT, ST).';
 $string['privacy:metadata:gestionprojet_fast:status'] = 'Submission status (0=draft, 1=submitted).';
 $string['privacy:metadata:gestionprojet_fast:timesubmitted'] = 'Submission timestamp.';
+
+// Submit modal + AI auto-trigger (v2.6.3).
+$string['submit_modal_title'] = 'Submit your work';
+$string['submit_modal_intro'] = 'Before submitting, please review the consequences:';
+$string['submit_modal_lock'] = 'Your work will be locked — you won\'t be able to edit it.';
+$string['submit_modal_ai'] = 'Automatic AI grading will start immediately.';
+$string['submit_modal_irreversible'] = 'Only your teacher can unlock your submission.';
+$string['submit_modal_group_warning'] = 'Warning: this action submits the work for the entire group — notify your teammates first.';
+$string['submit_modal_checkbox'] = 'I have re-read my work and I want to submit it definitively.';
+$string['confirm_submit_btn'] = 'Submit definitively';
+$string['ai_progress_pending'] = 'AI evaluation queued…';
+$string['ai_progress_failed_student'] = 'AI evaluation unavailable. Your teacher will grade your work.';
+$string['messageprovider:ai_evaluation_failed'] = 'AI evaluation failure notifications';
+$string['ai_failure_notif_subject'] = 'AI evaluation failed in {$a->activityname}';
+$string['ai_failure_notif_body'] = 'An AI evaluation failed for step {$a->step}. Error: {$a->error}. Please review the submission at: {$a->url}';
+$string['ai_failure_notif_small'] = 'AI evaluation failed';
