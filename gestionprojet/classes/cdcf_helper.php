@@ -120,8 +120,8 @@ class cdcf_helper {
     }
 
     /**
-     * Migrate an old-format CDCF record (with $fp text + interacteurs imbriquant des FCs)
-     * into the new structure. Idempotent : if data already looks like the new schema,
+     * Migrate an old-format CDCF record (with $fp text + interactors nesting FCs)
+     * into the new structure. Idempotent: if data already looks like the new schema,
      * returns it normalized.
      *
      * @param string|null $oldjson Old interacteurs_data JSON (FCs nested in interactors).
