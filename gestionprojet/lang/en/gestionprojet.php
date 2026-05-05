@@ -759,7 +759,7 @@ $string['step4_fp_placeholder'] = 'Describe the main function of the product...'
 $string['step4_milieu_placeholder'] = 'Environment of use';
 $string['step4_diagram_title'] = 'Stakeholder Diagram';
 $string['step4_interactors_section'] = 'Stakeholders and Constraint Functions';
-$string['step4_add_interactor'] = '+ Add a stakeholder';
+$string['step4_add_interactor'] = 'Add a stakeholder';
 $string['step4_interactor_default'] = 'Stakeholder {$a}';
 $string['step4_interactor_name_placeholder'] = 'Stakeholder name';
 $string['step4_delete'] = 'Delete';
@@ -767,7 +767,7 @@ $string['step4_fc_value_placeholder'] = 'Constraint function description';
 $string['step4_critere_placeholder'] = 'Appreciation criterion';
 $string['step4_niveau_placeholder'] = 'Level';
 $string['step4_unite_placeholder'] = 'Unit';
-$string['step4_add_critere'] = '+ Criterion';
+$string['step4_add_critere'] = 'Add a criterion';
 $string['step4_add_fc'] = '+ Constraint Function';
 $string['step4_product_fallback'] = 'Product';
 

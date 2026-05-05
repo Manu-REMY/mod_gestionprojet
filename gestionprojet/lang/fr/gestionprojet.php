@@ -759,7 +759,7 @@ $string['step4_fp_placeholder'] = 'Décrivez la fonction principale du produit..
 $string['step4_milieu_placeholder'] = 'Milieu d\'utilisation';
 $string['step4_diagram_title'] = 'Diagramme des Interacteurs';
 $string['step4_interactors_section'] = 'Interacteurs et Fonctions Contraintes';
-$string['step4_add_interactor'] = '+ Ajouter un interacteur';
+$string['step4_add_interactor'] = 'Ajouter un interacteur';
 $string['step4_interactor_default'] = 'Interacteur {$a}';
 $string['step4_interactor_name_placeholder'] = 'Nom de l\'interacteur';
 $string['step4_delete'] = 'Supprimer';
@@ -767,7 +767,7 @@ $string['step4_fc_value_placeholder'] = 'Description de la fonction contrainte';
 $string['step4_critere_placeholder'] = 'Critère d\'appréciation';
 $string['step4_niveau_placeholder'] = 'Niveau';
 $string['step4_unite_placeholder'] = 'Unité';
-$string['step4_add_critere'] = '+ Critère';
+$string['step4_add_critere'] = 'Ajouter un critère';
 $string['step4_add_fc'] = '+ Fonction Contrainte';
 $string['step4_product_fallback'] = 'Produit';
 
