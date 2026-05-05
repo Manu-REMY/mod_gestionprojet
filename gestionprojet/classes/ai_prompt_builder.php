@@ -379,21 +379,30 @@ PROMPT;
             $byid[$i['id']] = $i['name'] !== '' ? $i['name'] : ('Interacteur ' . $i['id']);
         }
 
-        $out[] = '';
-        $out[] = 'FONCTIONS DE SERVICE :';
+        // Map persisted FS id → human-visible "FS<n>" label so contraintes can reference
+        // the same label the FS section prints, regardless of insertion order or deletes.
+        $fslabelbyid = [];
         foreach ($data['fonctionsService'] as $idx => $fs) {
-            $i1 = $byid[$fs['interactor1Id']] ?? '?';
-            $tail = $fs['interactor2Id'] > 0 ? (' ↔ ' . ($byid[$fs['interactor2Id']] ?? '?')) : '';
-            $out[] = sprintf('  • FS%d : %s [%s%s]',
-                $idx + 1,
-                $fs['description'] !== '' ? $fs['description'] : '(énoncé manquant)',
-                $i1, $tail);
-            foreach ($fs['criteres'] as $cidx => $c) {
-                $out[] = sprintf('      - C%d.%d : %s | niveau : %s | flexibilité : %s',
-                    $idx + 1, $cidx + 1,
-                    $c['description'] !== '' ? $c['description'] : '(critère vide)',
-                    $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)',
-                    $c['flexibilite'] !== '' ? $c['flexibilite'] : '(non précisée)');
+            $fslabelbyid[$fs['id']] = 'FS' . ($idx + 1);
+        }
+
+        if (!empty($data['fonctionsService'])) {
+            $out[] = '';
+            $out[] = 'FONCTIONS DE SERVICE :';
+            foreach ($data['fonctionsService'] as $idx => $fs) {
+                $i1 = $byid[$fs['interactor1Id']] ?? '?';
+                $tail = $fs['interactor2Id'] > 0 ? (' ↔ ' . ($byid[$fs['interactor2Id']] ?? '?')) : '';
+                $out[] = sprintf('  • FS%d : %s [%s%s]',
+                    $idx + 1,
+                    $fs['description'] !== '' ? $fs['description'] : '(énoncé manquant)',
+                    $i1, $tail);
+                foreach ($fs['criteres'] as $cidx => $c) {
+                    $out[] = sprintf('      - C%d.%d : %s | niveau : %s | flexibilité : %s',
+                        $idx + 1, $cidx + 1,
+                        $c['description'] !== '' ? $c['description'] : '(critère vide)',
+                        $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)',
+                        $c['flexibilite'] !== '' ? $c['flexibilite'] : '(non précisée)');
+                }
             }
         }
 
@@ -401,8 +410,11 @@ PROMPT;
             $out[] = '';
             $out[] = 'CONTRAINTES :';
             foreach ($data['contraintes'] as $cidx => $c) {
-                $linked = $c['linkedFsId'] > 0 ? (' (liée à FS' . $c['linkedFsId'] . ')') : '';
-                $out[] = sprintf('  • C%d : %s%s — Justification : %s',
+                $linked = '';
+                if ($c['linkedFsId'] > 0 && isset($fslabelbyid[$c['linkedFsId']])) {
+                    $linked = ' (liée à ' . $fslabelbyid[$c['linkedFsId']] . ')';
+                }
+                $out[] = sprintf('  • C%d : %s%s | Justification : %s',
                     $cidx + 1,
                     $c['description'] !== '' ? $c['description'] : '(énoncé manquant)',
                     $linked,
