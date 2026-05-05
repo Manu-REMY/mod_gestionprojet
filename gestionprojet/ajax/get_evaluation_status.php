@@ -47,6 +47,12 @@ $context = context_module::instance($cm->id);
 
 header('Content-Type: application/json');
 
+// Check capability: teachers can see all, students only their own evaluation.
+$isTeacher = has_capability('mod/gestionprojet:grade', $context);
+if (!$isTeacher) {
+    require_capability('mod/gestionprojet:submit', $context);
+}
+
 try {
     $evaluation = null;
 
@@ -75,6 +81,15 @@ try {
         throw new \Exception('Invalid evaluation');
     }
 
+    // For students: ensure the evaluation belongs to them or their group.
+    if (!$isTeacher) {
+        $isOwner = ($evaluation->userid && $evaluation->userid == $USER->id);
+        $isGroupMember = ($evaluation->groupid && groups_is_member($evaluation->groupid, $USER->id));
+        if (!$isOwner && !$isGroupMember) {
+            throw new \moodle_exception('nopermission');
+        }
+    }
+
     // Get status display info.
     $statusinfo = \mod_gestionprojet\ai_evaluator::get_status_display($evaluation);
 
@@ -88,8 +103,8 @@ try {
         'timemodified' => $evaluation->timemodified,
     ];
 
-    // Include results if completed.
-    if ($evaluation->status === 'completed' || $evaluation->status === 'applied') {
+    // Include results if completed (teachers only — students reload the page to see filtered feedback via student_ai_feedback_display.php).
+    if (($evaluation->status === 'completed' || $evaluation->status === 'applied') && $isTeacher) {
         $response['grade'] = $evaluation->parsed_grade;
         $response['feedback'] = $evaluation->parsed_feedback;
         $response['criteria'] = json_decode($evaluation->criteria_json, true) ?? [];
@@ -98,28 +113,25 @@ try {
         $response['suggestions'] = json_decode($evaluation->suggestions, true) ?? [];
         $response['tokens_used'] = ($evaluation->prompt_tokens ?? 0) + ($evaluation->completion_tokens ?? 0);
 
-        // Include formatted HTML for teacher view.
-        if (has_capability('mod/gestionprojet:grade', $context)) {
-            $parser = new \mod_gestionprojet\ai_response_parser();
-            $result = new \stdClass();
-            $result->grade = $evaluation->parsed_grade;
-            $result->max_grade = 20;
-            $result->feedback = $evaluation->parsed_feedback;
-            $result->criteria = $response['criteria'];
-            $result->keywords_found = $response['keywords_found'];
-            $result->keywords_missing = $response['keywords_missing'];
-            $result->suggestions = $response['suggestions'];
-            $response['html'] = $parser->format_for_display($result);
-        }
+        $parser = new \mod_gestionprojet\ai_response_parser();
+        $result = new \stdClass();
+        $result->grade = $evaluation->parsed_grade;
+        $result->max_grade = 20;
+        $result->feedback = $evaluation->parsed_feedback;
+        $result->criteria = $response['criteria'];
+        $result->keywords_found = $response['keywords_found'];
+        $result->keywords_missing = $response['keywords_missing'];
+        $result->suggestions = $response['suggestions'];
+        $response['html'] = $parser->format_for_display($result);
     }
 
-    // Include error if failed.
-    if ($evaluation->status === 'failed') {
+    // Include error message only for teachers (students get a generic banner).
+    if ($evaluation->status === 'failed' && $isTeacher) {
         $response['error_message'] = $evaluation->error_message;
     }
 
-    // Include applied info if applied.
-    if ($evaluation->status === 'applied') {
+    // Include applied info only for teachers.
+    if ($evaluation->status === 'applied' && $isTeacher) {
         $response['applied_by'] = $evaluation->applied_by;
         $response['applied_at'] = $evaluation->applied_at;
     }
