@@ -63,6 +63,11 @@ echo $OUTPUT->render_from_template(
 );
 echo $OUTPUT->heading(get_string('step4', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
 
+echo '<div class="alert alert-info">';
+echo '<h4>' . get_string('step4_desc_title', 'gestionprojet') . '</h4>';
+echo '<p>' . get_string('step4_desc_text', 'gestionprojet') . '</p>';
+echo '</div>';
+
 require_once(__DIR__ . '/teacher_model_styles.php');
 
 // Get navigation for teacher consigne steps (reuse teacher step navigation order, only for editors).
