@@ -63,7 +63,7 @@ try {
         }
 
         $providedtables = [
-            4 => ['table' => 'gestionprojet_cdcf_provided', 'fields' => ['produit', 'milieu', 'fp', 'interacteurs_data']],
+            4 => ['table' => 'gestionprojet_cdcf_provided', 'fields' => ['interacteurs_data']],
             9 => ['table' => 'gestionprojet_fast_provided', 'fields' => ['data_json']],
         ];
 
@@ -112,7 +112,7 @@ try {
 
         // Map step to teacher table.
         $teachertables = [
-            4 => ['table' => 'gestionprojet_cdcf_teacher', 'fields' => ['produit', 'milieu', 'fp', 'interacteurs_data', 'ai_instructions', 'submission_date', 'deadline_date']],
+            4 => ['table' => 'gestionprojet_cdcf_teacher', 'fields' => ['interacteurs_data', 'ai_instructions', 'submission_date', 'deadline_date']],
             5 => ['table' => 'gestionprojet_essai_teacher', 'fields' => ['nom_essai', 'date_essai', 'groupe_eleves', 'fonction_service', 'niveaux_reussite', 'etapes_protocole', 'materiel_outils', 'precautions', 'resultats_obtenus', 'observations_remarques', 'conclusion', 'objectif', 'ai_instructions', 'submission_date', 'deadline_date']],
             6 => ['table' => 'gestionprojet_rapport_teacher', 'fields' => ['titre_projet', 'auteurs', 'besoin_projet', 'imperatifs', 'solutions', 'justification', 'realisation', 'difficultes', 'validation', 'ameliorations', 'bilan', 'perspectives', 'besoins', 'ai_instructions', 'submission_date', 'deadline_date']],
             7 => ['table' => 'gestionprojet_besoin_eleve_teacher', 'fields' => ['aqui', 'surquoi', 'dansquelbut', 'ai_instructions', 'submission_date', 'deadline_date']],
@@ -288,7 +288,7 @@ try {
 
             // List of valid fields for cdcf table
             // Note: 'interacteurs_data' is the field name in DB for JSON data
-            $validfields = ['produit', 'milieu', 'fp', 'interacteurs_data'];
+            $validfields = ['interacteurs_data'];
 
             foreach ($formdata as $key => $value) {
                 if ($key !== 'id' && in_array($key, $validfields)) {
