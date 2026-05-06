@@ -81,6 +81,22 @@ $stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 
         <input type="hidden" name="step" value="5">
         <input type="hidden" name="mode" value="provided">
 
+        <!-- Intro text displayed read-only to students at the top of step 5. -->
+        <div class="model-form-section gp-intro-section">
+            <h3><?php echo icon::render('file-text', 'sm', 'blue'); ?> <?php echo get_string('intro_text_label', 'gestionprojet'); ?></h3>
+            <p class="text-muted small"><?php echo get_string('intro_text_help', 'gestionprojet'); ?></p>
+            <textarea name="intro_text" id="intro_text" rows="8" class="form-control gp-intro-textarea"><?php echo s($model->intro_text ?? ''); ?></textarea>
+        </div>
+        <?php
+        // Activate the Moodle preferred rich-text editor (Atto/TinyMCE) on the textarea.
+        $editor = editors_get_preferred_editor(FORMAT_HTML);
+        $editor->set_text($model->intro_text ?? '');
+        $editor->use_editor('intro_text', [
+            'context'  => $context,
+            'autosave' => false,
+        ]);
+        ?>
+
         <div class="model-form-section">
             <h3><?php echo icon::render('flask-conical', 'sm', 'purple'); ?> <?php echo get_string('step5', 'gestionprojet'); ?></h3>
 
