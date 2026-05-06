@@ -106,6 +106,74 @@ function($, Ajax, Cdcf, Autosave) {
                 });
             }
         }
+
+        // Reset-to-provided button.
+        var resetBtn = document.getElementById('resetButton');
+        if (resetBtn && cfg.resetEnabled && cfg.resetUrl) {
+            resetBtn.addEventListener('click', function() {
+                var lang = cfg.resetLang || {};
+                var modalHtml = '' +
+                    '<div class="modal fade" id="gpResetModal" tabindex="-1" role="dialog">' +
+                    '  <div class="modal-dialog" role="document">' +
+                    '    <div class="modal-content">' +
+                    '      <div class="modal-header">' +
+                    '        <h5 class="modal-title">' + escapeHtml(lang.modalTitle || 'Reset?') + '</h5>' +
+                    '        <button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
+                    '          <span aria-hidden="true">&times;</span>' +
+                    '        </button>' +
+                    '      </div>' +
+                    '      <div class="modal-body"><p>' + escapeHtml(lang.modalBody || '') + '</p></div>' +
+                    '      <div class="modal-footer">' +
+                    '        <button type="button" class="btn btn-secondary" data-dismiss="modal">' +
+                              escapeHtml(lang.modalCancel || 'Cancel') + '</button>' +
+                    '        <button type="button" class="btn btn-warning" id="gpResetConfirm">' +
+                              escapeHtml(lang.modalConfirm || 'Reset') + '</button>' +
+                    '      </div>' +
+                    '    </div>' +
+                    '  </div>' +
+                    '</div>';
+                var existing = document.getElementById('gpResetModal');
+                if (existing) { existing.parentNode.removeChild(existing); }
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                var modalEl = document.getElementById('gpResetModal');
+                $(modalEl).modal('show');
+                $('#gpResetConfirm').on('click', function() {
+                    var fd = new FormData();
+                    fd.append('id', cfg.cmid);
+                    fd.append('step', cfg.step);
+                    fd.append('groupid', cfg.groupid || 0);
+                    fd.append('sesskey', cfg.sesskey);
+                    $('#gpResetConfirm').prop('disabled', true);
+                    fetch(cfg.resetUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        body: fd,
+                    }).then(function(r) {
+                        return r.json().then(function(j) { return { ok: r.ok, body: j }; });
+                    }).then(function(res) {
+                        $(modalEl).modal('hide');
+                        if (res.ok && res.body.success) {
+                            window.location.reload();
+                        } else {
+                            window.alert((res.body && res.body.message) || (lang.genericError || 'Error'));
+                            $('#gpResetConfirm').prop('disabled', false);
+                        }
+                    }).catch(function() {
+                        $(modalEl).modal('hide');
+                        window.alert(lang.genericError || 'Error');
+                    });
+                });
+            });
+        }
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
     }
 
     return { init: init };

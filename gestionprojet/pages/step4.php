@@ -200,6 +200,15 @@ if (!$group) {
                     ↩️ <?php echo get_string('revert_to_draft', 'gestionprojet'); ?>
                 </button>
             <?php endif; ?>
+
+            <?php if ($showstudentform && (int)($gestionprojet->step4_provided ?? 0) === 1): ?>
+                <button type="button"
+                        class="btn btn-warning"
+                        id="resetButton"
+                        <?php echo $isLocked ? 'disabled title="' . s(get_string('reset_disabled_tooltip', 'gestionprojet')) . '"' : ''; ?>>
+                    <?php echo get_string('reset_button_label', 'gestionprojet'); ?>
+                </button>
+            <?php endif; ?>
         </div>
     </form>
 </div>
@@ -251,6 +260,17 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'lang'          => $langstrings,
     'confirmSubmit' => get_string('confirm_submission', 'gestionprojet'),
     'confirmRevert' => get_string('confirm_revert', 'gestionprojet'),
+    'resetEnabled'  => (bool)((int)($gestionprojet->step4_provided ?? 0) === 1) && !$isLocked,
+    'resetUrl'      => (new moodle_url('/mod/gestionprojet/ajax/reset_to_provided.php'))->out(false),
+    'sesskey'       => sesskey(),
+    'resetLang'     => [
+        'modalTitle'   => get_string('reset_modal_title', 'gestionprojet'),
+        'modalBody'    => get_string('reset_modal_body', 'gestionprojet'),
+        'modalConfirm' => get_string('reset_modal_confirm', 'gestionprojet'),
+        'modalCancel'  => get_string('reset_modal_cancel', 'gestionprojet'),
+        'success'      => get_string('reset_success', 'gestionprojet'),
+        'genericError' => get_string('error', 'core'),
+    ],
 ]]);
 ?>
 
