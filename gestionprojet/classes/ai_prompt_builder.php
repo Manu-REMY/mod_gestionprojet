@@ -142,10 +142,11 @@ class ai_prompt_builder {
      * @param int $step Step number (4-9)
      * @param object $studentdata Student submission data
      * @param object $teachermodel Teacher correction model
+     * @param string|null $teacherintro Optional teacher pedagogical intro text (HTML allowed, will be stripped)
      * @return array ['system' => string, 'user' => string]
      */
-    public function build_prompt(int $step, object $studentdata, object $teachermodel): array {
-        $systemprompt = $this->build_system_prompt($step, $teachermodel);
+    public function build_prompt(int $step, object $studentdata, object $teachermodel, ?string $teacherintro = null): array {
+        $systemprompt = $this->build_system_prompt($step, $teachermodel, $teacherintro);
         $userprompt = $this->build_user_prompt($step, $studentdata, $teachermodel);
 
         return [
@@ -159,9 +160,10 @@ class ai_prompt_builder {
      *
      * @param int $step Step number
      * @param object $teachermodel Teacher correction model
+     * @param string|null $teacherintro Optional teacher pedagogical intro text (HTML allowed, will be stripped)
      * @return string System prompt
      */
-    public function build_system_prompt(int $step, object $teachermodel): string {
+    public function build_system_prompt(int $step, object $teachermodel, ?string $teacherintro = null): string {
         $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
         $aiinstructions = $teachermodel->ai_instructions ?? '';
         $criteriatext = $this->build_criteria_text($step);
@@ -185,6 +187,19 @@ INSTRUCTIONS GÉNÉRALES:
 5. Identifie les points forts et les axes d'amélioration
 
 PROMPT;
+
+        // Add teacher's pedagogical intro (visible to students) as additional context for the AI.
+        if ($teacherintro !== null) {
+            $cleanintro = trim(html_entity_decode(strip_tags($teacherintro)));
+            if ($cleanintro !== '') {
+                $prompt .= <<<PROMPT
+
+CONTEXTE FOURNI PAR L'ENSEIGNANT (présentation aux élèves):
+$cleanintro
+
+PROMPT;
+            }
+        }
 
         // Add teacher-specific instructions if provided.
         if (!empty($aiinstructions)) {

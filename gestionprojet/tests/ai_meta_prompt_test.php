@@ -91,4 +91,40 @@ class mod_gestionprojet_ai_meta_prompt_test extends advanced_testcase {
         $result = $builder->build_meta_prompt(4, (object)[]);
         $this->assertStringContainsString('(Modèle de correction non renseigné', $result['user']);
     }
+
+    public function test_build_system_prompt_includes_intro_text_when_provided(): void {
+        $teachermodel = (object) [
+            'ai_instructions' => 'Évaluer la qualité des FS.',
+        ];
+        $teacherintro = 'Pour ce projet, vous travaillerez sur un système de tri sélectif.';
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_system_prompt(4, $teachermodel, $teacherintro);
+
+        $this->assertStringContainsString('Pour ce projet, vous travaillerez', $prompt);
+        $this->assertStringContainsString('CONTEXTE FOURNI PAR L\'ENSEIGNANT', $prompt);
+        $this->assertStringContainsString('Évaluer la qualité des FS.', $prompt);
+    }
+
+    public function test_build_system_prompt_omits_intro_text_when_null_or_empty(): void {
+        $teachermodel = (object) ['ai_instructions' => 'Eval.'];
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+
+        $promptnull = $builder->build_system_prompt(4, $teachermodel, null);
+        $promptempty = $builder->build_system_prompt(4, $teachermodel, '   ');
+
+        $this->assertStringNotContainsString('CONTEXTE FOURNI PAR L\'ENSEIGNANT', $promptnull);
+        $this->assertStringNotContainsString('CONTEXTE FOURNI PAR L\'ENSEIGNANT', $promptempty);
+    }
+
+    public function test_build_system_prompt_strips_html_from_intro_text(): void {
+        $teachermodel = (object) ['ai_instructions' => 'Eval.'];
+        $teacherintro = '<p>Travail sur <strong>la sécurité</strong> électrique.</p>';
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_system_prompt(4, $teachermodel, $teacherintro);
+
+        $this->assertStringContainsString('Travail sur la sécurité électrique.', $prompt);
+        $this->assertStringNotContainsString('<strong>', $prompt);
+    }
 }
