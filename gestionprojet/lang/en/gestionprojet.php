@@ -961,3 +961,5 @@ $string['reset_disabled_tooltip'] = 'The form is locked after submission. Ask yo
 $string['reset_success'] = 'Form reset to the latest teacher instructions.';
 $string['reset_error_locked'] = 'Cannot reset a submitted form.';
 $string['reset_error_no_provided'] = 'No teacher-provided instructions exist for this step.';
+$string['reset_error_unsupported_step'] = 'Unsupported step.';
+$string['reset_error_internal'] = 'An internal error occurred. Please try again or contact your teacher.';

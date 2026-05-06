@@ -961,3 +961,5 @@ $string['reset_disabled_tooltip'] = 'Le formulaire est verrouillé après soumis
 $string['reset_success'] = 'Formulaire réinitialisé à la dernière version de la consigne.';
 $string['reset_error_locked'] = 'Impossible de réinitialiser un formulaire soumis.';
 $string['reset_error_no_provided'] = 'Aucune consigne fournie par l\'enseignant pour cette étape.';
+$string['reset_error_unsupported_step'] = 'Étape non prise en charge.';
+$string['reset_error_internal'] = 'Une erreur interne est survenue. Veuillez réessayer ou contacter votre enseignant.';

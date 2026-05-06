@@ -57,11 +57,14 @@ try {
     if (!$result['success']) {
         $errorcode = $result['error'] ?? 'unknown';
         $errormap = [
-            'locked'           => ['msg' => get_string('reset_error_locked', 'gestionprojet'),       'http' => 403],
-            'no_provided'      => ['msg' => get_string('reset_error_no_provided', 'gestionprojet'),  'http' => 400],
-            'unsupported_step' => ['msg' => 'Unsupported step',                                       'http' => 400],
+            'locked'           => ['msg' => get_string('reset_error_locked', 'gestionprojet'),            'http' => 403],
+            'no_provided'      => ['msg' => get_string('reset_error_no_provided', 'gestionprojet'),       'http' => 400],
+            'unsupported_step' => ['msg' => get_string('reset_error_unsupported_step', 'gestionprojet'),  'http' => 400],
         ];
-        $info = $errormap[$errorcode] ?? ['msg' => 'Unknown error', 'http' => 500];
+        $info = $errormap[$errorcode] ?? [
+            'msg'  => get_string('reset_error_internal', 'gestionprojet'),
+            'http' => 500,
+        ];
         http_response_code($info['http']);
         echo json_encode([
             'success' => false,
@@ -76,10 +79,13 @@ try {
         'message' => get_string('reset_success', 'gestionprojet'),
     ]);
 } catch (\Throwable $e) {
+    // Log full exception server-side. The client only sees a generic message
+    // (avoids leaking SQL fragments, file paths, or stack details).
+    debugging('reset_to_provided exception: ' . $e->getMessage(), DEBUG_DEVELOPER);
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'error'   => 'exception',
-        'message' => $e->getMessage(),
+        'message' => get_string('reset_error_internal', 'gestionprojet'),
     ]);
 }
