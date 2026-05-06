@@ -113,10 +113,20 @@ if (!$group) {
     $group->name = get_string('defaultgroup', 'group'); // Generic fallback
 }
 
-// Parse precautions (stored as JSON array)
+// Parse precautions: historically stored as a JSON array of 6 strings (one per cell).
+// When seeded from the consigne (essai_provided.precautions), the value is a
+// free-form text — split on newlines and clamp to 6 entries for back-compat with
+// the 6-cell student layout. Trailing/empty lines are kept positionally to preserve
+// the cell mapping.
 $precautions = [];
-if ($submission->precautions) {
-    $precautions = json_decode($submission->precautions, true) ?? [];
+if (!empty($submission->precautions)) {
+    $decoded = json_decode($submission->precautions, true);
+    if (is_array($decoded)) {
+        $precautions = $decoded;
+    } else {
+        $lines = preg_split('/\r\n|\r|\n/', $submission->precautions);
+        $precautions = array_slice($lines, 0, 6);
+    }
 }
 ?>
 

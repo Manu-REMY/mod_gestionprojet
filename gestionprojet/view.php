@@ -123,6 +123,7 @@ if ($step > 0) {
     if (!$isteacher && !$enabled) {
         // Special case: step 4 / 9 may still be accessible if their _provided flag is enabled.
         $providedaccess = ($step === 4 && (int)($gestionprojet->step4_provided ?? 0) === 1)
+            || ($step === 5 && (int)($gestionprojet->step5_provided ?? 0) === 1)
             || ($step === 9 && (int)($gestionprojet->step9_provided ?? 0) === 1);
         if (!$providedaccess) {
             throw new \moodle_exception('stepdisabled', 'gestionprojet');
@@ -132,7 +133,7 @@ if ($step > 0) {
     // Handle teacher-provided consigne pages for dual-facet steps (4 CDCF, 9 FAST).
     // Polymorphic: teacher gets the editor; student gets a read-only view of the brief.
     // The provided page checks the user's capability and renders accordingly.
-    if ($mode === 'provided' && in_array($step, [4, 9], true)) {
+    if ($mode === 'provided' && in_array($step, [4, 5, 9], true)) {
         require_once(__DIR__ . '/pages/step' . $step . '_provided.php');
         exit;
     }

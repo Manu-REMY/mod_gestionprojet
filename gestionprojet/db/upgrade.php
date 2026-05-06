@@ -670,5 +670,51 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026050601, 'gestionprojet');
     }
 
+    if ($oldversion < 2026050700) {
+        // Add Essai consigne support: new flag step5_provided + new table gestionprojet_essai_provided.
+
+        // Add step5_provided flag to gestionprojet table (after step9_provided).
+        $maintable = new xmldb_table('gestionprojet');
+        $field = new xmldb_field(
+            'step5_provided',
+            XMLDB_TYPE_INTEGER,
+            '1',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'step9_provided'
+        );
+        if (!$dbman->field_exists($maintable, $field)) {
+            $dbman->add_field($maintable, $field);
+        }
+
+        // Create gestionprojet_essai_provided.
+        $essaiprovided = new xmldb_table('gestionprojet_essai_provided');
+        if (!$dbman->table_exists($essaiprovided)) {
+            $essaiprovided->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+            $essaiprovided->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
+            $essaiprovided->add_field('nom_essai', XMLDB_TYPE_CHAR, '255', null, null, null);
+            $essaiprovided->add_field('date_essai', XMLDB_TYPE_CHAR, '20', null, null, null);
+            $essaiprovided->add_field('groupe_eleves', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('objectif', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('fonction_service', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('niveaux_reussite', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('etapes_protocole', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('materiel_outils', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('precautions', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('resultats_obtenus', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('observations_remarques', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('conclusion', XMLDB_TYPE_TEXT, null, null, null, null);
+            $essaiprovided->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $essaiprovided->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $essaiprovided->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $essaiprovided->add_key('gestionprojetid', XMLDB_KEY_FOREIGN_UNIQUE, ['gestionprojetid'], 'gestionprojet', ['id']);
+            $dbman->create_table($essaiprovided);
+        }
+
+        upgrade_mod_savepoint(true, 2026050700, 'gestionprojet');
+    }
+
     return true;
 }
