@@ -66,6 +66,16 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/fast_editor', 'init', [[
     'sesskey' => sesskey(),
 ]]);
 
+// fast_editor only serializes data_json + ai_instructions, so the intro_text
+// textarea needs its own autosave loop (teacher-only).
+if ($canedit) {
+    $PAGE->requires->js_call_amd('mod_gestionprojet/intro_text_autosave', 'init', [[
+        'cmid'       => (int)$cm->id,
+        'step'       => 9,
+        'autosaveMs' => (int)($gestionprojet->autosave_interval ?? 30) * 1000,
+    ]]);
+}
+
 echo $OUTPUT->header();
 // Tabs: teacher gets consignes navigation; student gets work navigation.
 echo $OUTPUT->render_from_template(
