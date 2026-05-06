@@ -29,8 +29,15 @@
  * @copyright  2026 Emmanuel REMY
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/ajax', 'mod_gestionprojet/cdcf', 'mod_gestionprojet/autosave'],
-function($, Ajax, Cdcf, Autosave) {
+define([
+    'jquery',
+    'core/ajax',
+    'mod_gestionprojet/cdcf',
+    'mod_gestionprojet/autosave',
+    'core/modal_factory',
+    'core/modal_events',
+    'core/notification'
+], function($, Ajax, Cdcf, Autosave, ModalFactory, ModalEvents, Notification) {
     'use strict';
 
     function init(cfg) {
@@ -111,58 +118,49 @@ function($, Ajax, Cdcf, Autosave) {
         var resetBtn = document.getElementById('resetButton');
         if (resetBtn && cfg.resetEnabled && cfg.resetUrl) {
             resetBtn.addEventListener('click', function() {
-                var lang = cfg.resetLang || {};
-                var modalHtml = '' +
-                    '<div class="modal fade" id="gpResetModal" tabindex="-1" role="dialog">' +
-                    '  <div class="modal-dialog" role="document">' +
-                    '    <div class="modal-content">' +
-                    '      <div class="modal-header">' +
-                    '        <h5 class="modal-title">' + escapeHtml(lang.modalTitle || 'Reset?') + '</h5>' +
-                    '        <button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
-                    '          <span aria-hidden="true">&times;</span>' +
-                    '        </button>' +
-                    '      </div>' +
-                    '      <div class="modal-body"><p>' + escapeHtml(lang.modalBody || '') + '</p></div>' +
-                    '      <div class="modal-footer">' +
-                    '        <button type="button" class="btn btn-secondary" data-dismiss="modal">' +
-                              escapeHtml(lang.modalCancel || 'Cancel') + '</button>' +
-                    '        <button type="button" class="btn btn-warning" id="gpResetConfirm">' +
-                              escapeHtml(lang.modalConfirm || 'Reset') + '</button>' +
-                    '      </div>' +
-                    '    </div>' +
-                    '  </div>' +
-                    '</div>';
-                var existing = document.getElementById('gpResetModal');
-                if (existing) { existing.parentNode.removeChild(existing); }
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                var modalEl = document.getElementById('gpResetModal');
-                $(modalEl).modal('show');
-                $('#gpResetConfirm').on('click', function() {
-                    var fd = new FormData();
-                    fd.append('id', cfg.cmid);
-                    fd.append('step', cfg.step);
-                    fd.append('groupid', cfg.groupid || 0);
-                    fd.append('sesskey', cfg.sesskey);
-                    $('#gpResetConfirm').prop('disabled', true);
-                    fetch(cfg.resetUrl, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        body: fd,
-                    }).then(function(r) {
-                        return r.json().then(function(j) { return { ok: r.ok, body: j }; });
-                    }).then(function(res) {
-                        $(modalEl).modal('hide');
-                        if (res.ok && res.body.success) {
-                            window.location.reload();
-                        } else {
-                            window.alert((res.body && res.body.message) || (lang.genericError || 'Error'));
-                            $('#gpResetConfirm').prop('disabled', false);
-                        }
-                    }).catch(function() {
-                        $(modalEl).modal('hide');
-                        window.alert(lang.genericError || 'Error');
+                var lang = cfg.resetLang;
+                ModalFactory.create({
+                    type: ModalFactory.types.SAVE_CANCEL,
+                    title: lang.modalTitle,
+                    body: '<p>' + escapeHtml(lang.modalBody) + '</p>',
+                    large: false
+                }).then(function(modal) {
+                    modal.setSaveButtonText(lang.modalConfirm);
+
+                    modal.getRoot().on(ModalEvents.save, function(e) {
+                        e.preventDefault();
+                        var saveBtn = modal.getRoot().find('[data-action="save"]');
+                        saveBtn.prop('disabled', true);
+
+                        var fd = new FormData();
+                        fd.append('id', cfg.cmid);
+                        fd.append('step', cfg.step);
+                        fd.append('groupid', cfg.groupid || 0);
+                        fd.append('sesskey', cfg.sesskey);
+
+                        fetch(cfg.resetUrl, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            body: fd
+                        }).then(function(r) {
+                            return r.json().then(function(j) { return { ok: r.ok, body: j }; });
+                        }).then(function(res) {
+                            modal.hide();
+                            if (res.ok && res.body.success) {
+                                window.location.reload();
+                            } else {
+                                window.alert((res.body && res.body.message) || lang.genericError);
+                                saveBtn.prop('disabled', false);
+                            }
+                        }).catch(function() {
+                            modal.hide();
+                            window.alert(lang.genericError);
+                        });
                     });
-                });
+
+                    modal.show();
+                    return modal;
+                }).catch(Notification.exception);
             });
         }
 
