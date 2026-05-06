@@ -716,5 +716,27 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026050700, 'gestionprojet');
     }
 
+    if ($oldversion < 2026050800) {
+        $dbman = $DB->get_manager();
+
+        // Add intro_text column to gestionprojet_cdcf_provided.
+        $table = new xmldb_table('gestionprojet_cdcf_provided');
+        $field = new xmldb_field(
+            'intro_text',
+            XMLDB_TYPE_TEXT,
+            null,
+            null,
+            null,
+            null,
+            null,
+            'interacteurs_data'
+        );
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026050800, 'gestionprojet');
+    }
+
     return true;
 }
