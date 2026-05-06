@@ -111,6 +111,14 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'data_json', 'timecreated', 'timemodified',
         ]);
 
+        $essaiprovided = new backup_nested_element('essai_provided', ['id'], [
+            'nom_essai', 'date_essai', 'groupe_eleves', 'objectif',
+            'fonction_service', 'niveaux_reussite',
+            'etapes_protocole', 'materiel_outils', 'precautions',
+            'resultats_obtenus', 'observations_remarques', 'conclusion',
+            'timecreated', 'timemodified',
+        ]);
+
         // Student submission tables.
         $cdcfs = new backup_nested_element('cdcfs');
         $cdcf = new backup_nested_element('cdcf', ['id'], [
@@ -175,6 +183,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $gestionprojet->add_child($fastteacher);
         $gestionprojet->add_child($cdcfprovided);
         $gestionprojet->add_child($fastprovided);
+        $gestionprojet->add_child($essaiprovided);
 
         $gestionprojet->add_child($cdcfs);
         $cdcfs->add_child($cdcf);
@@ -210,6 +219,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $fastteacher->set_source_table('gestionprojet_fast_teacher', ['gestionprojetid' => backup::VAR_PARENTID]);
         $cdcfprovided->set_source_table('gestionprojet_cdcf_provided', ['gestionprojetid' => backup::VAR_PARENTID]);
         $fastprovided->set_source_table('gestionprojet_fast_provided', ['gestionprojetid' => backup::VAR_PARENTID]);
+        $essaiprovided->set_source_table('gestionprojet_essai_provided', ['gestionprojetid' => backup::VAR_PARENTID]);
 
         // User data sources (only if userinfo is set).
         if ($userinfo) {
