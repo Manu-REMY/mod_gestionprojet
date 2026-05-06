@@ -55,6 +55,9 @@ define([
             isLocked: cfg.isLocked,
             onChange: function(data) {
                 dataField.value = JSON.stringify(data);
+                // Notify the autosave dirty-detector that the hidden field changed
+                // (programmatic value updates don't fire change/input events).
+                dataField.dispatchEvent(new Event('input', { bubbles: true }));
             },
         });
 
