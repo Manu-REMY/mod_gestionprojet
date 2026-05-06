@@ -5,6 +5,30 @@ All notable changes to the mod_gestionprojet plugin will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] — 2026-05-06
+
+### Ajouts
+
+- **Step 4 (CDCF) — Refonte de la consigne enseignant** : nouveau champ texte d'introduction (éditeur Atto) sur la page « Consigne », visible en lecture seule en haut de l'activité élève. Lecture en temps réel : les modifications enseignant se propagent immédiatement à tous les élèves au prochain reload.
+- **Bouton « Réinitialiser le formulaire »** côté élève (step 4) : permet à l'élève de remplacer son brouillon par la dernière version de la consigne fournie par l'enseignant. Action confirmée par modal Bootstrap, désactivée si le formulaire est soumis (réactivable après revert enseignant).
+- **Endpoint AJAX** `ajax/reset_to_provided.php` (capability `mod/gestionprojet:submit`, garde-fou serveur sur `status === 1`).
+- **Classe `\mod_gestionprojet\reset_helper`** (testable via PHPUnit, 4 tests) — extensible aux steps 5 / 7 / 9 dans une prochaine itération.
+- **IA** : injection du texte d'intro enseignant dans le prompt système d'évaluation (plain text, après stripping HTML) pour une évaluation mieux contextualisée.
+
+### Database
+
+- Nouvelle colonne `intro_text` (TEXT, nullable) sur `gestionprojet_cdcf_provided`.
+- Étape d'upgrade automatique à `2026050800`.
+
+### Migration
+
+- Aucune migration des records élèves existants. Le seed initial existant continue de fonctionner pour les élèves dont le record est encore vide. Les autres peuvent cliquer sur « Réinitialiser le formulaire » pour récupérer la dernière consigne.
+
+### Internal
+
+- `ai_prompt_builder::build_prompt` et `build_system_prompt` acceptent un nouveau paramètre optionnel `?string $teacherintro = null` (rétro-compatible).
+- Backup/restore Moodle 2 : `intro_text` ajouté à `backup_nested_element('cdcf_provided', ...)`. Le restore est générique, aucun changement requis côté restore.
+
 ## [2.8.0] — 2026-05-06
 
 ### Ajouts
