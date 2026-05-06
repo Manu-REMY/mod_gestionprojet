@@ -28,6 +28,7 @@
         <FIELD NAME="enable_step9" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="step4_provided" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When 1, the teacher's CDCF (gestionprojet_cdcf_teacher) is displayed read-only to students as a reference document."/>
         <FIELD NAME="step9_provided" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When 1, the teacher's FAST diagram is displayed read-only to students as a starting point."/>
+        <FIELD NAME="step5_provided" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When 1, the teacher's Essai consigne is displayed read-only to students and seeded into their editable essai on first access."/>
         <FIELD NAME="ai_provider" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="AI provider: openai, anthropic, mistral"/>
         <FIELD NAME="ai_api_key" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Encrypted API key for AI evaluation"/>
         <FIELD NAME="ai_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=AI evaluation enabled"/>
@@ -395,6 +396,32 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="data_json" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON of FAST diagram"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign-unique" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- Table: Essai teacher-provided consigne (read-only reference for students, seeded into student record) - Step 5 -->
+    <TABLE NAME="gestionprojet_essai_provided" COMMENT="Teacher-provided Essai consigne (no ai_instructions, no dates) — seeded into student essai on first access">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="nom_essai" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="date_essai" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="groupe_eleves" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="objectif" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="fonction_service" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="niveaux_reussite" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="etapes_protocole" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="materiel_outils" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="precautions" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="resultats_obtenus" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="observations_remarques" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="conclusion" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
