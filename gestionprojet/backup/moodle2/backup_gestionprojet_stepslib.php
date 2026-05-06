@@ -108,7 +108,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         ]);
 
         $fastprovided = new backup_nested_element('fast_provided', ['id'], [
-            'data_json', 'timecreated', 'timemodified',
+            'data_json', 'intro_text', 'timecreated', 'timemodified',
         ]);
 
         $essaiprovided = new backup_nested_element('essai_provided', ['id'], [
@@ -116,7 +116,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'fonction_service', 'niveaux_reussite',
             'etapes_protocole', 'materiel_outils', 'precautions',
             'resultats_obtenus', 'observations_remarques', 'conclusion',
-            'timecreated', 'timemodified',
+            'intro_text', 'timecreated', 'timemodified',
         ]);
 
         // Student submission tables.
