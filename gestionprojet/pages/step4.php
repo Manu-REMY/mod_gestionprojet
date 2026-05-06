@@ -137,6 +137,18 @@ if (!$group) {
 
 <div class="step4-container gp-student">
     <?php
+    // Display teacher's pedagogical intro text (read-only, live-read from cdcf_provided).
+    if ((int)($gestionprojet->step4_provided ?? 0) === 1) {
+        $providedforintro = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
+        if ($providedforintro && !empty(trim(strip_tags($providedforintro->intro_text ?? '')))) {
+            echo html_writer::start_div('alert alert-info gp-consigne-intro');
+            echo html_writer::tag('h4', get_string('intro_section_title', 'gestionprojet'));
+            echo format_text($providedforintro->intro_text, FORMAT_HTML, ['context' => $context]);
+            echo html_writer::end_div();
+        }
+    }
+    ?>
+    <?php
     // Moodle-native heading + subtitle (replaces legacy colored banner).
     echo $OUTPUT->heading(get_string('step4_page_title', 'gestionprojet'), 2);
     ?>
