@@ -122,14 +122,13 @@ if ($table === 'essai' && (int)$gestionprojet->step5_provided === 1) {
 
 Étendre `ajax/autosave.php` pour whitelist les champs essai en mode `provided`. Probablement réutilise déjà le whitelist du step 5 standard — vérifier et brancher.
 
-### H. mod_form.php
+### H. Toggle via Gantt (pas mod_form.php)
 
-Ajouter une checkbox `step5_provided` à côté/dans la section "Consignes" :
-```php
-$mform->addElement('advcheckbox', 'step5_provided',
-                   get_string('step5_provided', 'gestionprojet'));
-$mform->setDefault('step5_provided', 0);
-```
+Comme pour `step4_provided` et `step9_provided`, l'activation/désactivation se fait par l'enseignant **directement sur le Gantt de la home page** via `ajax/toggle_step.php` (flag=`provided`). Pas d'ajout dans `mod_form.php`.
+
+L'endpoint actuel `ajax/toggle_step.php` valide `$stepnum in [4, 9]` quand `$flag === 'provided'` — étendre à `[4, 5, 9]`.
+
+`pages/home.php` doit ajouter une cellule "row docs" pour step 5 (côté enseignant, avec checkbox provided) et une cellule "row consult" (côté élève, lien vers la consigne quand activée).
 
 ### I. Strings (lang)
 
@@ -153,18 +152,20 @@ $DB->delete_records('gestionprojet_essai_provided', ['gestionprojetid' => $id]);
 - Pas de bouton "réinitialiser depuis la consigne" sur la fiche élève — YAGNI ; si l'élève a besoin de revoir la consigne, il a le lien lecture seule.
 - Pas de PDF export spécifique pour la consigne — l'enseignant peut imprimer la page si besoin.
 
-## Plan d'implémentation (10 étapes)
+## Plan d'implémentation (12 étapes)
 
 1. `db/install.xml` — ajouter table `gestionprojet_essai_provided` + champ `step5_provided`
-2. `db/upgrade.php` — migration : ajout table + ajout champ + bump version
-3. `version.php` — `$plugin->version` (2026050600) + `$plugin->release` (2.8.0)
-4. `lib.php` — seeding dans `gestionprojet_get_or_create_submission` + `delete_records` dans `gestionprojet_delete_instance` + extension de la nav consignes
-5. `pages/step5_provided.php` — nouvelle page (modèle = `step4_provided.php`, structure formulaire essai)
-6. `pages/step5.php` — adapter la lecture de `precautions` (fallback split sur retours à la ligne)
-7. `view.php` — étendre `mode=provided` à step 5 + élargir `$providedaccess`
-8. `mod_form.php` — checkbox `step5_provided`
-9. `lang/fr` + `lang/en` — strings nécessaires
-10. `ajax/autosave.php` — whitelist champs essai pour `mode=provided`
+2. `db/upgrade.php` — migration : ajout champ + ajout table + bump version
+3. `version.php` — `$plugin->version` (2026050700) + `$plugin->release` (2.8.0)
+4. `lib.php` — seeding dans `gestionprojet_get_or_create_submission` + `delete_records` dans `gestionprojet_delete_instance` + extension de `gestionprojet_build_step_tabs` (consignes [1,3,2,4,9,5] + isdualstep [4,5,9])
+5. `pages/step5_provided.php` — nouvelle page (modèle = `step4_provided.php`, structure formulaire essai textareas)
+6. `pages/step5.php` — adapter la lecture de `precautions` (fallback split sur retours à la ligne quand pas du JSON)
+7. `pages/home.php` — ajouter row docs cell + row consult cell pour step 5 sous flag `step5_provided`
+8. `view.php` — étendre `mode=provided` à step 5 (in_array [4,5,9]) + élargir `$providedaccess`
+9. `ajax/autosave.php` — ajouter step 5 dans `$providedtables`
+10. `ajax/toggle_step.php` — étendre `in_array($stepnum, [4, 9])` à `[4, 5, 9]` pour flag=provided
+11. `backup/moodle2/backup_gestionprojet_stepslib.php` + `restore_gestionprojet_stepslib.php` — étendre pour `essai_provided`
+12. `lang/fr` + `lang/en` — strings nécessaires
 
 ## Tests / vérifications
 
