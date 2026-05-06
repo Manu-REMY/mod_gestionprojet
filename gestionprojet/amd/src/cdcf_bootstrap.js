@@ -25,6 +25,9 @@
  * student_submit_helper.php, which opens a Bootstrap modal and triggers
  * the AI evaluation server-side.
  *
+ * The reset-to-provided button was extracted to mod_gestionprojet/reset_button
+ * in v2.10.0 so step 5 (essai) and step 9 (FAST) can reuse the same flow.
+ *
  * @module     mod_gestionprojet/cdcf_bootstrap
  * @copyright  2026 Emmanuel REMY
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -33,11 +36,8 @@ define([
     'jquery',
     'core/ajax',
     'mod_gestionprojet/cdcf',
-    'mod_gestionprojet/autosave',
-    'core/modal_factory',
-    'core/modal_events',
-    'core/notification'
-], function($, Ajax, Cdcf, Autosave, ModalFactory, ModalEvents, Notification) {
+    'mod_gestionprojet/autosave'
+], function($, Ajax, Cdcf, Autosave) {
     'use strict';
 
     function init(cfg) {
@@ -115,65 +115,6 @@ define([
                     Autosave.save();
                 });
             }
-        }
-
-        // Reset-to-provided button.
-        var resetBtn = document.getElementById('resetButton');
-        if (resetBtn && cfg.resetEnabled && cfg.resetUrl) {
-            resetBtn.addEventListener('click', function() {
-                var lang = cfg.resetLang;
-                ModalFactory.create({
-                    type: ModalFactory.types.SAVE_CANCEL,
-                    title: lang.modalTitle,
-                    body: '<p>' + escapeHtml(lang.modalBody) + '</p>',
-                    large: false
-                }).then(function(modal) {
-                    modal.setSaveButtonText(lang.modalConfirm);
-
-                    modal.getRoot().on(ModalEvents.save, function(e) {
-                        e.preventDefault();
-                        var saveBtn = modal.getRoot().find('[data-action="save"]');
-                        saveBtn.prop('disabled', true);
-
-                        var fd = new FormData();
-                        fd.append('id', cfg.cmid);
-                        fd.append('step', cfg.step);
-                        fd.append('groupid', cfg.groupid || 0);
-                        fd.append('sesskey', cfg.sesskey);
-
-                        fetch(cfg.resetUrl, {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            body: fd
-                        }).then(function(r) {
-                            return r.json().then(function(j) { return { ok: r.ok, body: j }; });
-                        }).then(function(res) {
-                            modal.hide();
-                            if (res.ok && res.body.success) {
-                                window.location.reload();
-                            } else {
-                                window.alert((res.body && res.body.message) || lang.genericError);
-                                saveBtn.prop('disabled', false);
-                            }
-                        }).catch(function() {
-                            modal.hide();
-                            window.alert(lang.genericError);
-                        });
-                    });
-
-                    modal.show();
-                    return modal;
-                }).catch(Notification.exception);
-            });
-        }
-
-        function escapeHtml(s) {
-            return String(s == null ? '' : s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
         }
     }
 
