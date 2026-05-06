@@ -74,6 +74,24 @@ echo $OUTPUT->render_from_template(
 );
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
 
+// Intro text editor (teacher-only — students see the read-only banner via step9.php).
+if ($canedit) {
+    echo '<div class="model-form-section gp-intro-section">';
+    echo '<h3>' . \mod_gestionprojet\output\icon::render('file-text', 'sm', 'blue') . ' '
+        . get_string('intro_text_label', 'gestionprojet') . '</h3>';
+    echo '<p class="text-muted small">' . get_string('intro_text_help', 'gestionprojet') . '</p>';
+    echo '<textarea name="intro_text" id="intro_text" rows="8" class="form-control gp-intro-textarea">'
+        . s($provided->intro_text ?? '') . '</textarea>';
+    echo '</div>';
+
+    $editor = editors_get_preferred_editor(FORMAT_HTML);
+    $editor->set_text($provided->intro_text ?? '');
+    $editor->use_editor('intro_text', [
+        'context'  => $context,
+        'autosave' => false,
+    ]);
+}
+
 echo '<div class="alert alert-info">';
 echo '<h4>' . get_string('step9_desc_title', 'gestionprojet') . '</h4>';
 echo '<p>' . get_string('step9_desc_text', 'gestionprojet') . '</p>';
