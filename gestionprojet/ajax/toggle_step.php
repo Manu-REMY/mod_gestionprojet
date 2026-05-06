@@ -54,7 +54,7 @@ if ($enabled === 2 && $stepnum !== 4) {
 if (!in_array($flag, ['enable', 'provided'], true)) {
     throw new \moodle_exception('invalidparameter', 'error');
 }
-if ($flag === 'provided' && !in_array($stepnum, [4, 9], true)) {
+if ($flag === 'provided' && !in_array($stepnum, [4, 5, 9], true)) {
     throw new \moodle_exception('invalidparameter', 'error');
 }
 
