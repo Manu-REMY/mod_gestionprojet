@@ -143,11 +143,12 @@ class ai_prompt_builder {
      * @param object $studentdata Student submission data
      * @param object $teachermodel Teacher correction model
      * @param string|null $teacherintro Optional teacher pedagogical intro text (HTML allowed, will be stripped)
+     * @param object|null $providedrec Optional teacher-provided pre-filled consigne record (e.g. cdcf_provided)
      * @return array ['system' => string, 'user' => string]
      */
-    public function build_prompt(int $step, object $studentdata, object $teachermodel, ?string $teacherintro = null): array {
+    public function build_prompt(int $step, object $studentdata, object $teachermodel, ?string $teacherintro = null, ?object $providedrec = null): array {
         $systemprompt = $this->build_system_prompt($step, $teachermodel, $teacherintro);
-        $userprompt = $this->build_user_prompt($step, $studentdata, $teachermodel);
+        $userprompt = $this->build_user_prompt($step, $studentdata, $teachermodel, $providedrec);
 
         return [
             'system' => $systemprompt,
@@ -241,19 +242,42 @@ PROMPT;
     /**
      * Build the user prompt with student and teacher data.
      *
+     * When $providedrec is provided (step 4 with teacher-provided consigne), a dedicated
+     * section is inserted between the correction model and the student production to tell
+     * the AI that anything matching the pre-filled consigne is NOT the student's own work.
+     *
      * @param int $step Step number
      * @param object $studentdata Student submission
      * @param object $teachermodel Teacher correction model
+     * @param object|null $providedrec Optional pre-filled consigne record (shares field shape with student data)
      * @return string User prompt
      */
-    public function build_user_prompt(int $step, object $studentdata, object $teachermodel): string {
+    public function build_user_prompt(int $step, object $studentdata, object $teachermodel, ?object $providedrec = null): string {
         $studenttext = $this->format_student_data($step, $studentdata);
         $teachertext = $this->format_teacher_model($step, $teachermodel);
+
+        $providedsection = '';
+        if ($providedrec !== null) {
+            // Reuse format_student_data: cdcf_provided shares the same field shape (interacteurs_data).
+            $providedtext = $this->format_student_data($step, $providedrec);
+            $providedsection = <<<PROMPT
+
+
+---
+
+## CONSIGNE PRÉ-REMPLIE FOURNIE À L'ÉLÈVE (point de départ, NE COMPTE PAS comme travail de l'élève):
+
+L'élève a reçu cette consigne déjà partiellement remplie. Considère comme travail de l'élève UNIQUEMENT ce qui a été modifié par rapport à cette consigne. Les libellés « A compléter » ainsi que tout contenu identique à la consigne ci-dessous ne sont PAS attribuables à l'élève — ils ne doivent pas être pris en compte dans l'évaluation positive. Si l'élève n'a rien modifié, la note doit être proche de 0.
+
+$providedtext
+PROMPT;
+        }
 
         return <<<PROMPT
 ## MODÈLE DE CORRECTION (Ce que l'enseignant attend):
 
 $teachertext
+$providedsection
 
 ---
 

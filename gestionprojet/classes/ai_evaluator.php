@@ -186,18 +186,26 @@ class ai_evaluator {
                 $teachermodel->ai_instructions = '';
             }
 
-            // Fetch teacher pedagogical intro (step 4 only for now, future: 5/7/9).
+            // Fetch teacher pedagogical intro and pre-filled consigne (step 4 only for now, future: 5/7/9).
             $teacherintro = null;
+            $providedrec_for_prompt = null;
             if ((int)$evaluation->step === 4) {
                 $providedrec = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $evaluation->gestionprojetid]);
-                if ($providedrec && !empty(trim(strip_tags($providedrec->intro_text ?? '')))) {
-                    $teacherintro = $providedrec->intro_text;
+                if ($providedrec) {
+                    if (!empty(trim(strip_tags($providedrec->intro_text ?? '')))) {
+                        $teacherintro = $providedrec->intro_text;
+                    }
+                    if (!empty($providedrec->interacteurs_data)) {
+                        $providedrec_for_prompt = $providedrec;
+                    }
                 }
             }
 
             // Build prompts.
             $promptbuilder = new ai_prompt_builder();
-            $prompts = $promptbuilder->build_prompt($evaluation->step, $submission, $teachermodel, $teacherintro);
+            $prompts = $promptbuilder->build_prompt(
+                $evaluation->step, $submission, $teachermodel, $teacherintro, $providedrec_for_prompt
+            );
 
             // Get AI provider.
             $provider = self::get_provider($aiconfig->provider, $apikey);

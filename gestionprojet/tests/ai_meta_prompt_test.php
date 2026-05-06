@@ -127,4 +127,27 @@ class mod_gestionprojet_ai_meta_prompt_test extends advanced_testcase {
         $this->assertStringContainsString('Travail sur la sécurité électrique.', $prompt);
         $this->assertStringNotContainsString('<strong>', $prompt);
     }
+
+    public function test_build_user_prompt_includes_provided_consigne_when_passed(): void {
+        $studentdata = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Modifié"}]}'];
+        $teachermodel = (object) ['interacteurs_data' => '{"interactors":[]}', 'ai_instructions' => ''];
+        $providedrec = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"A compléter"}]}'];
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_user_prompt(4, $studentdata, $teachermodel, $providedrec);
+
+        $this->assertStringContainsString('CONSIGNE PRÉ-REMPLIE FOURNIE À L\'ÉLÈVE', $prompt);
+        $this->assertStringContainsString('A compléter', $prompt);
+        $this->assertStringContainsString('travail de l\'élève UNIQUEMENT', $prompt);
+    }
+
+    public function test_build_user_prompt_omits_provided_section_when_null(): void {
+        $studentdata = (object) ['interacteurs_data' => '{"interactors":[]}'];
+        $teachermodel = (object) ['interacteurs_data' => '{"interactors":[]}', 'ai_instructions' => ''];
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_user_prompt(4, $studentdata, $teachermodel, null);
+
+        $this->assertStringNotContainsString('CONSIGNE PRÉ-REMPLIE', $prompt);
+    }
 }
