@@ -947,3 +947,17 @@ $string['messageprovider:ai_evaluation_failed'] = 'AI evaluation failure notific
 $string['ai_failure_notif_subject'] = 'AI evaluation failed in {$a->activityname}';
 $string['ai_failure_notif_body'] = 'An AI evaluation failed for step {$a->step}. Error: {$a->error}. Please review the submission at: {$a->url}';
 $string['ai_failure_notif_small'] = 'AI evaluation failed';
+
+// Step 4 — Consigne refactor (v2.9.0)
+$string['intro_text_label'] = 'Introduction text for students';
+$string['intro_text_help'] = 'Displayed read-only at the top of the student activity. Use it to explain expectations, context, methodological guidelines.';
+$string['intro_section_title'] = 'Teacher\'s instructions';
+$string['reset_button_label'] = 'Reset form';
+$string['reset_modal_title'] = 'Reset form?';
+$string['reset_modal_body'] = 'All your current changes will be lost and replaced by the latest version of the teacher\'s instructions. This action cannot be undone.';
+$string['reset_modal_confirm'] = 'Reset';
+$string['reset_modal_cancel'] = 'Cancel';
+$string['reset_disabled_tooltip'] = 'The form is locked after submission. Ask your teacher to unlock it to reset.';
+$string['reset_success'] = 'Form reset to the latest teacher instructions.';
+$string['reset_error_locked'] = 'Cannot reset a submitted form.';
+$string['reset_error_no_provided'] = 'No teacher-provided instructions exist for this step.';
