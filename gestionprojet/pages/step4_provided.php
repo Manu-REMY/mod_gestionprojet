@@ -85,7 +85,7 @@ $stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 
 
         <!-- Intro text displayed read-only to students. -->
         <div class="model-form-section gp-intro-section">
-            <h3><?php echo icon::render('message-square', 'sm', 'blue'); ?> <?php echo get_string('intro_text_label', 'gestionprojet'); ?></h3>
+            <h3><?php echo icon::render('file-text', 'sm', 'blue'); ?> <?php echo get_string('intro_text_label', 'gestionprojet'); ?></h3>
             <p class="text-muted small"><?php echo get_string('intro_text_help', 'gestionprojet'); ?></p>
             <textarea name="intro_text" id="intro_text" rows="8" class="form-control gp-intro-textarea"><?php echo s($model->intro_text ?? ''); ?></textarea>
         </div>
