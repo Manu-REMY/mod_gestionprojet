@@ -208,6 +208,38 @@ if ($isteacher) {
                 'name' => get_string('step9', 'gestionprojet'),
                 'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9, 'mode' => 'provided']))->out(false),
             ];
+        } else if ($stepnum === 5) {
+            // Special case: Essai row 1 cell controls step5_provided (teacher-provided consigne).
+            $providedval = isset($gestionprojet->step5_provided) ? (int)$gestionprojet->step5_provided : 0;
+            $providedenabled = ($providedval === 1);
+            $providedrec = $DB->get_record('gestionprojet_essai_provided', ['gestionprojetid' => $gestionprojet->id]);
+            // "Complete" = at least one consigne field filled.
+            $providedcomplete = false;
+            if ($providedrec) {
+                foreach (['fonction_service', 'niveaux_reussite', 'etapes_protocole',
+                          'materiel_outils', 'precautions', 'resultats_obtenus',
+                          'observations_remarques', 'conclusion', 'objectif'] as $f) {
+                    if (!empty(trim((string)($providedrec->{$f} ?? '')))) {
+                        $providedcomplete = true;
+                        break;
+                    }
+                }
+            }
+            if ($providedenabled) {
+                $totalconfigtargets++;
+                if ($providedcomplete) {
+                    $totalconfigured++;
+                }
+            }
+            $rowdocs[] = [
+                'stepnum' => 5,
+                'isfilled' => true,
+                'isenabled' => $providedenabled,
+                'iscomplete' => $providedcomplete,
+                'flag' => 'provided',
+                'name' => get_string('step5', 'gestionprojet'),
+                'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 5, 'mode' => 'provided']))->out(false),
+            ];
         } else {
             $rowdocs[] = ['isfilled' => false];
         }
@@ -316,6 +348,7 @@ if ($isteacher) {
             $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojet->id]);
             $cdcfprovided = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
             $fastprovided = $DB->get_record('gestionprojet_fast_provided', ['gestionprojetid' => $gestionprojet->id]);
+            $essaiprovided = $DB->get_record('gestionprojet_essai_provided', ['gestionprojetid' => $gestionprojet->id]);
 
             // Student work data sources.
             $cdcf = gestionprojet_get_or_create_submission($gestionprojet, $usergroup, $USER->id, 'cdcf');
@@ -346,10 +379,23 @@ if ($isteacher) {
                 return false;
             };
 
-            // Helper: provided-brief completion (steps 4 and 9).
-            $providedcomplete = function($stepnum) use ($cdcfprovided, $fastprovided, $cdcfstarted) {
+            // Helper: provided-brief completion (steps 4, 5, 9).
+            $providedcomplete = function($stepnum) use ($cdcfprovided, $fastprovided, $essaiprovided, $cdcfstarted) {
                 if ($stepnum === 4) {
                     return $cdcfstarted($cdcfprovided);
+                }
+                if ($stepnum === 5) {
+                    if (!$essaiprovided) {
+                        return false;
+                    }
+                    foreach (['fonction_service', 'niveaux_reussite', 'etapes_protocole',
+                              'materiel_outils', 'precautions', 'resultats_obtenus',
+                              'observations_remarques', 'conclusion', 'objectif'] as $f) {
+                        if (!empty(trim((string)($essaiprovided->{$f} ?? '')))) {
+                            return true;
+                        }
+                    }
+                    return false;
                 }
                 if ($stepnum === 9) {
                     if (!$fastprovided || empty($fastprovided->data_json)) {
@@ -438,6 +484,21 @@ if ($isteacher) {
                             'iscomplete' => $providedcomplete(9),
                             'name' => get_string('step9', 'gestionprojet'),
                             'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9, 'mode' => 'provided']))->out(false),
+                            'isprovided' => true,
+                        ]);
+                    } else {
+                        $rowconsult[] = ['isfilled' => false];
+                    }
+                } else if ($stepnum === 5) {
+                    $providedflag = isset($gestionprojet->step5_provided) ? (int)$gestionprojet->step5_provided : 0;
+                    if ($providedflag === 1) {
+                        $rowconsult[] = gestionprojet_build_student_gantt_cell([
+                            'isfilled' => true,
+                            'role' => 'consult',
+                            'isenabled' => $stepenabled(5),
+                            'iscomplete' => $providedcomplete(5),
+                            'name' => get_string('step5', 'gestionprojet'),
+                            'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 5, 'mode' => 'provided']))->out(false),
                             'isprovided' => true,
                         ]);
                     } else {
