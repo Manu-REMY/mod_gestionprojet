@@ -150,4 +150,27 @@ class mod_gestionprojet_ai_meta_prompt_test extends advanced_testcase {
 
         $this->assertStringNotContainsString('CONSIGNE PRÉ-REMPLIE', $prompt);
     }
+
+    public function test_build_user_prompt_injects_alert_when_no_modifications(): void {
+        $studentdata = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Same"}]}'];
+        $teachermodel = (object) ['interacteurs_data' => '{}', 'ai_instructions' => ''];
+        $providedrec = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Same"}]}'];
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_user_prompt(4, $studentdata, $teachermodel, $providedrec, true);
+
+        $this->assertStringContainsString('AUCUNE MODIFICATION', $prompt);
+        $this->assertStringContainsString('NOTE OBLIGATOIRE : 0/20', $prompt);
+    }
+
+    public function test_build_user_prompt_no_alert_when_modifications_present(): void {
+        $studentdata = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Modified"}]}'];
+        $teachermodel = (object) ['interacteurs_data' => '{}', 'ai_instructions' => ''];
+        $providedrec = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Original"}]}'];
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_user_prompt(4, $studentdata, $teachermodel, $providedrec, false);
+
+        $this->assertStringNotContainsString('AUCUNE MODIFICATION', $prompt);
+    }
 }
