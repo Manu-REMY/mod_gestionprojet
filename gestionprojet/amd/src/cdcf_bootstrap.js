@@ -81,6 +81,10 @@ function($, Ajax, Cdcf, Autosave) {
                     if (subDate) { payload.submission_date = subDate.value; }
                     var deadDate = document.getElementById('deadline_date');
                     if (deadDate) { payload.deadline_date = deadDate.value; }
+                    if (cfg.introTextSelector) {
+                        var introEl = document.querySelector(cfg.introTextSelector);
+                        if (introEl) { payload.intro_text = introEl.value; }
+                    }
                     return payload;
                 },
             });
