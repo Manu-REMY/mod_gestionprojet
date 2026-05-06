@@ -64,7 +64,7 @@ $message = '';
 try {
     $time = time();
 
-    // Handle teacher-provided consigne mode (dual-facet steps 4 and 9 only).
+    // Handle teacher-provided consigne mode (steps 4, 5, and 9).
     if ($mode === 'provided') {
         if (!has_capability('mod/gestionprojet:configureteacherpages', $context)) {
             throw new moodle_exception('nopermission');

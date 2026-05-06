@@ -47,7 +47,7 @@ class autosave extends external_api {
             'step' => new external_value(PARAM_INT, 'Step number (1-8)'),
             'data' => new external_value(PARAM_RAW, 'JSON-encoded form data'),
             'groupid' => new external_value(PARAM_INT, 'Group ID (0 for individual)', VALUE_DEFAULT, 0),
-            'mode' => new external_value(PARAM_TEXT, 'Mode: empty for student, "teacher" for correction models', VALUE_DEFAULT, ''),
+            'mode' => new external_value(PARAM_TEXT, 'Mode: empty for student, "teacher" for correction models, "provided" for consigne', VALUE_DEFAULT, ''),
         ]);
     }
 
@@ -58,7 +58,7 @@ class autosave extends external_api {
      * @param int $step Step number
      * @param string $data JSON-encoded form data
      * @param int $groupid Group ID
-     * @param string $mode Mode (empty or 'teacher')
+     * @param string $mode Mode: '' (student/default), 'teacher' (correction model), or 'provided' (consigne).
      * @return array Result with success status, message, and timestamp
      */
     public static function execute($cmid, $step, $data, $groupid = 0, $mode = ''): array {
