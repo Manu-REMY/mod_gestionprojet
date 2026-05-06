@@ -202,12 +202,33 @@ if (!$group) {
             <?php endif; ?>
 
             <?php if ($showstudentform && (int)($gestionprojet->step4_provided ?? 0) === 1): ?>
-                <button type="button"
-                        class="btn btn-warning"
-                        id="resetButton"
-                        <?php echo $isLocked ? 'disabled title="' . s(get_string('reset_disabled_tooltip', 'gestionprojet')) . '"' : ''; ?>>
-                    <?php echo get_string('reset_button_label', 'gestionprojet'); ?>
-                </button>
+                <?php
+                // Wrap in span when disabled — native title tooltips do not fire
+                // on disabled buttons in any major browser. The span receives the
+                // hover events instead.
+                $resetlabel = get_string('reset_button_label', 'gestionprojet');
+                if ($isLocked) {
+                    echo html_writer::tag('span',
+                        html_writer::tag('button', $resetlabel, [
+                            'type'     => 'button',
+                            'class'    => 'btn btn-warning',
+                            'id'       => 'resetButton',
+                            'disabled' => 'disabled',
+                            'tabindex' => '-1',
+                        ]),
+                        [
+                            'class' => 'gp-reset-wrapper d-inline-block',
+                            'title' => get_string('reset_disabled_tooltip', 'gestionprojet'),
+                        ]
+                    );
+                } else {
+                    echo html_writer::tag('button', $resetlabel, [
+                        'type'  => 'button',
+                        'class' => 'btn btn-warning',
+                        'id'    => 'resetButton',
+                    ]);
+                }
+                ?>
             <?php endif; ?>
         </div>
     </form>
