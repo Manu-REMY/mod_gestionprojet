@@ -5,6 +5,44 @@ All notable changes to the mod_gestionprojet plugin will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] — 2026-05-06
+
+### Ajouts
+
+- **Mode « consigne d'essai fournie par l'enseignant » pour l'étape 5** (`step5_provided`) — pattern identique à `step4_provided` (CDCF) et `step9_provided` (FAST) :
+  - Nouveau flag `step5_provided` (INT) sur la table `gestionprojet`, contrôlé par les cellules Gantt sur la page d'accueil enseignant (case à cocher AJAX, sans rechargement).
+  - Nouvelle table `gestionprojet_essai_provided` (12 champs métier alignés sur `gestionprojet_essai` : `nom_essai`, `date_essai`, `groupe_eleves`, `objectif`, `fonction_service`, `niveaux_reussite`, `etapes_protocole`, `materiel_outils`, `precautions`, `resultats_obtenus`, `observations_remarques`, `conclusion`).
+  - Nouvelle page enseignant `pages/step5_provided.php` (consigne fiche d'essai) avec autosave + bouton « Enregistrer ».
+  - Nouveau module AMD `mod_gestionprojet/essai_provided` (autosave + save button) — wrapper minimal autour de `mod_gestionprojet/autosave`.
+  - Quand `step5_provided` est activé : les élèves voient la consigne en lecture seule et leur fiche d'essai (`gestionprojet_essai`) est pré-remplie avec le contenu de la consigne au premier accès (seeding dans `gestionprojet_get_or_create_submission`).
+
+### Modifications
+
+- `view.php` accepte désormais `mode=provided` pour l'étape 5 (routage vers `step5_provided.php`).
+- `ajax/autosave.php` whitelist : 12 champs supportés pour le mode `provided` step 5.
+- `ajax/toggle_step.php` accepte le toggle du flag `step5_provided` depuis la page d'accueil.
+- `home.php` : nouvelles cellules Gantt pour la consigne d'essai (ligne « Documents enseignant », colonne « Fiche d'essai »).
+- Backup/restore Moodle 2 : intégration de `gestionprojet_essai_provided` dans `backup_gestionprojet_stepslib.php` et `restore_gestionprojet_stepslib.php`.
+- `gestionprojet_delete_instance()` purge désormais 22 tables (ajout de `gestionprojet_essai_provided`).
+
+### Corrections
+
+- `pages/step5.php` (élève) tolère désormais une valeur `precautions` au format texte libre (séparée par retours-ligne) lorsqu'elle est issue du seeding depuis la consigne — fallback automatique vers le format JSON historique sinon.
+
+### Notes techniques
+
+- Migration BDD idempotente (étape `2026050700`) : ajout du champ `step5_provided` sur la table `gestionprojet` et création de la table `gestionprojet_essai_provided`. Re-run safe via les guards `field_exists` / `table_exists`.
+- 5 nouvelles chaînes de langue (FR + EN) — total `710` clés en parité.
+- Conformité Moodle (CLAUDE.md §1-11) : header GPL deux paragraphes complet sur tous les nouveaux fichiers, aucun JS / CSS inline, aucune superglobale, aucun debug code.
+
+## [2.7.3] — 2026-05-06
+
+### Modifications
+
+- **Refonte du dashboard enseignant** : les diagrammes (CDCF / FAST / bête à cornes) sont désormais affichés en haut de l'éditeur (cohérence avec le layout de l'étape 7).
+- Le SVG du diagramme CDCF est borné à ~500 px de haut (`max-width: 100 %`) pour ne plus écraser les diagrammes besoin/FAST sur les écrans larges.
+- Les dashboards d'étape côté enseignant deviennent des cartes Bootstrap pliables (fermées par défaut). `chart.resize()` est branché sur `shown.bs.collapse` pour que la distribution des notes se rende correctement à la première ouverture.
+
 ## [2.7.1] — 2026-05-05
 
 Release de conformité à la checklist de contribution Moodle (sans changement fonctionnel).
