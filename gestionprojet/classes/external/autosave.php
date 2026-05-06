@@ -111,11 +111,12 @@ class autosave extends external_api {
                         'fields' => ['nom_essai', 'date_essai', 'groupe_eleves', 'objectif',
                                      'fonction_service', 'niveaux_reussite',
                                      'etapes_protocole', 'materiel_outils', 'precautions',
-                                     'resultats_obtenus', 'observations_remarques', 'conclusion'],
+                                     'resultats_obtenus', 'observations_remarques', 'conclusion',
+                                     'intro_text'],
                     ],
                     9 => [
                         'table' => 'gestionprojet_fast_provided',
-                        'fields' => ['data_json'],
+                        'fields' => ['data_json', 'intro_text'],
                     ],
                 ];
 

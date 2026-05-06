@@ -77,8 +77,9 @@ try {
                 'fonction_service', 'niveaux_reussite',
                 'etapes_protocole', 'materiel_outils', 'precautions',
                 'resultats_obtenus', 'observations_remarques', 'conclusion',
+                'intro_text',
             ]],
-            9 => ['table' => 'gestionprojet_fast_provided', 'fields' => ['data_json']],
+            9 => ['table' => 'gestionprojet_fast_provided', 'fields' => ['data_json', 'intro_text']],
         ];
 
         if (!isset($providedtables[$step])) {
