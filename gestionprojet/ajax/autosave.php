@@ -72,6 +72,12 @@ try {
 
         $providedtables = [
             4 => ['table' => 'gestionprojet_cdcf_provided', 'fields' => ['interacteurs_data']],
+            5 => ['table' => 'gestionprojet_essai_provided', 'fields' => [
+                'nom_essai', 'date_essai', 'groupe_eleves', 'objectif',
+                'fonction_service', 'niveaux_reussite',
+                'etapes_protocole', 'materiel_outils', 'precautions',
+                'resultats_obtenus', 'observations_remarques', 'conclusion',
+            ]],
             9 => ['table' => 'gestionprojet_fast_provided', 'fields' => ['data_json']],
         ];
 
