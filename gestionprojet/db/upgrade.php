@@ -738,5 +738,17 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026050800, 'gestionprojet');
     }
 
+    // 2.10.0 — extend consigne pattern (intro_text) to step 5 (essai) and step 9 (FAST).
+    if ($oldversion < 2026050900) {
+        foreach (['gestionprojet_essai_provided', 'gestionprojet_fast_provided'] as $tablename) {
+            $table = new xmldb_table($tablename);
+            $field = new xmldb_field('intro_text', XMLDB_TYPE_TEXT, null, null, null, null, null);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_mod_savepoint(true, 2026050900, 'gestionprojet');
+    }
+
     return true;
 }
