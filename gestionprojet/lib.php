@@ -158,6 +158,7 @@ function gestionprojet_delete_instance($id)
     // Teacher-provided ready-to-use content.
     $DB->delete_records('gestionprojet_cdcf_provided', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_fast_provided', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_essai_provided', ['gestionprojetid' => $id]);
     // AI evaluations and history.
     $DB->delete_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_ai_summaries', ['gestionprojetid' => $id]);
@@ -295,6 +296,43 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
                 $record->interacteurs_data = $provided->interacteurs_data;
                 $record->timemodified = time();
                 $DB->update_record('gestionprojet_cdcf', $record);
+            }
+        }
+    }
+
+    // For Essai phase: when teacher provides a consigne, seed student submission with it.
+    // "Empty" means all main text fields are blank — initial creation or never touched.
+    // Once the student saves any of these fields, no more seeding (predictable behavior).
+    if ($table === 'essai' && (int)($gestionprojet->step5_provided ?? 0) === 1) {
+        $checkfields = [
+            'fonction_service', 'niveaux_reussite', 'etapes_protocole',
+            'materiel_outils', 'precautions', 'resultats_obtenus',
+            'observations_remarques', 'conclusion', 'objectif',
+        ];
+        $isempty = true;
+        foreach ($checkfields as $f) {
+            if (!empty(trim((string)($record->{$f} ?? '')))) {
+                $isempty = false;
+                break;
+            }
+        }
+        if ($isempty) {
+            $provided = $DB->get_record('gestionprojet_essai_provided',
+                ['gestionprojetid' => $gestionprojet->id]);
+            if ($provided) {
+                // Copy all consigne fields (text + meta) into the student record.
+                $copyfields = array_merge($checkfields, ['nom_essai', 'date_essai', 'groupe_eleves']);
+                $changed = false;
+                foreach ($copyfields as $f) {
+                    if (!empty($provided->{$f} ?? '')) {
+                        $record->{$f} = $provided->{$f};
+                        $changed = true;
+                    }
+                }
+                if ($changed) {
+                    $record->timemodified = time();
+                    $DB->update_record('gestionprojet_essai', $record);
+                }
             }
         }
     }
@@ -1527,7 +1565,7 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
     //   - 'student': student work pages — phases [7, 4, 9, 5, 8, 6] with bare URLs.
     //   - 'model' (legacy) and other: full ordering with all 9 steps.
     if ($context === 'consignes') {
-        $order = [1, 3, 2, 4, 9];
+        $order = [1, 3, 2, 4, 9, 5];
     } else if ($context === 'correction' || $context === 'grading' || $context === 'student') {
         $order = [7, 4, 9, 5, 8, 6];
     } else {
@@ -1544,7 +1582,7 @@ function gestionprojet_build_step_tabs($gestionprojet, $cmid, $currentstep, $con
         $params = ['id' => $cmid, 'step' => $stepnum];
         $isconsigneonlystep = in_array($stepnum, [1, 2, 3], true);
         $iscorrectiononlystep = in_array($stepnum, [5, 6, 7, 8], true);
-        $isdualstep = in_array($stepnum, [4, 9], true);
+        $isdualstep = in_array($stepnum, [4, 5, 9], true);
         $isstudentstep = in_array($stepnum, [4, 5, 6, 7, 8, 9], true);
 
         if ($context === 'grading' && $isstudentstep) {
