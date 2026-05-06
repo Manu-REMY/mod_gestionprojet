@@ -216,6 +216,17 @@ class autosave extends external_api {
 
                 foreach ($formdata as $key => $value) {
                     if ($key !== 'id' && in_array($key, $validfields)) {
+                        // Coerce ISO date strings ("YYYY-MM-DD") to Unix timestamps for date columns
+                        // stored as bigint. Empty strings become null.
+                        if (in_array($key, ['submission_date', 'deadline_date'], true) && is_string($value)) {
+                            if ($value === '') {
+                                $value = null;
+                            } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                                $ts = strtotime($value);
+                                $value = $ts === false ? null : $ts;
+                            }
+                            // If already an int-like string ("1774742400"), let it pass through.
+                        }
                         $record->$key = $value;
                     }
                 }
