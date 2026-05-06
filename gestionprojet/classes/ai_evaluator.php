@@ -186,9 +186,35 @@ class ai_evaluator {
                 $teachermodel->ai_instructions = '';
             }
 
+            // Fetch teacher pedagogical intro and pre-filled consigne (step 4 only for now, future: 5/7/9).
+            $teacherintro = null;
+            $providedrec_for_prompt = null;
+            $nomodifications = false;
+            if ((int)$evaluation->step === 4) {
+                $providedrec = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $evaluation->gestionprojetid]);
+                if ($providedrec) {
+                    if (!empty(trim(strip_tags($providedrec->intro_text ?? '')))) {
+                        $teacherintro = $providedrec->intro_text;
+                    }
+                    if (!empty($providedrec->interacteurs_data)) {
+                        $providedrec_for_prompt = $providedrec;
+
+                        // Detect when the student has not modified anything compared to the pre-filled consigne.
+                        // We compare normalized JSON to ignore whitespace/key-order differences.
+                        $studentjson = json_decode($submission->interacteurs_data ?? '', true);
+                        $providedjson = json_decode($providedrec->interacteurs_data, true);
+                        if (is_array($studentjson) && is_array($providedjson)) {
+                            $nomodifications = (json_encode($studentjson) === json_encode($providedjson));
+                        }
+                    }
+                }
+            }
+
             // Build prompts.
             $promptbuilder = new ai_prompt_builder();
-            $prompts = $promptbuilder->build_prompt($evaluation->step, $submission, $teachermodel);
+            $prompts = $promptbuilder->build_prompt(
+                $evaluation->step, $submission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications
+            );
 
             // Get AI provider.
             $provider = self::get_provider($aiconfig->provider, $apikey);

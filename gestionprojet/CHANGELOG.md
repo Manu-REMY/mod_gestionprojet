@@ -5,6 +5,44 @@ All notable changes to the mod_gestionprojet plugin will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] — 2026-05-06
+
+### Ajouts
+
+- **Step 4 (CDCF) — Refonte de la consigne enseignant** : nouveau champ texte d'introduction (éditeur Atto) sur la page « Consigne », visible en lecture seule en haut de l'activité élève. Lecture en temps réel : les modifications enseignant se propagent immédiatement à tous les élèves au prochain reload.
+- **Bouton « Réinitialiser le formulaire »** côté élève (step 4) : permet à l'élève de remplacer son brouillon par la dernière version de la consigne fournie par l'enseignant. Action confirmée par modal Bootstrap, désactivée si le formulaire est soumis (réactivable après revert enseignant).
+- **Endpoint AJAX** `ajax/reset_to_provided.php` (capability `mod/gestionprojet:submit`, garde-fou serveur sur `status === 1`).
+- **Classe `\mod_gestionprojet\reset_helper`** (testable via PHPUnit, 4 tests) — extensible aux steps 5 / 7 / 9 dans une prochaine itération.
+- **IA** : injection du texte d'intro enseignant dans le prompt système d'évaluation (plain text, après stripping HTML) pour une évaluation mieux contextualisée.
+
+### Database
+
+- Nouvelle colonne `intro_text` (TEXT, nullable) sur `gestionprojet_cdcf_provided`.
+- Étape d'upgrade automatique à `2026050800`.
+
+### Migration
+
+- Aucune migration des records élèves existants. Le seed initial existant continue de fonctionner pour les élèves dont le record est encore vide. Les autres peuvent cliquer sur « Réinitialiser le formulaire » pour récupérer la dernière consigne.
+
+### Internal
+
+- `ai_prompt_builder::build_prompt` et `build_system_prompt` acceptent un nouveau paramètre optionnel `?string $teacherintro = null` (rétro-compatible).
+- Backup/restore Moodle 2 : `intro_text` ajouté à `backup_nested_element('cdcf_provided', ...)`. Le restore est générique, aucun changement requis côté restore.
+
+### Bug fixes (révélés en validation preprod)
+
+- **Webservice autosave** : le mode `provided` n'était pas géré dans `mod_gestionprojet_autosave` (le webservice utilisé par le client AMD). Les modifications du formulaire de consigne enseignant (mode=provided) étaient routées vers la table élève au lieu de `cdcf_provided` — silencieusement perdues. Le handler `mode='provided'` est désormais en place pour les steps 4, 5 et 9.
+- **Détection des changements structurels CDCF** : `cdcf_bootstrap.js` mettait à jour `#cdcfDataField.value` programmatiquement sans dispatcher d'event `input`, donc l'autosave ignorait les opérations d'ajout/suppression de FS, interacteur, critère. Ajout d'un `dispatchEvent(new Event('input', { bubbles: true }))`.
+- **Erreur de sauvegarde sur le modèle de correction** : `cdcf_bootstrap.js` envoyait `submission_date` / `deadline_date` en chaînes ISO (`"2026-05-15"`) dans le payload, mais les colonnes DB sont `bigint(10)` (timestamps Unix). MariaDB strict rejetait avec `dml_write_exception`. Coerce serveur-side dans le handler `mode='teacher'`.
+
+### Refinements (validation preprod)
+
+- **Bouton Reset — charte graphique alignée** : padding, font-size et border-radius identiques au bouton « Soumettre » (style pilule).
+- **Bouton Reset — tooltip sur état désactivé** : les tooltips natifs HTML ne se déclenchent pas sur les boutons `disabled`. Le bouton est désormais wrappé dans un `<span>` portant le `title` quand verrouillé.
+- **Modal Reset — pattern projet** : refactorisation pour utiliser `core/modal_factory` + `core/modal_events` (cohérent avec submission.js), au lieu d'une modale Bootstrap hand-rolled.
+- **IA — injection de la consigne pré-remplie dans le prompt** : le travail élève contient le contenu pré-rempli par l'enseignant. Le prompt expose désormais à l'IA la consigne de référence avec instruction explicite : seules les modifications par rapport à la consigne pré-remplie comptent comme travail élève.
+- **IA — force 0/20 si production identique à la consigne** : détection serveur-side (compare normalized JSON de `cdcf.interacteurs_data` vs `cdcf_provided.interacteurs_data`). Si identique → injection d'une alerte explicite en tête de prompt mandatant 0/20 + feedback explicatif.
+
 ## [2.8.0] — 2026-05-06
 
 ### Ajouts

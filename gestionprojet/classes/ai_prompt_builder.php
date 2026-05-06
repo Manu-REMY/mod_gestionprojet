@@ -142,11 +142,14 @@ class ai_prompt_builder {
      * @param int $step Step number (4-9)
      * @param object $studentdata Student submission data
      * @param object $teachermodel Teacher correction model
+     * @param string|null $teacherintro Optional teacher pedagogical intro text (HTML allowed, will be stripped)
+     * @param object|null $providedrec Optional teacher-provided pre-filled consigne record (e.g. cdcf_provided)
+     * @param bool $nomodifications True when server-side comparison found the submission identical to the consigne
      * @return array ['system' => string, 'user' => string]
      */
-    public function build_prompt(int $step, object $studentdata, object $teachermodel): array {
-        $systemprompt = $this->build_system_prompt($step, $teachermodel);
-        $userprompt = $this->build_user_prompt($step, $studentdata, $teachermodel);
+    public function build_prompt(int $step, object $studentdata, object $teachermodel, ?string $teacherintro = null, ?object $providedrec = null, bool $nomodifications = false): array {
+        $systemprompt = $this->build_system_prompt($step, $teachermodel, $teacherintro);
+        $userprompt = $this->build_user_prompt($step, $studentdata, $teachermodel, $providedrec, $nomodifications);
 
         return [
             'system' => $systemprompt,
@@ -159,9 +162,10 @@ class ai_prompt_builder {
      *
      * @param int $step Step number
      * @param object $teachermodel Teacher correction model
+     * @param string|null $teacherintro Optional teacher pedagogical intro text (HTML allowed, will be stripped)
      * @return string System prompt
      */
-    public function build_system_prompt(int $step, object $teachermodel): string {
+    public function build_system_prompt(int $step, object $teachermodel, ?string $teacherintro = null): string {
         $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
         $aiinstructions = $teachermodel->ai_instructions ?? '';
         $criteriatext = $this->build_criteria_text($step);
@@ -185,6 +189,19 @@ INSTRUCTIONS GÉNÉRALES:
 5. Identifie les points forts et les axes d'amélioration
 
 PROMPT;
+
+        // Add teacher's pedagogical intro (visible to students) as additional context for the AI.
+        if ($teacherintro !== null) {
+            $cleanintro = trim(html_entity_decode(strip_tags($teacherintro)));
+            if ($cleanintro !== '') {
+                $prompt .= <<<PROMPT
+
+CONTEXTE FOURNI PAR L'ENSEIGNANT (présentation aux élèves):
+$cleanintro
+
+PROMPT;
+            }
+        }
 
         // Add teacher-specific instructions if provided.
         if (!empty($aiinstructions)) {
@@ -226,19 +243,67 @@ PROMPT;
     /**
      * Build the user prompt with student and teacher data.
      *
+     * When $providedrec is provided (step 4 with teacher-provided consigne), a dedicated
+     * section is inserted between the correction model and the student production to tell
+     * the AI that anything matching the pre-filled consigne is NOT the student's own work.
+     *
+     * When $nomodifications is true, a top-level alert is injected at the very beginning
+     * of the prompt mandating a 0/20 grade, since the server confirmed the submission is
+     * byte-for-byte identical to the pre-filled consigne.
+     *
      * @param int $step Step number
      * @param object $studentdata Student submission
      * @param object $teachermodel Teacher correction model
+     * @param object|null $providedrec Optional pre-filled consigne record (shares field shape with student data)
+     * @param bool $nomodifications True when server-side comparison found the submission identical to the consigne
      * @return string User prompt
      */
-    public function build_user_prompt(int $step, object $studentdata, object $teachermodel): string {
+    public function build_user_prompt(int $step, object $studentdata, object $teachermodel, ?object $providedrec = null, bool $nomodifications = false): string {
         $studenttext = $this->format_student_data($step, $studentdata);
         $teachertext = $this->format_teacher_model($step, $teachermodel);
 
+        $alertheader = '';
+        if ($nomodifications && $providedrec !== null) {
+            $alertheader = <<<PROMPT
+⚠️ ALERTE — AUCUNE MODIFICATION DÉTECTÉE ⚠️
+
+Le serveur a vérifié byte par byte : la production de l'élève est STRICTEMENT IDENTIQUE à la consigne pré-remplie fournie. L'élève n'a apporté absolument aucune modification, ajout ou correction. Aucun travail n'a été fait.
+
+NOTE OBLIGATOIRE : 0/20.
+
+Le feedback doit expliquer clairement à l'élève qu'il n'a rien modifié et l'inviter à compléter les libellés « A compléter » et à enrichir le CDCF.
+
+---
+
+PROMPT;
+        }
+
+        $providedsection = '';
+        if ($providedrec !== null) {
+            // Reuse format_student_data: cdcf_provided shares the same field shape (interacteurs_data).
+            $providedtext = $this->format_student_data($step, $providedrec);
+            $providedsection = <<<PROMPT
+
+
+---
+
+## CONSIGNE PRÉ-REMPLIE FOURNIE À L'ÉLÈVE (point de départ, NE COMPTE PAS comme travail de l'élève):
+
+L'élève a reçu cette consigne déjà partiellement remplie. Considère comme travail de l'élève UNIQUEMENT ce qui a été modifié par rapport à cette consigne. Les libellés « A compléter » ainsi que tout contenu identique à la consigne ci-dessous ne sont PAS attribuables à l'élève — ils ne doivent pas être pris en compte dans l'évaluation positive. Si l'élève n'a rien modifié, la note doit être 0.
+
+$providedtext
+PROMPT;
+        }
+
+        $finalinstruction = $providedrec !== null
+            ? "RAPPEL FINAL : Évalue UNIQUEMENT les modifications apportées par l'élève par rapport à la CONSIGNE PRÉ-REMPLIE. Tout contenu identique à la consigne (y compris les libellés « A compléter ») est neutre et ne doit pas générer de points positifs. Réponds UNIQUEMENT avec le JSON demandé."
+            : "Évalue cette production en comparant avec le modèle de correction. Réponds UNIQUEMENT avec le JSON demandé.";
+
         return <<<PROMPT
-## MODÈLE DE CORRECTION (Ce que l'enseignant attend):
+{$alertheader}## MODÈLE DE CORRECTION (Ce que l'enseignant attend):
 
 $teachertext
+$providedsection
 
 ---
 
@@ -248,7 +313,7 @@ $studenttext
 
 ---
 
-Évalue cette production en comparant avec le modèle de correction. Réponds UNIQUEMENT avec le JSON demandé.
+$finalinstruction
 PROMPT;
     }
 

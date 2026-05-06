@@ -103,7 +103,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
 
         // Teacher-provided consignes (v2.4.0).
         $cdcfprovided = new backup_nested_element('cdcf_provided', ['id'], [
-            'interacteurs_data',
+            'interacteurs_data', 'intro_text',
             'timecreated', 'timemodified',
         ]);
 

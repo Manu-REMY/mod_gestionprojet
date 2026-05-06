@@ -71,7 +71,7 @@ try {
         }
 
         $providedtables = [
-            4 => ['table' => 'gestionprojet_cdcf_provided', 'fields' => ['interacteurs_data']],
+            4 => ['table' => 'gestionprojet_cdcf_provided', 'fields' => ['interacteurs_data', 'intro_text']],
             5 => ['table' => 'gestionprojet_essai_provided', 'fields' => [
                 'nom_essai', 'date_essai', 'groupe_eleves', 'objectif',
                 'fonction_service', 'niveaux_reussite',

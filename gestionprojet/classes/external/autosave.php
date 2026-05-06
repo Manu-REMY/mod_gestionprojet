@@ -97,6 +97,68 @@ class autosave extends external_api {
         $time = time();
 
         try {
+            // Handle teacher-provided consigne mode (dual-facet steps 4, 5, 9).
+            if ($params['mode'] === 'provided') {
+                require_capability('mod/gestionprojet:configureteacherpages', $context);
+
+                $providedtables = [
+                    4 => [
+                        'table' => 'gestionprojet_cdcf_provided',
+                        'fields' => ['interacteurs_data', 'intro_text'],
+                    ],
+                    5 => [
+                        'table' => 'gestionprojet_essai_provided',
+                        'fields' => ['nom_essai', 'date_essai', 'groupe_eleves', 'objectif',
+                                     'fonction_service', 'niveaux_reussite',
+                                     'etapes_protocole', 'materiel_outils', 'precautions',
+                                     'resultats_obtenus', 'observations_remarques', 'conclusion'],
+                    ],
+                    9 => [
+                        'table' => 'gestionprojet_fast_provided',
+                        'fields' => ['data_json'],
+                    ],
+                ];
+
+                if (!isset($providedtables[$params['step']])) {
+                    return [
+                        'success' => false,
+                        'message' => get_string('invalidstep', 'gestionprojet'),
+                        'timestamp' => $time,
+                    ];
+                }
+
+                $tableinfo = $providedtables[$params['step']];
+                $tablename = $tableinfo['table'];
+                $validfields = $tableinfo['fields'];
+
+                $record = $DB->get_record($tablename, ['gestionprojetid' => $gestionprojet->id]);
+                if (!$record) {
+                    $record = new \stdClass();
+                    $record->gestionprojetid = $gestionprojet->id;
+                    $record->timecreated = $time;
+                }
+
+                foreach ($formdata as $key => $value) {
+                    if ($key !== 'id' && in_array($key, $validfields)) {
+                        $record->$key = $value;
+                    }
+                }
+
+                $record->timemodified = $time;
+
+                if (isset($record->id)) {
+                    $DB->update_record($tablename, $record);
+                } else {
+                    $record->id = $DB->insert_record($tablename, $record);
+                }
+
+                return [
+                    'success' => true,
+                    'message' => get_string('autosave_success', 'gestionprojet'),
+                    'timestamp' => $time,
+                ];
+            }
+
             // Handle teacher correction model mode.
             if ($params['mode'] === 'teacher') {
                 require_capability('mod/gestionprojet:configureteacherpages', $context);
@@ -154,6 +216,17 @@ class autosave extends external_api {
 
                 foreach ($formdata as $key => $value) {
                     if ($key !== 'id' && in_array($key, $validfields)) {
+                        // Coerce ISO date strings ("YYYY-MM-DD") to Unix timestamps for date columns
+                        // stored as bigint. Empty strings become null.
+                        if (in_array($key, ['submission_date', 'deadline_date'], true) && is_string($value)) {
+                            if ($value === '') {
+                                $value = null;
+                            } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                                $ts = strtotime($value);
+                                $value = $ts === false ? null : $ts;
+                            }
+                            // If already an int-like string ("1774742400"), let it pass through.
+                        }
                         $record->$key = $value;
                     }
                 }

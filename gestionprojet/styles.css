@@ -5417,3 +5417,37 @@
     color: #1e40af;
     font-size: 0.95em;
 }
+
+/* === Step 4 consigne refonte (v2.9.0) === */
+
+/* Read-only intro displayed at top of student step 4. */
+.path-mod-gestionprojet .gp-consigne-intro {
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #1976d2;
+}
+.path-mod-gestionprojet .gp-consigne-intro h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    color: #1976d2;
+}
+
+/* Teacher-side intro section (above interacteurs). */
+.path-mod-gestionprojet .gp-intro-section {
+    margin-bottom: 1.5rem;
+}
+.path-mod-gestionprojet .gp-intro-textarea {
+    min-height: 8rem;
+}
+
+/* Reset button — match the .btn-submit-large pill shape for visual consistency. */
+.path-mod-gestionprojet #resetButton {
+    padding: 15px 40px;
+    font-size: 18px;
+    border-radius: 50px;
+    margin-left: 12px;
+}
+.path-mod-gestionprojet #resetButton:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}

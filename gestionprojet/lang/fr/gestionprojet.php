@@ -947,3 +947,19 @@ $string['messageprovider:ai_evaluation_failed'] = 'Notifications d\'échec d\'é
 $string['ai_failure_notif_subject'] = 'Échec de l\'évaluation IA dans {$a->activityname}';
 $string['ai_failure_notif_body'] = 'Une évaluation IA a échoué pour l\'étape {$a->step}. Erreur : {$a->error}. Vérifie la soumission ici : {$a->url}';
 $string['ai_failure_notif_small'] = 'Échec de l\'évaluation IA';
+
+// Step 4 — Refonte consigne (v2.9.0)
+$string['intro_text_label'] = 'Texte de présentation aux élèves';
+$string['intro_text_help'] = 'Affiché en lecture seule en haut de l\'activité élève. Utilisez-le pour expliquer ce qui est attendu, le contexte, les consignes méthodologiques.';
+$string['intro_section_title'] = 'Consignes de l\'enseignant';
+$string['reset_button_label'] = 'Réinitialiser le formulaire';
+$string['reset_modal_title'] = 'Réinitialiser le formulaire ?';
+$string['reset_modal_body'] = 'Toutes vos modifications actuelles seront perdues et remplacées par la dernière version de la consigne fournie par l\'enseignant. Cette action est irréversible.';
+$string['reset_modal_confirm'] = 'Réinitialiser';
+$string['reset_modal_cancel'] = 'Annuler';
+$string['reset_disabled_tooltip'] = 'Le formulaire est verrouillé après soumission. Demandez à l\'enseignant de le déverrouiller pour réinitialiser.';
+$string['reset_success'] = 'Formulaire réinitialisé à la dernière version de la consigne.';
+$string['reset_error_locked'] = 'Impossible de réinitialiser un formulaire soumis.';
+$string['reset_error_no_provided'] = 'Aucune consigne fournie par l\'enseignant pour cette étape.';
+$string['reset_error_unsupported_step'] = 'Étape non prise en charge.';
+$string['reset_error_internal'] = 'Une erreur interne est survenue. Veuillez réessayer ou contacter votre enseignant.';

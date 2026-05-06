@@ -91,4 +91,86 @@ class mod_gestionprojet_ai_meta_prompt_test extends advanced_testcase {
         $result = $builder->build_meta_prompt(4, (object)[]);
         $this->assertStringContainsString('(Modèle de correction non renseigné', $result['user']);
     }
+
+    public function test_build_system_prompt_includes_intro_text_when_provided(): void {
+        $teachermodel = (object) [
+            'ai_instructions' => 'Évaluer la qualité des FS.',
+        ];
+        $teacherintro = 'Pour ce projet, vous travaillerez sur un système de tri sélectif.';
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_system_prompt(4, $teachermodel, $teacherintro);
+
+        $this->assertStringContainsString('Pour ce projet, vous travaillerez', $prompt);
+        $this->assertStringContainsString('CONTEXTE FOURNI PAR L\'ENSEIGNANT', $prompt);
+        $this->assertStringContainsString('Évaluer la qualité des FS.', $prompt);
+    }
+
+    public function test_build_system_prompt_omits_intro_text_when_null_or_empty(): void {
+        $teachermodel = (object) ['ai_instructions' => 'Eval.'];
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+
+        $promptnull = $builder->build_system_prompt(4, $teachermodel, null);
+        $promptempty = $builder->build_system_prompt(4, $teachermodel, '   ');
+
+        $this->assertStringNotContainsString('CONTEXTE FOURNI PAR L\'ENSEIGNANT', $promptnull);
+        $this->assertStringNotContainsString('CONTEXTE FOURNI PAR L\'ENSEIGNANT', $promptempty);
+    }
+
+    public function test_build_system_prompt_strips_html_from_intro_text(): void {
+        $teachermodel = (object) ['ai_instructions' => 'Eval.'];
+        $teacherintro = '<p>Travail sur <strong>la sécurité</strong> électrique.</p>';
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_system_prompt(4, $teachermodel, $teacherintro);
+
+        $this->assertStringContainsString('Travail sur la sécurité électrique.', $prompt);
+        $this->assertStringNotContainsString('<strong>', $prompt);
+    }
+
+    public function test_build_user_prompt_includes_provided_consigne_when_passed(): void {
+        $studentdata = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Modifié"}]}'];
+        $teachermodel = (object) ['interacteurs_data' => '{"interactors":[]}', 'ai_instructions' => ''];
+        $providedrec = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"A compléter"}]}'];
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_user_prompt(4, $studentdata, $teachermodel, $providedrec);
+
+        $this->assertStringContainsString('CONSIGNE PRÉ-REMPLIE FOURNIE À L\'ÉLÈVE', $prompt);
+        $this->assertStringContainsString('A compléter', $prompt);
+        $this->assertStringContainsString('travail de l\'élève UNIQUEMENT', $prompt);
+    }
+
+    public function test_build_user_prompt_omits_provided_section_when_null(): void {
+        $studentdata = (object) ['interacteurs_data' => '{"interactors":[]}'];
+        $teachermodel = (object) ['interacteurs_data' => '{"interactors":[]}', 'ai_instructions' => ''];
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_user_prompt(4, $studentdata, $teachermodel, null);
+
+        $this->assertStringNotContainsString('CONSIGNE PRÉ-REMPLIE', $prompt);
+    }
+
+    public function test_build_user_prompt_injects_alert_when_no_modifications(): void {
+        $studentdata = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Same"}]}'];
+        $teachermodel = (object) ['interacteurs_data' => '{}', 'ai_instructions' => ''];
+        $providedrec = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Same"}]}'];
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_user_prompt(4, $studentdata, $teachermodel, $providedrec, true);
+
+        $this->assertStringContainsString('AUCUNE MODIFICATION', $prompt);
+        $this->assertStringContainsString('NOTE OBLIGATOIRE : 0/20', $prompt);
+    }
+
+    public function test_build_user_prompt_no_alert_when_modifications_present(): void {
+        $studentdata = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Modified"}]}'];
+        $teachermodel = (object) ['interacteurs_data' => '{}', 'ai_instructions' => ''];
+        $providedrec = (object) ['interacteurs_data' => '{"interactors":[{"id":1,"name":"Original"}]}'];
+
+        $builder = new \mod_gestionprojet\ai_prompt_builder();
+        $prompt = $builder->build_user_prompt(4, $studentdata, $teachermodel, $providedrec, false);
+
+        $this->assertStringNotContainsString('AUCUNE MODIFICATION', $prompt);
+    }
 }

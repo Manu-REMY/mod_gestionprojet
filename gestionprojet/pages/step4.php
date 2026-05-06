@@ -137,6 +137,18 @@ if (!$group) {
 
 <div class="step4-container gp-student">
     <?php
+    // Display teacher's pedagogical intro text (read-only, live-read from cdcf_provided).
+    if ((int)($gestionprojet->step4_provided ?? 0) === 1) {
+        $providedforintro = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
+        if ($providedforintro && !empty(trim(strip_tags($providedforintro->intro_text ?? '')))) {
+            echo html_writer::start_div('alert alert-info gp-consigne-intro');
+            echo html_writer::tag('h4', get_string('intro_section_title', 'gestionprojet'));
+            echo format_text($providedforintro->intro_text, FORMAT_HTML, ['context' => $context]);
+            echo html_writer::end_div();
+        }
+    }
+    ?>
+    <?php
     // Moodle-native heading + subtitle (replaces legacy colored banner).
     echo $OUTPUT->heading(get_string('step4_page_title', 'gestionprojet'), 2);
     ?>
@@ -187,6 +199,36 @@ if (!$group) {
                 <button type="button" class="btn btn-warning" id="revertButton">
                     ↩️ <?php echo get_string('revert_to_draft', 'gestionprojet'); ?>
                 </button>
+            <?php endif; ?>
+
+            <?php if ($showstudentform && (int)($gestionprojet->step4_provided ?? 0) === 1): ?>
+                <?php
+                // Wrap in span when disabled — native title tooltips do not fire
+                // on disabled buttons in any major browser. The span receives the
+                // hover events instead.
+                $resetlabel = get_string('reset_button_label', 'gestionprojet');
+                if ($isLocked) {
+                    echo html_writer::tag('span',
+                        html_writer::tag('button', $resetlabel, [
+                            'type'     => 'button',
+                            'class'    => 'btn btn-warning',
+                            'id'       => 'resetButton',
+                            'disabled' => 'disabled',
+                            'tabindex' => '-1',
+                        ]),
+                        [
+                            'class' => 'gp-reset-wrapper d-inline-block',
+                            'title' => get_string('reset_disabled_tooltip', 'gestionprojet'),
+                        ]
+                    );
+                } else {
+                    echo html_writer::tag('button', $resetlabel, [
+                        'type'  => 'button',
+                        'class' => 'btn btn-warning',
+                        'id'    => 'resetButton',
+                    ]);
+                }
+                ?>
             <?php endif; ?>
         </div>
     </form>
@@ -239,6 +281,17 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'lang'          => $langstrings,
     'confirmSubmit' => get_string('confirm_submission', 'gestionprojet'),
     'confirmRevert' => get_string('confirm_revert', 'gestionprojet'),
+    'resetEnabled'  => (bool)((int)($gestionprojet->step4_provided ?? 0) === 1) && !$isLocked,
+    'resetUrl'      => (new moodle_url('/mod/gestionprojet/ajax/reset_to_provided.php'))->out(false),
+    'sesskey'       => sesskey(),
+    'resetLang'     => [
+        'modalTitle'   => get_string('reset_modal_title', 'gestionprojet'),
+        'modalBody'    => get_string('reset_modal_body', 'gestionprojet'),
+        'modalConfirm' => get_string('reset_modal_confirm', 'gestionprojet'),
+        'modalCancel'  => get_string('reset_modal_cancel', 'gestionprojet'),
+        'success'      => get_string('reset_success', 'gestionprojet'),
+        'genericError' => get_string('error', 'core'),
+    ],
 ]]);
 ?>
 

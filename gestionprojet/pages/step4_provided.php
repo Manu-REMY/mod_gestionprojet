@@ -83,6 +83,22 @@ $stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 
         <input type="hidden" name="interacteurs_data" id="cdcfDataField"
             value="<?php echo s(json_encode($cdcfdata, JSON_UNESCAPED_UNICODE)); ?>">
 
+        <!-- Intro text displayed read-only to students. -->
+        <div class="model-form-section gp-intro-section">
+            <h3><?php echo icon::render('file-text', 'sm', 'blue'); ?> <?php echo get_string('intro_text_label', 'gestionprojet'); ?></h3>
+            <p class="text-muted small"><?php echo get_string('intro_text_help', 'gestionprojet'); ?></p>
+            <textarea name="intro_text" id="intro_text" rows="8" class="form-control gp-intro-textarea"><?php echo s($model->intro_text ?? ''); ?></textarea>
+        </div>
+        <?php
+        // Activate the Moodle preferred rich-text editor (Atto/TinyMCE) on the textarea.
+        $editor = editors_get_preferred_editor(FORMAT_HTML);
+        $editor->set_text($model->intro_text ?? '');
+        $editor->use_editor('intro_text', [
+            'context' => $context,
+            'autosave' => false,
+        ]);
+        ?>
+
         <div class="model-form-section">
             <h3><?php echo icon::render('clipboard-list', 'sm', 'purple'); ?> <?php echo get_string('step4', 'gestionprojet'); ?></h3>
             <div class="gp-cdcf-norm-block">
@@ -169,6 +185,7 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'projetNom'         => $projetnom,
     'initial'           => $cdcfdata,
     'lang'              => $langstrings,
+    'introTextSelector' => '#intro_text',
     'redirectAfterSave' => $readonly ? null : (new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]))->out(false),
 ]]);
 
