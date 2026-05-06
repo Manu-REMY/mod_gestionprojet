@@ -44,6 +44,20 @@ require_sesskey();
 $context = context_module::instance($cm->id);
 require_capability('mod/gestionprojet:submit', $context);
 
+// Whitelist of steps that support reset-to-provided. Defence-in-depth: the
+// helper itself also validates against STEP_MAP, but rejecting unknown steps
+// here avoids loading the course/module records for a request that cannot succeed.
+if (!in_array($step, [4, 5, 9], true)) {
+    header('Content-Type: application/json');
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'error'   => 'unsupported_step',
+        'message' => get_string('reset_error_unsupported_step', 'gestionprojet'),
+    ]);
+    exit;
+}
+
 header('Content-Type: application/json');
 
 try {

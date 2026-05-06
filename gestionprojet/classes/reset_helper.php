@@ -41,13 +41,30 @@ class reset_helper {
             'table_key'      => 'cdcf',
             'fields'         => ['interacteurs_data'],
         ],
+        5 => [
+            'provided_table' => 'gestionprojet_essai_provided',
+            'student_table'  => 'gestionprojet_essai',
+            'table_key'      => 'essai',
+            'fields'         => [
+                'nom_essai', 'date_essai', 'groupe_eleves', 'objectif',
+                'fonction_service', 'niveaux_reussite', 'etapes_protocole',
+                'materiel_outils', 'precautions', 'resultats_obtenus',
+                'observations_remarques', 'conclusion',
+            ],
+        ],
+        9 => [
+            'provided_table' => 'gestionprojet_fast_provided',
+            'student_table'  => 'gestionprojet_fast',
+            'table_key'      => 'fast',
+            'fields'         => ['data_json'],
+        ],
     ];
 
     /**
      * Reset a student record to the latest teacher-provided consigne.
      *
      * @param object $gestionprojet Plugin instance record.
-     * @param int    $step          Step number (4 currently; 5/7/9 future).
+     * @param int    $step          Step number (4, 5, or 9).
      * @param int    $groupid       Group ID (0 for individual mode).
      * @param int    $userid        User ID.
      * @return array{success: bool, error?: string}
