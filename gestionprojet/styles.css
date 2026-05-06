@@ -5440,7 +5440,13 @@
     min-height: 8rem;
 }
 
-/* Disabled reset button styling. */
+/* Reset button — match the .btn-submit-large pill shape for visual consistency. */
+.path-mod-gestionprojet #resetButton {
+    padding: 15px 40px;
+    font-size: 18px;
+    border-radius: 50px;
+    margin-left: 12px;
+}
 .path-mod-gestionprojet #resetButton:disabled {
     cursor: not-allowed;
     opacity: 0.6;
