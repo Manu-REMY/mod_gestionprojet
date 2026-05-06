@@ -186,26 +186,44 @@ class ai_evaluator {
                 $teachermodel->ai_instructions = '';
             }
 
-            // Fetch teacher pedagogical intro and pre-filled consigne (step 4 only for now, future: 5/7/9).
+            // Mapping per step: provided table + comparator strategy for "no modifications" detection.
+            $providedmap = [
+                4 => [
+                    'table'      => 'gestionprojet_cdcf_provided',
+                    'comparator' => 'json_normalized',
+                    'field'      => 'interacteurs_data',
+                ],
+                5 => [
+                    'table'      => 'gestionprojet_essai_provided',
+                    'comparator' => 'fields_strict',
+                    'fields'     => [
+                        'nom_essai', 'date_essai', 'groupe_eleves', 'objectif',
+                        'fonction_service', 'niveaux_reussite', 'etapes_protocole',
+                        'materiel_outils', 'precautions', 'resultats_obtenus',
+                        'observations_remarques', 'conclusion',
+                    ],
+                ],
+                9 => [
+                    'table'      => 'gestionprojet_fast_provided',
+                    'comparator' => 'string_strict',
+                    'field'      => 'data_json',
+                ],
+            ];
+
             $teacherintro = null;
             $providedrec_for_prompt = null;
             $nomodifications = false;
-            if ((int)$evaluation->step === 4) {
-                $providedrec = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $evaluation->gestionprojetid]);
+
+            if (isset($providedmap[$evaluation->step])) {
+                $cfg = $providedmap[$evaluation->step];
+                $providedrec = $DB->get_record($cfg['table'], ['gestionprojetid' => $evaluation->gestionprojetid]);
                 if ($providedrec) {
                     if (!empty(trim(strip_tags($providedrec->intro_text ?? '')))) {
                         $teacherintro = $providedrec->intro_text;
                     }
-                    if (!empty($providedrec->interacteurs_data)) {
+                    if (self::provided_has_content($cfg, $providedrec)) {
                         $providedrec_for_prompt = $providedrec;
-
-                        // Detect when the student has not modified anything compared to the pre-filled consigne.
-                        // We compare normalized JSON to ignore whitespace/key-order differences.
-                        $studentjson = json_decode($submission->interacteurs_data ?? '', true);
-                        $providedjson = json_decode($providedrec->interacteurs_data, true);
-                        if (is_array($studentjson) && is_array($providedjson)) {
-                            $nomodifications = (json_encode($studentjson) === json_encode($providedjson));
-                        }
+                        $nomodifications = self::detect_no_modifications($cfg, $submission, $providedrec);
                     }
                 }
             }
@@ -719,6 +737,59 @@ class ai_evaluator {
             } catch (\Exception $e) {
                 debugging('Failed to notify teacher of AI failure: ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
+        }
+    }
+
+    /**
+     * Check whether the provided record has any non-empty content in the comparable fields.
+     *
+     * @param array $cfg     Provided map entry for the current step.
+     * @param object $rec    Provided record.
+     * @return bool          True when at least one field is non-empty.
+     */
+    private static function provided_has_content(array $cfg, object $rec): bool {
+        $fields = $cfg['fields'] ?? [$cfg['field']];
+        foreach ($fields as $f) {
+            if (!empty(trim((string)($rec->$f ?? '')))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Compare the student submission to the provided record using the per-step comparator.
+     *
+     * @param array $cfg            Provided map entry.
+     * @param object $submission    Student submission record.
+     * @param object $providedrec   Teacher provided record.
+     * @return bool                 True when the student record matches the provided record exactly.
+     */
+    private static function detect_no_modifications(array $cfg, object $submission, object $providedrec): bool {
+        switch ($cfg['comparator']) {
+            case 'json_normalized':
+                $f = $cfg['field'];
+                $studentjson  = json_decode($submission->$f ?? '', true);
+                $providedjson = json_decode($providedrec->$f ?? '', true);
+                if (is_array($studentjson) && is_array($providedjson)) {
+                    return json_encode($studentjson) === json_encode($providedjson);
+                }
+                return false;
+
+            case 'string_strict':
+                $f = $cfg['field'];
+                return (string)($submission->$f ?? '') === (string)($providedrec->$f ?? '');
+
+            case 'fields_strict':
+                foreach ($cfg['fields'] as $f) {
+                    if ((string)($submission->$f ?? '') !== (string)($providedrec->$f ?? '')) {
+                        return false;
+                    }
+                }
+                return true;
+
+            default:
+                return false;
         }
     }
 }
