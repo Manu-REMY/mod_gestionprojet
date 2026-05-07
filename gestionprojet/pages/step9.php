@@ -29,9 +29,26 @@ require_capability('mod/gestionprojet:submit', $context);
 $PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9]);
 $PAGE->set_title(get_string('step9', 'gestionprojet'));
 
-// Resolve groupid / userid.
-$groupid = groups_get_activity_group($cm, true);
-$isgroup = ($gestionprojet->group_submission && $groupid != 0);
+// Resolve groupid / userid — mirror step 4/5 logic so the student's submission
+// lands in the correct group record (group_submission=1) or individual record
+// (group_submission=0). groups_get_activity_group() returned 0 when no URL
+// filter was applied, which routed group submissions to a teacher-side
+// individual record and made the student's work invisible to the teacher
+// browsing by group.
+$groupid = optional_param('groupid', 0, PARAM_INT);
+if ($groupid) {
+    require_capability('mod/gestionprojet:grade', $context);
+} else if (has_capability('mod/gestionprojet:grade', $context)) {
+    $groupid = 0;
+} else {
+    $groupid = gestionprojet_get_user_group($cm, $USER->id);
+}
+
+if ($gestionprojet->group_submission && !$groupid && !has_capability('mod/gestionprojet:grade', $context)) {
+    throw new \moodle_exception('not_in_group', 'gestionprojet');
+}
+
+$isgroup = !empty($gestionprojet->group_submission) && $groupid != 0;
 $effectivegroupid = $isgroup ? $groupid : 0;
 $effectiveuserid = $isgroup ? 0 : $USER->id;
 
