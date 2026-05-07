@@ -33,12 +33,10 @@ Le composant `pages/student_ai_feedback_display.php` affiche aujourd'hui le reto
 |---------|---------------------|
 | `pages/student_ai_feedback_display.php` | Refonte du markup à partir de la ligne 141 (HTML), logique PHP de récupération inchangée |
 | `styles.css` | Ajout des styles `.feedback-body`, `.feedback-col-left`, `.feedback-col-right`, `.feedback-keywords-row`, `.feedback-grade-card` + media query mobile |
-| `pages/step4.php` | Déplacement de l'include `student_ai_feedback_display.php` juste après `group-info` |
-| `pages/step5.php` | Déplacement idem |
-| `pages/step6.php` | Déplacement idem |
-| `pages/step7.php` | Ajout du bandeau `group-info` conditionnel + ajout de l'include juste après |
-| `pages/step8.php` | Déplacement idem |
-| `pages/step9.php` | Ajout du bandeau `group-info` conditionnel + ajout de l'include juste après, avant le canvas FAST |
+| `pages/step4.php` | Déplacement de l'include `student_ai_feedback_display.php` juste après `group-info` (avant la description) |
+| `pages/step6.php` | Déplacement de l'include juste après `group-info` (avant la `info-box`) |
+| `pages/step7.php` | Ajout du bandeau `group-info` conditionnel + déplacement de l'include juste après le bandeau |
+| `pages/step9.php` | Ajout du bandeau `group-info` conditionnel + ajout de l'include, avant le wrapper `gp-student` qui contient le canvas FAST |
 | `version.php` | Bump 2.10.0 → 2.10.1 (pas de DB upgrade) |
 
 ### Fichiers non touchés
@@ -168,12 +166,12 @@ Le composant `pages/student_ai_feedback_display.php` affiche aujourd'hui le reto
 
 | Step | Bandeau `group-info` actuel | Action sur le bandeau | Action sur l'include IA |
 |------|------------------------------|------------------------|-------------------------|
-| 4 (CDCF) | Présent (inconditionnel) | Pas touché | Déplacé : actuellement après la description, à placer juste après `group-info` (avant la description) |
-| 5 (Essai) | Présent | Pas touché | Déplacé : actuellement après la description, à placer juste après `group-info` |
-| 6 (Rapport) | Présent | Pas touché | Déplacé : actuellement après la description, à placer juste après `group-info` |
-| 7 (Besoin) | Absent | Ajout conditionnel à `group_submission` | Ajout juste après le bandeau, avant le heading « Bête à cornes » |
-| 8 (Carnet) | Présent | Pas touché | Déplacé : actuellement après la description, à placer juste après `group-info` |
-| 9 (FAST) | Absent | Ajout conditionnel à `group_submission` | Ajout juste après le bandeau, avant le canvas FAST |
+| 4 (CDCF) | Présent (inconditionnel) | Pas touché | Déplacé : actuellement après la description (ligne 170), à placer juste après `group-info` (avant la description) |
+| 5 (Essai) | Présent | Pas touché | Déjà juste après `group-info` (ligne 164) — pas de modification |
+| 6 (Rapport) | Présent | Pas touché | Déplacé : actuellement après la `info-box` (ligne 151), à placer juste après `group-info` (avant la `info-box`) |
+| 7 (Besoin) | Absent | Ajout conditionnel à `group_submission` | Ajout juste après le bandeau, avant la `description` (alert) |
+| 8 (Carnet) | Présent | Pas touché | Déjà juste après `group-info` (ligne 143) — pas de modification |
+| 9 (FAST) | Absent | Ajout conditionnel à `group_submission` | Ajout juste après le bandeau, avant le wrapper `gp-student` qui contient le canvas FAST |
 
 ### Patch identique pour steps 7 et 9
 
