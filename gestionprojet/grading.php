@@ -275,11 +275,15 @@ switch ($step) {
         $tablename = 'gestionprojet_carnet';
         $submission = $DB->get_record($tablename, $params);
         break;
+    case 9:
+        $tablename = 'gestionprojet_fast';
+        $submission = $DB->get_record($tablename, $params);
+        break;
 }
 
 // Get AI evaluation if available.
 $aievaluation = null;
-if ($submission && in_array($step, [4, 5, 6, 7, 8]) && !empty($gestionprojet->ai_enabled)) {
+if ($submission && in_array($step, [4, 5, 6, 7, 8, 9]) && !empty($gestionprojet->ai_enabled)) {
     require_once(__DIR__ . '/classes/ai_evaluator.php');
     require_once(__DIR__ . '/classes/ai_response_parser.php');
     $aievaluation = \mod_gestionprojet\ai_evaluator::get_evaluation(
@@ -362,7 +366,7 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
 
                 <?php else: ?>
                     <?php // Status bar for student steps.
-                    if (in_array($step, [4, 5, 6, 7, 8])): ?>
+                    if (in_array($step, [4, 5, 6, 7, 8, 9])): ?>
                         <?php if ($isSubmitted): ?>
                             <div class="status-bar submitted">
                                 <?php echo icon::render('check-circle', 'sm', 'green'); ?> <?php echo get_string('submission_status_submitted', 'gestionprojet'); ?>
@@ -648,6 +652,38 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
+                            <?php endif; ?>
+                        </div>
+
+                    <?php elseif ($step == 9): // FAST diagram
+                        $fastdata = json_decode($submission->data_json ?? '', true) ?: [];
+                        $fps = $fastdata['fonctionsPrincipales'] ?? [];
+                        $functions = $fastdata['fonctions'] ?? [];
+                    ?>
+                        <div class="field-display">
+                            <h4><?php echo get_string('fast:diagram_title', 'gestionprojet'); ?></h4>
+                            <?php if (empty($fps) && empty($functions)): ?>
+                                <p><em><?php echo get_string('no_submission', 'gestionprojet'); ?></em></p>
+                            <?php else: ?>
+                                <?php if (!empty($fps)): ?>
+                                    <strong><?php echo get_string('fast:fp_label', 'gestionprojet'); ?></strong>
+                                    <ul>
+                                        <?php foreach ($fps as $fp): ?>
+                                            <li><?php echo s($fp['description'] ?? ''); ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
+                                <?php if (!empty($functions)): ?>
+                                    <strong><?php echo get_string('fast:ft_label', 'gestionprojet'); ?></strong>
+                                    <ul>
+                                        <?php foreach ($functions as $ft):
+                                            $depth = (int)($ft['depth'] ?? 0);
+                                            $indent = str_repeat('— ', max(0, $depth));
+                                        ?>
+                                            <li><?php echo $indent . s($ft['description'] ?? ''); ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
