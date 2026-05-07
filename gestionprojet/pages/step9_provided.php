@@ -66,6 +66,17 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/fast_editor', 'init', [[
     'sesskey' => sesskey(),
 ]]);
 
+// fast_editor only serializes data_json + ai_instructions, so the intro_text
+// textarea needs its own autosave loop (teacher-only).
+if ($canedit) {
+    $PAGE->requires->js_call_amd('mod_gestionprojet/intro_text_autosave', 'init', [[
+        'cmid'       => (int)$cm->id,
+        'step'       => 9,
+        'elementId'  => 'gp_intro_text_step9',
+        'autosaveMs' => (int)($gestionprojet->autosave_interval ?? 30) * 1000,
+    ]]);
+}
+
 echo $OUTPUT->header();
 // Tabs: teacher gets consignes navigation; student gets work navigation.
 echo $OUTPUT->render_from_template(
@@ -73,6 +84,26 @@ echo $OUTPUT->render_from_template(
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, $canedit ? 'consignes' : 'student')
 );
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
+
+// Intro text editor (teacher-only — students see the read-only banner via step9.php).
+if ($canedit) {
+    echo '<div class="model-form-section gp-intro-section">';
+    echo '<h3>' . \mod_gestionprojet\output\icon::render('file-text', 'sm', 'blue') . ' '
+        . get_string('intro_text_label', 'gestionprojet') . '</h3>';
+    echo '<p class="text-muted small">' . get_string('intro_text_help', 'gestionprojet') . '</p>';
+    // Use a step-specific id so TinyMCE drafts don't collide between consigne
+    // pages sharing the same module context.
+    echo '<textarea name="intro_text" id="gp_intro_text_step9" rows="8" class="form-control gp-intro-textarea">'
+        . s($provided->intro_text ?? '') . '</textarea>';
+    echo '</div>';
+
+    $editor = editors_get_preferred_editor(FORMAT_HTML);
+    $editor->set_text($provided->intro_text ?? '');
+    $editor->use_editor('gp_intro_text_step9', [
+        'context'  => $context,
+        'autosave' => false,
+    ]);
+}
 
 echo '<div class="alert alert-info">';
 echo '<h4>' . get_string('step9_desc_title', 'gestionprojet') . '</h4>';

@@ -446,7 +446,7 @@ $string['gradesaved'] = 'Note enregistrée';
 $string['invalidstep'] = 'Étape invalide';
 $string['revert_to_draft'] = 'Revenir au brouillon';
 $string['submit'] = 'Soumettre';
-$string['submitted_on'] = 'Soumis le';
+$string['submitted_on'] = 'Soumis le {$a}';
 $string['teacher_feedback'] = 'Commentaire de l\'enseignant';
 
 // Privacy API - Chaînes de métadonnées complètes
@@ -910,6 +910,7 @@ $string['fast:ai_instructions_label'] = 'Consignes pour le correcteur IA';
 $string['fast:ai_instructions_help'] = 'Guidez le correcteur IA sur les critères d\'évaluation.';
 $string['fast:no_data_to_evaluate'] = 'Aucune donnée FAST à évaluer.';
 $string['fast:fp_label'] = 'Fonction principale (lecture seule, issue du CDCF)';
+$string['fast:ft_label'] = 'Fonctions techniques';
 $string['fast:fp_help'] = 'La fonction principale provient du cahier des charges fonctionnel et ne peut pas être modifiée ici.';
 
 // Séparation consigne / modèle de correction (v2.4.0).

@@ -5,6 +5,36 @@ All notable changes to the mod_gestionprojet plugin will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] — 2026-05-06
+
+### Ajouts
+
+- **Step 5 (Fiche d'essai) — Refonte de la consigne enseignant** : nouveau champ texte d'introduction (éditeur Atto) sur la page consigne (`step5_provided`), affiché en lecture seule en haut de l'activité élève. Lecture en temps réel : les modifications enseignant se propagent immédiatement à tous les élèves au prochain reload.
+- **Step 9 (Diagramme FAST) — Refonte de la consigne enseignant** : éditeur Atto identique sur la page consigne (`step9_provided`), affiché en lecture seule au-dessus du canevas du diagramme côté élève.
+- **Bouton « Réinitialiser le formulaire »** côté élève sur step 5 et step 9 : remplace le travail élève par la dernière version de la consigne enseignant. Confirmation par modale Moodle (`core/modal_factory`). Désactivé si le formulaire est soumis (réactivable après revert enseignant).
+- **IA — injection de la consigne enseignante dans le prompt** : sur step 5 et step 9, le `intro_text` enseignant est désormais injecté dans le prompt système de l'évaluation IA (mêmes règles que step 4 livré en v2.9.0).
+- **IA — force 0/20 si production identique à la consigne** : détection serveur-side généralisée. Si la soumission élève est strictement identique à la consigne enseignant, le prompt mandate 0/20 avec feedback explicatif. Comparateur par step : `json_normalized` (step 4), `fields_strict` (step 5), `string_strict` (step 9).
+
+### Modifications
+
+- **Module AMD `mod_gestionprojet/reset_button`** extrait de `cdcf_bootstrap.js` — réutilisable par step 4, step 5 et step 9 (modale + fetch reset, identique à la pilule submit).
+- **Module AMD `mod_gestionprojet/intro_text_autosave`** ajouté — autosave générique pour l'éditeur Atto d'intro enseignant (utilisé sur la page consigne FAST ; les pages step 4 et step 5 bénéficient déjà de l'autosave de formulaire complet).
+- **`ai_evaluator` généralisé** : mapping par step du comparateur d'identité (`json_normalized` / `fields_strict` / `string_strict`) pour la garde « copie identique → 0/20 ».
+
+### Database
+
+- Nouvelle colonne `intro_text` (TEXT, nullable) sur `gestionprojet_essai_provided` et `gestionprojet_fast_provided`. Étape d'upgrade automatique à `2026050900`. Aucun backfill : champ optionnel, vide par défaut.
+
+### Migration
+
+- Aucune migration des records élèves existants — le seed initial existant continue de fonctionner pour les drafts vides ; les autres élèves peuvent cliquer sur « Réinitialiser le formulaire » pour récupérer la dernière consigne.
+
+### Internal
+
+- Backup/restore Moodle 2 : `intro_text` ajouté à `backup_nested_element('essai_provided', ...)` et `backup_nested_element('fast_provided', ...)`. Le restore est générique, aucun changement requis côté restore.
+- `reset_helper::STEP_MAP` étendu à steps 5 et 9 (table `_provided`, colonnes business, comparateur d'identité). Endpoint `ajax/reset_to_provided.php` accepte désormais step ∈ {4, 5, 9}.
+- Webservice `mod_gestionprojet_autosave` whitelist étendue : `intro_text` autorisé en mode `provided` pour les steps 4 / 5 / 9.
+
 ## [2.9.0] — 2026-05-06
 
 ### Ajouts

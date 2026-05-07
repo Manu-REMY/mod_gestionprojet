@@ -446,7 +446,7 @@ $string['gradesaved'] = 'Grade saved';
 $string['invalidstep'] = 'Invalid step';
 $string['revert_to_draft'] = 'Revert to draft';
 $string['submit'] = 'Submit';
-$string['submitted_on'] = 'Submitted on';
+$string['submitted_on'] = 'Submitted on {$a}';
 $string['teacher_feedback'] = 'Teacher feedback';
 
 // Privacy API - Complete metadata strings
@@ -910,6 +910,7 @@ $string['fast:ai_instructions_label'] = 'AI evaluator instructions';
 $string['fast:ai_instructions_help'] = 'Guide the AI evaluator on what to assess.';
 $string['fast:no_data_to_evaluate'] = 'No FAST data to evaluate.';
 $string['fast:fp_label'] = 'Main function (read-only, from CDCF)';
+$string['fast:ft_label'] = 'Technical functions';
 $string['fast:fp_help'] = 'The main function comes from the functional specifications and cannot be edited here.';
 
 // Consigne / Correction model split (v2.4.0).

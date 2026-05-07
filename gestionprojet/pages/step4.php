@@ -281,18 +281,29 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'lang'          => $langstrings,
     'confirmSubmit' => get_string('confirm_submission', 'gestionprojet'),
     'confirmRevert' => get_string('confirm_revert', 'gestionprojet'),
-    'resetEnabled'  => (bool)((int)($gestionprojet->step4_provided ?? 0) === 1) && !$isLocked,
-    'resetUrl'      => (new moodle_url('/mod/gestionprojet/ajax/reset_to_provided.php'))->out(false),
-    'sesskey'       => sesskey(),
-    'resetLang'     => [
-        'modalTitle'   => get_string('reset_modal_title', 'gestionprojet'),
-        'modalBody'    => get_string('reset_modal_body', 'gestionprojet'),
-        'modalConfirm' => get_string('reset_modal_confirm', 'gestionprojet'),
-        'modalCancel'  => get_string('reset_modal_cancel', 'gestionprojet'),
-        'success'      => get_string('reset_success', 'gestionprojet'),
-        'genericError' => get_string('error', 'core'),
-    ],
 ]]);
+
+// Reset-to-provided button (extracted from cdcf_bootstrap in v2.10.0 for
+// reuse on step 5 / step 9). Wire only when the consigne block is enabled
+// and the submission is not locked — matches the button rendering guard
+// above so the script never binds to a missing element.
+if ((int)($gestionprojet->step4_provided ?? 0) === 1 && !$isLocked) {
+    $PAGE->requires->js_call_amd('mod_gestionprojet/reset_button', 'init', [[
+        'cmid'      => (int)$cm->id,
+        'step'      => 4,
+        'groupid'   => (int)$groupid,
+        'sesskey'   => sesskey(),
+        'resetUrl'  => (new moodle_url('/mod/gestionprojet/ajax/reset_to_provided.php'))->out(false),
+        'resetLang' => [
+            'modalTitle'   => get_string('reset_modal_title', 'gestionprojet'),
+            'modalBody'    => get_string('reset_modal_body', 'gestionprojet'),
+            'modalConfirm' => get_string('reset_modal_confirm', 'gestionprojet'),
+            'modalCancel'  => get_string('reset_modal_cancel', 'gestionprojet'),
+            'success'      => get_string('reset_success', 'gestionprojet'),
+            'genericError' => get_string('error', 'core'),
+        ],
+    ]]);
+}
 ?>
 
 

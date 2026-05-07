@@ -397,6 +397,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="data_json" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON of FAST diagram"/>
+        <FIELD NAME="intro_text" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="HTML intro text shown read-only to students at the top of the FAST diagram page"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -423,6 +424,7 @@
         <FIELD NAME="resultats_obtenus" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="observations_remarques" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="conclusion" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="intro_text" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="HTML intro text shown read-only to students at the top of the essai page"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

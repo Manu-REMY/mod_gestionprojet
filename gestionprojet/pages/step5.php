@@ -137,6 +137,18 @@ if (!empty($submission->precautions)) {
     data-str-error-reverting="<?php echo s(get_string('error_reverting', 'gestionprojet')); ?>"
 >
     <?php
+    // Display teacher's pedagogical intro text (read-only, live-read from essai_provided).
+    if ((int)($gestionprojet->step5_provided ?? 0) === 1) {
+        $providedforintro = $DB->get_record('gestionprojet_essai_provided', ['gestionprojetid' => $gestionprojet->id]);
+        if ($providedforintro && !empty(trim(strip_tags($providedforintro->intro_text ?? '')))) {
+            echo html_writer::start_div('alert alert-info gp-consigne-intro');
+            echo html_writer::tag('h4', get_string('intro_section_title', 'gestionprojet'));
+            echo format_text($providedforintro->intro_text, FORMAT_HTML, ['context' => $context]);
+            echo html_writer::end_div();
+        }
+    }
+    ?>
+    <?php
     // Moodle-native heading + subtitle (replaces legacy colored banner).
     echo $OUTPUT->heading(get_string('step5_page_title', 'gestionprojet'), 2);
     ?>
@@ -318,6 +330,36 @@ if (!empty($submission->precautions)) {
                 </button>
             <?php endif; ?>
 
+            <?php if ((int)($gestionprojet->step5_provided ?? 0) === 1): ?>
+                <?php
+                // Wrap in span when disabled — native title tooltips do not fire
+                // on disabled buttons in any major browser. The span receives the
+                // hover events instead.
+                $resetlabel = get_string('reset_button_label', 'gestionprojet');
+                if ($isLocked) {
+                    echo html_writer::tag('span',
+                        html_writer::tag('button', $resetlabel, [
+                            'type'     => 'button',
+                            'class'    => 'btn btn-warning',
+                            'id'       => 'resetButton',
+                            'disabled' => 'disabled',
+                            'tabindex' => '-1',
+                        ]),
+                        [
+                            'class' => 'gp-reset-wrapper d-inline-block',
+                            'title' => get_string('reset_disabled_tooltip', 'gestionprojet'),
+                        ]
+                    );
+                } else {
+                    echo html_writer::tag('button', $resetlabel, [
+                        'type'  => 'button',
+                        'class' => 'btn btn-warning',
+                        'id'    => 'resetButton',
+                    ]);
+                }
+                ?>
+            <?php endif; ?>
+
             <button type="button" id="exportPdfBtn" class="btn-export btn-export-margin">
                 📄 <?php echo get_string('export_pdf', 'gestionprojet'); ?> (2 pages)
             </button>
@@ -344,6 +386,28 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/step5', 'init', [[
         'export_pdf_coming_soon' => get_string('export_pdf_coming_soon', 'gestionprojet'),
     ],
 ]]);
+
+// Reset-to-provided button (extracted from cdcf_bootstrap in v2.10.0 for
+// reuse on step 5 / step 9). Wire only when the consigne block is enabled
+// and the submission is not locked — matches the button rendering guard
+// above so the script never binds to a missing element.
+if ((int)($gestionprojet->step5_provided ?? 0) === 1 && !$isLocked) {
+    $PAGE->requires->js_call_amd('mod_gestionprojet/reset_button', 'init', [[
+        'cmid'      => (int)$cm->id,
+        'step'      => 5,
+        'groupid'   => (int)$groupid,
+        'sesskey'   => sesskey(),
+        'resetUrl'  => (new moodle_url('/mod/gestionprojet/ajax/reset_to_provided.php'))->out(false),
+        'resetLang' => [
+            'modalTitle'   => get_string('reset_modal_title', 'gestionprojet'),
+            'modalBody'    => get_string('reset_modal_body', 'gestionprojet'),
+            'modalConfirm' => get_string('reset_modal_confirm', 'gestionprojet'),
+            'modalCancel'  => get_string('reset_modal_cancel', 'gestionprojet'),
+            'success'      => get_string('reset_success', 'gestionprojet'),
+            'genericError' => get_string('error', 'core'),
+        ],
+    ]]);
+}
 
 echo $OUTPUT->footer();
 ?>
