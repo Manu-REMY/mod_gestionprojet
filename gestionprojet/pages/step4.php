@@ -160,14 +160,14 @@ if (!$group) {
         <?php echo format_string($group->name); ?>
     </div>
 
+    <!-- AI Evaluation Feedback Display -->
+    <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
+
     <!-- Description -->
     <div class="description">
         <h3><?php echo get_string('step4_desc_title', 'gestionprojet'); ?></h3>
         <p><?php echo get_string('step4_desc_text', 'gestionprojet'); ?></p>
     </div>
-
-    <!-- AI Evaluation Feedback Display -->
-    <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
 
     <?php
     require_once($CFG->dirroot . '/mod/gestionprojet/classes/cdcf_helper.php');
