@@ -84,6 +84,12 @@ $canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted
 
 $readonly = $isLocked;
 
+// Resolve group info (used by group-info banner below).
+$group = null;
+if ($gestionprojet->group_submission && $groupid) {
+    $group = groups_get_group($groupid);
+}
+
 echo $OUTPUT->header();
 
 // Render student step navigation tabs.
@@ -104,6 +110,17 @@ require_once(__DIR__ . '/student_dates_display.php');
 // Open student wrapper for full-width + blue accent.
 echo '<div class="gp-student">';
 
+// Group info banner (only when group submission is enabled).
+if ($gestionprojet->group_submission && $group) {
+    echo '<div class="group-info">';
+    echo '👥 <strong>' . get_string('your_group', 'gestionprojet') . ':</strong> ';
+    echo format_string($group->name);
+    echo '</div>';
+}
+
+// AI Evaluation Feedback Display.
+require_once(__DIR__ . '/student_ai_feedback_display.php');
+
 // Moodle-native heading (replaces legacy emoji-prefixed h2).
 echo $OUTPUT->heading(get_string('step7', 'gestionprojet'), 2);
 
@@ -117,9 +134,6 @@ echo '<li><strong>' . get_string('surquoi', 'gestionprojet') . '</strong> - ' . 
 echo '<li><strong>' . get_string('dansquelbut', 'gestionprojet') . '</strong> - ' . get_string('dansquelbut_help', 'gestionprojet') . '</li>';
 echo '</ul>';
 echo '</div>';
-
-// AI Evaluation Feedback Display
-require_once(__DIR__ . '/student_ai_feedback_display.php');
 
 ?>
 

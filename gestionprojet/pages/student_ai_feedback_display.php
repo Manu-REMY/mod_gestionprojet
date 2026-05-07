@@ -136,6 +136,9 @@ if ($submission->grade >= 16) {
 } else {
     $gradeColorClass = 'grade-low';
 }
+
+// Pre-format the grade value once, reused below in two layouts (header badge with spaces, card compact).
+$gradeFormatted = format_float($submission->grade, 1);
 ?>
 
 <div class="student-feedback">
@@ -146,58 +149,85 @@ if ($submission->grade >= 16) {
         </div>
         <div class="grade-badge <?php echo $gradeColorClass; ?>">
             <span>⭐</span>
-            <span><?php echo format_float($submission->grade, 1); ?> / 20</span>
+            <span><?php echo $gradeFormatted; ?> / 20</span>
         </div>
     </div>
 
     <?php if ($hasDetailedFeedback): ?>
 
-    <!-- Feedback text -->
-    <?php if ($showFeedback && !empty($submission->feedback)): ?>
-    <div class="feedback-section">
-        <div class="section-title">
-            <span class="section-icon">💬</span>
-            <span><?php echo get_string('feedback', 'gestionprojet'); ?></span>
-        </div>
-        <div class="feedback-text">
-            <?php echo nl2br(s($submission->feedback)); ?>
-        </div>
-    </div>
-    <?php endif; ?>
+    <div class="feedback-body">
+        <!-- Left column: grade card + feedback + suggestions -->
+        <div class="feedback-col-left">
+            <div class="feedback-grade-card">
+                <div class="grade-value"><?php echo $gradeFormatted; ?>/20</div>
+                <div class="grade-label"><?php echo get_string('ai_grade', 'gestionprojet'); ?></div>
+            </div>
 
-    <!-- Evaluation criteria -->
-    <?php if ($showCriteria && !empty($criteria)): ?>
-    <div class="feedback-section">
-        <div class="section-title">
-            <span class="section-icon">📋</span>
-            <span><?php echo get_string('ai_criteria', 'gestionprojet'); ?></span>
-        </div>
-        <div class="criteria-grid">
-            <?php foreach ($criteria as $criterion):
-                $score = $criterion['score'] ?? 0;
-                $max = $criterion['max'] ?? 5;
-                $percentage = ($max > 0) ? ($score / $max) * 100 : 0;
-                $scoreClass = ($percentage >= 70) ? 'score-high' : (($percentage >= 50) ? 'score-medium' : 'score-low');
-            ?>
-            <div class="criteria-item">
-                <div class="criteria-info">
-                    <div class="criteria-name"><?php echo s($criterion['name'] ?? ''); ?></div>
-                    <?php if (!empty($criterion['comment'])): ?>
-                    <div class="criteria-comment"><?php echo s($criterion['comment']); ?></div>
-                    <?php endif; ?>
+            <?php if ($showFeedback && !empty($submission->feedback)): ?>
+            <div class="feedback-section">
+                <div class="section-title">
+                    <span class="section-icon">💬</span>
+                    <span><?php echo get_string('feedback', 'gestionprojet'); ?></span>
                 </div>
-                <div class="criteria-score <?php echo $scoreClass; ?>">
-                    <?php echo format_float($score, 1); ?> / <?php echo format_float($max, 0); ?>
+                <div class="feedback-text">
+                    <?php echo nl2br(s($submission->feedback)); ?>
                 </div>
             </div>
-            <?php endforeach; ?>
+            <?php endif; ?>
+
+            <?php if ($showSuggestions && !empty($suggestions)): ?>
+            <div class="feedback-section">
+                <div class="section-title">
+                    <span class="section-icon">💡</span>
+                    <span><?php echo get_string('ai_suggestions', 'gestionprojet'); ?></span>
+                </div>
+                <div class="suggestions-list">
+                    <ul>
+                        <?php foreach ($suggestions as $suggestion): ?>
+                        <li><?php echo s($suggestion); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Right column: criteria -->
+        <div class="feedback-col-right">
+            <?php if ($showCriteria && !empty($criteria)): ?>
+            <div class="feedback-section">
+                <div class="section-title">
+                    <span class="section-icon">📋</span>
+                    <span><?php echo get_string('ai_criteria', 'gestionprojet'); ?></span>
+                </div>
+                <div class="criteria-grid">
+                    <?php foreach ($criteria as $criterion):
+                        $score = $criterion['score'] ?? 0;
+                        $max = $criterion['max'] ?? 5;
+                        $percentage = ($max > 0) ? ($score / $max) * 100 : 0;
+                        $scoreClass = ($percentage >= 70) ? 'score-high' : (($percentage >= 50) ? 'score-medium' : 'score-low');
+                    ?>
+                    <div class="criteria-item">
+                        <div class="criteria-info">
+                            <div class="criteria-name"><?php echo s($criterion['name'] ?? ''); ?></div>
+                            <?php if (!empty($criterion['comment'])): ?>
+                            <div class="criteria-comment"><?php echo s($criterion['comment']); ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="criteria-score <?php echo $scoreClass; ?>">
+                            <?php echo format_float($score, 1); ?> / <?php echo format_float($max, 0); ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
-    <?php endif; ?>
 
-    <!-- Keywords found and missing -->
     <?php if (($showKeywordsFound && !empty($keywordsFound)) || ($showKeywordsMissing && !empty($keywordsMissing))): ?>
-    <div class="feedback-section">
+    <!-- Full-width row: keywords -->
+    <div class="feedback-keywords-row">
         <div class="keywords-container">
             <?php if ($showKeywordsFound && !empty($keywordsFound)): ?>
             <div class="keywords-box found">
@@ -230,22 +260,5 @@ if ($submission->grade >= 16) {
     </div>
     <?php endif; ?>
 
-    <!-- Suggestions for improvement -->
-    <?php if ($showSuggestions && !empty($suggestions)): ?>
-    <div class="feedback-section">
-        <div class="section-title">
-            <span class="section-icon">💡</span>
-            <span><?php echo get_string('ai_suggestions', 'gestionprojet'); ?></span>
-        </div>
-        <div class="suggestions-list">
-            <ul>
-                <?php foreach ($suggestions as $suggestion): ?>
-                <li><?php echo s($suggestion); ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <?php endif; ?>
+    <?php endif; // hasDetailedFeedback ?>
 </div>

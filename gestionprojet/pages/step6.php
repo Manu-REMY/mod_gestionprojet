@@ -141,14 +141,14 @@ if ($submission->auteurs) {
         <?php echo format_string($group->name); ?>
     </div>
 
+    <!-- AI Evaluation Feedback Display -->
+    <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
+
     <!-- Info box -->
     <div class="info-box">
         <p><strong><?php echo get_string('step6_info_title', 'gestionprojet'); ?></strong></p>
         <p><?php echo get_string('step6_info_text', 'gestionprojet'); ?></p>
     </div>
-
-    <!-- AI Evaluation Feedback Display -->
-    <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
 
     <form id="rapportForm" method="post" action="">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">

@@ -105,6 +105,12 @@ if ((int)($gestionprojet->step9_provided ?? 0) === 1 && !$isLocked) {
     ]]);
 }
 
+// Resolve group info (used by group-info banner below).
+$group = null;
+if ($gestionprojet->group_submission && $groupid) {
+    $group = groups_get_group($groupid);
+}
+
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
@@ -135,6 +141,17 @@ if ((int)($gestionprojet->step9_provided ?? 0) === 1) {
         echo html_writer::end_div();
     }
 }
+
+// Group info banner (only when group submission is enabled).
+if ($gestionprojet->group_submission && $group) {
+    echo html_writer::start_div('group-info');
+    echo '👥 <strong>' . get_string('your_group', 'gestionprojet') . ':</strong> ';
+    echo format_string($group->name);
+    echo html_writer::end_div();
+}
+
+// AI Evaluation Feedback Display.
+require_once(__DIR__ . '/student_ai_feedback_display.php');
 
 echo html_writer::start_div('gp-student');
 
