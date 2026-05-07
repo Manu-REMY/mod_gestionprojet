@@ -44,6 +44,12 @@ $submission = gestionprojet_get_or_create_submission(
 );
 
 $isLocked = ((int)$submission->status === 1);
+$isSubmitted = $isLocked;
+$canSubmit = !empty($gestionprojet->enable_submission) && !$isSubmitted;
+$canRevert = has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
+// student_submit_helper.php uses $groupid (and $step) directly.
+$groupid = $effectivegroupid;
+$step = 9;
 
 $tplcontext = [
     'cmid' => $cm->id,
@@ -88,6 +94,15 @@ echo $OUTPUT->render_from_template(
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'student')
 );
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet'));
+
+// Submission status notification (mirrors step 4/5 pattern).
+if ($isSubmitted) {
+    echo $OUTPUT->notification(
+        get_string('submitted_on', 'gestionprojet', userdate($submission->timesubmitted ?? time())),
+        'success'
+    );
+}
+
 echo html_writer::start_div('description');
 echo html_writer::tag('h3', get_string('step9_desc_title', 'gestionprojet'));
 echo html_writer::tag('p', get_string('step9_desc_text', 'gestionprojet'));
@@ -107,9 +122,32 @@ if ((int)($gestionprojet->step9_provided ?? 0) === 1) {
 echo html_writer::start_div('gp-student');
 echo $OUTPUT->render_from_template('mod_gestionprojet/step9_form', $tplcontext);
 
-// Reset button section (visible only when step9_provided is enabled).
+// Action bar: Submit + (optional) Revert + Reset.
+echo html_writer::start_div('export-section gp-fast-actions');
+
+if ($canSubmit) {
+    echo html_writer::tag('button',
+        '📤 ' . get_string('submit', 'gestionprojet'),
+        [
+            'type'  => 'button',
+            'class' => 'btn btn-primary btn-lg btn-submit-large',
+            'id'    => 'submitButton',
+        ]
+    );
+}
+
+if ($canRevert) {
+    echo html_writer::tag('button',
+        get_string('unlock', 'gestionprojet'),
+        [
+            'type'  => 'button',
+            'class' => 'btn btn-secondary btn-lg',
+            'id'    => 'unlockButton',
+        ]
+    );
+}
+
 if ((int)($gestionprojet->step9_provided ?? 0) === 1) {
-    echo html_writer::start_div('export-section gp-fast-actions');
     $resetlabel = get_string('reset_button_label', 'gestionprojet');
     if ($isLocked) {
         echo html_writer::tag('span',
@@ -132,8 +170,12 @@ if ((int)($gestionprojet->step9_provided ?? 0) === 1) {
             'id'    => 'resetButton',
         ]);
     }
-    echo html_writer::end_div();
 }
+
+echo html_writer::end_div();
+
+// Wire the modal-based submit flow + AI progress banner.
+require __DIR__ . '/student_submit_helper.php';
 
 echo html_writer::end_div();
 echo $OUTPUT->footer();

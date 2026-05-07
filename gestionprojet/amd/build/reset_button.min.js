@@ -107,7 +107,14 @@ define([
                     }).then(function(res) {
                         modal.hide();
                         if (res.ok && res.body.success) {
-                            window.location.reload();
+                            // Force a fresh GET. Some browsers (Firefox) hold a
+                            // cached page after location.reload(), which leaves
+                            // the editor showing pre-reset data. A throwaway
+                            // query param defeats the cache without confusing
+                            // Moodle (unknown params are ignored server-side).
+                            var base = window.location.href.split('#')[0];
+                            var sep = base.indexOf('?') > -1 ? '&' : '?';
+                            window.location.href = base + sep + '_resetts=' + Date.now();
                         } else {
                             window.alert((res.body && res.body.message) || lang.genericError);
                             saveBtn.prop('disabled', false);
