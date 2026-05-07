@@ -349,6 +349,7 @@ $string['ai_evaluation_not_ready'] = 'L\'évaluation IA n\'est pas encore prête
 $string['ai_grade'] = 'Note suggérée par l\'IA';
 $string['ai_feedback'] = 'Commentaires de l\'IA';
 $string['ai_criteria'] = 'Critères d\'évaluation';
+$string['ai_grade_suggested'] = 'Note suggérée par l\'IA';
 $string['ai_keywords_found'] = 'Éléments clés trouvés';
 $string['ai_keywords_missing'] = 'Éléments manquants';
 $string['ai_suggestions'] = 'Suggestions d\'amélioration';
