@@ -72,6 +72,7 @@ if ($canedit) {
     $PAGE->requires->js_call_amd('mod_gestionprojet/intro_text_autosave', 'init', [[
         'cmid'       => (int)$cm->id,
         'step'       => 9,
+        'elementId'  => 'gp_intro_text_step9',
         'autosaveMs' => (int)($gestionprojet->autosave_interval ?? 30) * 1000,
     ]]);
 }
@@ -90,13 +91,15 @@ if ($canedit) {
     echo '<h3>' . \mod_gestionprojet\output\icon::render('file-text', 'sm', 'blue') . ' '
         . get_string('intro_text_label', 'gestionprojet') . '</h3>';
     echo '<p class="text-muted small">' . get_string('intro_text_help', 'gestionprojet') . '</p>';
-    echo '<textarea name="intro_text" id="intro_text" rows="8" class="form-control gp-intro-textarea">'
+    // Use a step-specific id so TinyMCE drafts don't collide between consigne
+    // pages sharing the same module context.
+    echo '<textarea name="intro_text" id="gp_intro_text_step9" rows="8" class="form-control gp-intro-textarea">'
         . s($provided->intro_text ?? '') . '</textarea>';
     echo '</div>';
 
     $editor = editors_get_preferred_editor(FORMAT_HTML);
     $editor->set_text($provided->intro_text ?? '');
-    $editor->use_editor('intro_text', [
+    $editor->use_editor('gp_intro_text_step9', [
         'context'  => $context,
         'autosave' => false,
     ]);

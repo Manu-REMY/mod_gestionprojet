@@ -40,10 +40,12 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
      * @param {Object} cfg
      * @param {number} cfg.cmid Course module ID.
      * @param {number} cfg.step Step number (4, 5 or 9).
+     * @param {string} cfg.elementId DOM id of the textarea (step-specific to avoid TinyMCE draft collisions).
      * @param {number} [cfg.autosaveMs] Polling interval in milliseconds (default 10000).
      */
     function init(cfg) {
-        var textarea = document.getElementById('intro_text');
+        var elementId = cfg.elementId || 'intro_text';
+        var textarea = document.getElementById(elementId);
         if (!textarea) {
             return;
         }
@@ -55,7 +57,7 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
             // TinyMCE 6 stores its instance under window.tinymce; force a sync
             // back to the underlying textarea before reading it.
             if (typeof window.tinymce !== 'undefined' && window.tinymce.get) {
-                var ed = window.tinymce.get('intro_text');
+                var ed = window.tinymce.get(elementId);
                 if (ed) {
                     ed.save();
                 }

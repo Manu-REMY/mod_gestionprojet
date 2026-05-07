@@ -87,13 +87,15 @@ $stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 
         <div class="model-form-section gp-intro-section">
             <h3><?php echo icon::render('file-text', 'sm', 'blue'); ?> <?php echo get_string('intro_text_label', 'gestionprojet'); ?></h3>
             <p class="text-muted small"><?php echo get_string('intro_text_help', 'gestionprojet'); ?></p>
-            <textarea name="intro_text" id="intro_text" rows="8" class="form-control gp-intro-textarea"><?php echo s($model->intro_text ?? ''); ?></textarea>
+            <textarea name="intro_text" id="gp_intro_text_step4" rows="8" class="form-control gp-intro-textarea"><?php echo s($model->intro_text ?? ''); ?></textarea>
         </div>
         <?php
         // Activate the Moodle preferred rich-text editor (Atto/TinyMCE) on the textarea.
+        // Use a step-specific id so TinyMCE drafts don't collide between consigne pages
+        // sharing the same module context.
         $editor = editors_get_preferred_editor(FORMAT_HTML);
         $editor->set_text($model->intro_text ?? '');
-        $editor->use_editor('intro_text', [
+        $editor->use_editor('gp_intro_text_step4', [
             'context' => $context,
             'autosave' => false,
         ]);
@@ -185,7 +187,7 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'projetNom'         => $projetnom,
     'initial'           => $cdcfdata,
     'lang'              => $langstrings,
-    'introTextSelector' => '#intro_text',
+    'introTextSelector' => '#gp_intro_text_step4',
     'redirectAfterSave' => $readonly ? null : (new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]))->out(false),
 ]]);
 
