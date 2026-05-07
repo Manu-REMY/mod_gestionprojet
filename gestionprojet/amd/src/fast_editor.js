@@ -245,7 +245,7 @@ function($, Notification, Str, FastDiagram, Toast) {
                 return $.post(M.cfg.wwwroot + '/mod/gestionprojet/ajax/autosave.php', {
                     cmid: cmid,
                     step: STEP,
-                    mode: mode === 'teacher' ? 'teacher' : '',
+                    mode: (mode === 'teacher' || mode === 'provided') ? mode : '',
                     groupid: groupid,
                     sesskey: sesskey,
                     data: JSON.stringify(payload)

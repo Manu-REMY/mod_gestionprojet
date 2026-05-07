@@ -14,13 +14,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Generic autosave for the teacher intro_text Atto editor on consigne pages.
+ * Generic autosave for the teacher intro_text rich-text editor on consigne pages.
  *
- * Watches #intro_text (textarea backing the Atto editor) for changes and posts
- * to the mod_gestionprojet_autosave webservice with mode=provided. Used on
- * step 9 (FAST) where the existing fast_editor module does not serialize the
- * intro_text textarea. Steps 4 and 5 already cover intro_text via their
- * own form-serialization flows (cdcf_bootstrap, essai_provided).
+ * Polls the underlying #intro_text textarea every cfg.autosaveMs and posts to
+ * the mod_gestionprojet_autosave webservice with mode=provided when the value
+ * changes. Used on step 9 (FAST) where the existing fast_editor module does
+ * not serialize the intro_text textarea.
+ *
+ * Polling is required because Atto and TinyMCE edit inside an iframe and do
+ * not dispatch native 'input'/'change' events on the underlying textarea while
+ * the user is typing — they only sync the textarea value programmatically on
+ * blur or on their own internal cadence, and programmatic value changes do not
+ * fire DOM events.
  *
  * @module     mod_gestionprojet/intro_text_autosave
  * @copyright  2026 Emmanuel REMY
@@ -35,7 +40,7 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
      * @param {Object} cfg
      * @param {number} cfg.cmid Course module ID.
      * @param {number} cfg.step Step number (4, 5 or 9).
-     * @param {number} [cfg.autosaveMs] Debounce delay in milliseconds (default 30000).
+     * @param {number} [cfg.autosaveMs] Polling interval in milliseconds (default 10000).
      */
     function init(cfg) {
         var textarea = document.getElementById('intro_text');
@@ -43,12 +48,23 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
             return;
         }
 
-        var debounceMs = cfg.autosaveMs || 30000;
-        var timer = null;
+        var pollMs = cfg.autosaveMs || 10000;
         var lastSent = textarea.value;
 
+        function readEditorValue() {
+            // TinyMCE 6 stores its instance under window.tinymce; force a sync
+            // back to the underlying textarea before reading it.
+            if (typeof window.tinymce !== 'undefined' && window.tinymce.get) {
+                var ed = window.tinymce.get('intro_text');
+                if (ed) {
+                    ed.save();
+                }
+            }
+            return textarea.value;
+        }
+
         function sendNow() {
-            var current = textarea.value;
+            var current = readEditorValue();
             if (current === lastSent) {
                 return;
             }
@@ -65,17 +81,8 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
             }])[0].catch(Notification.exception);
         }
 
-        function schedule() {
-            if (timer) {
-                clearTimeout(timer);
-            }
-            timer = setTimeout(sendNow, debounceMs);
-        }
-
-        // Atto syncs to the underlying textarea via 'change' event; 'input'
-        // fires when the user types directly into the source view.
-        textarea.addEventListener('change', schedule);
-        textarea.addEventListener('input', schedule);
+        // Periodic polling — survives iframe-edited content and programmatic syncs.
+        setInterval(sendNow, pollMs);
 
         // Best-effort flush on page unload.
         window.addEventListener('beforeunload', sendNow);
