@@ -120,7 +120,18 @@ if ((int)($gestionprojet->step9_provided ?? 0) === 1) {
 }
 
 echo html_writer::start_div('gp-student');
+
+// Lock the FAST canvas after submission. The gp-fast-readonly class disables
+// pointer events on descendants (CSS in styles.css) so the user cannot drag,
+// edit text, or click action buttons inside the diagram. The action bar below
+// is rendered outside this wrapper so the teacher's Revert button stays usable.
+if ($isLocked) {
+    echo html_writer::start_div('gp-fast-readonly');
+}
 echo $OUTPUT->render_from_template('mod_gestionprojet/step9_form', $tplcontext);
+if ($isLocked) {
+    echo html_writer::end_div();
+}
 
 // Action bar: Submit + (optional) Revert + Reset.
 echo html_writer::start_div('export-section gp-fast-actions');
