@@ -136,6 +136,9 @@ if ($submission->grade >= 16) {
 } else {
     $gradeColorClass = 'grade-low';
 }
+
+// Pre-format the grade value once, reused below in two layouts (header badge with spaces, card compact).
+$gradeFormatted = format_float($submission->grade, 1);
 ?>
 
 <div class="student-feedback">
@@ -146,17 +149,18 @@ if ($submission->grade >= 16) {
         </div>
         <div class="grade-badge <?php echo $gradeColorClass; ?>">
             <span>⭐</span>
-            <span><?php echo format_float($submission->grade, 1); ?> / 20</span>
+            <span><?php echo $gradeFormatted; ?> / 20</span>
         </div>
     </div>
 
     <?php if ($hasDetailedFeedback): ?>
 
     <div class="feedback-body">
+        <!-- Left column: grade card + feedback + suggestions -->
         <div class="feedback-col-left">
             <div class="feedback-grade-card">
-                <div class="grade-value"><?php echo format_float($submission->grade, 1); ?>/20</div>
-                <div class="grade-label"><?php echo get_string('ai_grade_suggested', 'gestionprojet'); ?></div>
+                <div class="grade-value"><?php echo $gradeFormatted; ?>/20</div>
+                <div class="grade-label"><?php echo get_string('ai_grade', 'gestionprojet'); ?></div>
             </div>
 
             <?php if ($showFeedback && !empty($submission->feedback)): ?>
@@ -188,6 +192,7 @@ if ($submission->grade >= 16) {
             <?php endif; ?>
         </div>
 
+        <!-- Right column: criteria -->
         <div class="feedback-col-right">
             <?php if ($showCriteria && !empty($criteria)): ?>
             <div class="feedback-section">
@@ -221,6 +226,7 @@ if ($submission->grade >= 16) {
     </div>
 
     <?php if (($showKeywordsFound && !empty($keywordsFound)) || ($showKeywordsMissing && !empty($keywordsMissing))): ?>
+    <!-- Full-width row: keywords -->
     <div class="feedback-keywords-row">
         <div class="keywords-container">
             <?php if ($showKeywordsFound && !empty($keywordsFound)): ?>
@@ -254,5 +260,5 @@ if ($submission->grade >= 16) {
     </div>
     <?php endif; ?>
 
-    <?php endif; ?>
+    <?php endif; // hasDetailedFeedback ?>
 </div>
