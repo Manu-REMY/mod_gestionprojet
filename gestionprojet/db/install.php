@@ -39,7 +39,7 @@ function xmldb_gestionprojet_install() {
 
     // Albert API key (Etalab government service).
     // This key is stored encrypted in Moodle config, not in the database.
-    $albertkey = '<albert-key — voir API-KEY.local.md>';
+    $albertkey = '';
 
     \mod_gestionprojet\ai_config::set_builtin_api_key('albert', $albertkey);
 
