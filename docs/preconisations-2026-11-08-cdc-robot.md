@@ -72,6 +72,37 @@ Les essais suivants ont été faits sans rien écrire en base. Une copie fictive
 11. **Une instance ne se configure pas d'un seul formulaire.** `enable_step1` à `enable_step9` et `step4_provided` ne sont pas dans `mod_form`. Pour créer l'activité, il a fallu écrire en base par script.
     - À faire : mettre ces réglages dans le formulaire, ou proposer un préréglage « Cahier des charges seul » à la création.
 
+17. **L'accueil élève exige les étapes 1 à 3, même désactivées.** `gestionprojet_teacher_pages_complete()` (lib.php) demande `description.intitule`, `besoin.aqui` et `planning.projectname`, sans regarder `enable_step1` à `enable_step3`. Sur cm 6975 (étape 3 désactivée, étapes 1 et 2 vides), l'élève voit « L'enseignant doit d'abord compléter les 3 premières étapes » sur `view.php?id=…`, alors que `&step=4` s'ouvre (le contrôle n'est que dans `pages/home.php`). Constaté le 08/11 avec un compte élève de test.
+    - À faire : ne vérifier que les étapes enseignant activées, et ne jamais bloquer une étape élève dont la consigne est fournie (`step4_provided`).
+
+18. **Une case de consultation inutile pour l'élève.** Avec `step4_provided = 1`, le Gantt de l'accueil élève (`pages/home.php`) affiche deux cases pour l'étape 4 : « consulter » (`&mode=provided`, consigne en lecture seule) et « travailler » (`&step=4`). Or la page de travail contient déjà tout : le texte d'introduction en tête et le CDCF pré-rempli avec la consigne. Emmanuel, en élève de test le 08/11, a cliqué sur la première et s'est retrouvé devant une page où rien n'est modifiable.
+    - À faire : pour un élève, quand la consigne est recopiée dans sa copie, ne pas afficher la case de consultation (ou la faire mener à la page de travail). Même logique pour les étapes 5 et 9 en mode fourni.
+
+## 3 bis. Champs modifiables par l'élève : ce qui reste après la v2.11.1 (constaté le 08/11 après-midi)
+
+État de la production : 2.11.1 (`2026110804`), `consigne_lock` présent. Sur cm 6975 (instance 4), la consigne ne porte **aucun drapeau** (`locked`, `gap`, `niveauLocked`, `niveauGap` : 0). Comme prévu par la v2.11.1, une consigne sans drapeau garde l'ancien comportement : en mode « travailler », tous les champs sont modifiables. Emmanuel l'a constaté avec le compte élève de test et le juge bloquant. Les points 9 et 10 sont donc en partie traités, mais pas encore utilisables tels quels pour ce CDC.
+
+19. **Rendre le verrouillage visible et par défaut.**
+    - Sur la page de la consigne, quand `step4_provided = 1` et qu'aucun drapeau n'est posé, afficher un avertissement au professeur : « Aucun élément n'est verrouillé : les élèves pourront tout modifier. »
+    - Proposer une action « Tout marquer Fourni » puis laisser le professeur ouvrir les cases à compléter. Pour un CDC pré-rempli, le cas courant est « presque tout fourni, quelques trous ».
+    - Option : traiter automatiquement un champ dont le texte contient « (A compléter) » ou « A compléter » comme un champ `gap`, avec le reste du texte en indication.
+20. **Trous au milieu d'une phrase.** La granularité actuelle est le champ entier. Or la consigne a des trous dans des phrases fournies : « Doit (A compléter) terrain », « Permettre à l'utilisateur d'obtenir (A compléter) l'atmosphère », « Envoi des (A compléter) », « (A compléter) km/h ». Avec un `gap`, l'élève doit réécrire toute la phrase ; avec un `locked`, il ne peut rien écrire.
+    - Constaté par Emmanuel le 08/11 avec les drapeaux posés : l'indication (« Doit … terrain. ») n'est qu'un `placeholder`, elle disparaît dès que l'élève tape, et la partie fournie de la phrase est perdue. Il demande que la partie fournie reste affichée.
+    - À faire : un marqueur de trou dans le texte de la consigne (par exemple `[[...]]` ou `___`) rendu chez l'élève comme une petite case dans la phrase figée ; seul le contenu des cases est enregistré et noté.
+    - Pour le niveau d'exigence : séparer valeur et unité (point 5) permet de fournir l'unité imprimée (« km/h », « cm », « degrés ») et de n'ouvrir que la valeur, ou l'inverse.
+20 bis. **Troisième état « Pré-rempli, modifiable » (demande d'Emmanuel du 08/11, prioritaire sur le point 20).** Emmanuel veut que le champ reste entièrement modifiable, mais que le texte de la consigne y soit **déjà écrit** (valeur initiale du champ, pas une indication grisée qui s'efface à la frappe). Exemple : le champ arrive avec « Doit … terrain. », l'élève remplace « … » et garde le reste ; il peut aussi tout réécrire.
+    - Aujourd'hui, ce comportement n'existe que de façon implicite : un champ sans drapeau est recopié tel quel par `consigne_lock::seed`. Mais l'éditeur de la consigne ne le présente pas comme un choix, et l'IA ne sait pas quelle partie vient de la consigne.
+    - À faire :
+      - dans l'éditeur de la consigne, trois états exclusifs par champ réglable (énoncé de FS, description de critère, niveau, interacteur, contrainte) : « 🔒 Fourni » (verrouillé), « ✎ Pré-rempli » (texte de la consigne écrit dans le champ, modifiable), « ▢ À compléter » (case vide avec indication) ; drapeau `prefill` (et `niveauPrefill` pour le niveau), écrit seulement quand vrai, comme les autres ; doubler l'état par l'icône et le mot (daltonisme) ;
+      - chez l'élève, un champ `prefill` arrive rempli avec le texte de la consigne et reste éditable ; style discret qui le distingue d'un champ fourni (pas de cadenas) ;
+      - IA : dans le prompt, marquer ces champs `[pré-rempli : « texte de la consigne »]` pour que le modèle évalue seulement ce que l'élève a changé ou ajouté, et ne crédite jamais un texte laissé tel quel ;
+      - détection « aucune modification » : un champ `prefill` resté identique à la consigne compte comme non fait ; signaler à l'élève, avant « Soumettre », les champs pré-remplis encore identiques ou contenant encore « … » ;
+      - `enforce` ne touche pas aux champs `prefill` (l'élève peut tout réécrire) ;
+      - réamorçage (point 22) : une copie non commencée reçoit les champs `prefill` remplis.
+    - Pour cm 6975 : énoncés des FS1 et FS3 à FS7, critères « Envoi des … » et « Mesurer … », niveaux « > … », « … km/h », « … cm », « … degrés », « … m », « Temps … » passent en `prefill` ; les trois critères entièrement à trouver restent « À compléter » ; le reste reste « Fourni ».
+21. **Verrouiller les interacteurs liés indépendamment de l'énoncé.** Aujourd'hui, une FS `locked` fige énoncé ET interacteurs. Pour ce CDC, les liaisons (FS1 utilisateur ↔ atmosphère, FS2 atmosphère ↔ robot…) sont données par le diagramme, mais l'énoncé de plusieurs FS est à compléter. Il faut un drapeau propre aux interacteurs liés (`linksLocked`).
+22. **Copies déjà créées.** `seed` n'est appliqué qu'à la création de la copie. Si le professeur pose les drapeaux après coup, les copies existantes gardent les « (A compléter) » en texte au lieu de cases vides (les verrous, eux, sont rétablis à l'enregistrement). Proposer au professeur « Réamorcer les copies non commencées » (copies identiques à l'ancienne copie de départ), sans toucher à celles où un élève a écrit.
+
 ## 4. À vérifier
 
 12. **Fiche HTML :** confirmer que le lien profond `view.php?id=6974&step=4` mène bien l'élève à son groupe. La fiche élève (cm 749) y renverra au lieu du devoir 1347.
