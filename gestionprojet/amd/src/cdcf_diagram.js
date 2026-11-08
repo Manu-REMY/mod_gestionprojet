@@ -57,6 +57,37 @@ define([], function() {
     }
 
     /**
+     * Group the FS by their two ends, whatever their order: one line and one label ("FS2, FS3") per group.
+     *
+     * @param {Array<{interactor1Id:number,interactor2Id:number}>} fonctionsService
+     * @returns {Array<{a:number,b:number,index:number,labels:string[]}>} a and b: interactor ids (b = 0: the product);
+     *     index: rank of the first FS of the group (its colour).
+     */
+    function groupLinks(fonctionsService) {
+        var groups = [];
+        var byKey = {};
+        fonctionsService.forEach(function(fs, idx) {
+            var key;
+            var a;
+            var b;
+            if (fs.interactor2Id > 0) {
+                a = Math.min(fs.interactor1Id, fs.interactor2Id);
+                b = Math.max(fs.interactor1Id, fs.interactor2Id);
+            } else {
+                a = fs.interactor1Id;
+                b = 0;
+            }
+            key = a + '-' + b;
+            if (!byKey[key]) {
+                byKey[key] = {a: a, b: b, index: idx, labels: []};
+                groups.push(byKey[key]);
+            }
+            byKey[key].labels.push('FS' + (idx + 1));
+        });
+        return groups;
+    }
+
+    /**
      * Render the pieuvre diagram into target.
      *
      * @param {HTMLElement} target Container element. Will be cleared.
@@ -74,13 +105,14 @@ define([], function() {
 
         var positions = computePositions(interactors.length);
 
-        fonctionsService.forEach(function(fs, idx) {
-            var color = COLORS[idx % COLORS.length];
-            var label = 'FS' + (idx + 1);
-            var i1 = interactors.findIndex(function(it) { return it.id === fs.interactor1Id; });
+        // One line per pair of ends: FS sharing the same two ends would be drawn on top of each other (v2.13.2).
+        groupLinks(fonctionsService).forEach(function(group) {
+            var color = COLORS[group.index % COLORS.length];
+            var label = group.labels.join(', ');
+            var i1 = interactors.findIndex(function(it) { return it.id === group.a; });
             if (i1 < 0) { return; }
-            if (fs.interactor2Id > 0) {
-                var i2 = interactors.findIndex(function(it) { return it.id === fs.interactor2Id; });
+            if (group.b > 0) {
+                var i2 = interactors.findIndex(function(it) { return it.id === group.b; });
                 if (i2 < 0) { return; }
                 var p1 = positions[i1];
                 var p2 = positions[i2];
@@ -136,5 +168,5 @@ define([], function() {
         target.appendChild(root);
     }
 
-    return { render: render };
+    return { render: render, groupLinks: groupLinks };
 });
