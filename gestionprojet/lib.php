@@ -557,6 +557,9 @@ function gestionprojet_teacher_pages_locked($gestionprojetid)
 /**
  * Check if teacher pages are complete.
  *
+ * Only the enabled teacher steps (1 description, 2 besoin, 3 planning) are checked: a disabled step
+ * never blocks the students.
+ *
  * @param int $gestionprojetid
  * @return bool
  */
@@ -564,14 +567,27 @@ function gestionprojet_teacher_pages_complete($gestionprojetid)
 {
     global $DB;
 
-    $description = $DB->get_record('gestionprojet_description', ['gestionprojetid' => $gestionprojetid]);
-    $besoin = $DB->get_record('gestionprojet_besoin', ['gestionprojetid' => $gestionprojetid]);
-    $planning = $DB->get_record('gestionprojet_planning', ['gestionprojetid' => $gestionprojetid]);
+    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $gestionprojetid],
+        'id, enable_step1, enable_step2, enable_step3');
 
-    // Check if basic required fields are filled
-    return $description && !empty($description->intitule) &&
-        $besoin && !empty($besoin->aqui) &&
-        $planning && !empty($planning->projectname);
+    // Step => [table, required field].
+    $required = [
+        1 => ['gestionprojet_description', 'intitule'],
+        2 => ['gestionprojet_besoin', 'aqui'],
+        3 => ['gestionprojet_planning', 'projectname'],
+    ];
+    foreach ($required as $step => [$table, $field]) {
+        $enabled = !$gestionprojet || !isset($gestionprojet->{'enable_step' . $step})
+            || (int)$gestionprojet->{'enable_step' . $step} === 1;
+        if (!$enabled) {
+            continue;
+        }
+        $record = $DB->get_record($table, ['gestionprojetid' => $gestionprojetid]);
+        if (!$record || empty($record->$field)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
