@@ -2592,7 +2592,7 @@ function gestionprojet_results_lines(object $gestionprojet, object $cm, int $gro
     // An activity set on a grouping only concerns the students of that grouping (v2.13.1): the others of the course
     // (another year group) are not listed, not even under "no group".
     if (!empty($cm->groupingid)) {
-        $members = groups_get_grouping_members((int)$cm->groupingid, 'u.id');
+        $members = groups_get_grouping_members((int)$cm->groupingid, 'DISTINCT u.id', 'u.id');
         $users = array_intersect_key($users, $members);
     }
 
