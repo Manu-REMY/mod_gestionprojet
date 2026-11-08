@@ -973,3 +973,9 @@ $string['setting_model_desc'] = 'Nom exact du modèle envoyé au fournisseur. Vi
 $string['error:notgroupmember'] = 'Vous n\'êtes pas membre de ce groupe.';
 $string['ai_hide_answers'] = 'Ne pas révéler le corrigé';
 $string['ai_hide_answers_help'] = 'Si activé, l\'IA a pour consigne de ne jamais citer le modèle de correction, et toute phrase du retour contenant un mot du corrigé que l\'élève n\'a pas écrit est retirée avant affichage aux élèves. Les mots-clés manquants ne sont jamais montrés aux élèves.';
+
+// Event names and notification link (were missing, shown as [[...]]).
+$string['event_submission_graded'] = 'Production notée';
+$string['event_submission_created'] = 'Production créée';
+$string['event_ai_evaluation_completed'] = 'Évaluation IA terminée';
+$string['grading'] = 'Correction';

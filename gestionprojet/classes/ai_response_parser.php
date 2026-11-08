@@ -136,10 +136,11 @@ class ai_response_parser {
      *
      * @param mixed $grade Raw grade value
      * @return float Valid grade
+     * @throws \Exception When the grade is missing or not a number: inventing one would mislead.
      */
     private function validate_grade($grade): float {
-        if ($grade === null || $grade === '') {
-            return 10.0; // Default to middle value if missing.
+        if (!is_numeric($grade)) {
+            throw new \Exception(get_string('ai_parse_error', 'gestionprojet'));
         }
 
         $grade = (float) $grade;

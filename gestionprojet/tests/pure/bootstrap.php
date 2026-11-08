@@ -37,6 +37,19 @@ if (!is_dir($stubroot . '/mod/gestionprojet')) {
     mkdir($stubroot . '/mod/gestionprojet', 0777, true);
 }
 file_put_contents($stubroot . '/mod/gestionprojet/lib.php', "<?php\n");
+if (!function_exists('get_string')) {
+    /**
+     * Stub of Moodle's get_string: returns the key, so that checks can tell strings apart.
+     *
+     * @param string $key
+     * @param string $component
+     * @param mixed $a
+     * @return string
+     */
+    function get_string($key, $component = '', $a = null) {
+        return '[[' . $key . ']]';
+    }
+}
 $CFG = (object) ['dirroot' => $stubroot, 'libdir' => $stubroot . '/lib'];
 
 /**
