@@ -383,7 +383,13 @@ class autosave extends external_api {
                     }
 
                     $record->timemodified = $time;
-                    $DB->update_record('gestionprojet_cdcf', $record);
+                    // Only the copy: never write back fields read at the start of the request (zones frozen by a level
+                    // verdict that landed meanwhile, v2.11.2).
+                    $DB->update_record('gestionprojet_cdcf', (object)[
+                        'id' => $record->id,
+                        'interacteurs_data' => $record->interacteurs_data,
+                        'timemodified' => $record->timemodified,
+                    ]);
                     break;
 
                 case 5: // Test Sheet (student).

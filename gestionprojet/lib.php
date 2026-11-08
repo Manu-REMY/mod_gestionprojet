@@ -414,6 +414,20 @@ function gestionprojet_palier_pending(object $gestionprojet, int $submissionid):
 }
 
 /**
+ * Owner of the levels of a copy, as stored in gestionprojet_palier: the group (userid 0) for group work,
+ * the student alone (groupid 0) for individual work, even when the student belongs to a course group.
+ *
+ * @param object $submission Step 4 copy (gestionprojet_cdcf).
+ * @return array ['groupid' => int, 'userid' => int]
+ */
+function gestionprojet_palier_owner(object $submission): array {
+    if ((int)$submission->userid > 0) {
+        return ['groupid' => 0, 'userid' => (int)$submission->userid];
+    }
+    return ['groupid' => (int)$submission->groupid, 'userid' => 0];
+}
+
+/**
  * State of the level mode for a step 4 copy (v2.11.2).
  *
  * @param object $gestionprojet Instance record.
@@ -424,8 +438,8 @@ function gestionprojet_palier_state(object $gestionprojet, object $submission): 
     global $DB;
 
     $ingrid = \mod_gestionprojet\palier::paliers_in_grid(gestionprojet_palier_parts($gestionprojet));
-    $rows = $DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id, 'groupid' => $submission->groupid,
-        'userid' => $submission->userid, 'retire' => 0], 'timecreated ASC');
+    $rows = $DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id, 'retire' => 0]
+        + gestionprojet_palier_owner($submission), 'timecreated ASC');
     $validated = array_values(array_unique(array_column($rows, 'palier')));
     $attempts = $DB->get_records_select('gestionprojet_ai_evaluations',
         "gestionprojetid = :gpid AND step = 4 AND submissionid = :sid AND palier IS NOT NULL AND palier <> ''",
@@ -550,15 +564,16 @@ function gestionprojet_palier_record_locked(object $gestionprojet, object $evalu
 
     $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $evaluation->submissionid,
         'gestionprojetid' => $gestionprojet->id], '*', MUST_EXIST);
-    $owner = ['gestionprojetid' => $gestionprojet->id, 'groupid' => $submission->groupid, 'userid' => $submission->userid,
-        'palier' => $evaluation->palier, 'retire' => 0];
+    $owner = ['gestionprojetid' => $gestionprojet->id, 'palier' => $evaluation->palier, 'retire' => 0]
+        + gestionprojet_palier_owner($submission);
     if ($DB->record_exists('gestionprojet_palier', $owner)) {
         return;
     }
 
     // Members at validation time, as plan-classe reads them: [[userid, username], ...].
     $membres = [];
-    if ((int)$submission->groupid > 0) {
+    if ((int)$submission->userid === 0 && (int)$submission->groupid > 0) {
+        // Group work: every member of the group; individual work: the student alone, even inside a course group.
         foreach (groups_get_members($submission->groupid, 'u.id, u.username') as $member) {
             $membres[] = [(int)$member->id, $member->username];
         }
@@ -599,26 +614,41 @@ function gestionprojet_palier_retire(object $gestionprojet, int $palierid): arra
 
     $row = $DB->get_record('gestionprojet_palier', ['id' => $palierid, 'gestionprojetid' => $gestionprojet->id, 'retire' => 0],
         '*', MUST_EXIST);
-    $rows = $DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id, 'groupid' => $row->groupid,
-        'userid' => $row->userid, 'retire' => 0]);
-    $retired = \mod_gestionprojet\palier::retire_cascade($row->palier, array_column($rows, 'palier'));
-    $evaluationids = [];
-    foreach ($rows as $r) {
-        if (in_array($r->palier, $retired, true)) {
-            $DB->update_record('gestionprojet_palier', (object)['id' => $r->id, 'retire' => 1, 'timemodified' => time()]);
-            $evaluationids[] = (int)$r->evaluationid;
+    // The copy: through the evaluation that validated the level, else through the owner.
+    $submissionid = $row->evaluationid ? (int)$DB->get_field('gestionprojet_ai_evaluations', 'submissionid',
+        ['id' => $row->evaluationid]) : 0;
+    $submission = $submissionid ? $DB->get_record('gestionprojet_cdcf', ['id' => $submissionid]) : null;
+    if (!$submission) {
+        $candidates = $DB->get_records('gestionprojet_cdcf', ['gestionprojetid' => $gestionprojet->id, 'userid' => $row->userid]
+            + ($row->userid ? [] : ['groupid' => $row->groupid]), 'id ASC', '*', 0, 1);
+        $submission = $candidates ? reset($candidates) : null;
+    }
+    $lock = $submission ? gestionprojet_palier_lock((int)$submission->id) : null;
+    try {
+        $rows = $DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id, 'groupid' => $row->groupid,
+            'userid' => $row->userid, 'retire' => 0]);
+        $retired = \mod_gestionprojet\palier::retire_cascade($row->palier, array_column($rows, 'palier'));
+        $evaluationids = [];
+        foreach ($rows as $r) {
+            if (in_array($r->palier, $retired, true)) {
+                $DB->update_record('gestionprojet_palier', (object)['id' => $r->id, 'retire' => 1, 'timemodified' => time()]);
+                $evaluationids[] = (int)$r->evaluationid;
+            }
+        }
+        if ($submission) {
+            $current = $DB->get_field('gestionprojet_cdcf', 'zones_validees', ['id' => $submission->id]);
+            $zones = array_filter((array)json_decode((string)$current, true),
+                function ($evaluationid) use ($evaluationids): bool {
+                    return !in_array((int)$evaluationid, $evaluationids, true);
+                });
+            $DB->set_field('gestionprojet_cdcf', 'zones_validees', $zones ? json_encode($zones) : null, ['id' => $submission->id]);
+        }
+        return $retired;
+    } finally {
+        if ($lock) {
+            $lock->release();
         }
     }
-    $submission = $DB->get_record('gestionprojet_cdcf', ['gestionprojetid' => $gestionprojet->id, 'groupid' => $row->groupid,
-        'userid' => $row->userid]);
-    if ($submission) {
-        $zones = array_filter((array)json_decode((string)($submission->zones_validees ?? ''), true),
-            function ($evaluationid) use ($evaluationids): bool {
-                return !in_array((int)$evaluationid, $evaluationids, true);
-            });
-        $DB->set_field('gestionprojet_cdcf', 'zones_validees', $zones ? json_encode($zones) : null, ['id' => $submission->id]);
-    }
-    return $retired;
 }
 
 /**
@@ -1498,7 +1528,8 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
                 $totalgrade = 0;
                 $count = 0;
 
-                if ($cdcf && $cdcf->grade !== null && (!isset($gestionprojet->enable_step4) || $gestionprojet->enable_step4)) {
+                if ($cdcf && $cdcf->grade !== null && (!isset($gestionprojet->enable_step4) || $gestionprojet->enable_step4)
+                && empty($gestionprojet->step4_paliers)) {
                     $totalgrade += $cdcf->grade;
                     $count++;
                 }
@@ -1568,7 +1599,8 @@ function gestionprojet_get_user_grades($gestionprojet, $userid = 0)
         $totalgrade = 0;
         $count = 0;
 
-        if ($cdcf && $cdcf->grade !== null && (!isset($gestionprojet->enable_step4) || $gestionprojet->enable_step4)) {
+        if ($cdcf && $cdcf->grade !== null && (!isset($gestionprojet->enable_step4) || $gestionprojet->enable_step4)
+                && empty($gestionprojet->step4_paliers)) {
             $totalgrade += $cdcf->grade;
             $count++;
         }

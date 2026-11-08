@@ -66,8 +66,8 @@ test('verdict: a duplicate criterion counts once', fn() =>
     palier::verdict($ai([['Fonctions', 12], ['Fonctions', 12], ['Critères', 0]]), $sparts, 61)['valide'] === false);
 test('verdict: names match regardless of case and spaces', fn() =>
     palier::verdict($ai([['  fonctions ', 12], ['CRITÈRES', 8]]), $sparts, 100)['valide'] === true);
-test('verdict: unmatched names fall back on the order when the counts are equal', fn() =>
-    palier::verdict($ai([['Partie 1', 12], ['Partie 2', 8]]), $sparts, 100)['valide'] === true);
+test('verdict: unknown names never validate, even as many as the parts (final review)', fn() =>
+    palier::verdict($ai([['Partie 1', 12], ['Partie 2', 8]]), $sparts, 1)['valide'] === false);
 test('verdict: a missing part scores 0', fn() => palier::verdict($ai([['Fonctions', 12]]), $sparts, 61)['valide'] === false);
 test('verdict: 79.95 % is below 80 % even if it shows 80.0', fn() =>
     palier::verdict($ai([['Fonctions', 12], ['Critères', 3.99]]), $sparts, 80) === ['valide' => false, 'percent' => 80.0]
