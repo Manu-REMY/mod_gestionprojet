@@ -297,6 +297,7 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
         $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
         $data->groupid = $this->get_mappingid('group', $data->groupid);
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -304,7 +305,9 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        $DB->insert_record('gestionprojet_cdcf', $data);
+        $newid = $DB->insert_record('gestionprojet_cdcf', $data);
+        // AI evaluations refer to submissions by id.
+        $this->set_mapping('gestionprojet_cdcf', $oldid, $newid);
     }
 
     /**
@@ -316,6 +319,7 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
         $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
         $data->groupid = $this->get_mappingid('group', $data->groupid);
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -323,7 +327,9 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        $DB->insert_record('gestionprojet_essai', $data);
+        $newid = $DB->insert_record('gestionprojet_essai', $data);
+        // AI evaluations refer to submissions by id.
+        $this->set_mapping('gestionprojet_essai', $oldid, $newid);
     }
 
     /**
@@ -335,6 +341,7 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
         $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
         $data->groupid = $this->get_mappingid('group', $data->groupid);
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -342,7 +349,9 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        $DB->insert_record('gestionprojet_rapport', $data);
+        $newid = $DB->insert_record('gestionprojet_rapport', $data);
+        // AI evaluations refer to submissions by id.
+        $this->set_mapping('gestionprojet_rapport', $oldid, $newid);
     }
 
     /**
@@ -354,6 +363,7 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
         $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
         $data->groupid = $this->get_mappingid('group', $data->groupid);
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -361,7 +371,9 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        $DB->insert_record('gestionprojet_besoin_eleve', $data);
+        $newid = $DB->insert_record('gestionprojet_besoin_eleve', $data);
+        // AI evaluations refer to submissions by id.
+        $this->set_mapping('gestionprojet_besoin_eleve', $oldid, $newid);
     }
 
     /**
@@ -373,6 +385,7 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
         $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
         $data->groupid = $this->get_mappingid('group', $data->groupid);
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -380,7 +393,9 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        $DB->insert_record('gestionprojet_carnet', $data);
+        $newid = $DB->insert_record('gestionprojet_carnet', $data);
+        // AI evaluations refer to submissions by id.
+        $this->set_mapping('gestionprojet_carnet', $oldid, $newid);
     }
 
     /**
@@ -392,6 +407,7 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
         $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
         $data->groupid = $this->get_mappingid('group', $data->groupid);
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -399,7 +415,9 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        $DB->insert_record('gestionprojet_fast', $data);
+        $newid = $DB->insert_record('gestionprojet_fast', $data);
+        // AI evaluations refer to submissions by id.
+        $this->set_mapping('gestionprojet_fast', $oldid, $newid);
     }
 
     /**
@@ -415,6 +433,17 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->groupid = $this->get_mappingid('group', $data->groupid);
         $data->userid = $this->get_mappingid('user', $data->userid);
         $data->applied_by = $this->get_mappingid('user', $data->applied_by);
+
+        // Point to the restored submission; an evaluation whose submission was not restored is dropped.
+        $submissiontables = [4 => 'gestionprojet_cdcf', 5 => 'gestionprojet_essai', 6 => 'gestionprojet_rapport',
+            7 => 'gestionprojet_besoin_eleve', 8 => 'gestionprojet_carnet', 9 => 'gestionprojet_fast'];
+        if (!isset($submissiontables[$data->step])) {
+            return;
+        }
+        $data->submissionid = $this->get_mappingid($submissiontables[$data->step], $data->submissionid);
+        if (!$data->submissionid) {
+            return;
+        }
         $data->applied_at = $this->apply_date_offset($data->applied_at);
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
