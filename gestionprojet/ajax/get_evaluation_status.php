@@ -126,7 +126,7 @@ try {
         }
     }
 
-    // Include results if completed (teachers only — students reload the page to see filtered feedback via student_ai_feedback_display.php).
+    // Include results if completed (teachers only — students get the filtered view above, feedback_html).
     if (($evaluation->status === 'completed' || $evaluation->status === 'applied') && $isTeacher) {
         $response['grade'] = $evaluation->parsed_grade;
         $response['feedback'] = $evaluation->parsed_feedback;

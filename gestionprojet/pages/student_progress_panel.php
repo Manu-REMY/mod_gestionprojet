@@ -139,6 +139,10 @@ if (!empty($submission)) {
 
     // Buttons: feedback request and submission (a teacher looking at a copy gets none).
     echo html_writer::start_div('gp-progress-actions');
+    if (!$progressreadonly && $progress['deadlinepassed'] && $progress['status'] === 'draft'
+            && $progress['formative'] && $progress['formative']['enabled']) {
+        echo html_writer::div('⊘ ' . get_string('formative_deadline_passed', 'gestionprojet'), 'gp-formative-none');
+    }
     if ($progress['canask'] && !$progress['formative']['pending']) {
         if ($progress['formative']['remaining'] > 0) {
             echo html_writer::tag('button', get_string('formative_request', 'gestionprojet', $progress['formative']['remaining']),

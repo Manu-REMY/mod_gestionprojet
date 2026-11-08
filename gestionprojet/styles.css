@@ -3399,7 +3399,7 @@
 
 /* =========================================
    Student AI Feedback Display
-   (from pages/student_ai_feedback_display.php)
+   (feedback blocks)
    ========================================= */
 
 .path-mod-gestionprojet .student-feedback {
@@ -5926,4 +5926,46 @@
 
 .path-mod-gestionprojet .gp-submit-ask-instead .btn {
     min-height: 44px;
+}
+
+/* ===== No progress panel on the page (step 4 without a copy): one column, no empty space (v2.12.5) ===== */
+.path-mod-gestionprojet .gp-progress-layout:not(:has(.gp-progress-panel)) {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* ===== Results of the class (v2.13.0) ===== */
+.path-mod-gestionprojet .gp-results-wrap {
+    overflow-x: auto;
+}
+
+.path-mod-gestionprojet .gp-results td,
+.path-mod-gestionprojet .gp-results th {
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.path-mod-gestionprojet .gp-results .gp-results-group {
+    font-weight: 600;
+    background-color: #f4f6f9;
+}
+
+.path-mod-gestionprojet .gp-results-cell {
+    display: block;
+    min-height: 44px;
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Blue for done, orange for not started: always with the symbol and the word. */
+.path-mod-gestionprojet .gp-results-submitted {
+    color: #1f3f78;
+}
+
+.path-mod-gestionprojet .gp-results-none {
+    color: #7a3d0a;
+}
+
+.path-mod-gestionprojet .gp-results .gp-results-summary td {
+    font-weight: 600;
+    background-color: #eef1f5;
 }

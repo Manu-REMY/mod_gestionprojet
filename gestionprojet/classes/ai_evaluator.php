@@ -372,8 +372,11 @@ class ai_evaluator {
             // Log the error.
             debugging('AI evaluation failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
 
-            // Notify teachers (best-effort, errors swallowed inside).
-            self::notify_teachers_of_failure($evaluation, $e->getMessage());
+            // Notify teachers (best-effort, errors swallowed inside); a formative feedback that fails is simply
+            // not counted, the student asks again: no alert (v2.12.5).
+            if (empty($evaluation->formatif)) {
+                self::notify_teachers_of_failure($evaluation, $e->getMessage());
+            }
 
             return false;
         }

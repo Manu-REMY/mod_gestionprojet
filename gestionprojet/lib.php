@@ -936,7 +936,7 @@ function gestionprojet_formative_request(object $gestionprojet, object $cm, int 
     $deadline = (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
         ['gestionprojetid' => $gestionprojet->id]);
     if ($deadline > 0 && time() > $deadline) {
-        throw new moodle_exception('submissionlocked', 'gestionprojet');
+        throw new moodle_exception('formative_deadline_passed', 'gestionprojet');
     }
 
     // Check and queue under the lock of the copy: a double click never exceeds the limit.
@@ -996,6 +996,11 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     $paliermode = $step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1;
     $palier = $paliermode ? gestionprojet_palier_state($gestionprojet, $submission) : null;
     $formative = $aion ? gestionprojet_formative_state($gestionprojet, $step, $submission) : null;
+    // Past the deadline no feedback can be asked any more (a page left open across it would offer the button).
+    $tables = [4 => 'cdcf', 5 => 'essai', 6 => 'rapport', 7 => 'besoin_eleve', 8 => 'carnet', 9 => 'fast'];
+    $deadline = isset($tables[$step]) ? (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
+        ['gestionprojetid' => $gestionprojet->id]) : 0;
+    $deadlinepassed = $deadline > 0 && time() > $deadline;
     // A copy just created by gestionprojet_get_or_create_submission has no grade property yet.
     $grade = isset($submission->grade) && $submission->grade !== null ? (float)$submission->grade : null;
 
@@ -1046,7 +1051,9 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
         'formative' => $formative,
         'feedback' => $feedback,
         'cansubmit' => !$readonly && !$submitted && !empty($gestionprojet->enable_submission) && !$paliermode,
-        'canask' => !$readonly && !$submitted && $formative !== null && $formative['enabled'],
+        'canask' => !$readonly && !$submitted && $formative !== null && $formative['enabled']
+            && !$deadlinepassed,
+        'deadlinepassed' => $deadlinepassed,
     ];
 }
 
@@ -1143,7 +1150,7 @@ function gestionprojet_has_provided_student_step(object $gestionprojet): bool {
  * @return int Number of copies changed.
  */
 function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjson): int {
-    global $DB, $USER;
+    global $DB;
 
     if ((int)($gestionprojet->step4_provided ?? 0) !== 1 || $oldjson === '') {
         return 0;
@@ -1166,10 +1173,10 @@ function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjs
         if ($json === $before) {
             continue;
         }
+        // No history row: following the consigne never removes student text, and the teacher's autosave would
+        // write one row per copy every few seconds (v2.12.5).
         $DB->update_record('gestionprojet_cdcf', (object)['id' => $copy->id, 'interacteurs_data' => $json,
             'timemodified' => time()]);
-        gestionprojet_log_change($gestionprojet->id, 'cdcf', $copy->id, 'interacteurs_data', $before, $json,
-            (int)$USER->id, (int)$copy->groupid);
         $count++;
     }
     $transaction->allow_commit();
@@ -1309,6 +1316,12 @@ function gestionprojet_extend_settings_navigation($settings, $navref)
     global $PAGE, $USER;
 
     $context = $PAGE->cm->context;
+
+    // Results of the class, like the results page of a quiz (v2.13.0).
+    if (has_capability('mod/gestionprojet:viewallsubmissions', $context)) {
+        $navref->add(get_string('results', 'gestionprojet'), new moodle_url('/mod/gestionprojet/results.php',
+            ['id' => $PAGE->cm->id]), navigation_node::TYPE_SETTING, null, 'gestionprojetresults');
+    }
 
     // Add link to AI usage report for teachers (if AI is enabled)
     if (has_capability('mod/gestionprojet:grade', $context)) {
@@ -2543,4 +2556,149 @@ function gestionprojet_build_student_gantt_cell(array $input): array {
     }
 
     return $cell;
+}
+
+/**
+ * Lines of the class results page (v2.13.0): one per student, with the copy of each enabled student step.
+ *
+ * In group mode the students are listed by group and share the group's copy; the line carries the spans used to
+ * merge the group and its copy over its students. Every line also carries the owner's values, for the export.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $cm Course module.
+ * @param int $groupid Group chosen in the filter (0: all).
+ * @return array ['groupmode' => bool, 'steps' => int[], 'lines' => array, 'summary' => [step => results::summary()]]
+ */
+function gestionprojet_results_lines(object $gestionprojet, object $cm, int $groupid): array {
+    global $DB;
+
+    $context = context_module::instance($cm->id);
+    $tables = [4 => 'cdcf', 5 => 'essai', 6 => 'rapport', 7 => 'besoin_eleve', 8 => 'carnet', 9 => 'fast'];
+    $steps = array_values(array_filter(gestionprojet_get_graded_steps_order(), function (int $step) use ($gestionprojet) {
+        return gestionprojet_is_step_enabled($gestionprojet, $step);
+    }));
+    $groupmode = !empty($gestionprojet->group_submission);
+    $paliermode = (int)($gestionprojet->step4_paliers ?? 0) === 1;
+
+    // Students: active enrolled users who can submit, teachers left out (one query each).
+    $teachers = get_enrolled_users($context, 'mod/gestionprojet:grade', 0, 'u.id');
+    $users = [];
+    foreach (get_enrolled_users($context, 'mod/gestionprojet:submit', $groupid, 'u.*', 'u.lastname, u.firstname', 0, 0, true)
+            as $u) {
+        if (!isset($teachers[$u->id])) {
+            $users[(int)$u->id] = $u;
+        }
+    }
+
+    // Copies, grading in progress, formative feedbacks used, validated levels.
+    $copies = [];
+    foreach ($steps as $step) {
+        foreach ($DB->get_records('gestionprojet_' . $tables[$step], ['gestionprojetid' => $gestionprojet->id]) as $copy) {
+            $key = (int)$copy->userid > 0 ? 'u' . $copy->userid : 'g' . $copy->groupid;
+            $copies[$step][$key] = $copy;
+        }
+    }
+    $pending = [];
+    $sql = "SELECT id, step, submissionid FROM {gestionprojet_ai_evaluations}
+             WHERE gestionprojetid = ? AND formatif = 0 AND status IN ('pending', 'processing')";
+    foreach ($DB->get_records_sql($sql, [$gestionprojet->id]) as $e) {
+        $pending[$e->step . '-' . $e->submissionid] = true;
+    }
+    $used = [];
+    $sql = "SELECT " . $DB->sql_concat('step', "'-'", 'submissionid') . " AS k, COUNT(1) AS n
+              FROM {gestionprojet_ai_evaluations}
+             WHERE gestionprojetid = ? AND formatif = 1 AND status <> 'failed'
+          GROUP BY step, submissionid";
+    foreach ($DB->get_records_sql($sql, [$gestionprojet->id]) as $r) {
+        $used[$r->k] = (int)$r->n;
+    }
+    $ingrid = $paliermode ? \mod_gestionprojet\palier::paliers_in_grid(gestionprojet_palier_parts($gestionprojet)) : [];
+    $validated = [];
+    if ($paliermode) {
+        foreach ($DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id, 'retire' => 0]) as $p) {
+            $key = (int)$p->userid > 0 ? 'u' . $p->userid : 'g' . $p->groupid;
+            $validated[$key][] = $p->palier;
+        }
+    }
+    $limit = empty($gestionprojet->ai_enabled) ? 0 : max(0, (int)($gestionprojet->formative_limit ?? 3));
+
+    // Values of one owner (a group, or a student): cells, dates, average, links.
+    $owner = function (string $key) use ($steps, $copies, $pending, $used, $ingrid, $validated, $paliermode, $limit): array {
+        $cells = [];
+        $start = 0;
+        $last = 0;
+        foreach ($steps as $step) {
+            $copy = $copies[$step][$key] ?? null;
+            $levels = $step === 4 && $paliermode ? ['ingrid' => $ingrid, 'validated' => $validated[$key] ?? []] : null;
+            $cells[$step] = \mod_gestionprojet\results::cell(
+                $copy ? ['status' => (int)$copy->status, 'grade' => $copy->grade] : null,
+                $copy !== null && isset($pending[$step . '-' . $copy->id]), $levels,
+                $copy ? ($used[$step . '-' . $copy->id] ?? 0) : 0, $step === 4 && $paliermode ? 0 : $limit);
+            if ($copy) {
+                $start = $start ? min($start, (int)$copy->timecreated) : (int)$copy->timecreated;
+                $last = max($last, (int)$copy->timemodified);
+            }
+        }
+        return ['cells' => $cells, 'start' => $start, 'last' => $last,
+            'average' => \mod_gestionprojet\results::average($cells)];
+    };
+
+    $lines = [];
+    $percolumn = [];
+    if ($groupmode) {
+        $groups = [];
+        $memberships = [];
+        foreach (groups_get_all_groups($cm->course, 0, $cm->groupingid, 'g.*', true) as $g) {
+            if ($groupid && (int)$g->id !== $groupid) {
+                continue;
+            }
+            // Raw name: formatted once, where it is shown.
+            $groups[(int)$g->id] = (string)$g->name;
+            $memberships[(int)$g->id] = array_map('intval', array_values($g->members ?? []));
+        }
+        $names = [];
+        foreach ($users as $id => $u) {
+            $names[$id] = ['lastname' => (string)$u->lastname, 'firstname' => (string)$u->firstname];
+        }
+        foreach (\mod_gestionprojet\results::group_rows($groups, $memberships, $names) as $block) {
+            $count = count($block['userids']);
+            if ($block['groupid'] > 0) {
+                $values = $owner('g' . $block['groupid']);
+                foreach ($values['cells'] as $step => $cell) {
+                    $percolumn[$step][] = $cell;
+                }
+            }
+            foreach ($block['userids'] as $index => $userid) {
+                // A student in no group cannot work in group mode (the step pages refuse it): an individual copy
+                // left from before the switch to group mode is shown, without a link (grading opens groups only).
+                $mine = $block['groupid'] > 0 ? $values : $owner('u' . $userid);
+                if ($block['groupid'] === 0) {
+                    foreach ($mine['cells'] as $step => $cell) {
+                        $percolumn[$step][] = $cell;
+                    }
+                }
+                $lines[] = $mine + [
+                    'groupname' => $block['name'],
+                    'groupspan' => $index === 0 ? $count : 0,
+                    'ownerspan' => $block['groupid'] > 0 ? ($index === 0 ? $count : 0) : 1,
+                    'student' => fullname($users[$userid]),
+                    'link' => $block['groupid'] > 0 ? ['groupid' => $block['groupid']] : null,
+                ];
+            }
+        }
+    } else {
+        foreach ($users as $userid => $u) {
+            $mine = $owner('u' . $userid);
+            foreach ($mine['cells'] as $step => $cell) {
+                $percolumn[$step][] = $cell;
+            }
+            $lines[] = $mine + ['groupname' => null, 'groupspan' => 0, 'ownerspan' => 1, 'student' => fullname($u),
+                'link' => ['userid' => $userid]];
+        }
+    }
+    $summary = [];
+    foreach ($steps as $step) {
+        $summary[$step] = \mod_gestionprojet\results::summary($percolumn[$step] ?? []);
+    }
+    return ['groupmode' => $groupmode, 'steps' => $steps, 'lines' => $lines, 'summary' => $summary];
 }

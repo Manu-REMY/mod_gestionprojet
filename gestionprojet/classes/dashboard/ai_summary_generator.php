@@ -115,7 +115,7 @@ class ai_summary_generator {
             'SELECT id, parsed_feedback, criteria_json, keywords_found, keywords_missing, suggestions
              FROM {gestionprojet_ai_evaluations}
              WHERE gestionprojetid = ? AND step = ? AND status IN (?, ?)
-             AND parsed_feedback IS NOT NULL AND parsed_feedback != ?',
+             AND parsed_feedback IS NOT NULL AND parsed_feedback != ? AND formatif = 0',
             [$gestionprojet->id, $step, 'applied', 'completed', '']
         );
 
@@ -358,7 +358,7 @@ $feedbacksJson";
             $currentCount = $DB->count_records_sql(
                 'SELECT COUNT(*) FROM {gestionprojet_ai_evaluations}
                  WHERE gestionprojetid = ? AND step = ? AND status IN (?, ?)
-                 AND parsed_feedback IS NOT NULL AND parsed_feedback != ?',
+                 AND parsed_feedback IS NOT NULL AND parsed_feedback != ? AND formatif = 0',
                 [$gestionprojetid, $step, 'applied', 'completed', '']
             );
         }
