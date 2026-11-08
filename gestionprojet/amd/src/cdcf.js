@@ -71,6 +71,54 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
 
         function emit() { onChange(data); render(); }
 
+        // Parts of the editor that show typed text; a text change refreshes only them (v2.12.2).
+        var noticesHolder = null;
+        var diagramHolder = null;
+
+        /**
+         * A text field changed: save, and refresh what shows the text, without rebuilding the fields.
+         *
+         * The change event fires on the mousedown that leaves the field: rebuilding everything then replaced the
+         * clicked field or button before it got the focus or the click (two clicks were needed).
+         */
+        function emitText() {
+            onChange(data);
+            if (diagramHolder) {
+                Diagram.render(diagramHolder, opts.projetNom, data.interactors, data.fonctionsService);
+            }
+            refreshLabels();
+            // Student notice of the pre-filled fields left; the teacher's notices do not depend on the text.
+            if (!editFlags && noticesHolder) {
+                noticesHolder.replaceChildren.apply(noticesHolder, notices());
+            }
+        }
+
+        /** Label of an interactor in the lists. */
+        function interactorLabel(inter) {
+            return inter.name || ('Interacteur ' + inter.id);
+        }
+
+        /** Label of an FS in the lists of the constraints. */
+        function fsLabel(fs, idx) {
+            return 'FS' + (idx + 1) + (fs.description ? (' — ' + fs.description.substring(0, 30)) : '');
+        }
+
+        /** Update the option labels of the interactor and FS lists after a text change. */
+        function refreshLabels() {
+            Array.prototype.forEach.call(container.querySelectorAll('select[data-gp-options="interactors"] option'),
+                function(o) {
+                    data.interactors.forEach(function(inter) {
+                        if (String(inter.id) === o.value) { o.textContent = interactorLabel(inter); }
+                    });
+                });
+            Array.prototype.forEach.call(container.querySelectorAll('select[data-gp-options="fs"] option'),
+                function(o) {
+                    data.fonctionsService.forEach(function(fs, idx) {
+                        if (String(fs.id) === o.value) { o.textContent = fsLabel(fs, idx); }
+                    });
+                });
+        }
+
         function fsReferencingInteractor(id) {
             return data.fonctionsService.filter(function(fs) {
                 return fs.interactor1Id === id || fs.interactor2Id === id;
@@ -275,12 +323,9 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
         }
 
         function render() {
-            container.replaceChildren.apply(container, notices().concat([
-                renderDiagram(),
-                renderInteractors(),
-                renderFs(),
-                renderContraintes()
-            ]));
+            noticesHolder = el('div', { className: 'gp-cdcf-notices' }, notices());
+            container.replaceChildren(noticesHolder, renderDiagram(), renderInteractors(), renderFs(),
+                renderContraintes());
         }
 
         function renderInteractors() {
@@ -291,7 +336,7 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
                 var canRemove = data.interactors.length > 2 && fsReferencingInteractor(inter.id).length === 0;
                 var input = el('input', {
                     type: 'text', value: inter.name, placeholder: lang.interactorPlaceholder,
-                    onchange: function(e) { inter.name = e.target.value; emit(); },
+                    onchange: function(e) { inter.name = e.target.value; emitText(); },
                 });
                 // Target of the "to complete" list of the progress panel (v2.12.0).
                 input.setAttribute('data-gp-field', 'i-' + inter.id);
@@ -326,6 +371,7 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
             var section = el('section', { className: 'gp-cdcf-section gp-cdcf-diagram-wrap' });
             section.appendChild(el('h3', null, [lang.diagramTitle]));
             var holder = el('div', { className: 'gp-cdcf-diagram' });
+            diagramHolder = holder;
             section.appendChild(holder);
             Diagram.render(holder, opts.projetNom, data.interactors, data.fonctionsService);
             return section;
@@ -383,7 +429,7 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
 
             var desc = el('textarea', {
                 className: 'gp-cdcf-fs-desc', rows: '2', placeholder: lang.fsDescPlaceholder,
-                onchange: function(e) { fs.description = e.target.value; emit(); },
+                onchange: function(e) { fs.description = e.target.value; emitText(); },
             });
             desc.value = fs.description;
             desc.setAttribute('data-gp-field', 'fs-' + fs.id);
@@ -435,11 +481,11 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
             var row = el('div', { className: 'gp-cdcf-critere gp-cdcf-flex-' + (crit.flexibilite || 'none') });
             var d = el('input', {
                 type: 'text', value: crit.description, placeholder: lang.criterePlaceholder,
-                onchange: function(e) { crit.description = e.target.value; emit(); },
+                onchange: function(e) { crit.description = e.target.value; emitText(); },
             });
             var n = el('input', {
                 type: 'text', value: crit.niveau, placeholder: lang.niveauPlaceholder,
-                onchange: function(e) { crit.niveau = e.target.value; emit(); },
+                onchange: function(e) { crit.niveau = e.target.value; emitText(); },
             });
             d.setAttribute('data-gp-field', 'c-' + fs.id + '-' + crit.id);
             n.setAttribute('data-gp-field', 'n-' + fs.id + '-' + crit.id);
@@ -481,14 +527,14 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
 
         function renderInteractorSelect(currentId, allowNone, cb) {
             var s = el('select', { onchange: function(e) { cb(parseInt(e.target.value, 10)); } });
+            s.setAttribute('data-gp-options', 'interactors');
             if (allowNone) {
                 var none = el('option', { value: '0', text: lang.noneOption });
                 if (currentId === 0) { none.selected = true; }
                 s.appendChild(none);
             }
             data.interactors.forEach(function(inter) {
-                var label = inter.name || ('Interacteur ' + inter.id);
-                var o = el('option', { value: String(inter.id), text: label });
+                var o = el('option', { value: String(inter.id), text: interactorLabel(inter) });
                 if (inter.id === currentId) { o.selected = true; }
                 s.appendChild(o);
             });
@@ -503,22 +549,22 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
             data.contraintes.forEach(function(c, idx) {
                 var d = el('input', {
                     type: 'text', value: c.description, placeholder: lang.contraintePlaceholder,
-                    onchange: function(e) { c.description = e.target.value; emit(); },
+                    onchange: function(e) { c.description = e.target.value; emitText(); },
                 });
                 var j = el('input', {
                     type: 'text', value: c.justification, placeholder: lang.justificationPlaceholder,
-                    onchange: function(e) { c.justification = e.target.value; emit(); },
+                    onchange: function(e) { c.justification = e.target.value; emitText(); },
                 });
                 d.setAttribute('data-gp-field', 'k-' + c.id);
                 var sel = el('select', {
                     onchange: function(e) { c.linkedFsId = parseInt(e.target.value, 10); emit(); },
                 });
+                sel.setAttribute('data-gp-options', 'fs');
                 var none = el('option', { value: '0', text: lang.noFsLink });
                 if (c.linkedFsId === 0) { none.selected = true; }
                 sel.appendChild(none);
                 data.fonctionsService.forEach(function(fs, fsidx) {
-                    var label = 'FS' + (fsidx + 1) + (fs.description ? (' — ' + fs.description.substring(0, 30)) : '');
-                    var o = el('option', { value: String(fs.id), text: label });
+                    var o = el('option', { value: String(fs.id), text: fsLabel(fs, fsidx) });
                     if (fs.id === c.linkedFsId) { o.selected = true; }
                     sel.appendChild(o);
                 });
