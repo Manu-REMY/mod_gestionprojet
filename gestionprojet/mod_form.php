@@ -43,7 +43,7 @@ class mod_gestionprojet_mod_form extends moodleform_mod
 
         // Load test API JavaScript module.
         $cmid = $this->_cm ? $this->_cm->id : 0;
-        $PAGE->requires->js_call_amd('mod_gestionprojet/test_api', 'init', [$cmid]);
+        $PAGE->requires->js_call_amd('mod_gestionprojet/test_api', 'init', [$cmid, (int)$this->current->course]);
 
         // Adding the "general" fieldset, where all the common settings are shown.
         $mform->addElement('header', 'general', get_string('general', 'form'));

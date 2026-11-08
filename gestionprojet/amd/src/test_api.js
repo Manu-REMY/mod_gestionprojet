@@ -13,7 +13,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
      *
      * @param {number} cmid Course module ID (0 for new activity)
      */
-    var init = function(cmid) {
+    var init = function(cmid, courseid) {
         var testBtn = $('#id_test_api_btn');
 
         if (!testBtn.length) {
@@ -56,7 +56,8 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
                 args: {
                     cmid: cmid,
                     provider: provider,
-                    apikey: hasBuiltinKey ? '' : apiKey
+                    apikey: hasBuiltinKey ? '' : apiKey,
+                    courseid: courseid || 0
                 }
             }])[0].done(function(response) {
                 if (response.success) {

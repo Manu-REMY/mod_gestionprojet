@@ -513,7 +513,9 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
                     container.html(html);
                 },
                 error: function(message) {
-                    container.html('<span class="ai-status-badge ai-status-failed">❌ ' + message + '</span>');
+                    // The message may come from the provider: insert it as text, never as HTML.
+                    var badge = $('<span class="ai-status-badge ai-status-failed"></span>').text('❌ ' + message);
+                    container.empty().append(badge);
                 }
             };
         }
