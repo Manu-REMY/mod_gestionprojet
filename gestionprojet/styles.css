@@ -5910,3 +5910,20 @@
         border-top-width: 6px;
     }
 }
+
+/* ===== Submit modal: ask for a feedback instead of submitting (v2.12.2) ===== */
+.path-mod-gestionprojet .gp-submit-ask-instead {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #90caf9;
+    border-radius: 0.5rem;
+    background-color: #e3f2fd;
+}
+
+.path-mod-gestionprojet .gp-submit-ask-instead p {
+    margin-bottom: 0.5rem;
+}
+
+.path-mod-gestionprojet .gp-submit-ask-instead .btn {
+    min-height: 44px;
+}

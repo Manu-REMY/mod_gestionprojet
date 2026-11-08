@@ -21,12 +21,7 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/str', 'core/ajax'], functi
             var isLocked = config.isLocked;
             var STRINGS = config.strings || {};
 
-            // Submit / Revert
-            $('#submitButton').on('click', function () {
-                if (confirm(STRINGS.confirm_submission)) {
-                    submitAction('submit');
-                }
-            });
+            // Submission: the progress panel's modal (mod_gestionprojet/submission) is the only confirmation.
 
             $('#revertButton').on('click', function () {
                 if (confirm(STRINGS.confirm_revert)) {

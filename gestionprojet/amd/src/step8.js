@@ -173,32 +173,8 @@ define(['jquery', 'mod_gestionprojet/autosave', 'core/notification'], function($
                 return formData;
             };
 
-            // Handle Submission.
-            $('#submitButton').on('click', function() {
-                if (confirm(STRINGS.confirm_submission)) {
-                    $.ajax({
-                        url: M.cfg.wwwroot + '/mod/gestionprojet/ajax/submit.php',
-                        method: 'POST',
-                        data: {
-                            id: cmid,
-                            step: step,
-                            groupid: groupid,
-                            action: 'submit',
-                            sesskey: M.cfg.sesskey
-                        },
-                        success: function(response) {
-                            var res = JSON.parse(response);
-                            if (res.success) {
-                                window.location.reload();
-                            } else {
-                                Notification.alert('Error', 'Error submitting');
-                            }
-                        }
-                    });
-                }
-            });
+            // Submission: the progress panel's modal (mod_gestionprojet/submission) is the only confirmation.
 
-            // Handle Revert.
             $('#revertButton').on('click', function() {
                 if (confirm(STRINGS.confirm_revert)) {
                     $.ajax({

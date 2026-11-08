@@ -959,6 +959,7 @@ $string['submit_modal_ai'] = 'Automatic AI grading will start immediately.';
 $string['submit_modal_irreversible'] = 'Only your teacher can unlock your submission.';
 $string['submit_modal_group_warning'] = 'Warning: this action submits the work for the entire group — notify your teammates first.';
 $string['submit_modal_checkbox'] = 'I have re-read my work and I want to submit it definitively.';
+$string['submit_modal_ask_intro'] = 'Not sure yet? Ask for feedback first: your work is not submitted and stays editable.';
 $string['confirm_submit_btn'] = 'Submit definitively';
 $string['ai_progress_pending_student'] = 'AI evaluation queued…';
 $string['ai_progress_processing_student'] = 'AI evaluation in progress…';
