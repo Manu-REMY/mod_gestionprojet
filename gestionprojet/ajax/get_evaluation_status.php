@@ -108,8 +108,9 @@ try {
         $submission = $table ? $DB->get_record($table, ['id' => $evaluation->submissionid,
             'gestionprojetid' => $gestionprojet->id]) : null;
         if ($submission) {
-            // A teacher looking at someone else's copy cannot ask in their place (same rule as the panel).
-            $readonly = $isTeacher && !$isOwner && !$isGroupMember;
+            // A teacher looking at a copy that is not theirs (a group copy has userid 0) cannot ask in its
+            // place: same rule as the panel.
+            $readonly = $isTeacher && (int)$submission->userid !== (int)$USER->id;
             $state = gestionprojet_progress_state($gestionprojet, (int)$evaluation->step, $submission, $readonly);
             if ($evaluation->status === 'completed' && $state['feedback']['source'] !== 'none') {
                 $response['feedback_html'] = gestionprojet_progress_feedback_html($state['feedback']);

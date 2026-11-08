@@ -50,7 +50,7 @@ test('emitText() exists, saves, and does not call render()', fn() =>
     $body !== '' && strpos($body, 'onChange(data);') !== false && strpos($body, 'render()') === false);
 test('emitText() refreshes the diagram, the labels of the lists and the student notice', fn() =>
     strpos($body, 'Diagram.render(') !== false && strpos($body, 'refreshLabels()') !== false
-    && strpos($body, 'noticesHolder') !== false);
+    && strpos($body, 'refreshNotices()') !== false);
 test('the lists carry their kind so their labels can be refreshed', fn() =>
     strpos($js, "'data-gp-options', 'interactors'") !== false && strpos($js, "'data-gp-options', 'fs'") !== false);
 test('one label builder for the interactor and FS options (render and refresh agree)', fn() =>
@@ -59,3 +59,9 @@ test('the teacher notices (automark button) are not rebuilt on typing', fn() =>
     preg_match('/function emitText\(\) \{.*?if \(!editFlags\)/s', $js) === 1);
 test('build cdcf.min.js up to date', fn() => is_file(GP_ROOT . '/amd/build/cdcf.min.js')
     && filemtime(GP_ROOT . '/amd/build/cdcf.min.js') >= filemtime(GP_ROOT . '/amd/src/cdcf.js'));
+
+// Final review: the student notice appearing or vanishing during a click moves the buttons under the pointer;
+// its refresh waits until the pointer is released.
+test('notice refresh deferred while a pointer is down', fn() =>
+    strpos($js, "addEventListener('pointerdown'") !== false && strpos($js, "addEventListener('pointerup'") !== false
+    && strpos($js, 'function refreshNotices()') !== false && strpos($js, 'if (pointerDown) {') !== false);

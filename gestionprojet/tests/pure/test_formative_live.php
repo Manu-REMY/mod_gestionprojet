@@ -78,3 +78,9 @@ test('js: the ask button comes back (or "none left")', fn() =>
     strpos($js, 'data.ask_label') !== false && strpos($js, 'data.none_left') !== false);
 test('build formative_button.min.js up to date', fn() => is_file(GP_ROOT . '/amd/build/formative_button.min.js')
     && filemtime(GP_ROOT . '/amd/build/formative_button.min.js') >= filemtime(GP_ROOT . '/amd/src/formative_button.js'));
+
+// Final review (v2.12.2).
+test('endpoint: read-only rule of the panel (a teacher on a copy that is not theirs, group copies included)', fn() =>
+    strpos($ajax, '$readonly = $isTeacher && (int)$submission->userid !== (int)$USER->id;') !== false);
+test('js: a finished feedback is handled once (overlapping polls)', fn() =>
+    strpos($js, 'if (done || !data') !== false && strpos($js, 'done = true;') !== false);

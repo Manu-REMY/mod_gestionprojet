@@ -88,7 +88,32 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
             }
             refreshLabels();
             // Student notice of the pre-filled fields left; the teacher's notices do not depend on the text.
-            if (!editFlags && noticesHolder) {
+            if (!editFlags) {
+                refreshNotices();
+            }
+        }
+
+        // The notice appearing or vanishing moves everything below it: during a click (the change event fires on
+        // the mousedown) the button under the pointer would change and the click be lost. Wait for the release.
+        var pointerDown = false;
+        var noticesPending = false;
+        document.addEventListener('pointerdown', function() { pointerDown = true; }, true);
+        document.addEventListener('pointerup', function() {
+            pointerDown = false;
+            if (noticesPending) {
+                // After the click event of this release.
+                setTimeout(refreshNotices, 0);
+            }
+        }, true);
+
+        /** Refresh the student notice now, or after the pointer is released. */
+        function refreshNotices() {
+            if (pointerDown) {
+                noticesPending = true;
+                return;
+            }
+            noticesPending = false;
+            if (noticesHolder) {
                 noticesHolder.replaceChildren.apply(noticesHolder, notices());
             }
         }

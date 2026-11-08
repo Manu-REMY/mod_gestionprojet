@@ -132,6 +132,8 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
         if (!live) {
             return;
         }
+        // Polls may overlap on a slow server: the finished feedback is handled once.
+        var done = false;
         var timer = setInterval(function() {
             var sesskey = window.M && window.M.cfg ? window.M.cfg.sesskey : '';
             var url = cfg.statusUrl + '?id=' + encodeURIComponent(cfg.cmid) + '&evaluationid='
@@ -139,9 +141,10 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
             fetch(url, {credentials: 'same-origin'})
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    if (!data || !data.success || (data.status !== 'completed' && data.status !== 'failed')) {
+                    if (done || !data || !data.success || (data.status !== 'completed' && data.status !== 'failed')) {
                         return null;
                     }
+                    done = true;
                     clearInterval(timer);
                     restoreAsk(data, cfg);
                     if (data.status === 'completed' && data.feedback_html) {
