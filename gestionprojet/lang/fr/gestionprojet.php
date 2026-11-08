@@ -987,3 +987,34 @@ $string['step4_flexibility_help'] = 'Si désactivé, les critères n\'ont pas de
 
 // Editable grid (v2.11.0).
 $string['ai_no_graded_part'] = 'Toutes les parties de la grille sont exclues : l\'IA n\'a rien à noter. Vérifiez la grille du modèle de correction.';
+
+// Grading grid editor (v2.11.0).
+$string['grille_title'] = 'Grille de notation';
+$string['grille_help'] = 'Parties notées par l\'IA, avec leur poids (ramené sur 20). Une partie réglée sur « Non » n\'est pas notée. Le niveau (FRA, SAT, TS) sert au mode paliers.';
+$string['grille_nom'] = 'Nom';
+$string['grille_description'] = 'Ce qui est attendu';
+$string['grille_poids'] = 'Poids';
+$string['grille_zones'] = 'Porte sur';
+$string['grille_palier'] = 'Niveau';
+$string['grille_palier_none'] = '—';
+$string['grille_palier_help'] = '(utilisé par le mode paliers)';
+$string['grille_evaluee'] = 'Notée';
+$string['grille_evaluee_auto'] = 'Automatique';
+$string['grille_evaluee_oui'] = 'Oui';
+$string['grille_evaluee_non'] = 'Non';
+$string['grille_status_graded'] = 'Notée';
+$string['grille_status_excluded'] = 'Non notée';
+$string['grille_add'] = 'Ajouter une partie';
+$string['grille_reset'] = 'Rétablir la grille par défaut';
+$string['grille_up'] = 'Monter';
+$string['grille_down'] = 'Descendre';
+$string['grille_remove'] = 'Supprimer cette partie';
+$string['grille_new_part'] = 'Nouvelle partie';
+$string['grille_total'] = 'Total des poids notés : {$a} (ramené sur 20)';
+$string['grille_zone_interacteurs'] = 'Interacteurs';
+$string['grille_zone_fonctions'] = 'Fonctions de service';
+$string['grille_zone_criteres'] = 'Critères';
+$string['grille_zone_niveaux'] = 'Niveaux';
+$string['grille_zone_flexibilite'] = 'Flexibilité';
+$string['grille_zone_contraintes'] = 'Contraintes';
+$string['grille_zone_ensemble'] = 'Cahier des charges entier';

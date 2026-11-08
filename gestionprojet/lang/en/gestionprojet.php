@@ -987,3 +987,34 @@ $string['step4_flexibility_help'] = 'If disabled, criteria have no flexibility f
 
 // Editable grid (v2.11.0).
 $string['ai_no_graded_part'] = 'Every part of the grading grid is excluded: the AI has nothing to grade. Check the grid of the correction model.';
+
+// Grading grid editor (v2.11.0).
+$string['grille_title'] = 'Grading grid';
+$string['grille_help'] = 'Parts the AI grades, with their weight (put on 20). A part set to "No" is not graded. The level (FRA, SAT, TS) is used by the levels mode.';
+$string['grille_nom'] = 'Name';
+$string['grille_description'] = 'What is expected';
+$string['grille_poids'] = 'Weight';
+$string['grille_zones'] = 'Looks at';
+$string['grille_palier'] = 'Level';
+$string['grille_palier_none'] = '—';
+$string['grille_palier_help'] = '(used by the levels mode)';
+$string['grille_evaluee'] = 'Graded';
+$string['grille_evaluee_auto'] = 'Automatic';
+$string['grille_evaluee_oui'] = 'Yes';
+$string['grille_evaluee_non'] = 'No';
+$string['grille_status_graded'] = 'Graded';
+$string['grille_status_excluded'] = 'Not graded';
+$string['grille_add'] = 'Add a part';
+$string['grille_reset'] = 'Restore the default grid';
+$string['grille_up'] = 'Move up';
+$string['grille_down'] = 'Move down';
+$string['grille_remove'] = 'Remove this part';
+$string['grille_new_part'] = 'New part';
+$string['grille_total'] = 'Total of graded weights: {$a} (put on 20)';
+$string['grille_zone_interacteurs'] = 'Interactors';
+$string['grille_zone_fonctions'] = 'Service functions';
+$string['grille_zone_criteres'] = 'Criteria';
+$string['grille_zone_niveaux'] = 'Levels';
+$string['grille_zone_flexibilite'] = 'Flexibility';
+$string['grille_zone_contraintes'] = 'Constraints';
+$string['grille_zone_ensemble'] = 'Whole specification';

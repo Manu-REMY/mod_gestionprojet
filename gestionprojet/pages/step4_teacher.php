@@ -115,6 +115,7 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 4, $context, $cm->id);
         <input type="hidden" name="step" value="4">
         <input type="hidden" name="interacteurs_data" id="cdcfDataField"
             value="<?php echo s(json_encode($cdcfdata, JSON_UNESCAPED_UNICODE)); ?>">
+        <input type="hidden" name="grille_json" id="grilleDataField" value="<?php echo s($model->grille_json ?? ''); ?>">
 
         <div class="model-form-section">
             <h3><?php echo icon::render('clipboard-list', 'sm', 'purple'); ?> <?php echo get_string('step4', 'gestionprojet'); ?></h3>
@@ -129,6 +130,12 @@ echo gestionprojet_render_step_dashboard($gestionprojet, 4, $context, $cm->id);
         $step = 4;
         require_once(__DIR__ . '/teacher_dates_section.php');
         ?>
+
+        <div class="model-form-section gp-grille">
+            <h3><?php echo icon::render('target', 'sm', 'purple'); ?> <?php echo get_string('grille_title', 'gestionprojet'); ?></h3>
+            <p class="gp-grille-help"><?php echo get_string('grille_help', 'gestionprojet'); ?></p>
+            <div id="grilleRoot"></div>
+        </div>
 
         <div class="ai-instructions-section">
             <h3><?php echo icon::render('bot', 'sm', 'purple'); ?> <?php echo get_string('ai_instructions', 'gestionprojet'); ?></h3>
@@ -217,6 +224,29 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'initial'           => $cdcfdata,
     'lang'              => $langstrings,
     'redirectAfterSave' => (new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]))->out(false),
+]]);
+
+// Editable grading grid (v2.11.0).
+$grillezones = [];
+foreach (\mod_gestionprojet\grille::ZONES as $zone) {
+    if ($zone === 'flexibilite' && !(int)($gestionprojet->step4_flexibility ?? 1)) {
+        continue;
+    }
+    $grillezones[] = [$zone, get_string('grille_zone_' . $zone, 'gestionprojet')];
+}
+$grillelang = [];
+foreach (['nom', 'description', 'poids', 'zones', 'palier', 'palier_none', 'palier_help', 'evaluee', 'evaluee_auto',
+        'evaluee_oui', 'evaluee_non', 'status_graded', 'status_excluded', 'add', 'reset', 'up', 'down', 'remove',
+        'new_part', 'total'] as $key) {
+    $grillelang[lcfirst(str_replace('_', '', ucwords($key, '_')))] = get_string('grille_' . $key, 'gestionprojet');
+}
+$PAGE->requires->js_call_amd('mod_gestionprojet/grille_editor', 'init', [[
+    'fieldId'  => 'grilleDataField',
+    'rootId'   => 'grilleRoot',
+    'initial'  => \mod_gestionprojet\grille::decode($model->grille_json ?? null),
+    'defaults' => \mod_gestionprojet\grille::default_grid(),
+    'zones'    => $grillezones,
+    'lang'     => $grillelang,
 ]]);
 
 // AI instructions Generate buttons. The new modelDataField API reads JSON
