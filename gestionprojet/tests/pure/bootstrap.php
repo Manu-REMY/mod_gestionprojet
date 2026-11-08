@@ -67,6 +67,12 @@ function throws(callable $fn, string $class = \Throwable::class): bool {
 
 register_shutdown_function(function () {
     $n = $GLOBALS['gp_failures'];
+    $last = error_get_last();
+    if ($last && in_array($last['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        // A fatal error stopped the script: never report it as a pass.
+        echo "\nFATAL  " . $last['message'] . "\n";
+        $n++;
+    }
     echo $n ? "\n$n check(s) failed\n" : "\nAll checks passed\n";
     exit($n ? 1 : 0);
 });

@@ -220,13 +220,35 @@ function gestionprojet_create_teacher_pages($gestionprojetid)
  */
 function gestionprojet_get_user_group($cm, $userid)
 {
-    $groups = groups_get_activity_allowed_groups($cm, $userid);
+    // Only the groups the user belongs to: groups_get_activity_allowed_groups() returns every group
+    // in visible groups mode or with accessallgroups, which put all students in the first group.
+    $groups = groups_get_all_groups($cm->course, $userid, $cm->groupingid, 'g.id');
 
-    if (empty($groups)) {
-        return 0; // No groups mode or user not in any group
+    return $groups ? (int) array_key_first($groups) : 0;
+}
+
+/**
+ * Check that the user may write in the group sent by the browser, and return it.
+ *
+ * @param stdClass|cm_info $cm Course module
+ * @param int $groupid Group id sent by the browser, 0 for individual work
+ * @param int $userid User id
+ * @param context_module $context Module context
+ * @return int The checked group id
+ * @throws moodle_exception When the user is not a member of that group
+ */
+function gestionprojet_require_group_access($cm, int $groupid, int $userid, $context): int
+{
+    if ($groupid === 0) {
+        return 0;
     }
-
-    return $groups ? array_key_first($groups) : 0;
+    $members = array_keys(groups_get_all_groups($cm->course, $userid, $cm->groupingid, 'g.id'));
+    $activity = array_keys(groups_get_all_groups($cm->course, 0, $cm->groupingid, 'g.id'));
+    $accessall = has_capability('moodle/site:accessallgroups', $context, $userid);
+    if (!\mod_gestionprojet\group_access::is_allowed($groupid, $members, $activity, $accessall)) {
+        throw new moodle_exception('error:notgroupmember', 'gestionprojet');
+    }
+    return $groupid;
 }
 
 /**

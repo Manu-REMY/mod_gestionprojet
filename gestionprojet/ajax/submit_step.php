@@ -76,6 +76,9 @@ try {
             throw new moodle_exception('nopermission');
         }
 
+        // Never trust the group id sent by the browser.
+        $groupid = gestionprojet_require_group_access($cm, $groupid, (int)$USER->id, $context);
+
         // Get the submission record.
         $record = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $USER->id, $steptype);
 

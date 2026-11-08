@@ -970,3 +970,4 @@ $string['setting_models_heading'] = 'AI models';
 $string['setting_models_heading_desc'] = 'Model used by each provider for evaluations, summaries and the connection test. Leave empty to use the default model.';
 $string['setting_model'] = 'Model for {$a}';
 $string['setting_model_desc'] = 'Exact model name sent to the provider. Empty: {$a}.';
+$string['error:notgroupmember'] = 'You are not a member of this group.';

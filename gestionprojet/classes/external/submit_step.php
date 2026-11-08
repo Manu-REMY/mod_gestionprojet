@@ -115,6 +115,10 @@ class submit_step extends external_api {
                 // Student submitting their work.
                 require_capability('mod/gestionprojet:submit', $context);
 
+                // Never trust the group id sent by the browser.
+                $params['groupid'] = gestionprojet_require_group_access($cm, (int)$params['groupid'],
+                    (int)$USER->id, $context);
+
                 // Get the submission record.
                 $record = gestionprojet_get_or_create_submission($gestionprojet, $params['groupid'],
                     $USER->id, $steptype);

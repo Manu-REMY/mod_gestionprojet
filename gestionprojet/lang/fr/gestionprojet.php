@@ -970,3 +970,4 @@ $string['setting_models_heading'] = 'Modèles d\'IA';
 $string['setting_models_heading_desc'] = 'Modèle utilisé par chaque fournisseur pour les évaluations, les synthèses et le test de connexion. Laisser vide pour utiliser le modèle par défaut.';
 $string['setting_model'] = 'Modèle pour {$a}';
 $string['setting_model_desc'] = 'Nom exact du modèle envoyé au fournisseur. Vide : {$a}.';
+$string['error:notgroupmember'] = 'Vous n\'êtes pas membre de ce groupe.';

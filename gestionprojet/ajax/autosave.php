@@ -64,6 +64,9 @@ $message = '';
 try {
     $time = time();
 
+    // Never trust the group id sent by the browser.
+    $groupid = gestionprojet_require_group_access($cm, $groupid, (int)$USER->id, $context);
+
     // Handle teacher-provided consigne mode (steps 4, 5, and 9).
     if ($mode === 'provided') {
         if (!has_capability('mod/gestionprojet:configureteacherpages', $context)) {

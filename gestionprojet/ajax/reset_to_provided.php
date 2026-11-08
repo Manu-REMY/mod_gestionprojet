@@ -61,6 +61,9 @@ if (!in_array($step, [4, 5, 9], true)) {
 header('Content-Type: application/json');
 
 try {
+    // Never trust the group id sent by the browser.
+    $groupid = gestionprojet_require_group_access($cm, $groupid, (int)$USER->id, $context);
+
     $result = \mod_gestionprojet\reset_helper::reset_step_to_provided(
         $gestionprojet,
         $step,

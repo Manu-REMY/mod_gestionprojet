@@ -97,6 +97,8 @@ class autosave extends external_api {
         $time = time();
 
         try {
+            // Never trust the group id sent by the browser.
+            $params['groupid'] = gestionprojet_require_group_access($cm, (int)$params['groupid'], (int)$USER->id, $context);
             // Handle teacher-provided consigne mode (dual-facet steps 4, 5, 9).
             if ($params['mode'] === 'provided') {
                 require_capability('mod/gestionprojet:configureteacherpages', $context);
