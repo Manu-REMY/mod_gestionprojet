@@ -61,4 +61,4 @@ foreach (['MATURITY_ALPHA' => 50, 'MATURITY_BETA' => 100, 'MATURITY_RC' => 150, 
 }
 $plugin = new stdClass();
 include(GP_ROOT . '/version.php');
-test('version 2026110807 / 2.11.4', fn() => $plugin->version === 2026110807 && $plugin->release === '2.11.4');
+test('version is at least 2026110807 (the formative upgrade step runs)', fn() => $plugin->version >= 2026110807);
