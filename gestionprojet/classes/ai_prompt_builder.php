@@ -42,6 +42,9 @@ class ai_prompt_builder {
     /** @var string[] Zones of the grid entirely provided by the step 4 consigne (consigne_lock::locked_zones) */
     private array $lockedzones;
 
+    /** @var bool Whether the prompt being built uses the [fourni] / [à compléter] markers */
+    private bool $markersinuse = false;
+
     /**
      * Constructor.
      *
@@ -297,6 +300,7 @@ PROMPT;
      * @return string User prompt
      */
     public function build_user_prompt(int $step, object $studentdata, object $teachermodel, ?object $providedrec = null, bool $nomodifications = false): string {
+        $this->markersinuse = $step === 4 && $providedrec !== null && self::consigne_has_flags($providedrec);
         $studenttext = $this->format_student_data($step, $studentdata);
         $teachertext = $this->format_teacher_model($step, $teachermodel);
 
@@ -518,12 +522,16 @@ PROMPT;
 
         require_once(__DIR__ . '/cdcf_helper.php');
         $data = \mod_gestionprojet\cdcf_helper::decode($json);
-        // Only the server writes the [fourni] / [à compléter] markers: remove any typed in the text.
-        array_walk_recursive($data, function (&$value) {
-            if (is_string($value)) {
-                $value = self::strip_markers($value);
-            }
-        });
+        require_once(__DIR__ . '/consigne_lock.php');
+        if ($this->markersinuse || consigne_lock::strip_flags($data) !== $data) {
+            // Markers in use: only the server writes square brackets, every bracket typed in the text
+            // (any Unicode opening or closing punctuation) becomes a parenthesis.
+            array_walk_recursive($data, function (&$value) {
+                if (is_string($value)) {
+                    $value = preg_replace(['/\p{Ps}/u', '/\p{Pe}/u'], ['(', ')'], $value) ?? '';
+                }
+            });
+        }
 
         $out = [];
 
@@ -584,29 +592,6 @@ PROMPT;
         }
 
         return implode("\n", $out);
-    }
-
-    /**
-     * Remove the [fourni] / [à compléter] markers from a text written by a student, including nested,
-     * full-width or zero-width-split forms. A text without any marker is returned unchanged.
-     *
-     * @param string $value
-     * @return string
-     */
-    private static function strip_markers(string $value): string {
-        $pattern = '/\[\s*(fourni|[àa]\s*compl[ée]ter)\s*\]/iu';
-        $probe = preg_replace('/\p{Cf}+/u', '', $value) ?? $value;
-        if (class_exists('\Normalizer')) {
-            $probe = \Normalizer::normalize($probe, \Normalizer::FORM_KC) ?: $probe;
-        }
-        if (!preg_match($pattern, $probe)) {
-            return $value;
-        }
-        do {
-            $previous = $probe;
-            $probe = preg_replace($pattern, '', $probe) ?? '';
-        } while ($probe !== $previous);
-        return trim($probe);
     }
 
     /**
