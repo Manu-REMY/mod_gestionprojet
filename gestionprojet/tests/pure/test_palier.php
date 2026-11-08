@@ -112,3 +112,10 @@ test('freeze SAT: a deleted frozen FS comes back', fn() => count(palier::freeze(
 test('retire_cascade(S) with S, TS validated → S, TS', fn() => palier::retire_cascade('S', ['S', 'TS']) === ['S', 'TS']);
 test('retire_cascade(TS) → TS only', fn() => palier::retire_cascade('TS', ['S', 'TS']) === ['TS']);
 test('retire_cascade(F) with F, TS validated → F, TS', fn() => palier::retire_cascade('F', ['F', 'TS']) === ['F', 'TS']);
+
+// Preprod run: the AI added details after the part name ("Fonctions de service (verbes, FP, FC)").
+$fs = palier::parts_for($parts, 'S');
+test('verdict: an AI name starting with the part name matches', fn() =>
+    palier::verdict($ai([['Fonctions (verbes, FP)', 12], ['Critères et niveaux', 8], ['Autre', 0]]), $fs, 100)['valide'] === true);
+test('verdict: a prefix must end on a word boundary ("Critèresxyz" does not match)', fn() =>
+    palier::verdict($ai([['Fonctions', 12], ['Critèresxyz', 8], ['Autre', 0]]), $fs, 61)['valide'] === false);

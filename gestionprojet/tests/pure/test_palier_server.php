@@ -136,3 +136,10 @@ foreach (['en', 'fr'] as $l) {
     include(GP_ROOT . "/lang/$l/gestionprojet.php");
     test("string submissionlocked in $l (thrown by autosave and level request)", fn() => !empty($string['submissionlocked']));
 }
+
+// Preprod run: in level mode the AI must answer one criterion per part, with its exact name.
+$sys = (new ai_prompt_builder(['palier' => 'S']))->build_system_prompt(4, $model);
+test('palier prompt asks for exactly one criterion per part with its exact name', fn() =>
+    strpos($sys, 'exactement un critère par partie') !== false && strpos($sys, '« Fonctions »') !== false);
+test('no level: no such instruction', fn() =>
+    strpos((new ai_prompt_builder())->build_system_prompt(4, $model), 'exactement un critère par partie') === false);

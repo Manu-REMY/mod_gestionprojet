@@ -105,7 +105,8 @@ class palier {
      * Verdict of an attempt, computed by the server from the points of the level's parts.
      *
      * The points of each part are its weight on the server grid (grille::scaled_weights of the level's parts);
-     * the AI's own "max" is never trusted. AI criteria are matched to the parts by name (case and spaces ignored);
+     * the AI's own "max" is never trusted. AI criteria are matched to the parts by name (case and spaces ignored),
+     * then by a name starting with the part name followed by a non-letter;
      * a part left unmatched takes, when the AI returned exactly one criterion per part, the criterion at its rank
      * if that criterion matched no part. Unknown or duplicate criteria are ignored, a missing part scores 0, scores
      * are bounded to [0, weight]. The threshold is compared with the unrounded ratio; no point earned never validates.
@@ -134,6 +135,22 @@ class palier {
             if (isset($partbyname[$key]) && !isset($scores[$partbyname[$key]])) {
                 $scores[$partbyname[$key]] = $criterion['score'] ?? 0;
                 $used[$rank] = true;
+            }
+        }
+        // A name starting with the part name, then a non-letter ("Fonctions de service (verbes)"), matches too.
+        foreach (array_values($criteria) as $rank => $criterion) {
+            if (!empty($used[$rank])) {
+                continue;
+            }
+            $key = $norm($criterion['name'] ?? '');
+            foreach ($parts as $index => $part) {
+                $partname = $norm($part['nom']);
+                if (!isset($scores[$index]) && $partname !== ''
+                        && preg_match('/^' . preg_quote($partname, '/') . '(?![\p{L}\p{N}])/u', $key)) {
+                    $scores[$index] = $criterion['score'] ?? 0;
+                    $used[$rank] = true;
+                    break;
+                }
             }
         }
         if (count($criteria) === count($parts)) {

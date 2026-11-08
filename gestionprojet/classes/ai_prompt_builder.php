@@ -495,6 +495,14 @@ PROMPT;
             }
             $text .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$description}\n";
         }
+        if ($step === 4 && $this->palier !== '' && $criteria) {
+            // Level mode: the server matches the AI criteria to the parts by name (palier::verdict).
+            $names = implode(', ', array_map(function (array $c): string {
+                return '« ' . $c['name'] . ' »';
+            }, $criteria));
+            $text .= "\nRéponds avec exactement un critère par partie de cette grille, en reprenant son nom exact : {$names}. "
+                . "N'évalue rien d'autre, même si les instructions de l'enseignant décrivent d'autres critères.\n";
+        }
         return $text;
     }
 
