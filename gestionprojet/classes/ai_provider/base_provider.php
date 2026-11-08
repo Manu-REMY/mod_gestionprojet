@@ -203,14 +203,14 @@ abstract class base_provider implements provider_interface {
         $httpcode = $curl->get_info()['http_code'] ?? 0;
 
         if ($httpcode === 0) {
-            throw new \Exception(get_string('ai_connection_error', 'gestionprojet'));
+            throw new provider_http_exception(get_string('ai_connection_error', 'gestionprojet'), 0);
         }
 
         $decoded = json_decode($response, true);
 
         if ($httpcode >= 400) {
             $errormsg = $this->extract_error_message($decoded, $httpcode);
-            throw new \Exception($errormsg);
+            throw new provider_http_exception($errormsg, $httpcode);
         }
 
         if ($decoded === null) {
@@ -253,8 +253,9 @@ abstract class base_provider implements provider_interface {
             } catch (\Exception $e) {
                 $lastexception = $e;
 
-                // Don't retry on authentication errors.
-                if ($this->is_auth_error($e)) {
+                // Only a transient provider error (no answer, 429, 5xx) may succeed later: a 400, 401 or
+                // 404 (unknown model) fails the same way each time, and retrying blocks the request for minutes.
+                if (!($e instanceof provider_http_exception) || !$e->is_transient()) {
                     throw $e;
                 }
 
@@ -268,18 +269,4 @@ abstract class base_provider implements provider_interface {
         throw $lastexception;
     }
 
-    /**
-     * Check if an exception is an authentication error.
-     *
-     * @param \Exception $e The exception
-     * @return bool True if auth error
-     */
-    protected function is_auth_error(\Exception $e): bool {
-        $message = strtolower($e->getMessage());
-        return strpos($message, 'unauthorized') !== false
-            || strpos($message, 'invalid api key') !== false
-            || strpos($message, 'authentication') !== false
-            || strpos($message, '401') !== false
-            || strpos($message, '403') !== false;
-    }
 }
