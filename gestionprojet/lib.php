@@ -478,18 +478,41 @@ function gestionprojet_palier_request(object $gestionprojet, object $cm, int $gr
     if ($deadline > 0 && time() > $deadline) {
         throw new moodle_exception('submissionlocked', 'gestionprojet');
     }
-    $state = gestionprojet_palier_state($gestionprojet, $submission);
-    if ($state['pending']) {
-        // One evaluation at a time per copy ('pending' or 'processing').
+    // Check and queue under a lock per copy: two members clicking at once get one evaluation.
+    $lock = gestionprojet_palier_lock((int)$submission->id);
+    try {
+        $state = gestionprojet_palier_state($gestionprojet, $submission);
+        if ($state['pending']) {
+            // One evaluation at a time per copy ('pending' or 'processing').
+            throw new moodle_exception('palier_pending_error', 'gestionprojet');
+        }
+        if (!in_array($palier, $state['requestable'], true)) {
+            throw new moodle_exception('palier_not_requestable', 'gestionprojet');
+        }
+        // The copy judged, and the reference of the zones if the level is validated.
+        $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $submission->id], '*', MUST_EXIST);
+        $contenu = (string)($submission->interacteurs_data ?? '');
+        return \mod_gestionprojet\ai_evaluator::queue_evaluation((int)$gestionprojet->id, 4, (int)$submission->id,
+            (int)$submission->groupid, (int)$submission->userid, $palier, $contenu);
+    } finally {
+        $lock->release();
+    }
+}
+
+/**
+ * Lock of a step 4 copy for the level checks (request, verdict).
+ *
+ * @param int $submissionid
+ * @return \core\lock\lock
+ * @throws moodle_exception When the copy stays locked (another request is being handled).
+ */
+function gestionprojet_palier_lock(int $submissionid): \core\lock\lock {
+    $factory = \core\lock\lock_config::get_lock_factory('mod_gestionprojet_palier');
+    $lock = $factory->get_lock('cdcf_' . $submissionid, 10);
+    if (!$lock) {
         throw new moodle_exception('palier_pending_error', 'gestionprojet');
     }
-    if (!in_array($palier, $state['requestable'], true)) {
-        throw new moodle_exception('palier_not_requestable', 'gestionprojet');
-    }
-    // The copy judged, and the reference of the zones if the level is validated.
-    $contenu = (string)($submission->interacteurs_data ?? '');
-    return \mod_gestionprojet\ai_evaluator::queue_evaluation((int)$gestionprojet->id, 4, (int)$submission->id,
-        (int)$submission->groupid, (int)$submission->userid, $palier, $contenu);
+    return $lock;
 }
 
 /**
@@ -508,6 +531,23 @@ function gestionprojet_palier_record(object $evaluation, array $verdict): void {
         return;
     }
     $gestionprojet = $DB->get_record('gestionprojet', ['id' => $evaluation->gestionprojetid], '*', MUST_EXIST);
+    $lock = gestionprojet_palier_lock((int)$evaluation->submissionid);
+    try {
+        gestionprojet_palier_record_locked($gestionprojet, $evaluation);
+    } finally {
+        $lock->release();
+    }
+}
+
+/**
+ * Insert a validated level and freeze its zones; the caller holds the lock of the copy.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $evaluation Validated level evaluation.
+ */
+function gestionprojet_palier_record_locked(object $gestionprojet, object $evaluation): void {
+    global $DB;
+
     $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $evaluation->submissionid,
         'gestionprojetid' => $gestionprojet->id], '*', MUST_EXIST);
     $owner = ['gestionprojetid' => $gestionprojet->id, 'groupid' => $submission->groupid, 'userid' => $submission->userid,

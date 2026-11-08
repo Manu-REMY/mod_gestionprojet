@@ -106,8 +106,8 @@ foreach (['gestionprojet_palier_state', 'gestionprojet_palier_request', 'gestion
 test('request: refuses when a level evaluation is pending', fn() => strpos(fn_body($lib, 'gestionprojet_palier_request'), "'pending'") !== false);
 test('request: only a requestable level', fn() => strpos(fn_body($lib, 'gestionprojet_palier_request'), "['requestable']") !== false);
 test('record: a level already validated is not inserted twice', fn() =>
-    strpos(fn_body($lib, 'gestionprojet_palier_record'), 'record_exists') !== false);
-test('record: members are stored', fn() => strpos(fn_body($lib, 'gestionprojet_palier_record'), 'membres') !== false);
+    strpos(fn_body($lib, 'gestionprojet_palier_record_locked'), 'record_exists') !== false);
+test('record: members are stored', fn() => strpos(fn_body($lib, 'gestionprojet_palier_record_locked'), 'membres') !== false);
 test('retire: cascade to the higher levels', fn() => strpos(fn_body($lib, 'gestionprojet_palier_retire'), 'palier::retire_cascade(') !== false);
 test('enforce applies the frozen zones', fn() => strpos(fn_body($lib, 'gestionprojet_cdcf_enforce_consigne'), 'palier::freeze(') !== false);
 test('grade item of step 4 not updated in level mode', fn() =>
@@ -160,3 +160,12 @@ test('palier S: the levels (another level) are left out of the copy shown to the
 test('no level: the levels are shown', fn() => strpos((new ai_prompt_builder())->build_user_prompt(4, $copy, $model), 'niveau :') !== false);
 test('palier TS: the levels are shown', fn() =>
     strpos((new ai_prompt_builder(['palier' => 'TS']))->build_user_prompt(4, $copy, $model), 'niveau :') !== false);
+
+// Security review: check-then-act under a lock per copy.
+foreach (['gestionprojet_palier_request', 'gestionprojet_palier_record'] as $fn) {
+    $body = fn_body($lib, $fn);
+    test("$fn runs under a lock per copy", fn() => strpos($body, 'gestionprojet_palier_lock(') !== false
+        && strpos($body, '->release()') !== false);
+}
+test('the lock comes from the Moodle lock factory', fn() =>
+    strpos(fn_body($lib, 'gestionprojet_palier_lock'), 'lock_config::get_lock_factory(') !== false);
