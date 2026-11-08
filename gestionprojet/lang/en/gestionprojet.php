@@ -989,6 +989,12 @@ $string['grading'] = 'Grading';
 $string['step4settings'] = 'Functional specification (step 4)';
 $string['step4_flexibility'] = 'Ask for flexibility (F0 to F3)';
 $string['step4_flexibility_help'] = 'If disabled, criteria have no flexibility field and the AI does not take flexibility into account. Values already entered are kept and come back if the option is enabled again.';
+$string['step4_paliers'] = 'Validate by levels (F, S, TS)';
+$string['step4_paliers_help'] = 'Students ask for the validation of one level at a time (one button per level of the grading grid) instead of submitting for a grade out of 20. The AI only grades the parts of that level; the level is validated when the points reach the threshold. A validated level is never removed by a later attempt (only the teacher can remove it) and its zones can no longer be changed. Step 4 no longer updates the gradebook. Turning the option off brings back the usual submission; validated levels stay stored and come back if it is turned on again.';
+$string['step4_palier_seuil'] = 'Validation threshold (%)';
+$string['step4_palier_seuil_help'] = 'Percentage of the points of a level needed to validate it (0 to 100).';
+$string['error_palier_seuil'] = 'Enter a percentage between 0 and 100.';
+$string['privacy:metadata:palier'] = 'Levels (F, S, TS) validated by a group or a student, with the members of the group at that time';
 
 // Editable grid (v2.11.0).
 $string['ai_no_graded_part'] = 'Every part of the grading grid is excluded: the AI has nothing to grade. Check the grid of the correction model.';

@@ -96,6 +96,16 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->setDefault('step4_flexibility', 1);
         $mform->addHelpButton('step4_flexibility', 'step4_flexibility', 'gestionprojet');
 
+        // Level validation F / S / TS (v2.11.2): one button per level instead of a grade out of 20.
+        $mform->addElement('selectyesno', 'step4_paliers', get_string('step4_paliers', 'gestionprojet'));
+        $mform->setDefault('step4_paliers', 0);
+        $mform->addHelpButton('step4_paliers', 'step4_paliers', 'gestionprojet');
+        $mform->addElement('text', 'step4_palier_seuil', get_string('step4_palier_seuil', 'gestionprojet'), ['size' => 4]);
+        $mform->setType('step4_palier_seuil', PARAM_INT);
+        $mform->setDefault('step4_palier_seuil', 80);
+        $mform->addHelpButton('step4_palier_seuil', 'step4_palier_seuil', 'gestionprojet');
+        $mform->hideIf('step4_palier_seuil', 'step4_paliers', 'eq', 0);
+
         // AI Evaluation settings.
         $mform->addElement('header', 'ai_settings', get_string('ai_settings', 'gestionprojet'));
         $mform->setExpanded('ai_settings', false);
@@ -191,6 +201,11 @@ class mod_gestionprojet_mod_form extends moodleform_mod
                     $errors['ai_api_key'] = get_string('ai_api_key_required', 'gestionprojet');
                 }
             }
+        }
+
+        if (isset($data['step4_palier_seuil'])
+                && ((int)$data['step4_palier_seuil'] < 0 || (int)$data['step4_palier_seuil'] > 100)) {
+            $errors['step4_palier_seuil'] = get_string('error_palier_seuil', 'gestionprojet');
         }
 
         return $errors;

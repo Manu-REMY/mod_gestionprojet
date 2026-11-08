@@ -163,6 +163,7 @@ function gestionprojet_delete_instance($id)
     $DB->delete_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_ai_summaries', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_palier', ['gestionprojetid' => $id]);
 
     // Delete the instance.
     $DB->delete_records('gestionprojet', ['id' => $id]);

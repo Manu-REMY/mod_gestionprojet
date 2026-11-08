@@ -60,6 +60,7 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
             $paths[] = new restore_path_element('gestionprojet_carnet', '/activity/gestionprojet/carnets/carnet');
             $paths[] = new restore_path_element('gestionprojet_fast', '/activity/gestionprojet/fasts/fast');
             $paths[] = new restore_path_element('gestionprojet_ai_evaluation', '/activity/gestionprojet/ai_evaluations/ai_evaluation');
+            $paths[] = new restore_path_element('gestionprojet_palier', '/activity/gestionprojet/paliers/palier');
         }
 
         return $this->prepare_activity_structure($paths);
@@ -429,6 +430,7 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
         $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
         $data->groupid = $this->get_mappingid('group', $data->groupid);
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -448,13 +450,60 @@ class restore_gestionprojet_activity_structure_step extends restore_activity_str
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
-        $DB->insert_record('gestionprojet_ai_evaluations', $data);
+        $newid = $DB->insert_record('gestionprojet_ai_evaluations', $data);
+        // Levels and frozen zones refer to the evaluation that validated them.
+        $this->set_mapping('gestionprojet_ai_evaluation', $oldid, $newid);
+    }
+
+    /**
+     * Process a validated level (v2.11.2).
+     *
+     * @param array $data
+     */
+    protected function process_gestionprojet_palier($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $data->gestionprojetid = $this->get_new_parentid('gestionprojet');
+        $data->groupid = $data->groupid ? (int)$this->get_mappingid('group', $data->groupid) : 0;
+        $data->userid = $data->userid ? (int)$this->get_mappingid('user', $data->userid) : 0;
+        $data->evaluationid = $data->evaluationid ? (int)$this->get_mappingid('gestionprojet_ai_evaluation', $data->evaluationid) : 0;
+        // Members at validation time: keep those restored, with their new id.
+        $members = [];
+        foreach ((array)json_decode((string)($data->membres ?? ''), true) as $member) {
+            $newuserid = is_array($member) ? $this->get_mappingid('user', (int)($member[0] ?? 0)) : false;
+            if ($newuserid) {
+                $members[] = [(int)$newuserid, (string)($member[1] ?? '')];
+            }
+        }
+        $data->membres = json_encode($members);
+        $data->timecreated = $this->apply_date_offset($data->timecreated);
+        $data->timemodified = $this->apply_date_offset($data->timemodified);
+
+        $DB->insert_record('gestionprojet_palier', $data);
     }
 
     /**
      * Post-execution actions.
      */
     protected function after_execute() {
+        global $DB;
+
         $this->add_related_files('mod_gestionprojet', 'intro', null);
+
+        // Frozen zones point to the evaluation that validated them: use the restored evaluation ids.
+        $gestionprojetid = $this->get_new_parentid('gestionprojet');
+        $cdcfs = $DB->get_records_select('gestionprojet_cdcf', "gestionprojetid = ? AND zones_validees IS NOT NULL",
+            [$gestionprojetid], '', 'id, zones_validees');
+        foreach ($cdcfs as $cdcf) {
+            $zones = [];
+            foreach ((array)json_decode((string)$cdcf->zones_validees, true) as $zone => $evaluationid) {
+                $newid = $this->get_mappingid('gestionprojet_ai_evaluation', (int)$evaluationid);
+                if ($newid) {
+                    $zones[$zone] = (int)$newid;
+                }
+            }
+            $DB->set_field('gestionprojet_cdcf', 'zones_validees', $zones ? json_encode($zones) : null, ['id' => $cdcf->id]);
+        }
     }
 }

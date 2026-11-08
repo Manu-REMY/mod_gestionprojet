@@ -46,6 +46,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'enable_step5', 'enable_step6', 'enable_step7', 'enable_step8',
             'enable_step9', 'step9_provided',
             'ai_provider', 'ai_api_key', 'ai_enabled', 'ai_auto_apply', 'ai_hide_answers', 'step4_flexibility',
+            'step4_paliers', 'step4_palier_seuil',
             'enable_submission', 'grade_mode',
         ]);
 
@@ -122,7 +123,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         // Student submission tables.
         $cdcfs = new backup_nested_element('cdcfs');
         $cdcf = new backup_nested_element('cdcf', ['id'], [
-            'groupid', 'userid', 'interacteurs_data',
+            'groupid', 'userid', 'interacteurs_data', 'zones_validees',
             'grade', 'feedback', 'status', 'timesubmitted', 'timecreated', 'timemodified',
         ]);
 
@@ -168,7 +169,14 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'parsed_feedback', 'criteria_json', 'keywords_found', 'keywords_missing',
             'suggestions', 'status', 'error_message', 'applied_by', 'applied_at',
             'show_feedback', 'show_criteria', 'show_keywords_found',
-            'show_keywords_missing', 'show_suggestions', 'timecreated', 'timemodified',
+            'show_keywords_missing', 'show_suggestions', 'palier', 'contenu_json', 'palier_valide',
+            'timecreated', 'timemodified',
+        ]);
+
+        // Levels validated (v2.11.2); after the evaluations, which they refer to.
+        $paliers = new backup_nested_element('paliers');
+        $palier = new backup_nested_element('palier', ['id'], [
+            'step', 'groupid', 'userid', 'palier', 'evaluationid', 'membres', 'retire', 'timecreated', 'timemodified',
         ]);
 
         // Build the tree.
@@ -206,6 +214,9 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $gestionprojet->add_child($aievaluations);
         $aievaluations->add_child($aievaluation);
 
+        $gestionprojet->add_child($paliers);
+        $paliers->add_child($palier);
+
         // Define sources.
         $gestionprojet->set_source_table('gestionprojet', ['id' => backup::VAR_ACTIVITYID]);
         $description->set_source_table('gestionprojet_description', ['gestionprojetid' => backup::VAR_PARENTID]);
@@ -230,6 +241,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             $carnet->set_source_table('gestionprojet_carnet', ['gestionprojetid' => backup::VAR_PARENTID]);
             $fast->set_source_table('gestionprojet_fast', ['gestionprojetid' => backup::VAR_PARENTID]);
             $aievaluation->set_source_table('gestionprojet_ai_evaluations', ['gestionprojetid' => backup::VAR_PARENTID]);
+            $palier->set_source_table('gestionprojet_palier', ['gestionprojetid' => backup::VAR_PARENTID]);
         }
 
         // Define id annotations.
@@ -248,6 +260,8 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         $aievaluation->annotate_ids('group', 'groupid');
         $aievaluation->annotate_ids('user', 'userid');
         $aievaluation->annotate_ids('user', 'applied_by');
+        $palier->annotate_ids('group', 'groupid');
+        $palier->annotate_ids('user', 'userid');
 
         // Define file annotations.
         $gestionprojet->annotate_files('mod_gestionprojet', 'intro', null);

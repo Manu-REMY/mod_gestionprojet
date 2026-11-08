@@ -780,5 +780,57 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026110803, 'gestionprojet');
     }
 
+    // 2.11.2 — step 4 validated level by level (F, S, TS); off by default: unchanged.
+    if ($oldversion < 2026110805) {
+        $table = new xmldb_table('gestionprojet');
+        $fields = [
+            new xmldb_field('step4_paliers', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'step4_flexibility'),
+            new xmldb_field('step4_palier_seuil', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, '80', 'step4_paliers'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        $table = new xmldb_table('gestionprojet_cdcf');
+        $field = new xmldb_field('zones_validees', XMLDB_TYPE_TEXT, null, null, null, null, null, 'interacteurs_data');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('gestionprojet_ai_evaluations');
+        $fields = [
+            new xmldb_field('palier', XMLDB_TYPE_CHAR, '2', null, null, null, null, 'show_suggestions'),
+            new xmldb_field('contenu_json', XMLDB_TYPE_TEXT, null, null, null, null, null, 'palier'),
+            new xmldb_field('palier_valide', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'contenu_json'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        $table = new xmldb_table('gestionprojet_palier');
+        if (!$dbman->table_exists($table)) {
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+            $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('step', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '4');
+            $table->add_field('groupid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('palier', XMLDB_TYPE_CHAR, '2', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('evaluationid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('membres', XMLDB_TYPE_TEXT, null, null, null, null, null);
+            $table->add_field('retire', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN, ['gestionprojetid'], 'gestionprojet', ['id']);
+            $table->add_index('palier_owner_idx', XMLDB_INDEX_NOTUNIQUE, ['gestionprojetid', 'groupid', 'userid']);
+            $dbman->create_table($table);
+        }
+        upgrade_mod_savepoint(true, 2026110805, 'gestionprojet');
+    }
+
     return true;
 }

@@ -190,6 +190,19 @@ class provider implements
             'privacy:metadata:gestionprojet_ai_evaluations'
         );
 
+        // Levels (F, S, TS) validated in step 4 (v2.11.2).
+        $collection->add_database_table(
+            'gestionprojet_palier',
+            [
+                'userid' => 'privacy:metadata:gestionprojet_ai_evaluations:userid',
+                'groupid' => 'privacy:metadata:groupid',
+                'palier' => 'privacy:metadata:palier',
+                'membres' => 'privacy:metadata:palier',
+                'timecreated' => 'privacy:metadata:timecreated',
+            ],
+            'privacy:metadata:palier'
+        );
+
         // History/Audit trail table.
         $collection->add_database_table(
             'gestionprojet_history',
@@ -225,6 +238,7 @@ class provider implements
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
             'gestionprojet_fast',
+            'gestionprojet_palier',
         ];
 
         foreach ($submissiontables as $table) {
@@ -312,6 +326,7 @@ class provider implements
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
             'gestionprojet_fast',
+            'gestionprojet_palier',
         ];
 
         foreach ($submissiontables as $table) {
@@ -407,6 +422,31 @@ class provider implements
 
             // Group work is stored with userid 0: it is exported to each member of the group.
             $membergroups = $DB->get_fieldset_select('groups_members', 'groupid', 'userid = ?', [$user->id]);
+
+            // Levels validated (v2.11.2), by the user alone or by one of their groups.
+            $select = 'gestionprojetid = :gpid AND userid = :userid';
+            $params = ['gpid' => $gestionprojet->id, 'userid' => $user->id];
+            if ($membergroups) {
+                [$insql, $inparams] = $DB->get_in_or_equal($membergroups, SQL_PARAMS_NAMED, 'pgrp');
+                $select = "gestionprojetid = :gpid AND (userid = :userid OR (userid = 0 AND groupid $insql))";
+                $params += $inparams;
+            }
+            $paliers = $DB->get_records_select('gestionprojet_palier', $select, $params);
+            if ($paliers) {
+                $data = [];
+                foreach ($paliers as $row) {
+                    $data[] = [
+                        'palier' => $row->palier,
+                        'groupwork' => transform::yesno((int)$row->userid === 0),
+                        'removed' => transform::yesno((bool)$row->retire),
+                        'timecreated' => transform::datetime($row->timecreated),
+                    ];
+                }
+                writer::with_context($context)->export_data(
+                    [get_string('pluginname', 'gestionprojet'), get_string('privacy:metadata:palier', 'gestionprojet')],
+                    (object) ['paliers' => $data]
+                );
+            }
 
             foreach ($submissiontables as $table => $stepname) {
                 $select = 'gestionprojetid = :gpid AND userid = :userid';
@@ -524,6 +564,7 @@ class provider implements
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
             'gestionprojet_fast',
+            'gestionprojet_palier',
         ];
 
         foreach ($submissiontables as $table) {
@@ -576,6 +617,7 @@ class provider implements
                 'gestionprojet_besoin_eleve',
                 'gestionprojet_carnet',
                 'gestionprojet_fast',
+                'gestionprojet_palier',
             ];
 
             foreach ($submissiontables as $table) {
@@ -647,6 +689,7 @@ class provider implements
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
             'gestionprojet_fast',
+            'gestionprojet_palier',
         ];
 
         foreach ($submissiontables as $table) {
