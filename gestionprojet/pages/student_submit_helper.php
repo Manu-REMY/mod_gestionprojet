@@ -93,5 +93,3 @@ if ($isSubmitted && $pendingEval && in_array($pendingEval->status, ['pending', '
     }
 }
 
-// Formative feedback before submitting (v2.11.4).
-require(__DIR__ . '/student_formative_display.php');

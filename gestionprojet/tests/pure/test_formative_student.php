@@ -34,19 +34,21 @@ function code(string $path): string {
     return is_file(GP_ROOT . '/' . $path) ? file_get_contents(GP_ROOT . '/' . $path) : '';
 }
 
-$display = code('pages/student_formative_display.php');
-test('display: uses gestionprojet_formative_state', fn() => strpos($display, 'gestionprojet_formative_state(') !== false);
-test('display: the feedback is always filtered', fn() => strpos($display, 'answer_leak_filter::student_view(') !== false);
+// Since v2.12.0 the feedback block lives in the progress panel.
+$display = code('pages/student_progress_panel.php');
+test('display: state from gestionprojet_progress_state (which reads gestionprojet_formative_state)', fn() =>
+    strpos($display, 'gestionprojet_progress_state(') !== false
+    && strpos(code('lib.php'), '$formative = $aion ? gestionprojet_formative_state(') !== false);
+test('display: the feedback is always filtered (server state)', fn() => strpos(code('lib.php'), 'answer_leak_filter::student_view(') !== false);
 test('display: no grade shown', fn() => strpos($display, 'parsed_grade') === false);
 test('display: remaining count in the button', fn() => strpos($display, "'formative_request'") !== false);
 test('display: none left with ⊘ and a word', fn() => strpos($display, "'⊘ '") !== false && strpos($display, "'formative_none_left'") !== false);
 test('display: a running feedback is followed by the button module, never by the auto-reloading poller', fn() =>
     strpos($display, "'mod_gestionprojet/student_ai_progress'") === false && strpos($display, "'pendingId'") !== false);
 test('display: loads the button module', fn() => strpos($display, "'mod_gestionprojet/formative_button'") !== false);
-test('display: nothing for a submitted copy', fn() => strpos($display, '$isSubmitted') !== false);
-test('helper includes the block (steps 4, 5, 9)', fn() => strpos(code('pages/student_submit_helper.php'), 'student_formative_display.php') !== false);
-foreach ([6, 7, 8] as $n) {
-    test("step$n includes the block", fn() => strpos(code("pages/step$n.php"), 'student_formative_display.php') !== false);
+test('display: no request button for a submitted copy (canask)', fn() => strpos($display, "\$progress['canask']") !== false);
+foreach ([4, 5, 6, 7, 8, 9] as $n) {
+    test("step$n renders the panel (feedback block)", fn() => strpos(code("pages/step$n.php"), 'student_progress_panel.php') !== false);
 }
 $js = code('amd/src/formative_button.js');
 test('button calls the WS after saving the copy', fn() => strpos($js, "'mod_gestionprojet_request_formative'") !== false

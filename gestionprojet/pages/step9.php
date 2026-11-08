@@ -116,6 +116,8 @@ echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 9, 'student')
 );
+// Two columns: the form, then the progress panel (v2.12.0).
+echo gestionprojet_progress_layout_open();
 echo $OUTPUT->heading(get_string('step9', 'gestionprojet'));
 
 // Submission status notification (mirrors step 4/5 pattern).
@@ -151,7 +153,6 @@ if ($gestionprojet->group_submission && $group) {
 }
 
 // AI Evaluation Feedback Display.
-require_once(__DIR__ . '/student_ai_feedback_display.php');
 
 echo html_writer::start_div('gp-student');
 
@@ -170,16 +171,7 @@ if ($isLocked) {
 // Action bar: Submit + (optional) Revert + Reset.
 echo html_writer::start_div('export-section gp-fast-actions');
 
-if ($canSubmit) {
-    echo html_writer::tag('button',
-        '📤 ' . get_string('submit', 'gestionprojet'),
-        [
-            'type'  => 'button',
-            'class' => 'btn btn-primary btn-lg btn-submit-large',
-            'id'    => 'submitButton',
-        ]
-    );
-}
+// The submit button is in the progress panel (v2.12.0).
 
 if ($canRevert) {
     echo html_writer::tag('button',
@@ -223,4 +215,6 @@ echo html_writer::end_div();
 require __DIR__ . '/student_submit_helper.php';
 
 echo html_writer::end_div();
+// Progress panel: status, grade, what is left, last feedback, buttons (v2.12.0).
+require __DIR__ . '/student_progress_panel.php';
 echo $OUTPUT->footer();

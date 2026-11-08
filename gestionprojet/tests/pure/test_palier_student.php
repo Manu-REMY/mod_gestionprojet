@@ -38,7 +38,8 @@ $step4 = code('pages/step4.php');
 $display = code('pages/student_palier_display.php');
 test('step4: no submit button in level mode', fn() =>
     preg_match('/\$canSubmit = [^;]*!\$palierenabled/', $step4) === 1);
-test('step4: includes the level display', fn() => strpos($step4, "student_palier_display.php") !== false);
+test('the progress panel includes the level display (since v2.12.0)', fn() =>
+    strpos(code('pages/student_progress_panel.php'), 'student_palier_display.php') !== false);
 test('step4: passes the frozen zones to the editor', fn() => strpos($step4, "'frozenZones'") !== false);
 test('step4: frozen zones come from gestionprojet_palier_frozen_zones', fn() =>
     strpos($step4, 'gestionprojet_palier_frozen_zones(') !== false);
