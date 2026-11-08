@@ -202,7 +202,7 @@ class ai_evaluator {
             $providedmap = [
                 4 => [
                     'table'      => 'gestionprojet_cdcf_provided',
-                    'comparator' => 'json_normalized',
+                    'comparator' => 'cdcf_seed',
                     'field'      => 'interacteurs_data',
                 ],
                 5 => [
@@ -755,6 +755,25 @@ class ai_evaluator {
     }
 
     /**
+     * Whether a step 4 copy is still the starting copy given by the consigne (no work done).
+     *
+     * The starting copy is the consigne without flags, its fields "to fill in" emptied (consigne_lock::seed).
+     *
+     * @param string $studentjson CDCF JSON of the student.
+     * @param string $providedjson CDCF JSON of the consigne.
+     * @return bool
+     */
+    public static function cdcf_matches_seed(string $studentjson, string $providedjson): bool {
+        $student = json_decode($studentjson, true);
+        $provided = json_decode($providedjson, true);
+        if (!is_array($student) || !is_array($provided)) {
+            return false;
+        }
+        return consigne_lock::strip_flags(cdcf_helper::normalize($student))
+            === consigne_lock::seed(cdcf_helper::normalize($provided));
+    }
+
+    /**
      * Check whether the provided record has any non-empty content in the comparable fields.
      *
      * @param array $cfg     Provided map entry for the current step.
@@ -789,6 +808,10 @@ class ai_evaluator {
                     return json_encode($studentjson) === json_encode($providedjson);
                 }
                 return false;
+
+            case 'cdcf_seed':
+                return self::cdcf_matches_seed((string)($submission->{$cfg['field']} ?? ''),
+                    (string)($providedrec->{$cfg['field']} ?? ''));
 
             case 'string_strict':
                 $f = $cfg['field'];
