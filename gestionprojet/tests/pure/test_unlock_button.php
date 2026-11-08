@@ -37,3 +37,8 @@ test('step4.php passes the user of the copy', fn() => strpos(file_get_contents(G
 foreach (['grading', 'cdcf_bootstrap'] as $m) {
     test("build $m.min.js up to date", fn() => filemtime(GP_ROOT . "/amd/build/$m.min.js") >= filemtime(GP_ROOT . "/amd/src/$m.js"));
 }
+
+// Final review: the grading page sends the keys of the copy itself (an individual copy may have groupid 0).
+$gp = file_get_contents(GP_ROOT . '/grading.php');
+test('grading.php: data-groupid is the group of the copy', fn() => strpos($gp, 'data-groupid="<?php echo (int)$submission->groupid; ?>"') !== false);
+test('grading.php: data-userid is the user of the copy', fn() => strpos($gp, 'data-userid="<?php echo (int)$submission->userid; ?>"') !== false);

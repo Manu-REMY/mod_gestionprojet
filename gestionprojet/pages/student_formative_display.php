@@ -36,18 +36,20 @@ if (!empty($submission) && empty($isSubmitted)) {
         echo html_writer::tag('p', get_string('formative_help', 'gestionprojet'), ['class' => 'text-muted small']);
 
         if ($formative['pending']) {
-            // Same markup as the submission progress banner: student_ai_progress polls it and reloads at the end.
+            // Banner followed by formative_button (status polling, then a "show" button).
             echo html_writer::div(html_writer::span(get_string('formative_pending', 'gestionprojet'), 'ai-progress-label'),
                 'gp-formative-status ai-progress-banner status-' . s($formative['pending']->status),
-                ['id' => 'ai-progress-banner', 'data-status' => s($formative['pending']->status)]);
-            $PAGE->requires->js_call_amd('mod_gestionprojet/student_ai_progress', 'init', [[
-                'evaluationid' => (int)$formative['pending']->id,
+                ['id' => 'gpFormativeBanner', 'data-status' => s($formative['pending']->status)]);
+            // No automatic reload when it is ready: the student keeps working (a button shows the feedback).
+            $PAGE->requires->js_call_amd('mod_gestionprojet/formative_button', 'init', [[
                 'cmid' => (int)$cm->id,
+                'pendingId' => (int)$formative['pending']->id,
                 'statusUrl' => (new moodle_url('/mod/gestionprojet/ajax/get_evaluation_status.php'))->out(false),
+                'bannerId' => 'gpFormativeBanner',
                 'strings' => [
-                    'pending_student' => get_string('formative_pending', 'gestionprojet'),
-                    'processing_student' => get_string('formative_pending', 'gestionprojet'),
-                    'failed_student' => get_string('formative_error', 'gestionprojet'),
+                    'ready' => get_string('formative_ready', 'gestionprojet'),
+                    'show' => get_string('formative_show', 'gestionprojet'),
+                    'error' => get_string('formative_error', 'gestionprojet'),
                 ],
             ]]);
         } else if ($formative['remaining'] > 0) {

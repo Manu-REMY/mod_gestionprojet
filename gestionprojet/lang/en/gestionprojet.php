@@ -1002,6 +1002,8 @@ $string['formative_title'] = 'Feedback before submitting';
 $string['formative_help'] = 'Ask the AI for advice on your work as it is now. Nothing is submitted and no grade is given: only your submission will be graded.';
 $string['formative_request'] = 'Ask for a feedback ({$a} left)';
 $string['formative_pending'] = 'Your feedback is being prepared…';
+$string['formative_ready'] = 'Your feedback is ready.';
+$string['formative_show'] = 'Show the feedback';
 $string['formative_last'] = 'Last feedback ({$a})';
 $string['formative_error'] = 'The feedback could not be prepared. Try again in a moment.';
 

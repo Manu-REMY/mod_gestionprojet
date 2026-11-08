@@ -40,7 +40,8 @@ test('display: the feedback is always filtered', fn() => strpos($display, 'answe
 test('display: no grade shown', fn() => strpos($display, 'parsed_grade') === false);
 test('display: remaining count in the button', fn() => strpos($display, "'formative_request'") !== false);
 test('display: none left with ⊘ and a word', fn() => strpos($display, "'⊘ '") !== false && strpos($display, "'formative_none_left'") !== false);
-test('display: polls a running feedback', fn() => strpos($display, "'mod_gestionprojet/student_ai_progress'") !== false);
+test('display: a running feedback is followed by the button module, never by the auto-reloading poller', fn() =>
+    strpos($display, "'mod_gestionprojet/student_ai_progress'") === false && strpos($display, "'pendingId'") !== false);
 test('display: loads the button module', fn() => strpos($display, "'mod_gestionprojet/formative_button'") !== false);
 test('display: nothing for a submitted copy', fn() => strpos($display, '$isSubmitted') !== false);
 test('helper includes the block (steps 4, 5, 9)', fn() => strpos(code('pages/student_submit_helper.php'), 'student_formative_display.php') !== false);
@@ -62,6 +63,26 @@ foreach (['en', 'fr'] as $l) {
     $string = [];
     include(GP_ROOT . "/lang/$l/gestionprojet.php");
     foreach (['formative_title', 'formative_request', 'formative_pending', 'formative_last', 'formative_error', 'formative_help'] as $k) {
+        test("string $k in $l", fn() => !empty($string[$k]));
+    }
+}
+
+// Final review: save every editor before asking (step 9 has its own), and never reload by itself.
+test('button flushes the registered savers (save_hooks) and Autosave', fn() => strpos($js, 'SaveHooks.flushAll()') !== false
+    && strpos($js, 'Autosave.save()') !== false);
+test('button: no automatic reload when the feedback is ready, a "show" button instead', fn() =>
+    strpos($js, 'location.reload') === false && strpos($js, 'cfg.strings.show') !== false);
+$hooks = code('amd/src/save_hooks.js');
+test('save_hooks: register and flushAll', fn() => strpos($hooks, 'register') !== false && strpos($hooks, 'flushAll') !== false);
+test('the FAST editor registers its immediate save', fn() => strpos(code('amd/src/fast_editor.js'), 'SaveHooks.register(') !== false);
+foreach (['save_hooks', 'fast_editor', 'formative_button'] as $m) {
+    test("build $m.min.js up to date (review)", fn() => is_file(GP_ROOT . "/amd/build/$m.min.js")
+        && filemtime(GP_ROOT . "/amd/build/$m.min.js") >= filemtime(GP_ROOT . "/amd/src/$m.js"));
+}
+foreach (['en', 'fr'] as $l) {
+    $string = [];
+    include(GP_ROOT . "/lang/$l/gestionprojet.php");
+    foreach (['formative_ready', 'formative_show'] as $k) {
         test("string $k in $l", fn() => !empty($string[$k]));
     }
 }

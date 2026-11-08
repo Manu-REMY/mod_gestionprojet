@@ -1002,6 +1002,8 @@ $string['formative_title'] = 'Retour avant soumission';
 $string['formative_help'] = 'Demande à l\'IA des conseils sur ton travail tel qu\'il est maintenant. Rien n\'est soumis et aucune note n\'est donnée : seule ta soumission sera notée.';
 $string['formative_request'] = 'Demander un retour ({$a} restant(s))';
 $string['formative_pending'] = 'Ton retour est en préparation…';
+$string['formative_ready'] = 'Ton retour est prêt.';
+$string['formative_show'] = 'Afficher le retour';
 $string['formative_last'] = 'Dernier retour ({$a})';
 $string['formative_error'] = 'Le retour n\'a pas pu être préparé. Réessaie dans un moment.';
 
