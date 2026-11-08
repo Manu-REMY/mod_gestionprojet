@@ -145,8 +145,6 @@ $string['finish'] = 'Terminer';
 $string['produit'] = 'Produit';
 $string['milieu'] = 'Milieu d\'utilisation';
 $string['interacteurs'] = 'Interacteurs';
-$string['fonction_principale'] = 'Fonction principale (FP)';
-$string['fonctions_contraintes'] = 'Fonctions contraintes (FC)';
 
 // Fiche Essai (Step 5)
 $string['nom_essai'] = 'Nom de l\'essai';
@@ -455,7 +453,7 @@ $string['privacy:metadata:timemodified'] = 'Date et heure de dernière modificat
 
 // CDCF (Étape 4)
 $string['privacy:metadata:gestionprojet_cdcf:userid'] = 'L\'identifiant de l\'utilisateur qui a soumis le cahier des charges';
-$string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'Données JSON contenant les interacteurs, fonctions contraintes et critères';
+$string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'Données JSON contenant les interacteurs, les fonctions de service, les contraintes et les critères';
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'Le statut de la soumission (brouillon ou soumis)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'Date et heure de soumission du travail';
 
@@ -641,9 +639,9 @@ L\'Analyse Fonctionnelle (Diagramme Pieuvre / Fonctions)
 
 Verbes : Chaque fonction doit commencer par un verbe à l\'infinitif.
 
-Fonction Principale (FP) : Relie-t-elle bien l\'utilisateur et la matière d\'œuvre ?
+Fonctions de service (FS) : Chaque FS relie-t-elle le produit à un interacteur, ou deux interacteurs entre eux ?
 
-Fonctions Contraintes (FC) : Sont-elles pertinentes (Énergie, Esthétique, Sécurité, Budget, Environnement) ?
+Contraintes : Sont-elles pertinentes (énergie, esthétique, sécurité, budget, environnement) ?
 
 Erreur fatale à surveiller : L\'élève ne doit pas citer de solution technique (Exemple : dire "Doit avoir des roues" est une erreur, il faut dire "Doit permettre de se déplacer").
 
@@ -727,7 +725,7 @@ Tonalité : Sois bienveillant, valorise les efforts, propose des pistes d\'amél
 
 $string['ai_instructions_default_step9'] = 'Rôle : Tu es un professeur de technologie expérimenté au collège.
 
-Contexte de l\'étape : Tu corriges un diagramme FAST. L\'élève traduit les fonctions de service du CDCF en fonctions techniques (FT), puis en solutions techniques (ST), avec une cohérence FP → FT → ST.
+Contexte de l\'étape : Tu corriges un diagramme FAST. L\'élève traduit les fonctions de service du CDCF en fonctions techniques (FT), puis en solutions techniques (ST), avec une cohérence fonction d\'usage → FT → ST.
 
 Critères d\'attention :
 - Les fonctions techniques (FT) couvrent les fonctions de service du CDCF.
@@ -742,13 +740,10 @@ $string['logbook_model_desc'] = 'Définissez ici un exemple de carnet de bord at
 $string['logbook_status_header'] = 'Statut';
 $string['produit_placeholder'] = 'Nom du produit attendu';
 $string['milieu_placeholder'] = 'Milieu d\'utilisation attendu';
-$string['fp_placeholder'] = 'Fonction principale attendue...';
 $string['add_interactor'] = 'Ajouter un interacteur';
 $string['interactor_name_placeholder'] = 'Nom de l\'interacteur';
 $string['delete_interactor'] = 'Supprimer';
-$string['fc_description_placeholder'] = 'Description de la fonction contrainte';
 $string['add_criterion'] = 'Critère';
-$string['add_constraint_function'] = 'Fonction Contrainte';
 
 // Step 4 - Page Cahier des Charges Fonctionnel (élève)
 $string['step4_page_title'] = 'CAHIER DES CHARGES FONCTIONNEL';
@@ -811,7 +806,7 @@ $string['step5_page_title'] = 'FICHE ESSAI';
 $string['step5_page_subtitle'] = 'Démarche expérimentale - Technologie';
 $string['step5_general_info'] = 'Informations générales';
 $string['step5_section1_title'] = 'OBJECTIF DE L\'ESSAI';
-$string['step5_fonction_service_label'] = 'Quelle est la fonction de service/contrainte que doit satisfaire le système ?';
+$string['step5_fonction_service_label'] = 'Quelle fonction de service ou quelle contrainte le système doit-il satisfaire ?';
 $string['step5_fonction_service_placeholder'] = 'Décrivez la fonction de service ou la contrainte à satisfaire...';
 $string['step5_niveaux_reussite_label'] = 'Quelles sont les niveaux (valeurs et unité) que définissent la réussite du test ?';
 $string['step5_niveaux_reussite_placeholder'] = 'Précisez les valeurs attendues et les unités de mesure...';
@@ -929,9 +924,9 @@ $string['fast:placeholder'] = 'Diagramme FAST';
 $string['fast:ai_instructions_label'] = 'Consignes pour le correcteur IA';
 $string['fast:ai_instructions_help'] = 'Guidez le correcteur IA sur les critères d\'évaluation.';
 $string['fast:no_data_to_evaluate'] = 'Aucune donnée FAST à évaluer.';
-$string['fast:fp_label'] = 'Fonction principale (lecture seule, issue du CDCF)';
+$string['fast:fp_label'] = 'Fonction d\'usage (lecture seule, issue du cahier des charges)';
 $string['fast:ft_label'] = 'Fonctions techniques';
-$string['fast:fp_help'] = 'La fonction principale provient du cahier des charges fonctionnel et ne peut pas être modifiée ici.';
+$string['fast:fp_help'] = 'La fonction d\'usage provient du cahier des charges fonctionnel et ne peut pas être modifiée ici.';
 
 // Séparation consigne / modèle de correction (v2.4.0).
 $string['consigne'] = 'Consigne';
@@ -948,7 +943,7 @@ $string['step5_provided_precautions_placeholder'] = 'Une précaution par ligne (
 $string['correction_model_badge'] = 'Modèle de correction';
 $string['privacy:metadata:gestionprojet_fast'] = 'Productions élèves de diagrammes FAST.';
 $string['privacy:metadata:gestionprojet_fast:userid'] = 'ID utilisateur (mode individuel).';
-$string['privacy:metadata:gestionprojet_fast:data_json'] = 'Données du diagramme FAST (JSON : FP, FT, sous-FT, ST).';
+$string['privacy:metadata:gestionprojet_fast:data_json'] = 'Données du diagramme FAST (JSON : fonction d\'usage, FT, sous-FT, ST).';
 $string['privacy:metadata:gestionprojet_fast:status'] = 'Statut de soumission (0=brouillon, 1=soumis).';
 $string['privacy:metadata:gestionprojet_fast:timesubmitted'] = 'Date de soumission.';
 

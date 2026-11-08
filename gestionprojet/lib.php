@@ -2457,7 +2457,7 @@ function gestionprojet_fast_to_text($datajson) {
         }, $data['fonctionsPrincipales']);
         $fps = array_filter($fps);
         if (!empty($fps)) {
-            $lines[] = 'Fonction principale : ' . implode(' / ', $fps);
+            $lines[] = 'Fonction d\'usage : ' . implode(' / ', $fps);
             $lines[] = '';
         }
     }
@@ -2588,6 +2588,12 @@ function gestionprojet_results_lines(object $gestionprojet, object $cm, int $gro
         if (!isset($teachers[$u->id])) {
             $users[(int)$u->id] = $u;
         }
+    }
+    // An activity set on a grouping only concerns the students of that grouping (v2.13.1): the others of the course
+    // (another year group) are not listed, not even under "no group".
+    if (!empty($cm->groupingid)) {
+        $members = groups_get_grouping_members((int)$cm->groupingid, 'DISTINCT u.id', 'u.id');
+        $users = array_intersect_key($users, $members);
     }
 
     // Copies, grading in progress, formative feedbacks used, validated levels.

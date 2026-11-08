@@ -127,7 +127,7 @@ class ai_prompt_builder {
             ['name' => 'Pertinence des FT', 'weight' => 4, 'description' => 'Les FT sont correctement formulées et clairement identifiées'],
             ['name' => 'Sous-fonctions', 'weight' => 3, 'description' => 'La scission en sous-fonctions, lorsque utilisée, est judicieuse'],
             ['name' => 'Solutions techniques', 'weight' => 5, 'description' => 'Les solutions techniques (ST) proposées sont concrètes et adaptées aux FT/sous-FT'],
-            ['name' => 'Cohérence FP → FT → ST', 'weight' => 4, 'description' => 'L\'arborescence est cohérente : du « pourquoi » au « comment »'],
+            ['name' => 'Cohérence fonction d\'usage → FT → ST', 'weight' => 4, 'description' => 'L\'arborescence est cohérente : du « pourquoi » au « comment »'],
         ],
     ];
 
