@@ -2589,6 +2589,12 @@ function gestionprojet_results_lines(object $gestionprojet, object $cm, int $gro
             $users[(int)$u->id] = $u;
         }
     }
+    // An activity set on a grouping only concerns the students of that grouping (v2.13.1): the others of the course
+    // (another year group) are not listed, not even under "no group".
+    if (!empty($cm->groupingid)) {
+        $members = groups_get_grouping_members((int)$cm->groupingid, 'u.id');
+        $users = array_intersect_key($users, $members);
+    }
 
     // Copies, grading in progress, formative feedbacks used, validated levels.
     $copies = [];
