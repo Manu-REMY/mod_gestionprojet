@@ -96,8 +96,10 @@ test('normalize: niveauLocked wins over niveauGap', fn() => cdcf_helper::normali
 test('normalize: a false flag is not written', fn() =>
     cdcf_helper::normalize(['contraintes' => [['id' => 1, 'locked' => false]]])['contraintes'][0]
         === ['id' => 1, 'description' => '', 'justification' => '', 'linkedFsId' => 0]);
-test('normalize ignores hint keys (never stored)', fn() =>
-    !array_key_exists('hint', cdcf_helper::normalize(['interactors' => [['id' => 1, 'name' => 'A', 'hint' => 'x']]])['interactors'][0]));
+// v2.12.4: normalize keeps the starting text the page showed (enforce reads it); a student save never stores it.
+test('hint keys are never stored (stripped on every student save)', fn() =>
+    !array_key_exists('hint', L::strip_flags(cdcf_helper::normalize(['interactors' => [['id' => 1, 'name' => 'A', 'hint' => 'x']]]))['interactors'][0])
+    && strpos(L::sanitize_student_json('{"interactors":[{"id":1,"name":"A","prefill":true,"hint":"x"}]}'), 'hint') === false);
 
 // Seed.
 $seed = L::seed($p);

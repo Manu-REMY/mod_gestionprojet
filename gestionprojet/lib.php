@@ -327,11 +327,9 @@ function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $stud
         $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
         $consigne = \mod_gestionprojet\cdcf_helper::decode($provided ?: null);
         if (\mod_gestionprojet\consigne_lock::has_locks($consigne)) {
-            // The stored copy tells a page opened before a consigne change from text the student wrote (v2.12.3).
-            $stored = $submission && !empty($submission->interacteurs_data)
-                ? \mod_gestionprojet\cdcf_helper::decode($submission->interacteurs_data) : null;
+            // The flags the page showed tell a page opened before a consigne change from student text (v2.12.4).
             $json = json_encode(\mod_gestionprojet\consigne_lock::enforce(\mod_gestionprojet\cdcf_helper::decode($studentjson),
-                $consigne, $stored), JSON_UNESCAPED_UNICODE);
+                $consigne), JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -1158,6 +1156,8 @@ function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjs
         return 0;
     }
     $count = 0;
+    // All the copies or none: a copy left behind would be one consigne version late.
+    $transaction = $DB->start_delegated_transaction();
     foreach ($DB->get_records('gestionprojet_cdcf', ['gestionprojetid' => $gestionprojet->id, 'status' => 0]) as $copy) {
         $before = (string)$copy->interacteurs_data;
         $json = json_encode(\mod_gestionprojet\consigne_lock::follow(
@@ -1172,6 +1172,7 @@ function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjs
             (int)$USER->id, (int)$copy->groupid);
         $count++;
     }
+    $transaction->allow_commit();
     return $count;
 }
 

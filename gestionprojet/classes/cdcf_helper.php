@@ -56,6 +56,12 @@ class cdcf_helper {
                     break;
                 }
             }
+            // Starting text the student page showed (consigne_lock::with_flags): read by enforce, never stored
+            // (consigne_lock::strip_flags removes it) (v2.12.4).
+            $hint = $pair === 'element' ? 'hint' : 'niveauHint';
+            if (isset($src[$hint]) && is_string($src[$hint])) {
+                $out[$hint] = $src[$hint];
+            }
         }
         return $out;
     }
