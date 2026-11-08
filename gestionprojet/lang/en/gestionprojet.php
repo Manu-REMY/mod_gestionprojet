@@ -1006,6 +1006,27 @@ $string['formative_ready'] = 'Your feedback is ready.';
 $string['formative_show'] = 'Show the feedback';
 $string['formative_last'] = 'Last feedback ({$a})';
 $string['formative_error'] = 'The feedback could not be prepared. Try again in a moment.';
+$string['progress_title'] = 'My progress';
+$string['progress_status'] = 'Status';
+$string['progress_status_draft'] = 'Draft open';
+$string['progress_status_submitted'] = 'Submitted on {$a}';
+$string['progress_status_pending'] = 'Being graded…';
+$string['progress_grade'] = 'Grade';
+$string['progress_grade_previous'] = 'Previous grade: {$a}/20';
+$string['progress_grade_none'] = 'not submitted yet';
+$string['progress_todo_title'] = 'To complete';
+$string['progress_todo_count'] = '{left} of {total} left';
+$string['progress_todo_done'] = '✓ Everything is filled in';
+$string['progress_goto_form'] = 'Go to the form';
+$string['progress_feedback_title'] = 'Last feedback';
+$string['progress_feedback_none'] = 'No feedback yet.';
+$string['progress_submit'] = 'Submit my final version';
+$string['progress_readonly'] = 'Teacher view: read only';
+$string['progress_field_statement'] = 'statement';
+$string['progress_field_criterion'] = 'criterion';
+$string['progress_field_level'] = 'level';
+$string['progress_field_interactor'] = 'Interactor';
+$string['progress_field_constraint'] = 'Constraint';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Submission graded';

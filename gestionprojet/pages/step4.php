@@ -110,6 +110,8 @@ echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 4, 'student')
 );
+// Two columns: the form, then the progress panel (v2.12.0).
+echo gestionprojet_progress_layout_open();
 
 // Status display
 if ($isSubmitted) {
@@ -163,14 +165,7 @@ if (!$group) {
     </div>
 
     <!-- AI Evaluation Feedback Display -->
-    <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
 
-    <?php
-    // Level validation block (v2.11.2).
-    if ($palierenabled) {
-        require(__DIR__ . '/student_palier_display.php');
-    }
-    ?>
 
     <!-- Description -->
     <div class="description">
@@ -205,11 +200,7 @@ if (!$group) {
 
         <!-- Actions section -->
         <div class="export-section">
-            <?php if ($canSubmit): ?>
-                <button type="button" class="btn btn-primary btn-lg btn-submit-large" id="submitButton">
-                    📤 <?php echo get_string('submit', 'gestionprojet'); ?>
-                </button>
-            <?php endif; ?>
+            <!-- The submit button is in the progress panel (v2.12.0). -->
 
             <?php if ($canRevert): ?>
                 <button type="button" class="btn btn-warning" id="revertButton">
@@ -345,5 +336,7 @@ if ((int)($gestionprojet->step4_provided ?? 0) === 1 && !$isLocked) {
 <?php
 endif; // $showstudentform
 
+// Progress panel: status, grade, what is left, last feedback, buttons (v2.12.0).
+require __DIR__ . '/student_progress_panel.php';
 echo $OUTPUT->footer();
 ?>

@@ -86,6 +86,8 @@ echo $OUTPUT->render_from_template(
     'mod_gestionprojet/step_tabs',
     gestionprojet_build_step_tabs($gestionprojet, $cm->id, 8, 'student')
 );
+// Two columns: the form, then the progress panel (v2.12.0).
+echo gestionprojet_progress_layout_open();
 
 // Status display
 if ($isSubmitted) {
@@ -140,7 +142,6 @@ if (empty($tasks_data)) {
     </div>
 
     <!-- AI Evaluation Feedback Display -->
-    <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
 
     <form id="carnetForm" method="post" action="">
         <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
@@ -170,12 +171,7 @@ if (empty($tasks_data)) {
 
         <!-- Actions section -->
         <div class="export-section">
-            <?php if ($canSubmit): ?>
-                <button type="button" class="btn btn-primary btn-lg btn-submit-large" id="submitButton">
-                    📤
-                    <?php echo get_string('submit', 'gestionprojet'); ?>
-                </button>
-            <?php endif; ?>
+            <!-- The submit button is in the progress panel (v2.12.0). -->
 
             <?php if ($canRevert): ?>
                 <button type="button" class="btn btn-warning" id="revertButton">
@@ -193,9 +189,7 @@ if (empty($tasks_data)) {
 </div>
 
 <?php
-// Formative feedback before submitting (v2.11.4).
 $step = 8;
-require(__DIR__ . '/student_formative_display.php');
 
 $PAGE->requires->js_call_amd('mod_gestionprojet/step8', 'init', [[
     'cmid' => (int)$cm->id,
@@ -214,5 +208,7 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/step8', 'init', [[
     ],
 ]]);
 
+// Progress panel: status, grade, what is left, last feedback, buttons (v2.12.0).
+require __DIR__ . '/student_progress_panel.php';
 echo $OUTPUT->footer();
 ?>

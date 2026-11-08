@@ -965,6 +965,79 @@ function gestionprojet_formative_request(object $gestionprojet, object $cm, int 
 }
 
 /**
+ * Opening of the two-column layout of a student step page: the form, then the progress panel (v2.12.0).
+ *
+ * pages/student_progress_panel.php closes the main column and the layout.
+ *
+ * @return string
+ */
+function gestionprojet_progress_layout_open(): string {
+    return '<div class="gp-progress-layout"><div class="gp-progress-main" id="gpProgressMain">';
+}
+
+/**
+ * State shown by the progress panel of a student step page (v2.12.0).
+ *
+ * @param object $gestionprojet Instance record.
+ * @param int $step Step 4 to 9.
+ * @param object $submission The copy.
+ * @param bool $readonly A teacher looking at a group's or a student's copy: no submit, no feedback request.
+ * @return array status, grade, previousgrade, palier, formative, feedback (null when AI is off), cansubmit, canask
+ */
+function gestionprojet_progress_state(object $gestionprojet, int $step, object $submission, bool $readonly): array {
+    global $DB;
+
+    $aion = !empty($gestionprojet->ai_enabled);
+    $submitted = (int)$submission->status === 1;
+    $pending = $aion && $submitted
+        && \mod_gestionprojet\ai_evaluator::has_pending_evaluation((int)$gestionprojet->id, $step, (int)$submission->id);
+    $paliermode = $step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1;
+    $palier = $paliermode ? gestionprojet_palier_state($gestionprojet, $submission) : null;
+    $formative = $aion ? gestionprojet_formative_state($gestionprojet, $step, $submission) : null;
+    $grade = $submission->grade !== null ? (float)$submission->grade : null;
+
+    $feedback = null;
+    if ($aion) {
+        $applied = $DB->get_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $gestionprojet->id, 'step' => $step,
+            'submissionid' => $submission->id, 'status' => 'applied', 'formatif' => 0], 'timemodified DESC, id DESC', '*', 0, 1);
+        $applied = $applied ? reset($applied) : null;
+        $pick = \mod_gestionprojet\progress::pick_feedback($applied, $formative ? $formative['last'] : null, $grade,
+            (string)($submission->feedback ?? ''), (int)($submission->timemodified ?? 0));
+        $text = $pick['text'];
+        $criteria = [];
+        $suggestions = [];
+        if ($pick['evaluation']) {
+            if ($pick['source'] === 'applied' && isset($pick['evaluation']->show_feedback) && !$pick['evaluation']->show_feedback) {
+                $text = '';
+            }
+            $criteria = json_decode((string)$pick['evaluation']->criteria_json, true) ?: [];
+            if (!isset($pick['evaluation']->show_suggestions) || $pick['evaluation']->show_suggestions) {
+                $suggestions = json_decode((string)$pick['evaluation']->suggestions, true) ?: [];
+            }
+        }
+        // Never a word of the correction model the student did not write (always for a formative feedback).
+        if ($pick['source'] === 'formative' || !isset($gestionprojet->ai_hide_answers) || $gestionprojet->ai_hide_answers) {
+            $view = \mod_gestionprojet\answer_leak_filter::student_view($text, $criteria, $suggestions,
+                gestionprojet_answer_leak_roots($gestionprojet, $step, $submission));
+            $text = $view['feedback'];
+            $suggestions = $view['suggestions'];
+        }
+        $feedback = ['source' => $pick['source'], 'text' => $text, 'suggestions' => $suggestions, 'time' => $pick['time']];
+    }
+
+    return [
+        'status' => \mod_gestionprojet\progress::status((int)$submission->status, $pending),
+        'grade' => $grade,
+        'previousgrade' => $grade !== null && !$submitted,
+        'palier' => $palier,
+        'formative' => $formative,
+        'feedback' => $feedback,
+        'cansubmit' => !$readonly && !$submitted && !empty($gestionprojet->enable_submission) && !$paliermode,
+        'canask' => !$readonly && !$submitted && $formative !== null && $formative['enabled'],
+    ];
+}
+
+/**
  * Whether a student only consults the teacher's consigne of a step (4, 5 or 9) without completing it.
  *
  * True when the consigne is shown (stepN_provided = 1) and the student step is disabled. When students must
