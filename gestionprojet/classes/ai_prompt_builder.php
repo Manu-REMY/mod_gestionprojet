@@ -502,6 +502,24 @@ PROMPT;
             }, $criteria));
             $text .= "\nRéponds avec exactement un critère par partie de cette grille, en reprenant son nom exact : {$names}. "
                 . "N'évalue rien d'autre, même si les instructions de l'enseignant décrivent d'autres critères.\n";
+            // Zones that belong to other levels (or are not graded) must not cost points in this one.
+            $covered = [];
+            foreach ($this->graded_parts(4, $teachermodel ?? new \stdClass()) as $part) {
+                $covered = array_merge($covered, $part['zones']);
+            }
+            $labels = ['interacteurs' => 'les interacteurs', 'fonctions' => 'les fonctions de service',
+                'criteres' => "les critères d'appréciation", 'niveaux' => 'les niveaux (valeurs et unités)',
+                'flexibilite' => 'la flexibilité', 'contraintes' => 'les contraintes'];
+            $others = [];
+            foreach ($labels as $zone => $label) {
+                if (!in_array($zone, $covered, true) && ($zone !== 'flexibilite' || $this->flexibility)) {
+                    $others[] = $label;
+                }
+            }
+            if ($others) {
+                $text .= 'Ne pénalise pas ce qui relève d\'un autre palier ou n\'est pas évalué ici, même absent ou incomplet : '
+                    . implode(', ', $others) . ".\n";
+            }
         }
         return $text;
     }

@@ -143,3 +143,9 @@ test('palier prompt asks for exactly one criterion per part with its exact name'
     strpos($sys, 'exactement un critère par partie') !== false && strpos($sys, '« Fonctions »') !== false);
 test('no level: no such instruction', fn() =>
     strpos((new ai_prompt_builder())->build_system_prompt(4, $model), 'exactement un critère par partie') === false);
+
+// Preprod run: in a SAT request the AI still penalised the missing levels (another level's zone).
+test('palier prompt names what is not graded in this level', fn() =>
+    strpos($sys, 'Ne pénalise pas') !== false && strpos($sys, 'les niveaux') !== false && strpos($sys, 'les contraintes') !== false);
+test('palier prompt does not exclude the zones of the level asked', fn() =>
+    preg_match('/Ne pénalise pas[^\n]*les fonctions de service/u', $sys) === 0);
