@@ -87,20 +87,21 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
          */
         function flagToggles(obj, lockKey, gapKey) {
             if (!editFlags) { return null; }
+            // Three exclusive states (v2.11.3): provided, pre-filled (text written, editable), to fill in.
+            var prefillKey = lockKey === 'locked' ? 'prefill' : 'niveauPrefill';
+            var keys = [lockKey, prefillKey, gapKey];
             var wrap = el('span', { className: 'gp-cdcf-flags' });
-            [[lockKey, '🔒 ' + lang.flagLocked, lang.flagLockedHelp, gapKey],
-             [gapKey, '▢ ' + lang.flagGap, lang.flagGapHelp, lockKey]].forEach(function(t) {
+            [[lockKey, '🔒 ' + lang.flagLocked, lang.flagLockedHelp],
+             [prefillKey, '✎ ' + lang.flagPrefill, lang.flagPrefillHelp],
+             [gapKey, '▢ ' + lang.flagGap, lang.flagGapHelp]].forEach(function(t) {
                 var on = !!obj[t[0]];
                 var b = el('button', {
                     type: 'button', className: 'gp-cdcf-flag' + (on ? ' gp-cdcf-flag-on' : ''),
                     text: t[1], title: t[2], 'aria-pressed': on ? 'true' : 'false',
                     onclick: function() {
-                        if (obj[t[0]]) {
-                            delete obj[t[0]];
-                        } else {
-                            obj[t[0]] = true;
-                            delete obj[t[3]];
-                        }
+                        var wason = !!obj[t[0]];
+                        keys.forEach(function(k) { delete obj[k]; });
+                        if (!wason) { obj[t[0]] = true; }
                         emit();
                     },
                 });
@@ -108,6 +109,118 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                 wrap.appendChild(b);
             });
             return wrap;
+        }
+
+        /**
+         * Teacher toggle of the links of an FS (its interactors), locked on their own (v2.11.3).
+         *
+         * @param {Object} fs
+         * @returns {HTMLElement|null}
+         */
+        function linksToggle(fs) {
+            if (!editFlags) { return null; }
+            var on = !!fs.linksLocked;
+            var b = el('button', {
+                type: 'button', className: 'gp-cdcf-flag' + (on ? ' gp-cdcf-flag-on' : ''),
+                text: '🔗 ' + lang.flagLinks, title: lang.flagLinksHelp, 'aria-pressed': on ? 'true' : 'false',
+                onclick: function() {
+                    if (fs.linksLocked) { delete fs.linksLocked; } else { fs.linksLocked = true; }
+                    emit();
+                },
+            });
+            if (locked) { b.disabled = true; }
+            return b;
+        }
+
+        /**
+         * State of a consigne field for the auto-mark: empty → to fill in, "…" or "A compléter" → pre-filled,
+         * otherwise provided.
+         *
+         * @param {string} text
+         * @returns {string} 'gap', 'prefill' or 'locked'
+         */
+        function autoState(text) {
+            var t = (text || '').trim();
+            if (t === '') { return 'gap'; }
+            if (/…|\.\.\.|[aà] compl[eé]ter/i.test(t)) { return 'prefill'; }
+            return 'locked';
+        }
+
+        /** Mark every field of the consigne automatically (the teacher adjusts afterwards). */
+        function automark() {
+            var set = function(obj, text, keys) {
+                keys.forEach(function(k) { delete obj[k]; });
+                var state = autoState(text);
+                obj[keys[['locked', 'prefill', 'gap'].indexOf(state)]] = true;
+            };
+            var element = ['locked', 'prefill', 'gap'];
+            var level = ['niveauLocked', 'niveauPrefill', 'niveauGap'];
+            data.interactors.forEach(function(i) { set(i, i.name, element); });
+            data.fonctionsService.forEach(function(fs) {
+                set(fs, fs.description, element);
+                if (fs.interactor1Id) { fs.linksLocked = true; }
+                fs.criteres.forEach(function(c) {
+                    set(c, c.description, element);
+                    set(c, c.niveau, level);
+                });
+            });
+            data.contraintes.forEach(function(c) { set(c, c.description, element); });
+            emit();
+        }
+
+        /** True when the consigne locks something (a field, a level or links). */
+        function hasLock() {
+            var any = function(list, keys) {
+                return list.some(function(o) { return keys.some(function(k) { return !!o[k]; }); });
+            };
+            var criteria = [];
+            data.fonctionsService.forEach(function(fs) { criteria = criteria.concat(fs.criteres); });
+            return any(data.interactors, ['locked']) || any(data.fonctionsService, ['locked', 'linksLocked'])
+                || any(criteria, ['locked', 'niveauLocked']) || any(data.contraintes, ['locked']);
+        }
+
+        /** Number of pre-filled fields still as the consigne gave them, or still holding "…". */
+        function prefillLeft() {
+            var count = 0;
+            var check = function(value, flag, hint) {
+                if (!flag) { return; }
+                var v = (value || '').trim();
+                if (v === (hint || '').trim() || /…|\.\.\.|[aà] compl[eé]ter/i.test(v)) { count++; }
+            };
+            data.interactors.forEach(function(i) { check(i.name, i.prefill, i.hint); });
+            data.fonctionsService.forEach(function(fs) {
+                check(fs.description, fs.prefill, fs.hint);
+                fs.criteres.forEach(function(c) {
+                    check(c.description, c.prefill, c.hint);
+                    check(c.niveau, c.niveauPrefill, c.niveauHint);
+                });
+            });
+            data.contraintes.forEach(function(c) { check(c.description, c.prefill, c.hint); });
+            return count;
+        }
+
+        /**
+         * Notices above the editor: on the consigne page, the "nothing locked" warning and the auto-mark button;
+         * for the student, the pre-filled fields still to rework.
+         *
+         * @returns {HTMLElement[]}
+         */
+        function notices() {
+            var out = [];
+            if (editFlags && !locked) {
+                if (!hasLock()) {
+                    out.push(el('div', { className: 'alert alert-warning gp-cdcf-nolock', text: '⚠ ' + lang.noLockWarning }));
+                }
+                out.push(el('button', { type: 'button', className: 'btn btn-secondary gp-cdcf-automark',
+                    text: '⚙ ' + lang.automark, title: lang.automarkHelp, onclick: automark }));
+            } else if (!editFlags && !locked) {
+                var left = prefillLeft();
+                if (left > 0) {
+                    out.push(el('div', { className: 'alert alert-info gp-cdcf-prefill-notice',
+                        text: '✎ ' + lang.prefillNotice.replace('{$a}', String(left)) }));
+                }
+            }
+            return out;
         }
 
         /**
@@ -136,6 +249,14 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                     var hint = hintKey && obj[hintKey] ? obj[hintKey] : '';
                     input.placeholder = hint ? lang.gapPlaceholder + ' — ' + hint : lang.gapPlaceholder;
                 }
+            } else if (obj[lockKey === 'locked' ? 'prefill' : 'niveauPrefill']) {
+                // Pre-filled: the consigne text is in the field and stays editable (no lock).
+                input.classList.add('gp-cdcf-prefill');
+                if (!editFlags) {
+                    input.title = lang.flagPrefillHelp;
+                    return el('span', { className: 'gp-cdcf-prefill-badge', text: '✎ ' + lang.prefillBadge,
+                        title: lang.flagPrefillHelp });
+                }
             }
             return null;
         }
@@ -143,17 +264,17 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
         /** True when the student may not delete this element (it or one of its criteria is provided). */
         function isProtected(obj) {
             if (editFlags) { return false; }
-            if (obj.locked || obj.niveauLocked) { return true; }
+            if (obj.locked || obj.niveauLocked || obj.linksLocked) { return true; }
             return (obj.criteres || []).some(function(c) { return c.locked || c.niveauLocked; });
         }
 
         function render() {
-            container.replaceChildren(
+            container.replaceChildren.apply(container, notices().concat([
                 renderDiagram(),
                 renderInteractors(),
                 renderFs(),
                 renderContraintes()
-            );
+            ]));
         }
 
         function renderInteractors() {
@@ -262,7 +383,7 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
 
             var sel1 = renderInteractorSelect(fs.interactor1Id, false, function(v) { fs.interactor1Id = v; emit(); });
             var sel2 = renderInteractorSelect(fs.interactor2Id, true, function(v) { fs.interactor2Id = v; emit(); });
-            if (!editFlags && fs.locked) { sel1.disabled = sel2.disabled = true; }
+            if (!editFlags && (fs.locked || fs.linksLocked)) { sel1.disabled = sel2.disabled = true; }
             if (frozen('fonctions')) { freezeField(desc); freezeField(sel1); freezeField(sel2); }
             var del = el('button', {
                 type: 'button', className: 'gp-cdcf-btn-remove', text: '🗑',
@@ -276,7 +397,7 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
             head.appendChild(el('div', { className: 'gp-cdcf-fs-arrows' }, [up, down]));
             head.appendChild(badge);
             head.appendChild(el('div', { className: 'gp-cdcf-fs-desc-wrap' }, [
-                el('label', null, [lang.fsDescLabel]), desc, fsBadge, flagToggles(fs, 'locked', 'gap'),
+                el('label', null, [lang.fsDescLabel]), desc, fsBadge, flagToggles(fs, 'locked', 'gap'), linksToggle(fs),
             ]));
             head.appendChild(el('div', { className: 'gp-cdcf-fs-selects' }, [
                 el('label', null, [lang.fsInteractorsLabel]), sel1, sel2,

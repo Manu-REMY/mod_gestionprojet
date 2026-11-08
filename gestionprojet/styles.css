@@ -5670,3 +5670,18 @@
     color: #7a3d0a;
     font-weight: 600;
 }
+
+/* Pre-filled consigne field (v2.11.3): editable, marked by a pencil and a word, no lock. */
+.path-mod-gestionprojet .gp-cdcf-prefill {
+    border-left: 4px solid #6b8fd6;
+    background-color: #f7f9fe;
+}
+.path-mod-gestionprojet .gp-cdcf-prefill-badge {
+    font-size: 0.8rem;
+    color: #3d5a99;
+    white-space: nowrap;
+    align-self: center;
+}
+.path-mod-gestionprojet .gp-cdcf-automark {
+    margin-bottom: 0.75rem;
+}

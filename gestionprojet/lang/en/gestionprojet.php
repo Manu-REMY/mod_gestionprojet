@@ -790,6 +790,15 @@ $string['step4_flag_locked_help'] = 'Provided by the instructions: the student c
 $string['step4_flag_gap'] = 'To fill in';
 $string['step4_flag_gap_help'] = 'Reaches the student empty; the text typed here is shown as a hint';
 $string['step4_gap_placeholder'] = 'To fill in';
+$string['step4_flag_prefill'] = 'Pre-filled';
+$string['step4_flag_prefill_help'] = 'The text of the instructions is written in the student\'s field and stays editable: the student completes or rewrites it';
+$string['step4_flag_links'] = 'Links provided';
+$string['step4_flag_links_help'] = 'The interactors linked by this function are given: the student cannot change them, even if the statement stays open';
+$string['step4_prefill_badge'] = 'pre-filled';
+$string['step4_prefill_notice'] = '{$a} pre-filled field(s) still as given or still containing “…”: complete them.';
+$string['step4_automark'] = 'Mark automatically';
+$string['step4_automark_help'] = 'Empty field: to fill in. Text with “…” or “A compléter”: pre-filled. Other text: provided. Links of every function: provided. You can adjust each field afterwards.';
+$string['step4_nolock_warning'] = 'Nothing is locked: students will be able to change everything.';
 
 // Step 5 - Test Sheet page (student)
 $string['step5_page_title'] = 'TEST SHEET';

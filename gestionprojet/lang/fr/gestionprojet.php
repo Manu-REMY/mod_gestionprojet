@@ -790,6 +790,15 @@ $string['step4_flag_locked_help'] = 'Fourni par la consigne : l\'élève ne peut
 $string['step4_flag_gap'] = 'À compléter';
 $string['step4_flag_gap_help'] = 'Arrive vide chez l\'élève ; le texte saisi ici lui sert d\'indication';
 $string['step4_gap_placeholder'] = 'À compléter';
+$string['step4_flag_prefill'] = 'Pré-rempli';
+$string['step4_flag_prefill_help'] = 'Le texte de la consigne est écrit dans le champ de l\'élève et reste modifiable : l\'élève le complète ou le réécrit';
+$string['step4_flag_links'] = 'Liaison fournie';
+$string['step4_flag_links_help'] = 'Les interacteurs reliés par cette fonction sont donnés : l\'élève ne peut pas les changer, même si l\'énoncé reste ouvert';
+$string['step4_prefill_badge'] = 'pré-rempli';
+$string['step4_prefill_notice'] = '{$a} champ(s) pré-rempli(s) encore tel(s) que donné(s) ou contenant « … » : complète-les.';
+$string['step4_automark'] = 'Marquer automatiquement';
+$string['step4_automark_help'] = 'Champ vide : à compléter. Texte avec « … » ou « A compléter » : pré-rempli. Autre texte : fourni. Liaisons de chaque fonction : fournies. Tu peux ensuite ajuster chaque champ.';
+$string['step4_nolock_warning'] = 'Aucun élément n\'est verrouillé : les élèves pourront tout modifier.';
 
 // Step 5 - Page Fiche Essai (élève)
 $string['step5_page_title'] = 'FICHE ESSAI';
