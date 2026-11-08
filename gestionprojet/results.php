@@ -46,7 +46,14 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->activityheader->disable();
 
 $groupid = (int)groups_get_activity_group($cm, true);
-$data = gestionprojet_results_lines($gestionprojet, $cm, $groupid);
+// Separate groups: a teacher in no group and without access to all groups sees nobody (as the quiz report).
+$blocked = groups_get_activity_groupmode($cm) == SEPARATEGROUPS && $groupid === 0
+    && !has_capability('moodle/site:accessallgroups', $context);
+if ($blocked && $download !== '') {
+    throw new moodle_exception('notingroup');
+}
+$data = $blocked ? ['groupmode' => false, 'steps' => [], 'lines' => [], 'summary' => []]
+    : gestionprojet_results_lines($gestionprojet, $cm, $groupid);
 
 $stepnames = [];
 foreach ($data['steps'] as $step) {
@@ -102,7 +109,8 @@ if ($download !== '') {
         function (array $line) use ($data, $celltext, $date): array {
             $out = [];
             if ($data['groupmode']) {
-                $out[] = $line['groupname'] ?? get_string('results_nogroup', 'gestionprojet');
+                $out[] = $line['groupname'] === null ? get_string('results_nogroup', 'gestionprojet')
+                    : format_string($line['groupname'], true, ['escape' => false]);
             }
             $out[] = $line['student'];
             $out[] = $date($line['start']);
@@ -120,6 +128,11 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($gestionprojet->name) . ' — ' . get_string('results', 'gestionprojet'));
 groups_print_activity_menu($cm, $url);
 
+if ($blocked) {
+    echo $OUTPUT->notification(get_string('notingroup'), 'info');
+    echo $OUTPUT->footer();
+    die();
+}
 if (!$data['lines']) {
     echo $OUTPUT->notification(get_string('results_nostudents', 'gestionprojet'), 'info');
     echo $OUTPUT->footer();
@@ -143,7 +156,7 @@ $table->head[] = get_string('results_average', 'gestionprojet');
 foreach ($data['lines'] as $line) {
     $row = new html_table_row();
     if ($data['groupmode'] && $line['groupspan'] > 0) {
-        $cell = new html_table_cell(s($line['groupname'] ?? get_string('results_nogroup', 'gestionprojet')));
+        $cell = new html_table_cell(format_string($line['groupname'] ?? get_string('results_nogroup', 'gestionprojet')));
         $cell->rowspan = $line['groupspan'];
         $cell->attributes['class'] = 'gp-results-group';
         $row->cells[] = $cell;
@@ -156,9 +169,13 @@ foreach ($data['lines'] as $line) {
         foreach ($data['steps'] as $step) {
             $cell = $line['cells'][$step];
             $text = implode(html_writer::empty_tag('br'), array_map('s', $celltext($cell)));
-            $link = new moodle_url('/mod/gestionprojet/grading.php', ['id' => $cm->id, 'step' => $step] + $line['link']);
-            $shared[] = new html_table_cell(html_writer::link($link, $text,
-                ['class' => 'gp-results-cell gp-results-' . $cell['state']]));
+            $class = 'gp-results-cell gp-results-' . $cell['state'];
+            if ($line['link'] === null) {
+                $shared[] = new html_table_cell(html_writer::span($text, $class));
+            } else {
+                $link = new moodle_url('/mod/gestionprojet/grading.php', ['id' => $cm->id, 'step' => $step] + $line['link']);
+                $shared[] = new html_table_cell(html_writer::link($link, $text, ['class' => $class]));
+            }
         }
         $shared[] = new html_table_cell($line['average'] === null ? '—' : format_float($line['average'], 2) . '/20');
         foreach ($shared as $cell) {

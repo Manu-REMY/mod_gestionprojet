@@ -2580,10 +2580,12 @@ function gestionprojet_results_lines(object $gestionprojet, object $cm, int $gro
     $groupmode = !empty($gestionprojet->group_submission);
     $paliermode = (int)($gestionprojet->step4_paliers ?? 0) === 1;
 
-    // Students: enrolled users who can submit, teachers left out.
+    // Students: active enrolled users who can submit, teachers left out (one query each).
+    $teachers = get_enrolled_users($context, 'mod/gestionprojet:grade', 0, 'u.id');
     $users = [];
-    foreach (get_enrolled_users($context, 'mod/gestionprojet:submit', $groupid, 'u.*', 'u.lastname, u.firstname') as $u) {
-        if (!has_capability('mod/gestionprojet:grade', $context, $u)) {
+    foreach (get_enrolled_users($context, 'mod/gestionprojet:submit', $groupid, 'u.*', 'u.lastname, u.firstname', 0, 0, true)
+            as $u) {
+        if (!isset($teachers[$u->id])) {
             $users[(int)$u->id] = $u;
         }
     }
@@ -2646,12 +2648,13 @@ function gestionprojet_results_lines(object $gestionprojet, object $cm, int $gro
     if ($groupmode) {
         $groups = [];
         $memberships = [];
-        foreach (groups_get_all_groups($cm->course, 0, $cm->groupingid) as $g) {
+        foreach (groups_get_all_groups($cm->course, 0, $cm->groupingid, 'g.*', true) as $g) {
             if ($groupid && (int)$g->id !== $groupid) {
                 continue;
             }
-            $groups[(int)$g->id] = format_string($g->name);
-            $memberships[(int)$g->id] = array_map('intval', array_keys(groups_get_members($g->id, 'u.id')));
+            // Raw name: formatted once, where it is shown.
+            $groups[(int)$g->id] = (string)$g->name;
+            $memberships[(int)$g->id] = array_map('intval', array_values($g->members ?? []));
         }
         $names = [];
         foreach ($users as $id => $u) {
@@ -2666,7 +2669,8 @@ function gestionprojet_results_lines(object $gestionprojet, object $cm, int $gro
                 }
             }
             foreach ($block['userids'] as $index => $userid) {
-                // Students in no group work on their own copy (gestionprojet_get_or_create_submission).
+                // A student in no group cannot work in group mode (the step pages refuse it): an individual copy
+                // left from before the switch to group mode is shown, without a link (grading opens groups only).
                 $mine = $block['groupid'] > 0 ? $values : $owner('u' . $userid);
                 if ($block['groupid'] === 0) {
                     foreach ($mine['cells'] as $step => $cell) {
@@ -2678,7 +2682,7 @@ function gestionprojet_results_lines(object $gestionprojet, object $cm, int $gro
                     'groupspan' => $index === 0 ? $count : 0,
                     'ownerspan' => $block['groupid'] > 0 ? ($index === 0 ? $count : 0) : 1,
                     'student' => fullname($users[$userid]),
-                    'link' => $block['groupid'] > 0 ? ['groupid' => $block['groupid']] : ['userid' => $userid],
+                    'link' => $block['groupid'] > 0 ? ['groupid' => $block['groupid']] : null,
                 ];
             }
         }

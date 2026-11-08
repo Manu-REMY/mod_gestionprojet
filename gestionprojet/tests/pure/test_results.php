@@ -80,8 +80,8 @@ test('page: no inline script or style', fn() => $page !== '' && stripos($page, '
 test('lib: lines built with the pure rules', fn() =>
     strpos($lib, 'function gestionprojet_results_lines(object $gestionprojet, object $cm, int $groupid): array') !== false
     && strpos($lib, '\\mod_gestionprojet\\results::cell(') !== false && strpos($lib, '\\mod_gestionprojet\\results::group_rows(') !== false);
-test('lib: students without a group keep their own copy in group mode', fn() =>
-    strpos($lib, "// Students in no group work on their own copy") !== false);
+test('lib: students without a group in group mode: their old individual copy, shown without a link', fn() =>
+    strpos($lib, "// A student in no group cannot work in group mode") !== false);
 test('menu: "Results" link for teachers', fn() => strpos($lib, "new moodle_url('/mod/gestionprojet/results.php'") !== false);
 test('styles: results table', fn() => strpos((string)file_get_contents(GP_ROOT . '/styles.css'), '.path-mod-gestionprojet .gp-results') !== false);
 foreach (['en', 'fr'] as $l) {
@@ -93,3 +93,22 @@ foreach (['en', 'fr'] as $l) {
         test("string $k in $l", fn() => !empty($string[$k]));
     }
 }
+
+// Final review (v2.13.0).
+test('review: separate groups, teacher in no group without accessallgroups → stop', fn() =>
+    strpos($page, 'groups_get_activity_groupmode($cm) == SEPARATEGROUPS') !== false
+    && strpos($page, "has_capability('moodle/site:accessallgroups', \$context)") !== false
+    && strpos($page, "get_string('notingroup')") !== false);
+test('review: a "no group" student in group mode gets no link (grading opens groups only)', fn() =>
+    strpos($lib, "'link' => \$block['groupid'] > 0 ? ['groupid' => \$block['groupid']] : null,") !== false
+    && strpos($page, "\$line['link'] === null") !== false);
+test('review: group names escaped once (raw in the data, format_string when shown)', fn() =>
+    strpos($lib, '$groups[(int)$g->id] = (string)$g->name;') !== false
+    && strpos($page, "format_string(\$line['groupname'] ?? get_string('results_nogroup', 'gestionprojet'))") !== false
+    && strpos($page, "['escape' => false]") !== false);
+test('review: active students only, teachers left out in one query, members with the groups', fn() =>
+    strpos($lib, "'u.*', 'u.lastname, u.firstname', 0, 0, true)") !== false
+    && strpos($lib, "get_enrolled_users(\$context, 'mod/gestionprojet:grade', 0, 'u.id')") !== false
+    && strpos($lib, "groups_get_all_groups(\$cm->course, 0, \$cm->groupingid, 'g.*', true)") !== false
+    && preg_match('/function gestionprojet_results_lines\(.*?\n}\n/s', $lib, $rl) === 1 && strpos($rl[0], 'groups_get_members(') === false
+    && strpos($rl[0], 'has_capability(') === false);
