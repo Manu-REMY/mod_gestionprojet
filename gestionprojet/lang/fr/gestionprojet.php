@@ -995,6 +995,9 @@ $string['ai_hide_answers_help'] = 'Si activé, l\'IA a pour consigne de ne jamai
 $string['formative_limit'] = 'Retours de l’IA avant soumission (par étape)';
 $string['formative_limit_help'] = 'Nombre de fois où un élève (ou un groupe) peut demander un retour de l\'IA sur une étape avant de la soumettre. La copie reste ouverte, aucune note n\'est donnée ; seule la soumission est notée. 0 = pas de bouton de retour.';
 $string['error_formative_limit'] = 'Saisis un nombre entre 0 et 20.';
+$string['formative_disabled'] = 'Le retour avant soumission n’est pas disponible pour cette étape.';
+$string['formative_pending_error'] = 'Un retour est déjà en préparation : attends-le.';
+$string['formative_none_left'] = 'Tu as utilisé tous les retours de cette étape.';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Production notée';

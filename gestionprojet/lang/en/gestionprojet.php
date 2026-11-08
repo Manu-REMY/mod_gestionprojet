@@ -995,6 +995,9 @@ $string['ai_hide_answers_help'] = 'If enabled, the AI is told never to quote the
 $string['formative_limit'] = 'AI feedbacks before submitting (per step)';
 $string['formative_limit_help'] = 'How many times a student (or a group) may ask the AI for feedback on a step before submitting it. The copy stays open, no grade is given; only the submission is graded. 0 = no feedback button.';
 $string['error_formative_limit'] = 'Enter a number between 0 and 20.';
+$string['formative_disabled'] = 'Feedback before submitting is not available for this step.';
+$string['formative_pending_error'] = 'A feedback is already being prepared: wait for it.';
+$string['formative_none_left'] = 'You have used all the feedbacks for this step.';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Submission graded';

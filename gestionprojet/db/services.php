@@ -132,4 +132,13 @@ $functions = [
         'ajax'         => true,
         'capabilities' => 'mod/gestionprojet:configureteacherpages',
     ],
+
+    'mod_gestionprojet_request_formative' => [
+        'classname'    => 'mod_gestionprojet\\external\\request_formative',
+        'methodname'   => 'execute',
+        'description'  => 'Ask the AI for a formative feedback before submitting',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:submit',
+    ],
 ];
