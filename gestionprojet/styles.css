@@ -5685,3 +5685,7 @@
 .path-mod-gestionprojet .gp-cdcf-automark {
     margin-bottom: 0.75rem;
 }
+
+.path-mod-gestionprojet .gp-reseed {
+    margin: 0.75rem 0;
+}

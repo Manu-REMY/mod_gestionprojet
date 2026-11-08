@@ -125,6 +125,16 @@ $stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 
             <div id="cdcfRoot" class="gp-cdcf-root"></div>
         </div>
 
+        <?php if (!$readonly && (int)($gestionprojet->step4_provided ?? 0) === 1): ?>
+        <!-- Give the current starting copy to the copies nobody worked on (preco 22). -->
+        <div class="gp-reseed">
+            <button type="button" class="btn btn-outline-secondary" id="gpReseedButton"
+                title="<?php echo s(get_string('reseed_copies_help', 'gestionprojet')); ?>">
+                <?php echo get_string('reseed_copies', 'gestionprojet'); ?>
+            </button>
+        </div>
+        <?php endif; ?>
+
         <?php if (!$readonly): ?>
         <div class="save-section">
             <button type="button" class="btn-save" id="saveButton">
@@ -202,6 +212,16 @@ $langstrings = [
     'automarkHelp'             => get_string('step4_automark_help', 'gestionprojet'),
     'noLockWarning'            => get_string('step4_nolock_warning', 'gestionprojet'),
 ];
+
+if (!$readonly && (int)($gestionprojet->step4_provided ?? 0) === 1) {
+    $PAGE->requires->js_call_amd('mod_gestionprojet/reseed_copies', 'init', [[
+        'cmid'     => (int)$cm->id,
+        'buttonId' => 'gpReseedButton',
+        'title'    => get_string('reseed_copies', 'gestionprojet'),
+        'confirm'  => get_string('reseed_copies_confirm', 'gestionprojet'),
+        'done'     => get_string('reseed_copies_done', 'gestionprojet'),
+    ]]);
+}
 
 $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'cmid'              => $cm->id,

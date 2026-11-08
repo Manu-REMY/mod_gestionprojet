@@ -799,6 +799,10 @@ $string['step4_prefill_notice'] = '{$a} pre-filled field(s) still as given or st
 $string['step4_automark'] = 'Mark automatically';
 $string['step4_automark_help'] = 'Empty field: to fill in. Text with “…” or “A compléter”: pre-filled. Other text: provided. Links of every function: provided. You can adjust each field afterwards.';
 $string['step4_nolock_warning'] = 'Nothing is locked: students will be able to change everything.';
+$string['reseed_copies'] = 'Reseed the copies not started';
+$string['reseed_copies_help'] = 'Gives the current starting copy (locks, pre-filled and empty fields) to the copies that nobody has worked on yet.';
+$string['reseed_copies_confirm'] = 'The copies still identical to a starting copy (draft, no evaluation, no validated level) receive the current starting copy. Copies where students wrote something are not changed.';
+$string['reseed_copies_done'] = '{$a} copy(ies) reseeded.';
 
 // Step 5 - Test Sheet page (student)
 $string['step5_page_title'] = 'TEST SHEET';

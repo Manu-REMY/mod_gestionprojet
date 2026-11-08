@@ -799,6 +799,10 @@ $string['step4_prefill_notice'] = '{$a} champ(s) pré-rempli(s) encore tel(s) qu
 $string['step4_automark'] = 'Marquer automatiquement';
 $string['step4_automark_help'] = 'Champ vide : à compléter. Texte avec « … » ou « A compléter » : pré-rempli. Autre texte : fourni. Liaisons de chaque fonction : fournies. Tu peux ensuite ajuster chaque champ.';
 $string['step4_nolock_warning'] = 'Aucun élément n\'est verrouillé : les élèves pourront tout modifier.';
+$string['reseed_copies'] = 'Réamorcer les copies non commencées';
+$string['reseed_copies_help'] = 'Donne la copie de départ actuelle (verrous, champs pré-remplis et vides) aux copies sur lesquelles personne n\'a encore travaillé.';
+$string['reseed_copies_confirm'] = 'Les copies encore identiques à une copie de départ (brouillon, sans évaluation, sans palier validé) reçoivent la copie de départ actuelle. Les copies où des élèves ont écrit ne sont pas modifiées.';
+$string['reseed_copies_done'] = '{$a} copie(s) réamorcée(s).';
 
 // Step 5 - Page Fiche Essai (élève)
 $string['step5_page_title'] = 'FICHE ESSAI';
