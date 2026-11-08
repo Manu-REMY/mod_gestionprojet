@@ -287,6 +287,12 @@ $langstrings = [
     'flagGap'                  => get_string('step4_flag_gap', 'gestionprojet'),
     'flagGapHelp'              => get_string('step4_flag_gap_help', 'gestionprojet'),
     'gapPlaceholder'           => get_string('step4_gap_placeholder', 'gestionprojet'),
+    'flagPrefill'              => get_string('step4_flag_prefill', 'gestionprojet'),
+    'flagPrefillHelp'          => get_string('step4_flag_prefill_help', 'gestionprojet'),
+    'flagLinks'                => get_string('step4_flag_links', 'gestionprojet'),
+    'flagLinksHelp'            => get_string('step4_flag_links_help', 'gestionprojet'),
+    'prefillBadge'             => get_string('step4_prefill_badge', 'gestionprojet'),
+    'prefillNotice'            => get_string('step4_prefill_notice', 'gestionprojet'),
     'frozenHelp'               => get_string('palier_frozen_help', 'gestionprojet'),
 ];
 

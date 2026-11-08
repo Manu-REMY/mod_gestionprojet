@@ -125,6 +125,16 @@ $stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 
             <div id="cdcfRoot" class="gp-cdcf-root"></div>
         </div>
 
+        <?php if (!$readonly && (int)($gestionprojet->step4_provided ?? 0) === 1): ?>
+        <!-- Give the current starting copy to the copies nobody worked on (preco 22). -->
+        <div class="gp-reseed">
+            <button type="button" class="btn btn-outline-secondary" id="gpReseedButton"
+                title="<?php echo s(get_string('reseed_copies_help', 'gestionprojet')); ?>">
+                <?php echo get_string('reseed_copies', 'gestionprojet'); ?>
+            </button>
+        </div>
+        <?php endif; ?>
+
         <?php if (!$readonly): ?>
         <div class="save-section">
             <button type="button" class="btn-save" id="saveButton">
@@ -193,7 +203,27 @@ $langstrings = [
     'flagGap'                  => get_string('step4_flag_gap', 'gestionprojet'),
     'flagGapHelp'              => get_string('step4_flag_gap_help', 'gestionprojet'),
     'gapPlaceholder'           => get_string('step4_gap_placeholder', 'gestionprojet'),
+    'flagPrefill'              => get_string('step4_flag_prefill', 'gestionprojet'),
+    'flagPrefillHelp'          => get_string('step4_flag_prefill_help', 'gestionprojet'),
+    'flagLinks'                => get_string('step4_flag_links', 'gestionprojet'),
+    'flagLinksHelp'            => get_string('step4_flag_links_help', 'gestionprojet'),
+    'prefillBadge'             => get_string('step4_prefill_badge', 'gestionprojet'),
+    'automark'                 => get_string('step4_automark', 'gestionprojet'),
+    'automarkHelp'             => get_string('step4_automark_help', 'gestionprojet'),
+    'automarkConfirm'          => get_string('step4_automark_confirm', 'gestionprojet'),
+    'noLockWarning'            => get_string('step4_nolock_warning', 'gestionprojet'),
 ];
+
+if (!$readonly && (int)($gestionprojet->step4_provided ?? 0) === 1) {
+    $PAGE->requires->js_call_amd('mod_gestionprojet/reseed_copies', 'init', [[
+        'cmid'     => (int)$cm->id,
+        'buttonId' => 'gpReseedButton',
+        'dataFieldId' => 'cdcfDataField',
+        'title'    => get_string('reseed_copies', 'gestionprojet'),
+        'confirm'  => get_string('reseed_copies_confirm', 'gestionprojet'),
+        'done'     => get_string('reseed_copies_done', 'gestionprojet'),
+    ]]);
+}
 
 $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'cmid'              => $cm->id,

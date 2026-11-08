@@ -123,4 +123,13 @@ $functions = [
         'ajax'         => true,
         'capabilities' => 'mod/gestionprojet:grade',
     ],
+
+    'mod_gestionprojet_reseed_copies' => [
+        'classname'    => 'mod_gestionprojet\\external\\reseed_copies',
+        'methodname'   => 'execute',
+        'description'  => 'Give the current starting copy to the step 4 copies nobody worked on',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:configureteacherpages',
+    ],
 ];

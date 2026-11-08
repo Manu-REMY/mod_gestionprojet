@@ -38,7 +38,8 @@ defined('MOODLE_INTERNAL') || die();
 class consigne_lock {
 
     /** @var string[] Keys that only describe the consigne, never stored in a student copy. */
-    const FLAG_KEYS = ['locked', 'gap', 'niveauLocked', 'niveauGap', 'hint', 'niveauHint'];
+    const FLAG_KEYS = ['locked', 'gap', 'prefill', 'niveauLocked', 'niveauGap', 'niveauPrefill', 'linksLocked', 'hint',
+        'niveauHint'];
 
     /**
      * Remove every flag key.
@@ -74,6 +75,9 @@ class consigne_lock {
             }
         }
         foreach ($provided['fonctionsService'] ?? [] as $fs) {
+            if (!empty($fs['linksLocked'])) {
+                return true;
+            }
             foreach ($fs['criteres'] ?? [] as $c) {
                 if (!empty($c['locked']) || !empty($c['niveauLocked'])) {
                     return true;
@@ -188,7 +192,7 @@ class consigne_lock {
         // Interactors: locked ones, and those used by a locked FS.
         $needed = [];
         foreach ($provided['fonctionsService'] as $fs) {
-            if (!empty($fs['locked'])) {
+            if (!empty($fs['locked']) || !empty($fs['linksLocked'])) {
                 $needed[$fs['interactor1Id']] = true;
                 $needed[$fs['interactor2Id']] = true;
             }
@@ -239,7 +243,7 @@ class consigne_lock {
                 $index = null;
             }
             if ($index === null) {
-                if (!empty($pfs['locked']) || $lockedcriteria) {
+                if (!empty($pfs['locked']) || !empty($pfs['linksLocked']) || $lockedcriteria) {
                     array_splice($student['fonctionsService'], min($rank, count($student['fonctionsService'])), 0,
                         [self::strip_flags(['fonctionsService' => [self::seed_fs($pfs)]])['fonctionsService'][0]]);
                 }
@@ -248,6 +252,8 @@ class consigne_lock {
             $fs = &$student['fonctionsService'][$index];
             if (!empty($pfs['locked'])) {
                 $fs['description'] = $pfs['description'];
+            }
+            if (!empty($pfs['locked']) || !empty($pfs['linksLocked'])) {
                 $fs['interactor1Id'] = $pfs['interactor1Id'];
                 $fs['interactor2Id'] = $pfs['interactor2Id'];
             }
@@ -320,6 +326,70 @@ class consigne_lock {
         $normalized = cdcf_helper::normalize($decoded);
         $stripped = self::strip_flags($normalized);
         return $stripped === $normalized ? $json : json_encode($stripped, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Whether a student copy is still a starting copy: the current one (seed) or the one given before the teacher
+     * set the flags (the consigne text as is). Used to reseed copies nobody worked on (v2.11.3).
+     *
+     * @param array $copy Student copy (normalized).
+     * @param array $provided Consigne.
+     * @return bool
+     */
+    public static function is_untouched(array $copy, array $provided): bool {
+        $copy = self::strip_flags($copy);
+        $reference = self::strip_flags($provided);
+        if ($copy === self::seed($provided) || $copy === $reference) {
+            return true;
+        }
+        // A copy seeded under earlier flags: same structure, every text either the consigne text or emptied.
+        return self::fill_emptied($copy, $reference) === $reference;
+    }
+
+    /**
+     * The copy with each emptied text field given the consigne text, when the structure matches (same ids, same order).
+     *
+     * @param array $copy Copy without flags.
+     * @param array $reference Consigne without flags.
+     * @return array The copy (unchanged where the structure differs).
+     */
+    private static function fill_emptied(array $copy, array $reference): array {
+        $fill = function (array $mine, array $theirs, array $fields): array {
+            foreach ($fields as $field) {
+                if (($mine[$field] ?? null) === '' && isset($theirs[$field])) {
+                    $mine[$field] = $theirs[$field];
+                }
+            }
+            return $mine;
+        };
+        $lists = ['interactors' => ['name'], 'contraintes' => ['description', 'justification']];
+        foreach ($lists as $key => $fields) {
+            if (count($copy[$key]) !== count($reference[$key])) {
+                return $copy;
+            }
+            foreach ($copy[$key] as $i => $element) {
+                if ($element['id'] === $reference[$key][$i]['id']) {
+                    $copy[$key][$i] = $fill($element, $reference[$key][$i], $fields);
+                }
+            }
+        }
+        if (count($copy['fonctionsService']) !== count($reference['fonctionsService'])) {
+            return $copy;
+        }
+        foreach ($copy['fonctionsService'] as $i => $fs) {
+            $rfs = $reference['fonctionsService'][$i];
+            if ($fs['id'] !== $rfs['id'] || count($fs['criteres']) !== count($rfs['criteres'])) {
+                continue;
+            }
+            $fs = $fill($fs, $rfs, ['description']);
+            foreach ($fs['criteres'] as $j => $c) {
+                if ($c['id'] === $rfs['criteres'][$j]['id']) {
+                    $fs['criteres'][$j] = $fill($c, $rfs['criteres'][$j], ['description', 'niveau', 'flexibilite']);
+                }
+            }
+            $copy['fonctionsService'][$i] = $fs;
+        }
+        return $copy;
     }
 
     /**
@@ -398,15 +468,16 @@ class consigne_lock {
      * @return array
      */
     private static function copy_flags(array $element, array $source, string $field): array {
-        foreach (['locked', 'gap', 'niveauLocked', 'niveauGap'] as $flag) {
+        foreach (['locked', 'gap', 'prefill', 'niveauLocked', 'niveauGap', 'niveauPrefill', 'linksLocked'] as $flag) {
             if (!empty($source[$flag])) {
                 $element[$flag] = true;
             }
         }
-        if (!empty($source['gap']) && ($source[$field] ?? '') !== '') {
+        // Gap: the consigne text is the hint of the empty box; prefill: it is the text the field started with.
+        if ((!empty($source['gap']) || !empty($source['prefill'])) && ($source[$field] ?? '') !== '') {
             $element['hint'] = $source[$field];
         }
-        if (!empty($source['niveauGap']) && ($source['niveau'] ?? '') !== '') {
+        if ((!empty($source['niveauGap']) || !empty($source['niveauPrefill'])) && ($source['niveau'] ?? '') !== '') {
             $element['niveauHint'] = $source['niveau'];
         }
         return $element;

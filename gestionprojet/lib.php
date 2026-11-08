@@ -889,6 +889,64 @@ function gestionprojet_student_consult_only(object $gestionprojet, int $step): b
 }
 
 /**
+ * Whether a student step (4, 5 or 9) is enabled with a consigne shown: students can start it whatever the
+ * teacher pages (preco 17 bis, v2.11.3).
+ *
+ * @param object $gestionprojet Instance record.
+ * @return bool
+ */
+function gestionprojet_has_provided_student_step(object $gestionprojet): bool {
+    foreach ([4, 5, 9] as $step) {
+        if ((int)($gestionprojet->{'step' . $step . '_provided'} ?? 0) === 1
+                && (int)($gestionprojet->{'enable_step' . $step} ?? 1) === 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Give the current starting copy to the step 4 copies nobody worked on (preco 22, v2.11.3).
+ *
+ * A copy is reseeded when it is a draft, has no zone frozen by a level, no AI evaluation, and is still a
+ * starting copy (consigne_lock::is_untouched): the teacher can set the flags after the copies were created.
+ *
+ * @param object $gestionprojet Instance record.
+ * @return int Number of copies reseeded.
+ */
+function gestionprojet_cdcf_reseed_untouched(object $gestionprojet): int {
+    global $DB;
+
+    if ((int)($gestionprojet->step4_provided ?? 0) !== 1) {
+        return 0;
+    }
+    $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
+    if (empty($provided)) {
+        return 0;
+    }
+    $consigne = \mod_gestionprojet\cdcf_helper::decode($provided);
+    $seedjson = json_encode(\mod_gestionprojet\consigne_lock::seed($consigne), JSON_UNESCAPED_UNICODE);
+    $count = 0;
+    foreach ($DB->get_records('gestionprojet_cdcf', ['gestionprojetid' => $gestionprojet->id, 'status' => 0]) as $copy) {
+        if (!empty($copy->zones_validees) || $copy->interacteurs_data === $seedjson) {
+            continue;
+        }
+        if ($DB->record_exists('gestionprojet_ai_evaluations',
+                ['gestionprojetid' => $gestionprojet->id, 'step' => 4, 'submissionid' => $copy->id])) {
+            continue;
+        }
+        if (!\mod_gestionprojet\consigne_lock::is_untouched(
+                \mod_gestionprojet\cdcf_helper::decode($copy->interacteurs_data ?: null), $consigne)) {
+            continue;
+        }
+        $DB->update_record('gestionprojet_cdcf', (object)['id' => $copy->id, 'interacteurs_data' => $seedjson,
+            'timemodified' => time()]);
+        $count++;
+    }
+    return $count;
+}
+
+/**
  * Check if teacher pages are complete.
  *
  * Only the enabled teacher steps (1 description, 2 besoin, 3 planning) are checked: a disabled step

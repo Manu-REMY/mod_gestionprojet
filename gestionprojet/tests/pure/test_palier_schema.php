@@ -126,8 +126,7 @@ foreach (['MATURITY_ALPHA' => 50, 'MATURITY_BETA' => 100, 'MATURITY_RC' => 150, 
 }
 $plugin = new stdClass();
 include(GP_ROOT . '/version.php');
-test('version 2026110805', fn() => $plugin->version === 2026110805);
-test('release 2.11.2', fn() => $plugin->release === '2.11.2');
+test('version is at least 2026110805 (the level schema upgrade runs)', fn() => $plugin->version >= 2026110805);
 
 // Privacy review: the members of a level are personal data.
 $m = json_encode([[12, 'alice'], [34, 'bob']]);

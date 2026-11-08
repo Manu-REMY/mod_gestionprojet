@@ -40,7 +40,9 @@ $cdcfstarted = function($rec) {
 };
 
 // Check if teacher pages are complete.
-$teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id);
+// Students are never blocked on a step whose consigne is provided (preco 17 bis).
+$teacherpagescomplete = gestionprojet_teacher_pages_complete($gestionprojet->id)
+    || gestionprojet_has_provided_student_step($gestionprojet);
 
 // Build context data for the template.
 $templatecontext = [

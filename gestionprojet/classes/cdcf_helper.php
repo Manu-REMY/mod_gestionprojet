@@ -35,10 +35,10 @@ class cdcf_helper {
     const FLEXIBILITE_CODES = ['', 'F0', 'F1', 'F2', 'F3'];
 
     /**
-     * Consigne flags kept by normalize(): [lock key, gap key]; the lock wins over the gap.
-     * Criteria carry a second pair for their level (niveau and flexibilite).
+     * Consigne flags kept by normalize(): three exclusive states per field, in priority order
+     * (provided/locked, to fill in/gap, pre-filled/prefill, v2.11.3). Criteria carry a second set for their level.
      */
-    const FLAG_PAIRS = ['element' => ['locked', 'gap'], 'niveau' => ['niveauLocked', 'niveauGap']];
+    const FLAG_PAIRS = ['element' => ['locked', 'gap', 'prefill'], 'niveau' => ['niveauLocked', 'niveauGap', 'niveauPrefill']];
 
     /**
      * Flags of an element of the consigne, written only when true (v2.11.1).
@@ -50,11 +50,11 @@ class cdcf_helper {
     private static function flags(array $src, array $pairs): array {
         $out = [];
         foreach ($pairs as $pair) {
-            [$lock, $gap] = self::FLAG_PAIRS[$pair];
-            if (!empty($src[$lock])) {
-                $out[$lock] = true;
-            } else if (!empty($src[$gap])) {
-                $out[$gap] = true;
+            foreach (self::FLAG_PAIRS[$pair] as $flag) {
+                if (!empty($src[$flag])) {
+                    $out[$flag] = true;
+                    break;
+                }
             }
         }
         return $out;
@@ -129,7 +129,9 @@ class cdcf_helper {
                     'interactor1Id' => (int)($fs['interactor1Id'] ?? 0),
                     'interactor2Id' => (int)($fs['interactor2Id'] ?? 0),
                     'criteres' => $criteres,
-                ] + self::flags($fs, ['element']);
+                ] + self::flags($fs, ['element'])
+                    // Links locked on their own: the statement may stay open (v2.11.3).
+                    + (!empty($fs['linksLocked']) ? ['linksLocked' => true] : []);
             }, $data['fonctionsService']));
         }
         if (!empty($data['contraintes']) && is_array($data['contraintes'])) {
