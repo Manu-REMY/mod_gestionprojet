@@ -45,3 +45,11 @@ test('FAST text for the AI: usage function', fn() => strpos($lib, "'Fonction pri
 foreach (['fast_editor', 'fast_diagram'] as $m) {
     test("build $m.min.js up to date", fn() => filemtime(GP_ROOT . "/amd/build/$m.min.js") >= filemtime(GP_ROOT . "/amd/src/$m.js"));
 }
+
+// Final review: the default FAST grading criterion, sent back to students by the AI, and old JS labels.
+$builder = (string)file_get_contents(GP_ROOT . '/classes/ai_prompt_builder.php');
+test('AI criteria: no FP in the default criteria names', fn() => preg_match('/\bFP\b|[Ff]onction principale/u', $builder) === 0);
+test("teacher_model.js: no FC label nor 'fonction contrainte'", fn() =>
+    preg_match("/'FC'|Fonction Contrainte|fonction contrainte/u", (string)file_get_contents(GP_ROOT . '/amd/src/teacher_model.js')) === 0);
+test('step4.js (old CDCF editor, loaded by no page) removed', fn() =>
+    !is_file(GP_ROOT . '/amd/src/step4.js') && !is_file(GP_ROOT . '/amd/build/step4.min.js'));

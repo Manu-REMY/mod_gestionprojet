@@ -121,14 +121,14 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
                 fcItem.className = 'fc-item';
 
                 var fcHeader = document.createElement('div');
-                fcHeader.appendChild(createTextElement('span', 'fc-label', 'FC' + (fcIndex + 1)));
+                fcHeader.appendChild(createTextElement('span', 'fc-label', 'C' + (fcIndex + 1)));
                 fcItem.appendChild(fcHeader);
 
                 var fcValueInput = document.createElement('input');
                 fcValueInput.type = 'text';
                 fcValueInput.className = 'fc-value-input';
                 fcValueInput.value = fc.value;
-                fcValueInput.placeholder = 'Description de la fonction contrainte';
+                fcValueInput.placeholder = 'Description de la contrainte';
                 fcValueInput.onchange = function() {
                     interacteurs[iIndex].fcs[fcIndex].value = fcValueInput.value;
                 };
@@ -206,7 +206,7 @@ define(['jquery', 'mod_gestionprojet/autosave'], function($, Autosave) {
             var addFCBtn = document.createElement('button');
             addFCBtn.type = 'button';
             addFCBtn.className = 'btn-add';
-            addFCBtn.textContent = '+ Fonction Contrainte';
+            addFCBtn.textContent = '+ Contrainte';
             addFCBtn.onclick = function() {
                 interacteurs[iIndex].fcs.push({value: '', criteres: [{critere: '', niveau: '', unite: ''}]});
                 renderInteractors();
