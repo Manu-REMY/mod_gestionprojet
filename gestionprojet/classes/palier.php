@@ -242,6 +242,39 @@ class palier {
     }
 
     /**
+     * Whether a user is listed in the members of a level (JSON [[userid, username], ...]).
+     *
+     * @param string|null $membres
+     * @param int $userid
+     * @return bool
+     */
+    public static function has_member(?string $membres, int $userid): bool {
+        foreach ((array)json_decode((string)$membres, true) as $member) {
+            if (is_array($member) && (int)($member[0] ?? 0) === $userid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Members of a level without this user (privacy deletion).
+     *
+     * @param string|null $membres
+     * @param int $userid
+     * @return string JSON [[userid, username], ...]
+     */
+    public static function remove_member(?string $membres, int $userid): string {
+        $kept = [];
+        foreach ((array)json_decode((string)$membres, true) as $member) {
+            if (is_array($member) && (int)($member[0] ?? 0) !== $userid) {
+                $kept[] = $member;
+            }
+        }
+        return json_encode($kept);
+    }
+
+    /**
      * Levels removed when the teacher removes one: that level and every higher validated one.
      *
      * @param string $palier Level removed by the teacher.

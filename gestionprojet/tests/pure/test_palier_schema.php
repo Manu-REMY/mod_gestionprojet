@@ -128,3 +128,19 @@ $plugin = new stdClass();
 include(GP_ROOT . '/version.php');
 test('version 2026110805', fn() => $plugin->version === 2026110805);
 test('release 2.11.2', fn() => $plugin->release === '2.11.2');
+
+// Privacy review: the members of a level are personal data.
+$m = json_encode([[12, 'alice'], [34, 'bob']]);
+test('has_member finds a member', fn() => \mod_gestionprojet\palier::has_member($m, 34) === true);
+test('has_member: not a member', fn() => \mod_gestionprojet\palier::has_member($m, 3) === false);
+test('has_member: invalid JSON', fn() => \mod_gestionprojet\palier::has_member('{oops', 12) === false);
+test('remove_member drops the user and their name', fn() => \mod_gestionprojet\palier::remove_member($m, 12) === json_encode([[34, 'bob']]));
+test('remove_member: unknown user leaves the list', fn() => \mod_gestionprojet\palier::remove_member($m, 99) === json_encode([[12, 'alice'], [34, 'bob']]));
+foreach (['get_contexts_for_userid', 'get_users_in_context', 'export_user_data'] as $fn) {
+    test("privacy $fn finds a user through membres", fn() => strpos(fn_body($privacy, $fn), 'membres') !== false);
+}
+foreach (['delete_data_for_user', 'delete_data_for_users'] as $fn) {
+    test("privacy $fn removes the user from membres", fn() => strpos(fn_body($privacy, $fn), 'self::remove_from_palier_members(') !== false);
+}
+test('privacy helper rewrites membres without the user', fn() =>
+    strpos(fn_body($privacy, 'remove_from_palier_members'), 'palier::remove_member(') !== false);
