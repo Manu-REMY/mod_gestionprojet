@@ -181,6 +181,12 @@ class ai_summary_generator {
         $endpoint = \mod_gestionprojet\ai_config::ENDPOINTS[$provider];
         $model = self::get_model_for_provider($provider);
 
+        // The curl class lives in filelib.php, not autoloaded (CLI, adhoc tasks).
+
+        global $CFG;
+
+        require_once($CFG->libdir . '/filelib.php');
+
         $curl = new \curl();
         $curl->setopt([
             'CURLOPT_TIMEOUT' => 120,

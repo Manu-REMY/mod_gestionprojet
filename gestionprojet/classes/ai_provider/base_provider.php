@@ -184,6 +184,9 @@ abstract class base_provider implements provider_interface {
      * @throws \Exception On error
      */
     protected function make_request(string $systemprompt, string $userprompt, string $model, int $maxtokens): array {
+        // The curl class lives in filelib.php, not autoloaded (CLI, adhoc tasks).
+        global $CFG;
+        require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl();
         $curl->setopt([
             'CURLOPT_TIMEOUT' => $this->timeout,

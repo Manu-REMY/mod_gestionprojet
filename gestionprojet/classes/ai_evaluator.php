@@ -286,8 +286,8 @@ class ai_evaluator {
 
             return true;
 
-        } catch (\Exception $e) {
-            // Mark as failed.
+        } catch (\Throwable $e) {
+            // Mark as failed, also on an \Error (missing class, TypeError): never leave it processing forever.
             $evaluation->status = 'failed';
             $evaluation->error_message = $e->getMessage();
             $evaluation->timemodified = time();

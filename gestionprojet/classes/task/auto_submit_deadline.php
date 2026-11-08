@@ -130,7 +130,8 @@ class auto_submit_deadline extends \core\task\scheduled_task {
 
                         // Trigger AI evaluation if enabled (wrapped in try-catch to not block submission).
                         try {
-                            $this->trigger_ai_evaluation($model->gestionprojetid, $stepnum, $draft);
+                            $gestionprojet = $DB->get_record('gestionprojet', ['id' => $model->gestionprojetid], '*', MUST_EXIST);
+                            gestionprojet_trigger_ai_evaluation_safe($gestionprojet, $stepnum, $draft);
                         } catch (\Throwable $aierror) {
                             mtrace("        WARNING: AI evaluation trigger failed: " . $aierror->getMessage());
                         }
@@ -145,65 +146,5 @@ class auto_submit_deadline extends \core\task\scheduled_task {
         }
 
         mtrace("Auto-submit deadline task completed. Processed: {$processedcount}, Errors: {$errorcount}");
-    }
-
-    /**
-     * Trigger AI evaluation for an auto-submitted draft.
-     *
-     * @param int $gestionprojetid Activity instance ID
-     * @param int $step Step number
-     * @param object $submission Submission record
-     */
-    private function trigger_ai_evaluation($gestionprojetid, $step, $submission) {
-        global $DB, $CFG;
-
-        // Get the activity instance.
-        $gestionprojet = $DB->get_record('gestionprojet', ['id' => $gestionprojetid]);
-
-        if (!$gestionprojet || empty($gestionprojet->ai_enabled)) {
-            return;
-        }
-
-        // Check if AI evaluator class exists.
-        $evaluatorfile = $CFG->dirroot . '/mod/gestionprojet/classes/ai_evaluator.php';
-        if (!file_exists($evaluatorfile)) {
-            return;
-        }
-
-        require_once($evaluatorfile);
-
-        // Get the teacher model for this step.
-        $teachertables = [
-            4 => 'gestionprojet_cdcf_teacher',
-            5 => 'gestionprojet_essai_teacher',
-            6 => 'gestionprojet_rapport_teacher',
-            7 => 'gestionprojet_besoin_eleve_teacher',
-            8 => 'gestionprojet_carnet_teacher',
-        ];
-
-        $teachertable = $teachertables[$step] ?? null;
-        if (!$teachertable) {
-            return;
-        }
-
-        $teachermodel = $DB->get_record($teachertable, ['gestionprojetid' => $gestionprojetid]);
-
-        // Check if AI instructions are defined.
-        if (!$teachermodel || empty($teachermodel->ai_instructions)) {
-            return;
-        }
-
-        try {
-            // Queue the AI evaluation.
-            \mod_gestionprojet\ai_evaluator::queue_evaluation(
-                $gestionprojet,
-                $step,
-                $submission->groupid,
-                $submission->userid ?: 0
-            );
-            mtrace("        AI evaluation queued for auto-submitted draft.");
-        } catch (\Exception $e) {
-            mtrace("        WARNING: Could not queue AI evaluation: " . $e->getMessage());
-        }
     }
 }

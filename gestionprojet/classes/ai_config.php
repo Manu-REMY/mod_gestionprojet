@@ -251,6 +251,9 @@ class ai_config {
         string $model,
         string $message
     ): array {
+        // The curl class lives in filelib.php, not autoloaded (CLI, adhoc tasks).
+        global $CFG;
+        require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl();
         $curl->setopt([
             'CURLOPT_TIMEOUT' => 30,
