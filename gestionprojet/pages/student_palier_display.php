@@ -42,7 +42,8 @@ foreach ($palierstate['ingrid'] as $code) {
         echo html_writer::div('✓ ' . get_string('palier_validated', 'gestionprojet', $label), 'gp-palier-status gp-palier-ok');
     } else if ($pending && $pending->palier === $code) {
         // Same markup as the submission progress banner: student_ai_progress polls it and reloads at the end.
-        echo html_writer::div(html_writer::span(get_string('palier_pending', 'gestionprojet', $label), 'ai-progress-label'),
+        echo html_writer::div(html_writer::span('', 'gp-spinner', ['aria-hidden' => 'true'])
+            . html_writer::span(get_string('palier_pending', 'gestionprojet', $label), 'ai-progress-label'),
             'gp-palier-status gp-palier-pending ai-progress-banner status-' . s($pending->status),
             ['id' => 'ai-progress-banner', 'data-status' => s($pending->status)]);
     } else if (!$pending && in_array($code, $palierstate['requestable'], true)) {

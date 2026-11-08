@@ -51,9 +51,15 @@ define([
      * Open the confirmation modal.
      */
     function openModal() {
+        // A student who changes their mind can ask for a feedback instead (v2.12.2): offered only when the
+        // progress panel shows the ask button (feedback left, not pending, not in level mode).
+        var ask = document.getElementById('gpFormativeButton');
+        var canask = !!(ask && !ask.disabled);
         Templates.render('mod_gestionprojet/submit_modal', {
             isgroup: !!config.isGroup,
-            aienabled: !!config.aiEnabled
+            aienabled: !!config.aiEnabled,
+            canask: canask,
+            asklabel: canask ? ask.textContent : ''
         }).then(function(html) {
             return ModalFactory.create({
                 type: ModalFactory.types.SAVE_CANCEL,
@@ -71,6 +77,11 @@ define([
 
             modal.getRoot().on(ModalEvents.shown, function() {
                 modal.getRoot().find('[data-action="save"]').prop('disabled', true);
+            });
+
+            modal.getRoot().on('click', '[data-action="gp-ask-instead"]', function() {
+                modal.hide();
+                ask.click();
             });
 
             modal.getRoot().on(ModalEvents.save, function(e) {

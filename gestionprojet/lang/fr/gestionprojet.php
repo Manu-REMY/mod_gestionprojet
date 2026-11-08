@@ -959,6 +959,7 @@ $string['submit_modal_ai'] = 'La correction IA automatique démarrera immédiate
 $string['submit_modal_irreversible'] = 'Seul ton professeur peut déverrouiller ta soumission.';
 $string['submit_modal_group_warning'] = 'Attention : cette action soumet le travail pour tout le groupe — préviens d\'abord tes coéquipiers.';
 $string['submit_modal_checkbox'] = 'J\'ai relu mon travail et je veux le soumettre définitivement.';
+$string['submit_modal_ask_intro'] = 'Pas encore sûr(e) ? Demande d\'abord un retour : ta copie n\'est pas soumise et reste modifiable.';
 $string['confirm_submit_btn'] = 'Soumettre définitivement';
 $string['ai_progress_pending_student'] = 'Évaluation IA en attente…';
 $string['ai_progress_processing_student'] = 'Évaluation IA en cours…';

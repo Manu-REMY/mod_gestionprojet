@@ -6,11 +6,15 @@
     Context variables:
         isgroup    - bool: true if in group submission mode
         aienabled  - bool: true if AI evaluation is enabled for this instance
+        canask     - bool: true if a formative feedback can still be asked instead of submitting
+        asklabel   - string: label of the ask button (with the number of feedbacks left)
 
     Example context (json):
     {
         "isgroup": false,
-        "aienabled": true
+        "aienabled": true,
+        "canask": true,
+        "asklabel": "Ask for feedback (2 left)"
     }
 }}
 <div class="submit-confirm-modal">
@@ -27,6 +31,12 @@
         {{#str}}submit_modal_group_warning, mod_gestionprojet{{/str}}
     </div>
     {{/isgroup}}
+    {{#canask}}
+    <div class="gp-submit-ask-instead">
+        <p>{{#str}}submit_modal_ask_intro, mod_gestionprojet{{/str}}</p>
+        <button type="button" class="btn btn-outline-primary" data-action="gp-ask-instead">{{asklabel}}</button>
+    </div>
+    {{/canask}}
     <div class="form-check mt-3">
         <input class="form-check-input" type="checkbox" id="submit-confirm-checkbox">
         <label class="form-check-label" for="submit-confirm-checkbox">

@@ -111,57 +111,26 @@ if (!empty($submission)) {
         echo html_writer::tag('h3', get_string('progress_feedback_title', 'gestionprojet'));
         $formative = $progress['formative'];
         if ($formative && $formative['pending']) {
-            // Followed by formative_button: no automatic reload while the copy is open.
-            echo html_writer::div(html_writer::span(get_string('formative_pending', 'gestionprojet'), 'ai-progress-label'),
-                'gp-formative-status ai-progress-banner status-' . s($formative['pending']->status),
-                ['id' => 'gpFormativeBanner']);
+            // Followed by formative_button: when ready, the feedback replaces this banner by itself (no reload,
+            // nothing typed is lost). The live region announces it; the spinner is decoration.
+            $banner = html_writer::span('', 'gp-spinner', ['aria-hidden' => 'true'])
+                . html_writer::span(get_string('formative_pending', 'gestionprojet'), 'ai-progress-label');
+            echo html_writer::div(html_writer::div($banner,
+                'gp-formative-status ai-progress-banner status-' . s($formative['pending']->status)),
+                'gp-formative-live', ['id' => 'gpFormativeBanner', 'aria-live' => 'polite']);
             $PAGE->requires->js_call_amd('mod_gestionprojet/formative_button', 'init', [[
                 'cmid' => (int)$cm->id,
                 'pendingId' => (int)$formative['pending']->id,
+                'step' => (int)$step,
+                'groupid' => (int)$groupid,
                 'statusUrl' => (new moodle_url('/mod/gestionprojet/ajax/get_evaluation_status.php'))->out(false),
                 'bannerId' => 'gpFormativeBanner',
                 'strings' => [
-                    'ready' => get_string('formative_ready', 'gestionprojet'),
-                    'show' => get_string('formative_show', 'gestionprojet'),
                     'error' => get_string('formative_error', 'gestionprojet'),
                 ],
             ]]);
         } else if ($progress['feedback']['source'] !== 'none') {
-            echo html_writer::tag('p', userdate($progress['feedback']['time'], get_string('strftimedatetimeshort')),
-                ['class' => 'gp-progress-date']);
-            if ($progress['feedback']['text'] !== '') {
-                echo html_writer::tag('p', nl2br(s($progress['feedback']['text'])));
-            }
-            if ($progress['feedback']['suggestions']) {
-                echo html_writer::alist(array_map(function ($suggestion): string {
-                    return s(is_scalar($suggestion) ? (string)$suggestion : '');
-                }, $progress['feedback']['suggestions']));
-            }
-            // Criteria of the grade (score per criterion), as the former grade block showed them.
-            if ($progress['feedback']['criteria']) {
-                echo html_writer::tag('h4', get_string('progress_criteria', 'gestionprojet'));
-                $items = [];
-                foreach ($progress['feedback']['criteria'] as $criterion) {
-                    if (!is_array($criterion)) {
-                        continue;
-                    }
-                    $line = (string)($criterion['name'] ?? '');
-                    if (isset($criterion['score'], $criterion['max'])) {
-                        $line .= ' : ' . format_float((float)$criterion['score'], 1) . '/' . format_float((float)$criterion['max'], 1);
-                    }
-                    if (!empty($criterion['comment'])) {
-                        $line .= ' — ' . (string)$criterion['comment'];
-                    }
-                    $items[] = s($line);
-                }
-                echo html_writer::alist($items, ['class' => 'gp-progress-criteria']);
-            }
-            if ($progress['feedback']['keywords']) {
-                echo html_writer::tag('h4', get_string('progress_keywords', 'gestionprojet'));
-                echo html_writer::alist(array_map(function ($keyword): string {
-                    return '✓ ' . s(is_scalar($keyword) ? (string)$keyword : '');
-                }, $progress['feedback']['keywords']), ['class' => 'gp-progress-keywords']);
-            }
+            echo gestionprojet_progress_feedback_html($progress['feedback']);
         } else {
             echo html_writer::tag('p', get_string('progress_feedback_none', 'gestionprojet'), ['class' => 'gp-progress-date']);
         }
