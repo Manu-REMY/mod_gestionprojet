@@ -20,7 +20,7 @@
  * @copyright  2026 Emmanuel REMY
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
+define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram, Notification) {
     'use strict';
 
     function nextId(arr) {
@@ -212,7 +212,13 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                     out.push(el('div', { className: 'alert alert-warning gp-cdcf-nolock', text: '⚠ ' + lang.noLockWarning }));
                 }
                 out.push(el('button', { type: 'button', className: 'btn btn-secondary gp-cdcf-automark',
-                    text: '⚙ ' + lang.automark, title: lang.automarkHelp, onclick: automark }));
+                    text: '⚙ ' + lang.automark, title: lang.automarkHelp,
+                    onclick: function() {
+                        // It replaces every state set by hand: confirm first.
+                        Notification.saveCancelPromise(lang.automark, lang.automarkConfirm, lang.automark)
+                            .then(automark)
+                            .catch(function() { return null; });
+                    } }));
             } else if (!editFlags && !locked) {
                 var left = prefillLeft();
                 if (left > 0) {

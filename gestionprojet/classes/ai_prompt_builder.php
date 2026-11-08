@@ -668,7 +668,12 @@ PROMPT;
             return ' [à compléter]';
         }
         // Pre-filled (v2.11.3): the field started with the consigne text, quoted so that the AI sees what changed.
-        return !empty($element[$prefill]) ? ' [pré-rempli : « ' . (string)($element[$hint] ?? '') . ' »]' : '';
+        if (empty($element[$prefill])) {
+            return '';
+        }
+        // The consigne itself carries no hint: no quote there (an empty quote would mislead the AI).
+        $text = (string)($element[$hint] ?? '');
+        return $text === '' ? ' [pré-rempli]' : ' [pré-rempli : « ' . $text . ' »]';
     }
 
     /**

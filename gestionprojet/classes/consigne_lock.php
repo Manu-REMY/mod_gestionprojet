@@ -338,7 +338,58 @@ class consigne_lock {
      */
     public static function is_untouched(array $copy, array $provided): bool {
         $copy = self::strip_flags($copy);
-        return $copy === self::seed($provided) || $copy === self::strip_flags($provided);
+        $reference = self::strip_flags($provided);
+        if ($copy === self::seed($provided) || $copy === $reference) {
+            return true;
+        }
+        // A copy seeded under earlier flags: same structure, every text either the consigne text or emptied.
+        return self::fill_emptied($copy, $reference) === $reference;
+    }
+
+    /**
+     * The copy with each emptied text field given the consigne text, when the structure matches (same ids, same order).
+     *
+     * @param array $copy Copy without flags.
+     * @param array $reference Consigne without flags.
+     * @return array The copy (unchanged where the structure differs).
+     */
+    private static function fill_emptied(array $copy, array $reference): array {
+        $fill = function (array $mine, array $theirs, array $fields): array {
+            foreach ($fields as $field) {
+                if (($mine[$field] ?? null) === '' && isset($theirs[$field])) {
+                    $mine[$field] = $theirs[$field];
+                }
+            }
+            return $mine;
+        };
+        $lists = ['interactors' => ['name'], 'contraintes' => ['description', 'justification']];
+        foreach ($lists as $key => $fields) {
+            if (count($copy[$key]) !== count($reference[$key])) {
+                return $copy;
+            }
+            foreach ($copy[$key] as $i => $element) {
+                if ($element['id'] === $reference[$key][$i]['id']) {
+                    $copy[$key][$i] = $fill($element, $reference[$key][$i], $fields);
+                }
+            }
+        }
+        if (count($copy['fonctionsService']) !== count($reference['fonctionsService'])) {
+            return $copy;
+        }
+        foreach ($copy['fonctionsService'] as $i => $fs) {
+            $rfs = $reference['fonctionsService'][$i];
+            if ($fs['id'] !== $rfs['id'] || count($fs['criteres']) !== count($rfs['criteres'])) {
+                continue;
+            }
+            $fs = $fill($fs, $rfs, ['description']);
+            foreach ($fs['criteres'] as $j => $c) {
+                if ($c['id'] === $rfs['criteres'][$j]['id']) {
+                    $fs['criteres'][$j] = $fill($c, $rfs['criteres'][$j], ['description', 'niveau', 'flexibilite']);
+                }
+            }
+            $copy['fonctionsService'][$i] = $fs;
+        }
+        return $copy;
     }
 
     /**

@@ -798,6 +798,7 @@ $string['step4_prefill_badge'] = 'pre-filled';
 $string['step4_prefill_notice'] = '{$a} pre-filled field(s) still as given or still containing “…”: complete them.';
 $string['step4_automark'] = 'Mark automatically';
 $string['step4_automark_help'] = 'Empty field: to fill in. Text with “…” or “A compléter”: pre-filled. Other text: provided. Links of every function: provided. You can adjust each field afterwards.';
+$string['step4_automark_confirm'] = 'Every field gets a state from its text (empty: to fill in, “…”: pre-filled, otherwise provided). The states you set by hand are replaced.';
 $string['step4_nolock_warning'] = 'Nothing is locked: students will be able to change everything.';
 $string['reseed_copies'] = 'Reseed the copies not started';
 $string['reseed_copies_help'] = 'Gives the current starting copy (locks, pre-filled and empty fields) to the copies that nobody has worked on yet.';

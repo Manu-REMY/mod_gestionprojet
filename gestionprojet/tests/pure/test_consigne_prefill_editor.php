@@ -58,3 +58,11 @@ foreach (['MATURITY_ALPHA' => 50, 'MATURITY_BETA' => 100, 'MATURITY_RC' => 150, 
 $plugin = new stdClass();
 include(GP_ROOT . '/version.php');
 test('version 2026110806 / 2.11.3', fn() => $plugin->version === 2026110806 && $plugin->release === '2.11.3');
+
+// Final review: the auto-mark asks for a confirmation (it replaces the flags set by hand).
+test('auto-mark asks for a confirmation', fn() => strpos($js, 'saveCancelPromise') !== false && strpos($js, "'core/notification'") !== false);
+foreach (['en', 'fr'] as $l) {
+    $string = [];
+    include(GP_ROOT . "/lang/$l/gestionprojet.php");
+    test("string step4_automark_confirm in $l", fn() => !empty($string['step4_automark_confirm']));
+}

@@ -210,6 +210,7 @@ $langstrings = [
     'prefillBadge'             => get_string('step4_prefill_badge', 'gestionprojet'),
     'automark'                 => get_string('step4_automark', 'gestionprojet'),
     'automarkHelp'             => get_string('step4_automark_help', 'gestionprojet'),
+    'automarkConfirm'          => get_string('step4_automark_confirm', 'gestionprojet'),
     'noLockWarning'            => get_string('step4_nolock_warning', 'gestionprojet'),
 ];
 
@@ -217,6 +218,7 @@ if (!$readonly && (int)($gestionprojet->step4_provided ?? 0) === 1) {
     $PAGE->requires->js_call_amd('mod_gestionprojet/reseed_copies', 'init', [[
         'cmid'     => (int)$cm->id,
         'buttonId' => 'gpReseedButton',
+        'dataFieldId' => 'cdcfDataField',
         'title'    => get_string('reseed_copies', 'gestionprojet'),
         'confirm'  => get_string('reseed_copies_confirm', 'gestionprojet'),
         'done'     => get_string('reseed_copies_done', 'gestionprojet'),

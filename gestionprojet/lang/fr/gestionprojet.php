@@ -798,6 +798,7 @@ $string['step4_prefill_badge'] = 'pré-rempli';
 $string['step4_prefill_notice'] = '{$a} champ(s) pré-rempli(s) encore tel(s) que donné(s) ou contenant « … » : complète-les.';
 $string['step4_automark'] = 'Marquer automatiquement';
 $string['step4_automark_help'] = 'Champ vide : à compléter. Texte avec « … » ou « A compléter » : pré-rempli. Autre texte : fourni. Liaisons de chaque fonction : fournies. Tu peux ensuite ajuster chaque champ.';
+$string['step4_automark_confirm'] = 'Chaque champ reçoit un état selon son texte (vide : à compléter, « … » : pré-rempli, sinon fourni). Les états que tu as choisis à la main sont remplacés.';
 $string['step4_nolock_warning'] = 'Aucun élément n\'est verrouillé : les élèves pourront tout modifier.';
 $string['reseed_copies'] = 'Réamorcer les copies non commencées';
 $string['reseed_copies_help'] = 'Donne la copie de départ actuelle (verrous, champs pré-remplis et vides) aux copies sur lesquelles personne n\'a encore travaillé.';

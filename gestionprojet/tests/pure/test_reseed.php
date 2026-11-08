@@ -91,3 +91,8 @@ foreach (['en', 'fr'] as $l) {
         test("string $k in $l", fn() => !empty($string[$k]));
     }
 }
+
+// Final review: the consigne on screen is saved before reseeding (same batch, run in order).
+test('reseed button saves the consigne shown before reseeding', fn() =>
+    ($a = strpos($js, "'mod_gestionprojet_autosave'")) !== false && ($b = strpos($js, "'mod_gestionprojet_reseed_copies'")) !== false && $a < $b);
+test('consigne page passes the data field to the reseed button', fn() => strpos(code('pages/step4_provided.php'), "'dataFieldId'") !== false);

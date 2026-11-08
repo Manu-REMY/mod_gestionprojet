@@ -55,3 +55,7 @@ $plainuser = (new ai_prompt_builder())->build_user_prompt(4, (object) ['interact
     (object) ['interacteurs_data' => json_encode($plain)]);
 test('no flag: no pre-filled marker nor rule', fn() => strpos($plainuser, 'pré-rempli') === false
     && strpos($plainuser, 'liaison fournie') === false);
+
+// Final review: the consigne section carries no hint: no empty quote.
+test('consigne section: no empty pre-filled quote', fn() => strpos($user, '[pré-rempli : «  »]') === false
+    && strpos($user, '[pré-rempli]') !== false);

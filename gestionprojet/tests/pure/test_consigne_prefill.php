@@ -99,3 +99,22 @@ test('is_untouched: false once a field differs', fn() => L::is_untouched($s, $p)
 $gapp = H::normalize(['interactors' => [['id' => 1, 'name' => '(A compléter)', 'gap' => true]]]);
 test('is_untouched: old copy with "(A compléter)" before the gap flag', fn() =>
     L::is_untouched(H::normalize(['interactors' => [['id' => 1, 'name' => '(A compléter)']]]), $gapp) === true);
+
+// Final review: a copy seeded under earlier flags (FS1 to fill in, emptied) is still untouched once FS1 is pre-filled.
+$before = H::normalize(['interactors' => [['id' => 1, 'name' => 'U', 'locked' => true]],
+    'fonctionsService' => [['id' => 1, 'description' => 'Doit … terrain.', 'interactor1Id' => 1, 'gap' => true,
+        'criteres' => [['id' => 1, 'description' => 'Vitesse', 'niveau' => '… km/h', 'niveauGap' => true]]]]]);
+$oldcopy = L::seed($before);
+$now = H::normalize(['interactors' => [['id' => 1, 'name' => 'U', 'locked' => true]],
+    'fonctionsService' => [['id' => 1, 'description' => 'Doit … terrain.', 'interactor1Id' => 1, 'prefill' => true,
+        'criteres' => [['id' => 1, 'description' => 'Vitesse', 'niveau' => '… km/h', 'niveauPrefill' => true]]]]]);
+test('is_untouched: a copy seeded under earlier flags (fields emptied)', fn() => L::is_untouched($oldcopy, $now) === true);
+$worked = $oldcopy;
+$worked['fonctionsService'][0]['description'] = 'Doit rouler sur le terrain.';
+test('is_untouched: false once the student wrote', fn() => L::is_untouched($worked, $now) === false);
+$extra = $oldcopy;
+$extra['fonctionsService'][] = ['id' => 2, 'description' => '', 'interactor1Id' => 1, 'interactor2Id' => 0, 'criteres' => []];
+test('is_untouched: false when the structure differs (an added FS)', fn() => L::is_untouched($extra, $now) === false);
+$moved = $oldcopy;
+$moved['fonctionsService'][0]['interactor2Id'] = 1;
+test('is_untouched: false when a link differs', fn() => L::is_untouched($moved, $now) === false);

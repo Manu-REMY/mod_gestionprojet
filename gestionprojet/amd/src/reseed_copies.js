@@ -26,7 +26,7 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
     /**
      * Wire the button.
      *
-     * @param {Object} cfg cmid, buttonId, title, confirm, done (with {$a} for the count)
+     * @param {Object} cfg cmid, buttonId, dataFieldId, title, confirm, done (with {$a} for the count)
      */
     function init(cfg) {
         var button = document.getElementById(cfg.buttonId);
@@ -37,7 +37,17 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
             Notification.saveCancelPromise(cfg.title, cfg.confirm, cfg.title)
                 .then(function() {
                     button.disabled = true;
-                    return Ajax.call([{methodname: 'mod_gestionprojet_reseed_copies', args: {cmid: cfg.cmid}}])[0];
+                    // The consigne on screen is saved first, in the same batch (run in order on the server):
+                    // the copies receive what the teacher sees, not the last autosaved version.
+                    var calls = [];
+                    var field = document.getElementById(cfg.dataFieldId);
+                    if (field) {
+                        calls.push({methodname: 'mod_gestionprojet_autosave', args: {cmid: cfg.cmid, step: 4, groupid: 0,
+                            mode: 'provided', data: JSON.stringify({'interacteurs_data': field.value})}});
+                    }
+                    calls.push({methodname: 'mod_gestionprojet_reseed_copies', args: {cmid: cfg.cmid}});
+                    var promises = Ajax.call(calls);
+                    return promises[promises.length - 1];
                 })
                 .then(function(result) {
                     button.disabled = false;
