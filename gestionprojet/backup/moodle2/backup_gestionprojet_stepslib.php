@@ -68,7 +68,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
 
         // Teacher correction models.
         $cdcfteacher = new backup_nested_element('cdcf_teacher', ['id'], [
-            'interacteurs_data', 'ai_instructions',
+            'interacteurs_data', 'ai_instructions', 'grille_json',
             'submission_date', 'deadline_date', 'timecreated', 'timemodified',
         ]);
 
