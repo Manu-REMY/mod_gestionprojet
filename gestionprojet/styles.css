@@ -5712,3 +5712,135 @@
 .path-mod-gestionprojet .gp-formative-feedback {
     margin-top: 0.75rem;
 }
+
+/* Student progress panel (v2.12.0): form on the left, "Mon avancement" on the right, sticky while scrolling. */
+.path-mod-gestionprojet .gp-progress-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 24px;
+    align-items: start;
+}
+.path-mod-gestionprojet .gp-progress-main {
+    min-width: 0;
+}
+.path-mod-gestionprojet .gp-progress-panel {
+    position: sticky;
+    top: 70px;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 2px 10px rgba(31, 41, 51, 0.06);
+}
+.path-mod-gestionprojet .gp-progress-panel h2 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+.path-mod-gestionprojet .gp-progress-panel h3 {
+    font-size: 1rem;
+    margin: 0 0 6px;
+}
+.path-mod-gestionprojet .gp-progress-readonly,
+.path-mod-gestionprojet .gp-progress-date {
+    font-size: 0.85rem;
+    color: #52606d;
+    margin: 0;
+}
+.path-mod-gestionprojet .gp-progress-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.path-mod-gestionprojet .gp-progress-card {
+    border: 1px solid #dde3ea;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+.path-mod-gestionprojet .gp-progress-label {
+    font-size: 0.8rem;
+    color: #52606d;
+}
+.path-mod-gestionprojet .gp-progress-value {
+    font-weight: 600;
+}
+.path-mod-gestionprojet .gp-progress-todo-head {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.path-mod-gestionprojet .gp-progress-bar {
+    height: 8px;
+    background: #e6eaf0;
+    border-radius: 4px;
+    margin: 6px 0;
+}
+.path-mod-gestionprojet .gp-progress-bar-fill {
+    height: 8px;
+    width: 0;
+    background: #2f5fb0;
+    border-radius: 4px;
+}
+.path-mod-gestionprojet .gp-progress-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.path-mod-gestionprojet .gp-progress-list a {
+    display: block;
+    padding: 6px 8px;
+    border: 1px dashed #c0661a;
+    border-radius: 6px;
+    color: #7a3d0a;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+.path-mod-gestionprojet .gp-progress-list a:hover,
+.path-mod-gestionprojet .gp-progress-list a:focus {
+    background: #fdf1e6;
+}
+.path-mod-gestionprojet .gp-progress-target {
+    outline: 3px solid #2f5fb0;
+    outline-offset: 2px;
+}
+.path-mod-gestionprojet .gp-progress-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.path-mod-gestionprojet .gp-progress-actions .btn {
+    min-height: 44px;
+}
+/* Narrow screen, or Moodle's block drawer open: the panel goes under the form, its buttons stick at the bottom. */
+@media (max-width: 991.98px) {
+    .path-mod-gestionprojet .gp-progress-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .path-mod-gestionprojet .gp-progress-panel {
+        position: static;
+        max-height: none;
+    }
+    .path-mod-gestionprojet .gp-progress-actions {
+        position: sticky;
+        bottom: 0;
+        background: #ffffff;
+        padding: 8px 0;
+        border-top: 1px solid #dde3ea;
+    }
+}
+#page.show-drawer-right .path-mod-gestionprojet .gp-progress-layout,
+.path-mod-gestionprojet #page.show-drawer-right .gp-progress-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+.path-mod-gestionprojet #page.show-drawer-right .gp-progress-panel {
+    position: static;
+    max-height: none;
+}

@@ -1006,6 +1006,22 @@ $string['formative_ready'] = 'Ton retour est prêt.';
 $string['formative_show'] = 'Afficher le retour';
 $string['formative_last'] = 'Dernier retour ({$a})';
 $string['formative_error'] = 'Le retour n\'a pas pu être préparé. Réessaie dans un moment.';
+$string['progress_title'] = 'Mon avancement';
+$string['progress_status'] = 'Statut';
+$string['progress_status_draft'] = 'Brouillon ouvert';
+$string['progress_status_submitted'] = 'Soumis le {$a}';
+$string['progress_status_pending'] = 'Correction en cours…';
+$string['progress_grade'] = 'Note';
+$string['progress_grade_previous'] = 'Note précédente : {$a}/20';
+$string['progress_grade_none'] = 'pas encore soumis';
+$string['progress_todo_title'] = 'À compléter';
+$string['progress_todo_count'] = '{left} sur {total} restants';
+$string['progress_todo_done'] = '✓ Tout est complété';
+$string['progress_goto_form'] = 'Aller au formulaire';
+$string['progress_feedback_title'] = 'Dernier retour';
+$string['progress_feedback_none'] = 'Pas encore de retour.';
+$string['progress_submit'] = 'Soumettre ma version finale';
+$string['progress_readonly'] = 'Vue enseignant : lecture seule';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Production notée';

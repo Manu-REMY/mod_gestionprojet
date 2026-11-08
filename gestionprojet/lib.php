@@ -972,7 +972,7 @@ function gestionprojet_formative_request(object $gestionprojet, object $cm, int 
  * @return string
  */
 function gestionprojet_progress_layout_open(): string {
-    return '<div class="gp-progress-layout"><div class="gp-progress-main">';
+    return '<div class="gp-progress-layout"><div class="gp-progress-main" id="gpProgressMain">';
 }
 
 /**
