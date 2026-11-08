@@ -5689,3 +5689,26 @@
 .path-mod-gestionprojet .gp-reseed {
     margin: 0.75rem 0;
 }
+
+/* Formative feedback before submitting (v2.11.4). */
+.path-mod-gestionprojet .gp-formative {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid #b8c4d6;
+    border-radius: 0.5rem;
+    background: #f7f9fc;
+}
+.path-mod-gestionprojet .gp-formative h4 {
+    font-size: 1.05rem;
+}
+.path-mod-gestionprojet .gp-formative-none {
+    border: 2px dashed #c0661a;
+    background: #fdf1e6;
+    color: #7a3d0a;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+}
+.path-mod-gestionprojet .gp-formative-feedback {
+    margin-top: 0.75rem;
+}

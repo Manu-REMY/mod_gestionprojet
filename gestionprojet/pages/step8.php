@@ -193,6 +193,10 @@ if (empty($tasks_data)) {
 </div>
 
 <?php
+// Formative feedback before submitting (v2.11.4).
+$step = 8;
+require(__DIR__ . '/student_formative_display.php');
+
 $PAGE->requires->js_call_amd('mod_gestionprojet/step8', 'init', [[
     'cmid' => (int)$cm->id,
     'autosaveInterval' => (int)$gestionprojet->autosave_interval * 1000,

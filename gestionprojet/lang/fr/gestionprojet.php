@@ -998,6 +998,12 @@ $string['error_formative_limit'] = 'Saisis un nombre entre 0 et 20.';
 $string['formative_disabled'] = 'Le retour avant soumission n’est pas disponible pour cette étape.';
 $string['formative_pending_error'] = 'Un retour est déjà en préparation : attends-le.';
 $string['formative_none_left'] = 'Tu as utilisé tous les retours de cette étape.';
+$string['formative_title'] = 'Retour avant soumission';
+$string['formative_help'] = 'Demande à l\'IA des conseils sur ton travail tel qu\'il est maintenant. Rien n\'est soumis et aucune note n\'est donnée : seule ta soumission sera notée.';
+$string['formative_request'] = 'Demander un retour ({$a} restant(s))';
+$string['formative_pending'] = 'Ton retour est en préparation…';
+$string['formative_last'] = 'Dernier retour ({$a})';
+$string['formative_error'] = 'Le retour n\'a pas pu être préparé. Réessaie dans un moment.';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Production notée';
