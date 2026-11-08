@@ -233,12 +233,16 @@ class provider implements
                       JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                       JOIN {gestionprojet} gp ON gp.id = cm.instance
                       JOIN {{$table}} t ON t.gestionprojetid = gp.id
-                     WHERE t.userid = :userid";
+                     WHERE t.userid = :userid
+                        OR (t.userid = 0 AND EXISTS (
+                            SELECT 1 FROM {groups_members} gm WHERE gm.groupid = t.groupid AND gm.userid = :memberid))";
 
+            // Group work is stored with userid 0: it belongs to each member of the group.
             $params = [
                 'contextlevel' => CONTEXT_MODULE,
                 'modname' => 'gestionprojet',
                 'userid' => $userid,
+                'memberid' => $userid,
             ];
 
             $contextlist->add_from_sql($sql, $params);
@@ -318,6 +322,17 @@ class provider implements
                      WHERE cm.id = :instanceid AND t.userid > 0";
 
             $userlist->add_from_sql('userid', $sql, $params);
+
+            // Members of the groups whose work is stored with userid 0.
+            $sql = "SELECT gm.userid
+                      FROM {{$table}} t
+                      JOIN {gestionprojet} gp ON gp.id = t.gestionprojetid
+                      JOIN {course_modules} cm ON cm.instance = gp.id
+                      JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                      JOIN {groups_members} gm ON gm.groupid = t.groupid
+                     WHERE cm.id = :instanceid AND t.userid = 0";
+
+            $userlist->add_from_sql('userid', $sql, $params);
         }
 
         // AI evaluations - users and teachers who applied grades.
@@ -389,17 +404,25 @@ class provider implements
                 'gestionprojet_fast' => get_string('step9', 'gestionprojet'),
             ];
 
+            // Group work is stored with userid 0: it is exported to each member of the group.
+            $membergroups = $DB->get_fieldset_select('groups_members', 'groupid', 'userid = ?', [$user->id]);
+
             foreach ($submissiontables as $table => $stepname) {
-                $submissions = $DB->get_records($table, [
-                    'gestionprojetid' => $gestionprojet->id,
-                    'userid' => $user->id,
-                ]);
+                $select = 'gestionprojetid = :gpid AND userid = :userid';
+                $params = ['gpid' => $gestionprojet->id, 'userid' => $user->id];
+                if ($membergroups) {
+                    [$insql, $inparams] = $DB->get_in_or_equal($membergroups, SQL_PARAMS_NAMED, 'grp');
+                    $select = "gestionprojetid = :gpid AND (userid = :userid OR (userid = 0 AND groupid $insql))";
+                    $params += $inparams;
+                }
+                $submissions = $DB->get_records_select($table, $select, $params);
 
                 if (!empty($submissions)) {
                     $data = [];
                     foreach ($submissions as $submission) {
                         $data[] = [
                             'step' => $stepname,
+                            'groupwork' => transform::yesno((int)$submission->userid === 0),
                             'grade' => $submission->grade,
                             'feedback' => $submission->feedback,
                             'status' => $submission->status ? 'submitted' : 'draft',
@@ -515,6 +538,8 @@ class provider implements
 
     /**
      * Delete all user data for the specified user, in the specified contexts.
+     *
+     * Group work (userid 0) is shared by the other members: it is kept, as mod_assign does for team submissions.
      *
      * @param approved_contextlist $contextlist The approved contexts and user information to delete.
      */
