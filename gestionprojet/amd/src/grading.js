@@ -217,7 +217,10 @@ define(['core/ajax', 'core/notification'], function(Ajax, Notification) {
                 args: {
                     cmid: parseInt(btn.dataset.cmid),
                     step: parseInt(btn.dataset.step),
-                    action: 'unlock'
+                    action: 'unlock',
+                    // The server finds the copy by its group (group work) or its user (individual work).
+                    groupid: parseInt(btn.dataset.groupid, 10) || 0,
+                    userid: parseInt(btn.dataset.userid, 10) || 0
                 }
             }])[0].done(function(data) {
                 if (data.success) {
