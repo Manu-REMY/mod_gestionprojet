@@ -45,6 +45,9 @@ class ai_prompt_builder {
     /** @var string Level asked (F, S, TS): only its parts are graded; empty outside the level mode */
     private string $palier;
 
+    /** @var string[] Zones of other levels, left out of the CDCF shown to the AI (level mode) */
+    private array $outzones = [];
+
     /** @var bool Whether the prompt being built uses the [fourni] / [à compléter] markers */
     private bool $markersinuse = false;
 
@@ -305,6 +308,7 @@ PROMPT;
      */
     public function build_user_prompt(int $step, object $studentdata, object $teachermodel, ?object $providedrec = null, bool $nomodifications = false): string {
         $this->markersinuse = $step === 4 && $providedrec !== null && self::consigne_has_flags($providedrec);
+        $this->outzones = ($step === 4 && $this->palier !== '') ? $this->palier_out_zones($teachermodel) : [];
         $studenttext = $this->format_student_data($step, $studentdata);
         $teachertext = $this->format_teacher_model($step, $teachermodel);
 
@@ -503,17 +507,13 @@ PROMPT;
             $text .= "\nRéponds avec exactement un critère par partie de cette grille, en reprenant son nom exact : {$names}. "
                 . "N'évalue rien d'autre, même si les instructions de l'enseignant décrivent d'autres critères.\n";
             // Zones that belong to other levels (or are not graded) must not cost points in this one.
-            $covered = [];
-            foreach ($this->graded_parts(4, $teachermodel ?? new \stdClass()) as $part) {
-                $covered = array_merge($covered, $part['zones']);
-            }
             $labels = ['interacteurs' => 'les interacteurs', 'fonctions' => 'les fonctions de service',
                 'criteres' => "les critères d'appréciation", 'niveaux' => 'les niveaux (valeurs et unités)',
                 'flexibilite' => 'la flexibilité', 'contraintes' => 'les contraintes'];
             $others = [];
-            foreach ($labels as $zone => $label) {
-                if (!in_array($zone, $covered, true) && ($zone !== 'flexibilite' || $this->flexibility)) {
-                    $others[] = $label;
+            foreach ($this->palier_out_zones($teachermodel ?? new \stdClass()) as $zone) {
+                if ($zone !== 'flexibilite' || $this->flexibility) {
+                    $others[] = $labels[$zone];
                 }
             }
             if ($others) {
@@ -595,11 +595,15 @@ PROMPT;
                     $fs['description'] !== '' ? $fs['description'] : '(énoncé manquant)',
                     self::mark($fs), $i1, $tail);
                 foreach ($fs['criteres'] as $cidx => $c) {
-                    $line = sprintf('      - C%d.%d : %s%s | niveau : %s%s',
+                    $line = sprintf('      - C%d.%d : %s%s',
                         $idx + 1, $cidx + 1,
-                        $c['description'] !== '' ? $c['description'] : '(critère vide)', self::mark($c),
-                        $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)', self::mark($c, 'niveauLocked', 'niveauGap'));
-                    if ($this->flexibility) {
+                        $c['description'] !== '' ? $c['description'] : '(critère vide)', self::mark($c));
+                    // Level mode: the levels of another level are not shown, so they cannot cost points.
+                    if (!in_array('niveaux', $this->outzones, true)) {
+                        $line .= sprintf(' | niveau : %s%s', $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)',
+                            self::mark($c, 'niveauLocked', 'niveauGap'));
+                    }
+                    if ($this->flexibility && !in_array('flexibilite', $this->outzones, true)) {
                         $line .= ' | flexibilité : ' . ($c['flexibilite'] !== '' ? $c['flexibilite'] : '(non précisée)');
                     }
                     $out[] = $line;
@@ -624,6 +628,22 @@ PROMPT;
         }
 
         return implode("\n", $out);
+    }
+
+    /**
+     * Zones not graded in the level asked (zones of other levels, or of no graded part), "ensemble" excluded.
+     *
+     * @param object $teachermodel Teacher correction model (grille_json).
+     * @return string[] In the order of grille::ZONES.
+     */
+    private function palier_out_zones(object $teachermodel): array {
+        $covered = [];
+        foreach ($this->graded_parts(4, $teachermodel) as $part) {
+            $covered = array_merge($covered, $part['zones']);
+        }
+        return array_values(array_filter(grille::ZONES, function (string $zone) use ($covered): bool {
+            return $zone !== 'ensemble' && !in_array($zone, $covered, true);
+        }));
     }
 
     /**

@@ -149,3 +149,14 @@ test('palier prompt names what is not graded in this level', fn() =>
     strpos($sys, 'Ne pénalise pas') !== false && strpos($sys, 'les niveaux') !== false && strpos($sys, 'les contraintes') !== false);
 test('palier prompt does not exclude the zones of the level asked', fn() =>
     preg_match('/Ne pénalise pas[^\n]*les fonctions de service/u', $sys) === 0);
+
+// Preprod run: "niveau : (non précisé)" in the copy made the AI penalise the levels in a SAT request.
+$copy = (object) ['interacteurs_data' => json_encode(['interactors' => [['id' => 1, 'name' => 'Robot']],
+    'fonctionsService' => [['id' => 1, 'description' => 'Rouler', 'interactor1Id' => 1, 'interactor2Id' => 0,
+        'criteres' => [['id' => 1, 'description' => 'Vitesse', 'niveau' => '', 'flexibilite' => '']]]], 'contraintes' => []])];
+$satuser = (new ai_prompt_builder(['palier' => 'S']))->build_user_prompt(4, $copy, $model);
+test('palier S: the levels (another level) are left out of the copy shown to the AI', fn() =>
+    strpos($satuser, 'Vitesse') !== false && strpos($satuser, 'niveau :') === false);
+test('no level: the levels are shown', fn() => strpos((new ai_prompt_builder())->build_user_prompt(4, $copy, $model), 'niveau :') !== false);
+test('palier TS: the levels are shown', fn() =>
+    strpos((new ai_prompt_builder(['palier' => 'TS']))->build_user_prompt(4, $copy, $model), 'niveau :') !== false);
