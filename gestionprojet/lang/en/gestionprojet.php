@@ -964,3 +964,9 @@ $string['reset_error_locked'] = 'Cannot reset a submitted form.';
 $string['reset_error_no_provided'] = 'No teacher-provided instructions exist for this step.';
 $string['reset_error_unsupported_step'] = 'Unsupported step.';
 $string['reset_error_internal'] = 'An internal error occurred. Please try again or contact your teacher.';
+
+// AI model settings (v2.10.2).
+$string['setting_models_heading'] = 'AI models';
+$string['setting_models_heading_desc'] = 'Model used by each provider for evaluations, summaries and the connection test. Leave empty to use the default model.';
+$string['setting_model'] = 'Model for {$a}';
+$string['setting_model_desc'] = 'Exact model name sent to the provider. Empty: {$a}.';

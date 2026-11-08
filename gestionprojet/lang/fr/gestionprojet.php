@@ -964,3 +964,9 @@ $string['reset_error_locked'] = 'Impossible de réinitialiser un formulaire soum
 $string['reset_error_no_provided'] = 'Aucune consigne fournie par l\'enseignant pour cette étape.';
 $string['reset_error_unsupported_step'] = 'Étape non prise en charge.';
 $string['reset_error_internal'] = 'Une erreur interne est survenue. Veuillez réessayer ou contacter votre enseignant.';
+
+// AI model settings (v2.10.2).
+$string['setting_models_heading'] = 'Modèles d\'IA';
+$string['setting_models_heading_desc'] = 'Modèle utilisé par chaque fournisseur pour les évaluations, les synthèses et le test de connexion. Laisser vide pour utiliser le modèle par défaut.';
+$string['setting_model'] = 'Modèle pour {$a}';
+$string['setting_model_desc'] = 'Nom exact du modèle envoyé au fournisseur. Vide : {$a}.';

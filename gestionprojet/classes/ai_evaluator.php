@@ -475,24 +475,13 @@ class ai_evaluator {
     }
 
     /**
-     * Get default model for provider.
+     * Get the model configured for a provider.
      *
      * @param string $provider Provider name
      * @return string Model name
      */
     public static function get_model_for_provider(string $provider): string {
-        switch ($provider) {
-            case 'openai':
-                return ai_provider\openai_provider::DEFAULT_MODEL;
-            case 'anthropic':
-                return ai_provider\anthropic_provider::DEFAULT_MODEL;
-            case 'mistral':
-                return ai_provider\mistral_provider::DEFAULT_MODEL;
-            case 'albert':
-                return ai_provider\albert_provider::DEFAULT_MODEL;
-            default:
-                return 'gpt-4o-mini';
-        }
+        return ai_config::get_model($provider);
     }
 
     /**

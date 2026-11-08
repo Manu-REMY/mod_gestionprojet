@@ -44,16 +44,54 @@ class ai_config {
         'albert' => 'https://albert.api.etalab.gouv.fr/v1/chat/completions',
     ];
 
-    /** @var array Provider test models (lightweight for testing) */
-    const TEST_MODELS = [
-        'openai' => 'gpt-3.5-turbo',
-        'anthropic' => 'claude-3-haiku-20240307',
-        'mistral' => 'mistral-small-latest',
-        'albert' => 'albert-base',
+    /**
+     * @var array Default model per provider, used when the admin setting model_<provider> is empty.
+     * The connection test, the evaluations and the summaries all use the same model.
+     */
+    const DEFAULT_MODELS = [
+        'openai' => 'gpt-4o-mini',
+        'anthropic' => 'claude-sonnet-5-5',
+        'mistral' => 'mistral-medium-latest',
+        'albert' => 'deepseek-v4-flash',
+    ];
+
+    /** @var array Brand name of each provider (proper nouns, not translated) */
+    const PROVIDER_NAMES = [
+        'openai' => 'OpenAI',
+        'anthropic' => 'Anthropic',
+        'mistral' => 'Mistral AI',
+        'albert' => 'Albert (Etalab)',
     ];
 
     /** @var array Providers with built-in API keys (stored securely at admin level) */
     const BUILTIN_KEY_PROVIDERS = ['albert'];
+
+    /**
+     * Model to use for a provider: the admin setting when filled in, the default otherwise.
+     *
+     * @param string $provider One of PROVIDERS.
+     * @param string|null $configured Value of the admin setting model_<provider>.
+     * @return string
+     * @throws \InvalidArgumentException For an unknown provider.
+     */
+    public static function resolve_model(string $provider, ?string $configured): string {
+        if (!isset(self::DEFAULT_MODELS[$provider])) {
+            throw new \InvalidArgumentException('Unknown AI provider: ' . $provider);
+        }
+        $configured = trim((string) $configured);
+        return $configured !== '' ? $configured : self::DEFAULT_MODELS[$provider];
+    }
+
+    /**
+     * Model to use for a provider, read from the plugin settings.
+     *
+     * @param string $provider One of PROVIDERS.
+     * @return string
+     */
+    public static function get_model(string $provider): string {
+        $configured = get_config('mod_gestionprojet', 'model_' . $provider);
+        return self::resolve_model($provider, $configured === false ? null : $configured);
+    }
 
     /**
      * Encrypt an API key for storage.
@@ -172,7 +210,7 @@ class ai_config {
         }
 
         $endpoint = self::ENDPOINTS[$provider];
-        $model = self::TEST_MODELS[$provider];
+        $model = self::get_model($provider);
 
         try {
             $response = self::make_api_request($provider, $apikey, $endpoint, $model, 'Hello');

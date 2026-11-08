@@ -376,13 +376,7 @@ $feedbacksJson";
      * @return string Model name
      */
     private static function get_model_for_provider($provider) {
-        $models = [
-            'openai' => 'gpt-4o-mini',
-            'anthropic' => 'claude-3-haiku-20240307',
-            'mistral' => 'mistral-small-latest',
-            'albert' => 'neuralbeagle',
-        ];
-        return $models[$provider] ?? 'gpt-3.5-turbo';
+        return \mod_gestionprojet\ai_config::get_model($provider);
     }
 
     /**

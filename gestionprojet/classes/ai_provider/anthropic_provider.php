@@ -39,21 +39,6 @@ class anthropic_provider extends base_provider {
     /** @var string API version */
     const API_VERSION = '2023-06-01';
 
-    /** @var array Available models */
-    const MODELS = [
-        'claude-3-5-sonnet-20241022',
-        'claude-3-5-haiku-20241022',
-        'claude-3-opus-20240229',
-        'claude-3-sonnet-20240229',
-        'claude-3-haiku-20240307',
-    ];
-
-    /** @var string Default model for evaluation */
-    const DEFAULT_MODEL = 'claude-3-5-sonnet-20241022';
-
-    /** @var string Model used for testing */
-    const TEST_MODEL = 'claude-3-haiku-20240307';
-
     /**
      * Get provider name.
      *
@@ -61,33 +46,6 @@ class anthropic_provider extends base_provider {
      */
     public function get_name(): string {
         return 'anthropic';
-    }
-
-    /**
-     * Get available models.
-     *
-     * @return array
-     */
-    public function get_models(): array {
-        return self::MODELS;
-    }
-
-    /**
-     * Get default model.
-     *
-     * @return string
-     */
-    public function get_default_model(): string {
-        return self::DEFAULT_MODEL;
-    }
-
-    /**
-     * Get test model.
-     *
-     * @return string
-     */
-    protected function get_test_model(): string {
-        return self::TEST_MODEL;
     }
 
     /**

@@ -36,4 +36,20 @@ if ($ADMIN->fulltree) {
             ['class' => 'btn btn-primary']
         )
     ));
+
+    // AI model per provider: one place to change it when a provider retires a model.
+    $settings->add(new admin_setting_heading(
+        'mod_gestionprojet/modelsheading',
+        get_string('setting_models_heading', 'gestionprojet'),
+        get_string('setting_models_heading_desc', 'gestionprojet')
+    ));
+    foreach (\mod_gestionprojet\ai_config::PROVIDERS as $provider) {
+        $settings->add(new admin_setting_configtext(
+            'mod_gestionprojet/model_' . $provider,
+            get_string('setting_model', 'gestionprojet', \mod_gestionprojet\ai_config::PROVIDER_NAMES[$provider]),
+            get_string('setting_model_desc', 'gestionprojet', \mod_gestionprojet\ai_config::DEFAULT_MODELS[$provider]),
+            '',
+            PARAM_TEXT
+        ));
+    }
 }

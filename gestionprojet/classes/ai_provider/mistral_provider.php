@@ -36,21 +36,6 @@ class mistral_provider extends base_provider {
     /** @var string API endpoint */
     const ENDPOINT = 'https://api.mistral.ai/v1/chat/completions';
 
-    /** @var array Available models */
-    const MODELS = [
-        'mistral-medium-latest',
-        'mistral-small-latest',
-        'mistral-large-latest',
-        'open-mistral-7b',
-        'open-mixtral-8x7b',
-    ];
-
-    /** @var string Default model for evaluation */
-    const DEFAULT_MODEL = 'mistral-medium-latest';
-
-    /** @var string Model used for testing */
-    const TEST_MODEL = 'mistral-small-latest';
-
     /**
      * Get provider name.
      *
@@ -58,33 +43,6 @@ class mistral_provider extends base_provider {
      */
     public function get_name(): string {
         return 'mistral';
-    }
-
-    /**
-     * Get available models.
-     *
-     * @return array
-     */
-    public function get_models(): array {
-        return self::MODELS;
-    }
-
-    /**
-     * Get default model.
-     *
-     * @return string
-     */
-    public function get_default_model(): string {
-        return self::DEFAULT_MODEL;
-    }
-
-    /**
-     * Get test model.
-     *
-     * @return string
-     */
-    protected function get_test_model(): string {
-        return self::TEST_MODEL;
     }
 
     /**

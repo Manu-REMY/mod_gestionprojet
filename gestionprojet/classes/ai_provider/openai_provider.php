@@ -36,20 +36,6 @@ class openai_provider extends base_provider {
     /** @var string API endpoint */
     const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
-    /** @var array Available models */
-    const MODELS = [
-        'gpt-4o-mini',
-        'gpt-4o',
-        'gpt-4-turbo',
-        'gpt-3.5-turbo',
-    ];
-
-    /** @var string Default model for evaluation */
-    const DEFAULT_MODEL = 'gpt-4o-mini';
-
-    /** @var string Model used for testing */
-    const TEST_MODEL = 'gpt-3.5-turbo';
-
     /**
      * Get provider name.
      *
@@ -57,33 +43,6 @@ class openai_provider extends base_provider {
      */
     public function get_name(): string {
         return 'openai';
-    }
-
-    /**
-     * Get available models.
-     *
-     * @return array
-     */
-    public function get_models(): array {
-        return self::MODELS;
-    }
-
-    /**
-     * Get default model.
-     *
-     * @return string
-     */
-    public function get_default_model(): string {
-        return self::DEFAULT_MODEL;
-    }
-
-    /**
-     * Get test model.
-     *
-     * @return string
-     */
-    protected function get_test_model(): string {
-        return self::TEST_MODEL;
     }
 
     /**

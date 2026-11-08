@@ -147,13 +147,30 @@ abstract class base_provider implements provider_interface {
     }
 
     /**
-     * Get the model used for testing connections.
+     * Get available models: the one configured for this provider.
+     *
+     * @return array Model names
+     */
+    public function get_models(): array {
+        return [$this->get_default_model()];
+    }
+
+    /**
+     * Get the model used for evaluations, set in the plugin settings (see ai_config::get_model()).
+     *
+     * @return string Model name
+     */
+    public function get_default_model(): string {
+        return \mod_gestionprojet\ai_config::get_model($this->get_name());
+    }
+
+    /**
+     * Get the model used for testing connections: the real one, so that a passing test means evaluations work.
      *
      * @return string Test model name
      */
     protected function get_test_model(): string {
-        $models = $this->get_models();
-        return $models[0] ?? $this->get_default_model();
+        return $this->get_default_model();
     }
 
     /**
