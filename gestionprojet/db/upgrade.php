@@ -770,5 +770,15 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026110802, 'gestionprojet');
     }
 
+    // 2.11.0 — editable grading grid of step 4 (empty = former fixed grid).
+    if ($oldversion < 2026110803) {
+        $table = new xmldb_table('gestionprojet_cdcf_teacher');
+        $field = new xmldb_field('grille_json', XMLDB_TYPE_TEXT, null, null, null, null, null, 'ai_instructions');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026110803, 'gestionprojet');
+    }
+
     return true;
 }

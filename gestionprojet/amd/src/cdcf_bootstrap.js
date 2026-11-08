@@ -88,6 +88,8 @@ define([
                     var payload = { interacteurs_data: dataField.value };
                     var aiTextarea = document.getElementById('ai_instructions');
                     if (aiTextarea) { payload.ai_instructions = aiTextarea.value; }
+                    var grilleField = document.getElementById('grilleDataField');
+                    if (grilleField) { payload.grille_json = grilleField.value; }
                     var subDate = document.getElementById('submission_date');
                     if (subDate) { payload.submission_date = subDate.value; }
                     var deadDate = document.getElementById('deadline_date');

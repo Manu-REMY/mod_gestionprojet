@@ -97,6 +97,12 @@ if ($apikey === '') {
 
 $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
 
+// Step 4 grades with the teacher's saved grid: the generated instructions must follow it.
+if ($step === 4) {
+    $tmpmodel->grille_json = $DB->get_field('gestionprojet_cdcf_teacher', 'grille_json',
+        ['gestionprojetid' => $gestionprojet->id]) ?: null;
+}
+
 try {
     $builder = new \mod_gestionprojet\ai_prompt_builder(['flexibility' => !isset($gestionprojet->step4_flexibility)
         || (bool) $gestionprojet->step4_flexibility]);

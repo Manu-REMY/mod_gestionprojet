@@ -243,6 +243,10 @@ class ai_evaluator {
             // Build prompts.
             $promptbuilder = new ai_prompt_builder(['flexibility' => !isset($gestionprojet->step4_flexibility)
                 || (bool) $gestionprojet->step4_flexibility]);
+            // A grid where every part is excluded cannot give a grade: fail rather than invent one.
+            if ((int)$evaluation->step === 4 && !$promptbuilder->graded_parts(4, $teachermodel)) {
+                throw new \Exception(get_string('ai_no_graded_part', 'gestionprojet'));
+            }
             $prompts = $promptbuilder->build_prompt(
                 $evaluation->step, $submission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications,
                 !isset($gestionprojet->ai_hide_answers) || (bool) $gestionprojet->ai_hide_answers

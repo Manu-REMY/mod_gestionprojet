@@ -170,7 +170,7 @@ class autosave extends external_api {
                 $teachertables = [
                     4 => [
                         'table' => 'gestionprojet_cdcf_teacher',
-                        'fields' => ['interacteurs_data', 'ai_instructions',
+                        'fields' => ['interacteurs_data', 'ai_instructions', 'grille_json',
                                      'submission_date', 'deadline_date'],
                     ],
                     5 => [
@@ -219,6 +219,10 @@ class autosave extends external_api {
 
                 foreach ($formdata as $key => $value) {
                     if ($key !== 'id' && in_array($key, $validfields)) {
+                        if ($key === 'grille_json') {
+                            // Never store a grid the plugin cannot read.
+                            $value = json_encode(\mod_gestionprojet\grille::normalize(json_decode((string)$value, true) ?: []));
+                        }
                         // Coerce ISO date strings ("YYYY-MM-DD") to Unix timestamps for date columns
                         // stored as bigint. Empty strings become null.
                         if (in_array($key, ['submission_date', 'deadline_date'], true) && is_string($value)) {

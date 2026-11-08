@@ -5505,3 +5505,62 @@
     cursor: not-allowed;
     opacity: 0.6;
 }
+
+/* Grading grid editor (v2.11.0). Graded / not graded: a word and a symbol, and lightness, never the hue alone. */
+.path-mod-gestionprojet .gp-grille-part {
+    border: 1px solid #c5ccd6;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+.path-mod-gestionprojet .gp-grille-part.gp-grille-excluded {
+    background: #f3f4f6;
+    border-style: dashed;
+}
+.path-mod-gestionprojet .gp-grille-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+.path-mod-gestionprojet .gp-grille-nom {
+    flex: 1 1 220px;
+    font-weight: 600;
+}
+.path-mod-gestionprojet .gp-grille-poids {
+    width: 5em;
+}
+.path-mod-gestionprojet .gp-grille-status {
+    font-weight: 600;
+    color: #1d4f91;
+}
+.path-mod-gestionprojet .gp-grille-excluded .gp-grille-status {
+    color: #8a4b08;
+}
+.path-mod-gestionprojet .gp-grille-tools {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+}
+.path-mod-gestionprojet .gp-grille-description {
+    width: 100%;
+    min-height: 3em;
+    margin-top: 8px;
+}
+.path-mod-gestionprojet .gp-grille-zones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-top: 6px;
+    border: 0;
+    padding: 0;
+}
+.path-mod-gestionprojet .gp-grille-zones legend {
+    font-size: 0.9em;
+    margin-bottom: 0;
+    width: auto;
+}
+.path-mod-gestionprojet .gp-grille-total {
+    font-weight: 600;
+}
