@@ -521,8 +521,7 @@ PROMPT;
         // Only the server writes the [fourni] / [à compléter] markers: remove any typed in the text.
         array_walk_recursive($data, function (&$value) {
             if (is_string($value)) {
-                $clean = preg_replace('/\[\s*(fourni|[àa] compl[ée]ter)\s*\]/iu', '', $value);
-                $value = $clean === $value ? $value : trim($clean);
+                $value = self::strip_markers($value);
             }
         });
 
@@ -585,6 +584,29 @@ PROMPT;
         }
 
         return implode("\n", $out);
+    }
+
+    /**
+     * Remove the [fourni] / [à compléter] markers from a text written by a student, including nested,
+     * full-width or zero-width-split forms. A text without any marker is returned unchanged.
+     *
+     * @param string $value
+     * @return string
+     */
+    private static function strip_markers(string $value): string {
+        $pattern = '/\[\s*(fourni|[àa]\s*compl[ée]ter)\s*\]/iu';
+        $probe = preg_replace('/\p{Cf}+/u', '', $value) ?? $value;
+        if (class_exists('\Normalizer')) {
+            $probe = \Normalizer::normalize($probe, \Normalizer::FORM_KC) ?: $probe;
+        }
+        if (!preg_match($pattern, $probe)) {
+            return $value;
+        }
+        do {
+            $previous = $probe;
+            $probe = preg_replace($pattern, '', $probe) ?? '';
+        } while ($probe !== $previous);
+        return trim($probe);
     }
 
     /**
