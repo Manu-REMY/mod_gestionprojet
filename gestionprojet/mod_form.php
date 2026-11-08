@@ -181,7 +181,6 @@ class mod_gestionprojet_mod_form extends moodleform_mod
             }
             // API key is only required for providers without built-in keys.
             if (empty($data['ai_api_key']) && !empty($data['ai_provider'])) {
-                require_once($CFG->dirroot . '/mod/gestionprojet/classes/ai_config.php');
                 if (\mod_gestionprojet\ai_config::requires_user_api_key($data['ai_provider'])) {
                     $errors['ai_api_key'] = get_string('ai_api_key_required', 'gestionprojet');
                 }
