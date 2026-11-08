@@ -69,6 +69,11 @@ define([], function() {
             if (flagged && !gap && !prefill) {
                 return;
             }
+            // The field being typed is newer than the hidden field (updated when the field is left).
+            var input = document.querySelector('[data-gp-field="' + key + '"]');
+            if (input) {
+                value = input.value;
+            }
             out.total++;
             if (isLeft(value, prefill, hint)) {
                 out.left.push({label: label, key: key});
@@ -119,7 +124,7 @@ define([], function() {
                 }
                 out.total++;
                 if ((input.value || '').trim() === '') {
-                    out.left.push({label: label.textContent.trim().replace(/\s*:\s*$/, ''), element: input});
+                    out.left.push({label: label.textContent.trim().replace(/\s*:\s*$/, ''), id: input.id});
                 }
             });
         return out;
@@ -141,12 +146,22 @@ define([], function() {
     }
 
     /**
-     * Start the live list.
+     * Start the live list (steps 4 to 7) and the buttons of the narrow-screen bar (every step).
      *
      * @param {Object} cfg step, formSelector (steps 5 to 7), strings {count, done, statement, criterion, level,
      *     interactor, constraint}
      */
     function init(cfg) {
+        // Bar buttons forward the click to the panel's own buttons (one #submitButton per page).
+        Array.prototype.slice.call(document.querySelectorAll('[data-gp-forward]')).forEach(function(button) {
+            button.addEventListener('click', function() {
+                var target = document.getElementById(button.getAttribute('data-gp-forward'));
+                if (target && !target.disabled) {
+                    target.click();
+                }
+            });
+        });
+
         var list = document.querySelector('[data-gp-progress-list]');
         var count = document.querySelector('[data-gp-progress-count]');
         var bar = document.querySelector('.gp-progress-bar');
@@ -154,6 +169,18 @@ define([], function() {
         if (!list) {
             return;
         }
+        // One delegated listener: rebuilding the list never swallows a click (the CDCF re-renders on change).
+        list.addEventListener('click', function(e) {
+            var link = e.target.closest('a[data-gp-target]');
+            if (!link) {
+                return;
+            }
+            e.preventDefault();
+            var target = link.getAttribute('data-gp-target');
+            goTo(target.indexOf('#') === 0 ? document.getElementById(target.slice(1))
+                : document.querySelector('[data-gp-field="' + target + '"]'));
+        });
+        var lastSignature = null;
         var update = function() {
             var result = cfg.step === 4 ? cdcfFields(cfg.strings) : formFields(cfg.formSelector);
             var done = result.total - result.left.length;
@@ -168,15 +195,17 @@ define([], function() {
             if (bar) {
                 bar.setAttribute('aria-valuenow', String(percent));
             }
+            var signature = JSON.stringify(result.left.map(function(item) { return [item.label, item.key || item.id]; }));
+            if (signature === lastSignature) {
+                return;
+            }
+            lastSignature = signature;
             var items = result.left.map(function(item) {
                 var li = document.createElement('li');
                 var a = document.createElement('a');
                 a.href = '#';
                 a.textContent = '▢ ' + item.label;
-                a.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    goTo(item.element || document.querySelector('[data-gp-field="' + item.key + '"]'));
-                });
+                a.setAttribute('data-gp-target', item.key || ('#' + item.id));
                 li.appendChild(a);
                 return li;
             });
@@ -187,9 +216,11 @@ define([], function() {
             }
             list.replaceChildren.apply(list, items);
         };
-        // The CDCF editor fires "input" on its hidden field at every change; the forms fire it while typing.
+        // Step 4: the CDCF fields while typing and its hidden field at every change; steps 5 to 7: the form.
         document.addEventListener('input', function(e) {
-            if (cfg.step === 4 ? e.target.id === 'cdcfDataField' : !!e.target.closest(cfg.formSelector)) {
+            var t = e.target;
+            if (cfg.step === 4 ? (t.id === 'cdcfDataField' || (t.hasAttribute && t.hasAttribute('data-gp-field')))
+                    : !!t.closest(cfg.formSelector)) {
                 update();
             }
         });

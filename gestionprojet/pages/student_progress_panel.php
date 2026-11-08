@@ -32,7 +32,8 @@ defined('MOODLE_INTERNAL') || die();
 echo '</div>';
 
 if (!empty($submission)) {
-    $progressreadonly = optional_param('groupid', 0, PARAM_INT) > 0 && has_capability('mod/gestionprojet:grade', $context);
+    // Read-only for a teacher looking at someone else's copy (a group's, or another user's); their own copy is theirs.
+    $progressreadonly = (int)$submission->userid !== (int)$USER->id && has_capability('mod/gestionprojet:grade', $context);
     $progress = gestionprojet_progress_state($gestionprojet, (int)$step, $submission, $progressreadonly);
 
     echo html_writer::start_tag('aside', ['class' => 'gp-progress-panel', 'aria-label' => get_string('progress_title', 'gestionprojet')]);
@@ -60,6 +61,9 @@ if (!empty($submission)) {
     } else if ($progress['grade'] !== null) {
         $value = format_float($progress['grade'], 1);
         $gradetext = $progress['previousgrade'] ? get_string('progress_grade_previous', 'gestionprojet', $value) : $value . '/20';
+    } else if ($progress['status'] !== 'draft') {
+        // Submitted, waiting for its grade: never "not submitted yet" next to "submitted".
+        $gradetext = get_string('progress_grade_pending', 'gestionprojet');
     } else {
         $gradetext = get_string('progress_grade_none', 'gestionprojet');
     }
@@ -79,8 +83,13 @@ if (!empty($submission)) {
             ['role' => 'progressbar', 'aria-valuemin' => 0, 'aria-valuemax' => 100, 'aria-valuenow' => 0,
                 'aria-label' => get_string('progress_todo_title', 'gestionprojet')]);
         echo html_writer::tag('ul', '', ['class' => 'gp-progress-list', 'data-gp-progress-list' => '1']);
-        $forms = [5 => '#essaiForm', 6 => '#rapportForm', 7 => '#besoinEleveForm'];
-        $PAGE->requires->js_call_amd('mod_gestionprojet/progress_panel', 'init', [[
+    } else {
+        echo html_writer::link('#gpProgressMain', get_string('progress_goto_form', 'gestionprojet'));
+    }
+    echo html_writer::end_div();
+    // Live list (steps 4 to 7) and the buttons of the narrow-screen bar: started on every step.
+    $forms = [5 => '#essaiForm', 6 => '#rapportForm', 7 => '#besoinEleveForm'];
+    $PAGE->requires->js_call_amd('mod_gestionprojet/progress_panel', 'init', [[
             'step' => (int)$step,
             'formSelector' => $forms[(int)$step] ?? '',
             'strings' => [
@@ -93,15 +102,11 @@ if (!empty($submission)) {
                 'constraint' => get_string('progress_field_constraint', 'gestionprojet'),
             ],
         ]]);
-    } else {
-        echo html_writer::link('#gpProgressMain', get_string('progress_goto_form', 'gestionprojet'));
-    }
-    echo html_writer::end_div();
 
     // Level mode (step 4): the level block (buttons, attempt feedback) stays as it is; read-only shows the summary.
     if ($progress['palier'] && !$progressreadonly) {
         require(__DIR__ . '/student_palier_display.php');
-    } else if ($progress['feedback'] !== null) {
+    } else if (!empty($gestionprojet->ai_enabled) || $progress['feedback']['source'] === 'teacher') {
         echo html_writer::start_div('gp-progress-feedback');
         echo html_writer::tag('h3', get_string('progress_feedback_title', 'gestionprojet'));
         $formative = $progress['formative'];
@@ -132,6 +137,31 @@ if (!empty($submission)) {
                     return s(is_scalar($suggestion) ? (string)$suggestion : '');
                 }, $progress['feedback']['suggestions']));
             }
+            // Criteria of the grade (score per criterion), as the former grade block showed them.
+            if ($progress['feedback']['criteria']) {
+                echo html_writer::tag('h4', get_string('progress_criteria', 'gestionprojet'));
+                $items = [];
+                foreach ($progress['feedback']['criteria'] as $criterion) {
+                    if (!is_array($criterion)) {
+                        continue;
+                    }
+                    $line = (string)($criterion['name'] ?? '');
+                    if (isset($criterion['score'], $criterion['max'])) {
+                        $line .= ' : ' . format_float((float)$criterion['score'], 1) . '/' . format_float((float)$criterion['max'], 1);
+                    }
+                    if (!empty($criterion['comment'])) {
+                        $line .= ' — ' . (string)$criterion['comment'];
+                    }
+                    $items[] = s($line);
+                }
+                echo html_writer::alist($items, ['class' => 'gp-progress-criteria']);
+            }
+            if ($progress['feedback']['keywords']) {
+                echo html_writer::tag('h4', get_string('progress_keywords', 'gestionprojet'));
+                echo html_writer::alist(array_map(function ($keyword): string {
+                    return '✓ ' . s(is_scalar($keyword) ? (string)$keyword : '');
+                }, $progress['feedback']['keywords']), ['class' => 'gp-progress-keywords']);
+            }
         } else {
             echo html_writer::tag('p', get_string('progress_feedback_none', 'gestionprojet'), ['class' => 'gp-progress-date']);
         }
@@ -160,6 +190,20 @@ if (!empty($submission)) {
     }
     echo html_writer::end_div();
     echo html_writer::end_tag('aside');
+
+    // Narrow screen (or Moodle's block drawer open): a bar at the bottom keeps the status and the buttons in sight.
+    // Its buttons forward the click to the panel's own buttons (one #submitButton per page).
+    $barbuttons = '';
+    if ($progress['canask'] && !$progress['formative']['pending'] && $progress['formative']['remaining'] > 0) {
+        $barbuttons .= html_writer::tag('button', get_string('formative_request', 'gestionprojet', $progress['formative']['remaining']),
+            ['type' => 'button', 'class' => 'btn btn-outline-primary', 'data-gp-forward' => 'gpFormativeButton']);
+    }
+    if ($progress['cansubmit']) {
+        $barbuttons .= html_writer::tag('button', get_string('progress_submit', 'gestionprojet'),
+            ['type' => 'button', 'class' => 'btn btn-primary', 'data-gp-forward' => 'submitButton']);
+    }
+    echo html_writer::div(html_writer::span(s($statustext . ' · ' . $gradetext), 'gp-progress-bottombar-status') . $barbuttons,
+        'gp-progress-bottombar');
 }
 
 echo '</div>';

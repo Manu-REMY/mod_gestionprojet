@@ -5723,6 +5723,10 @@
 .path-mod-gestionprojet .gp-progress-main {
     min-width: 0;
 }
+/* Bottom bar of narrow screens: hidden on a wide screen. */
+.path-mod-gestionprojet .gp-progress-bottombar {
+    display: none;
+}
 .path-mod-gestionprojet .gp-progress-panel {
     position: sticky;
     top: 70px;
@@ -5824,6 +5828,30 @@
     .path-mod-gestionprojet .gp-progress-layout {
         grid-template-columns: minmax(0, 1fr);
     }
+    .path-mod-gestionprojet .gp-progress-main {
+        padding-bottom: 72px;
+    }
+    .path-mod-gestionprojet .gp-progress-bottombar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        background: #ffffff;
+        border-top: 1px solid #dde3ea;
+        padding: 8px 12px;
+        box-shadow: 0 -2px 8px rgba(31, 41, 51, 0.08);
+    }
+    .path-mod-gestionprojet .gp-progress-bottombar .btn {
+        min-height: 44px;
+    }
+    .path-mod-gestionprojet .gp-progress-bottombar-status {
+        flex: 1 1 100%;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
     .path-mod-gestionprojet .gp-progress-panel {
         position: static;
         max-height: none;
@@ -5843,4 +5871,14 @@
 .path-mod-gestionprojet #page.show-drawer-right .gp-progress-panel {
     position: static;
     max-height: none;
+}
+
+.path-mod-gestionprojet .gp-progress-criteria,
+.path-mod-gestionprojet .gp-progress-keywords {
+    padding-left: 1.1rem;
+    font-size: 0.9rem;
+}
+.path-mod-gestionprojet .gp-progress-feedback h4 {
+    font-size: 0.95rem;
+    margin: 10px 0 4px;
 }
