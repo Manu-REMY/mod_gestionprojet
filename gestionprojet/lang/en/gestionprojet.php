@@ -1109,3 +1109,21 @@ $string['grille_zone_ensemble'] = 'Whole specification';
 $string['grille_palier_f'] = 'FRA';
 $string['grille_palier_s'] = 'SAT';
 $string['grille_palier_ts'] = 'TS';
+
+// Results page (v2.13.0).
+$string['results'] = 'Results';
+$string['results_group'] = 'Group';
+$string['results_student'] = 'Student';
+$string['results_start'] = 'Started on';
+$string['results_last'] = 'Last activity';
+$string['results_average'] = 'Average';
+$string['results_nogroup'] = 'No group';
+$string['results_state_none'] = 'Not started';
+$string['results_state_draft'] = 'Draft';
+$string['results_state_pending'] = 'Being graded';
+$string['results_state_submitted'] = 'Submitted';
+$string['results_formative'] = 'Feedback {$a->used}/{$a->limit}';
+$string['results_summary'] = 'Summary';
+$string['results_summary_cell'] = 'Submitted {$a->submitted}/{$a->total} · average {$a->average}';
+$string['results_nostudents'] = 'No student in this activity (or in the chosen group).';
+$string['results_download'] = 'Download the table';

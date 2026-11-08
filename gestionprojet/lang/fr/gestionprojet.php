@@ -1109,3 +1109,21 @@ $string['grille_zone_ensemble'] = 'Cahier des charges entier';
 $string['grille_palier_f'] = 'FRA';
 $string['grille_palier_s'] = 'SAT';
 $string['grille_palier_ts'] = 'TS';
+
+// Results page (v2.13.0).
+$string['results'] = 'Résultats';
+$string['results_group'] = 'Groupe';
+$string['results_student'] = 'Élève';
+$string['results_start'] = 'Commencé le';
+$string['results_last'] = 'Dernière activité';
+$string['results_average'] = 'Moyenne';
+$string['results_nogroup'] = 'Sans groupe';
+$string['results_state_none'] = 'Pas commencé';
+$string['results_state_draft'] = 'Brouillon';
+$string['results_state_pending'] = 'Correction en cours';
+$string['results_state_submitted'] = 'Soumis';
+$string['results_formative'] = 'Retours {$a->used}/{$a->limit}';
+$string['results_summary'] = 'Synthèse';
+$string['results_summary_cell'] = 'Soumis {$a->submitted}/{$a->total} · moyenne {$a->average}';
+$string['results_nostudents'] = 'Aucun élève dans cette activité (ou dans le groupe choisi).';
+$string['results_download'] = 'Télécharger le tableau';
