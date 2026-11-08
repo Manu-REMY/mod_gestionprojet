@@ -5927,3 +5927,8 @@
 .path-mod-gestionprojet .gp-submit-ask-instead .btn {
     min-height: 44px;
 }
+
+/* ===== No progress panel on the page (step 4 without a copy): one column, no empty space (v2.12.5) ===== */
+.path-mod-gestionprojet .gp-progress-layout:not(:has(.gp-progress-panel)) {
+    grid-template-columns: minmax(0, 1fr);
+}

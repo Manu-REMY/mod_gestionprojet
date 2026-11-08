@@ -86,14 +86,18 @@ test('criteria comments are filtered, scores kept', fn() =>
     && $v['criteria'][1]['comment'] === 'Critères pertinents.');
 test('a leaking suggestion is dropped', fn() => $v['suggestions'] === ['Relis ta copie.']);
 
-// Wiring in the student page.
-$page = file_get_contents(GP_ROOT . '/pages/student_ai_feedback_display.php');
-test('missing keywords are never shown to students', fn() =>
-    strpos($page, '$showKeywordsMissing = false;') !== false && strpos($page, "keyword-tag missing") === false);
-test('students only see an evaluation the teacher applied', fn() => strpos($page, "'status' => 'completed'") === false);
-test('the student page filters with student_view when the option is on', fn() =>
-    strpos($page, 'answer_leak_filter::student_view(') !== false
-    && strpos($page, 'ai_hide_answers') !== false);
+// Wiring in the student view (since v2.12.0 the progress panel; the old page was removed in v2.12.5).
+$libsrc = file_get_contents(GP_ROOT . '/lib.php');
+preg_match('/function gestionprojet_progress_state\(.*?\n}\n/s', $libsrc, $statem);
+preg_match('/function gestionprojet_progress_feedback_html\(.*?\n}\n/s', $libsrc, $htmlm);
+$state = $statem[0] ?? '';
+$render = $htmlm[0] ?? '';
+test('missing keywords are never shown to students', fn() => $state !== '' && $render !== ''
+    && strpos($state, 'keywords_missing') === false && strpos($render, 'keywords_missing') === false);
+test('students only see an applied grade evaluation (or their own formative one)', fn() =>
+    strpos($state, "'status' => 'applied', 'formatif' => 0") !== false);
+test('the student view filters with student_view when the option is on', fn() =>
+    strpos($state, 'answer_leak_filter::student_view(') !== false && strpos($state, 'ai_hide_answers') !== false);
 
 // Security review of 8 Nov.
 $record = (object) ['id' => 7, 'gestionprojetid' => 3, 'groupid' => 12, 'userid' => 0, 'status' => 1, 'grade' => '9.00',

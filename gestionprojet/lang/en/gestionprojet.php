@@ -1000,6 +1000,7 @@ $string['error_formative_limit'] = 'Enter a number between 0 and 20.';
 $string['formative_disabled'] = 'Feedback before submitting is not available for this step.';
 $string['formative_pending_error'] = 'A feedback is already being prepared: wait for it.';
 $string['formative_none_left'] = 'You have used all the feedbacks for this step.';
+$string['formative_deadline_passed'] = 'The deadline has passed: no more feedback can be asked for.';
 $string['formative_title'] = 'Feedback before submitting';
 $string['formative_help'] = 'Ask the AI for advice on your work as it is now. Nothing is submitted and no grade is given: only your submission will be graded.';
 $string['formative_request'] = 'Ask for a feedback ({$a} left)';

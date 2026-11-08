@@ -1000,6 +1000,7 @@ $string['error_formative_limit'] = 'Saisis un nombre entre 0 et 20.';
 $string['formative_disabled'] = 'Le retour avant soumission n’est pas disponible pour cette étape.';
 $string['formative_pending_error'] = 'Un retour est déjà en préparation : attends-le.';
 $string['formative_none_left'] = 'Tu as utilisé tous les retours de cette étape.';
+$string['formative_deadline_passed'] = 'La date limite est passée : tu ne peux plus demander de retour.';
 $string['formative_title'] = 'Retour avant soumission';
 $string['formative_help'] = 'Demande à l\'IA des conseils sur ton travail tel qu\'il est maintenant. Rien n\'est soumis et aucune note n\'est donnée : seule ta soumission sera notée.';
 $string['formative_request'] = 'Demander un retour ({$a} restant(s))';

@@ -936,7 +936,7 @@ function gestionprojet_formative_request(object $gestionprojet, object $cm, int 
     $deadline = (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
         ['gestionprojetid' => $gestionprojet->id]);
     if ($deadline > 0 && time() > $deadline) {
-        throw new moodle_exception('submissionlocked', 'gestionprojet');
+        throw new moodle_exception('formative_deadline_passed', 'gestionprojet');
     }
 
     // Check and queue under the lock of the copy: a double click never exceeds the limit.
@@ -996,6 +996,11 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     $paliermode = $step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1;
     $palier = $paliermode ? gestionprojet_palier_state($gestionprojet, $submission) : null;
     $formative = $aion ? gestionprojet_formative_state($gestionprojet, $step, $submission) : null;
+    // Past the deadline no feedback can be asked any more (a page left open across it would offer the button).
+    $tables = [4 => 'cdcf', 5 => 'essai', 6 => 'rapport', 7 => 'besoin_eleve', 8 => 'carnet', 9 => 'fast'];
+    $deadline = isset($tables[$step]) ? (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
+        ['gestionprojetid' => $gestionprojet->id]) : 0;
+    $deadlinepassed = $deadline > 0 && time() > $deadline;
     // A copy just created by gestionprojet_get_or_create_submission has no grade property yet.
     $grade = isset($submission->grade) && $submission->grade !== null ? (float)$submission->grade : null;
 
@@ -1046,7 +1051,9 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
         'formative' => $formative,
         'feedback' => $feedback,
         'cansubmit' => !$readonly && !$submitted && !empty($gestionprojet->enable_submission) && !$paliermode,
-        'canask' => !$readonly && !$submitted && $formative !== null && $formative['enabled'],
+        'canask' => !$readonly && !$submitted && $formative !== null && $formative['enabled']
+            && !$deadlinepassed,
+        'deadlinepassed' => $deadlinepassed,
     ];
 }
 
@@ -1143,7 +1150,7 @@ function gestionprojet_has_provided_student_step(object $gestionprojet): bool {
  * @return int Number of copies changed.
  */
 function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjson): int {
-    global $DB, $USER;
+    global $DB;
 
     if ((int)($gestionprojet->step4_provided ?? 0) !== 1 || $oldjson === '') {
         return 0;
@@ -1166,10 +1173,10 @@ function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjs
         if ($json === $before) {
             continue;
         }
+        // No history row: following the consigne never removes student text, and the teacher's autosave would
+        // write one row per copy every few seconds (v2.12.5).
         $DB->update_record('gestionprojet_cdcf', (object)['id' => $copy->id, 'interacteurs_data' => $json,
             'timemodified' => time()]);
-        gestionprojet_log_change($gestionprojet->id, 'cdcf', $copy->id, 'interacteurs_data', $before, $json,
-            (int)$USER->id, (int)$copy->groupid);
         $count++;
     }
     $transaction->allow_commit();
