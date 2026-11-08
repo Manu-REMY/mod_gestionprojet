@@ -218,3 +218,55 @@ test('empty consigne → no locked zone', fn() => L::locked_zones(cdcf_helper::n
 test('strip_flags removes every flag key', fn() => no_flags(L::strip_flags($wf)));
 
 
+
+// Review fix: an element written by the student is never overwritten by a locked consigne element with the same id.
+$texts = function (array $list, string $key): array {
+    return array_column($list, $key);
+};
+$cons1 = cdcf_helper::normalize(['interactors' => [['id' => 1, 'name' => 'Robot'], ['id' => 2, 'name' => 'Sol']],
+    'fonctionsService' => [['id' => 1, 'description' => 'F1', 'interactor1Id' => 1, 'criteres' => [['id' => 1, 'description' => 'c']]],
+        ['id' => 2, 'description' => 'F2', 'interactor1Id' => 2, 'criteres' => [['id' => 1, 'description' => 'd']]]]]);
+$stud = L::seed($cons1);
+$stud['fonctionsService'][] = ['id' => 3, 'description' => 'MY OWN WORK', 'interactor1Id' => 1, 'interactor2Id' => 0,
+    'criteres' => [['id' => 1, 'description' => 'mine', 'niveau' => '5 kg', 'flexibilite' => '']]];
+$cons2 = $cons1;
+$cons2['fonctionsService'][] = ['id' => 3, 'description' => 'Teacher FS3', 'interactor1Id' => 2, 'interactor2Id' => 0, 'locked' => true,
+    'criteres' => [['id' => 1, 'description' => 't', 'niveau' => '', 'flexibilite' => '']]];
+$r = L::enforce($stud, cdcf_helper::normalize($cons2));
+$fsids = $texts($r['fonctionsService'], 'id');
+test('id collision: the student FS text is kept', fn() => in_array('MY OWN WORK', $texts($r['fonctionsService'], 'description'), true));
+test('id collision: the student FS keeps its criteria', fn() => array_values(array_filter($r['fonctionsService'],
+    fn($f) => $f['description'] === 'MY OWN WORK'))[0]['criteres'][0]['niveau'] === '5 kg');
+test('id collision: the locked consigne FS 3 is there', fn() => fs_by_id($r, 3)['description'] === 'Teacher FS3');
+test('id collision: ids stay unique', fn() => count($fsids) === count(array_unique($fsids)));
+
+$cons3 = cdcf_helper::normalize($cons1);
+$cons3['fonctionsService'][0]['criteres'][] = ['id' => 2, 'description' => 'Teacher crit', 'niveau' => '', 'flexibilite' => '', 'locked' => true];
+$stud3 = L::seed($cons1);
+$stud3['fonctionsService'][0]['criteres'][] = ['id' => 2, 'description' => 'Student crit', 'niveau' => '3 m', 'flexibilite' => ''];
+$r3 = L::enforce($stud3, $cons3);
+$crits = $texts(fs_by_id($r3, 1)['criteres'], 'description');
+test('criterion id collision: both criteria are there', fn() => in_array('Student crit', $crits, true) && in_array('Teacher crit', $crits, true));
+test('criterion id collision: ids stay unique', fn() =>
+    count(array_unique($texts(fs_by_id($r3, 1)['criteres'], 'id'))) === count($crits));
+
+$cons4 = $cons1;
+$cons4['interactors'][1]['locked'] = true;
+$stud4 = L::seed($cons1);
+$stud4['interactors'][1]['name'] = 'Sable';
+$r4 = L::enforce($stud4, cdcf_helper::normalize($cons4));
+$sable = array_values(array_filter($r4['interactors'], fn($i) => $i['name'] === 'Sable'));
+test('interactor collision: the student name is kept on a new interactor', fn() => count($sable) === 1 && $sable[0]['id'] !== 2);
+test('interactor collision: the locked consigne interactor 2 is there', fn() =>
+    array_values(array_filter($r4['interactors'], fn($i) => $i['id'] === 2))[0]['name'] === 'Sol');
+test('interactor collision: the student FS follow their interactor', fn() => fs_by_id($r4, 2)['interactor1Id'] === $sable[0]['id']);
+test('an empty field on a locked id is simply filled (no copy)', fn() =>
+    count(L::enforce(cdcf_helper::normalize(['interactors' => [['id' => 1, 'name' => ''], ['id' => 2, 'name' => 'Sol']]]),
+        cdcf_helper::normalize($cons4))['interactors']) === 2);
+
+// Review fix: flags sent by the browser are never stored, whatever the consigne.
+$withflags = json_encode(['interactors' => [['id' => 1, 'name' => 'A', 'locked' => true, 'hint' => 'x']]]);
+test('sanitize_student_json removes flags', fn() => no_flags(json_decode(L::sanitize_student_json($withflags), true)));
+$raw = '{"interactors":[{"id":1,"name":"A"}],"fonctionsService":[],"contraintes":[]}';
+test('sanitize_student_json returns flag-free JSON byte for byte', fn() => L::sanitize_student_json($raw) === $raw);
+test('sanitize_student_json leaves invalid JSON unchanged', fn() => L::sanitize_student_json('{oops') === '{oops');

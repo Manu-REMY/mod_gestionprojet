@@ -310,8 +310,8 @@ function gestionprojet_cdcf_locked_zones(object $gestionprojet): array {
 /**
  * Step 4 student copy as the server stores it: what the consigne locks is restored (v2.11.1).
  *
- * Returns the JSON unchanged when the consigne is not shown to students or locks nothing,
- * so that activities without locks behave exactly as before.
+ * When the consigne is not shown to students or locks nothing, the JSON is returned unchanged except that
+ * flags sent by the browser are removed: activities without locks store exactly what they did before.
  *
  * @param object $gestionprojet Instance record.
  * @param string $studentjson CDCF JSON sent by the browser.
@@ -321,12 +321,12 @@ function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $stud
     global $DB;
 
     if ((int)($gestionprojet->step4_provided ?? 0) !== 1) {
-        return $studentjson;
+        return \mod_gestionprojet\consigne_lock::sanitize_student_json($studentjson);
     }
     $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
     $consigne = \mod_gestionprojet\cdcf_helper::decode($provided ?: null);
     if (!\mod_gestionprojet\consigne_lock::has_locks($consigne)) {
-        return $studentjson;
+        return \mod_gestionprojet\consigne_lock::sanitize_student_json($studentjson);
     }
     $student = \mod_gestionprojet\cdcf_helper::decode($studentjson);
     return json_encode(\mod_gestionprojet\consigne_lock::enforce($student, $consigne), JSON_UNESCAPED_UNICODE);

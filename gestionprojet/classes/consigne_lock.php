@@ -171,6 +171,10 @@ class consigne_lock {
      * elements are put back at their rank in the consigne, together with what they need: the FS of a locked
      * criterion and the interactors of a locked FS.
      *
+     * Student text is never lost: when the element sitting on a locked id has a non-empty locked field that differs
+     * from the consigne (an element the student wrote, or edited before the teacher locked it), it keeps its text
+     * under a new id and the consigne element is inserted next to it.
+     *
      * @param array $student Student copy (as sent by the browser, normalized).
      * @param array $provided Consigne.
      * @return array Student copy to store, without flags.
@@ -190,8 +194,17 @@ class consigne_lock {
             }
         }
         $student['interactors'] = self::unique_ids($student['interactors'], $provided['interactors']);
+        $max = self::max_id($student['interactors'], $provided['interactors']);
+        $remap = [];
         foreach ($provided['interactors'] as $rank => $pi) {
             $index = self::index_of($student['interactors'], $pi['id']);
+            if ($index !== null && !empty($pi['locked'])
+                    && self::differs($student['interactors'][$index], $pi, ['name'])) {
+                // The student's interactor keeps its name under a new id; their FS follow it.
+                $remap[$pi['id']] = ++$max;
+                $student['interactors'][$index]['id'] = $max;
+                $index = null;
+            }
             if ($index === null) {
                 if (!empty($pi['locked']) || isset($needed[$pi['id']])) {
                     $copy = self::seed(['interactors' => [$pi], 'fonctionsService' => [], 'contraintes' => []]);
@@ -202,14 +215,29 @@ class consigne_lock {
                 $student['interactors'][$index]['name'] = $pi['name'];
             }
         }
+        foreach ($student['fonctionsService'] as &$sfs) {
+            foreach (['interactor1Id', 'interactor2Id'] as $key) {
+                if (isset($remap[$sfs[$key]])) {
+                    $sfs[$key] = $remap[$sfs[$key]];
+                }
+            }
+        }
+        unset($sfs);
 
         // Service functions and their criteria.
         $student['fonctionsService'] = self::unique_ids($student['fonctionsService'], $provided['fonctionsService']);
+        $max = self::max_id($student['fonctionsService'], $provided['fonctionsService']);
         foreach ($provided['fonctionsService'] as $rank => $pfs) {
             $lockedcriteria = array_filter($pfs['criteres'], function (array $c): bool {
                 return !empty($c['locked']) || !empty($c['niveauLocked']);
             });
             $index = self::index_of($student['fonctionsService'], $pfs['id']);
+            if ($index !== null && !empty($pfs['locked'])
+                    && self::differs($student['fonctionsService'][$index], $pfs, ['description'])) {
+                // The student's FS (with its criteria) keeps its text under a new id.
+                $student['fonctionsService'][$index]['id'] = ++$max;
+                $index = null;
+            }
             if ($index === null) {
                 if (!empty($pfs['locked']) || $lockedcriteria) {
                     array_splice($student['fonctionsService'], min($rank, count($student['fonctionsService'])), 0,
@@ -224,11 +252,18 @@ class consigne_lock {
                 $fs['interactor2Id'] = $pfs['interactor2Id'];
             }
             $fs['criteres'] = self::unique_ids($fs['criteres'], $pfs['criteres']);
+            $cmax = self::max_id($fs['criteres'], $pfs['criteres']);
             foreach ($pfs['criteres'] as $crank => $pc) {
                 if (empty($pc['locked']) && empty($pc['niveauLocked'])) {
                     continue;
                 }
                 $cindex = self::index_of($fs['criteres'], $pc['id']);
+                $lockedfields = array_merge(!empty($pc['locked']) ? ['description'] : [],
+                    !empty($pc['niveauLocked']) ? ['niveau'] : []);
+                if ($cindex !== null && self::differs($fs['criteres'][$cindex], $pc, $lockedfields)) {
+                    $fs['criteres'][$cindex]['id'] = ++$cmax;
+                    $cindex = null;
+                }
                 if ($cindex === null) {
                     $seeded = self::strip_flags(['fonctionsService' => [self::seed_fs(['criteres' => [$pc]])]]);
                     array_splice($fs['criteres'], min($crank, count($fs['criteres'])), 0,
@@ -248,11 +283,16 @@ class consigne_lock {
 
         // Constraints.
         $student['contraintes'] = self::unique_ids($student['contraintes'], $provided['contraintes']);
+        $max = self::max_id($student['contraintes'], $provided['contraintes']);
         foreach ($provided['contraintes'] as $rank => $pc) {
             if (empty($pc['locked'])) {
                 continue;
             }
             $index = self::index_of($student['contraintes'], $pc['id']);
+            if ($index !== null && self::differs($student['contraintes'][$index], $pc, ['description', 'justification'])) {
+                $student['contraintes'][$index]['id'] = ++$max;
+                $index = null;
+            }
             $locked = self::strip_flags(['contraintes' => [$pc]])['contraintes'][0];
             if ($index === null) {
                 array_splice($student['contraintes'], min($rank, count($student['contraintes'])), 0, [$locked]);
@@ -261,6 +301,31 @@ class consigne_lock {
             }
         }
         return $student;
+    }
+
+    /**
+     * Student JSON without the consigne flags: only the server decides what is locked (v2.11.1).
+     *
+     * JSON without any flag is returned byte for byte, so activities without locks store exactly what they did.
+     *
+     * @param string $json CDCF JSON sent by the browser.
+     * @return string
+     */
+    public static function sanitize_student_json(string $json): string {
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded)) {
+            return $json;
+        }
+        $found = false;
+        array_walk_recursive($decoded, function ($value, $key) use (&$found) {
+            if (in_array($key, self::FLAG_KEYS, true)) {
+                $found = true;
+            }
+        });
+        if (!$found) {
+            return $json;
+        }
+        return json_encode(self::strip_flags(cdcf_helper::normalize($decoded)), JSON_UNESCAPED_UNICODE);
     }
 
     /**
@@ -374,6 +439,39 @@ class consigne_lock {
         }
         unset($element);
         return array_values($list);
+    }
+
+    /**
+     * Whether a student element carries its own text in a locked field (non-empty and different from the consigne).
+     *
+     * @param array $element Student element.
+     * @param array $source Consigne element.
+     * @param string[] $fields Locked text fields.
+     * @return bool
+     */
+    private static function differs(array $element, array $source, array $fields): bool {
+        foreach ($fields as $field) {
+            $value = (string)($element[$field] ?? '');
+            if ($value !== '' && $value !== (string)($source[$field] ?? '')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Highest id of two lists.
+     *
+     * @param array $list
+     * @param array $other
+     * @return int
+     */
+    private static function max_id(array $list, array $other): int {
+        $max = 0;
+        foreach (array_merge($list, $other) as $element) {
+            $max = max($max, (int)$element['id']);
+        }
+        return $max;
     }
 
     /**

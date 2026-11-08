@@ -94,3 +94,8 @@ $plain = ['interactors' => [['id' => 1, 'name' => 'A'], ['id' => 2, 'name' => 'B
 test('consigne without flag: an identical copy matches (current behaviour)', fn() =>
     ai_evaluator::cdcf_matches_seed(json_encode($plain), json_encode($plain)) === true);
 test('invalid JSON never matches', fn() => ai_evaluator::cdcf_matches_seed('{oops', $pjson) === false);
+
+test('enforce wrapper sanitizes flags on every path', fn() =>
+    substr_count(between(code('lib.php'), 'function gestionprojet_cdcf_enforce_consigne', "\n}\n"), 'consigne_lock::sanitize_student_json') >= 2);
+test('ai_evaluator strips student flags when the flagged copy is not used', fn() =>
+    strpos(code('classes/ai_evaluator.php'), 'consigne_lock::sanitize_student_json') !== false);

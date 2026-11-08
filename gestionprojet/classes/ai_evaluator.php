@@ -253,6 +253,11 @@ class ai_evaluator {
                 $promptsubmission = clone $submission;
                 $promptsubmission->interacteurs_data = json_encode(consigne_lock::with_flags(
                     cdcf_helper::decode($submission->interacteurs_data ?? null), $consigne), JSON_UNESCAPED_UNICODE);
+            } else if ((int)$evaluation->step === 4) {
+                // Only the consigne decides what is provided: flags stored by a forged request are ignored.
+                $promptsubmission = clone $submission;
+                $promptsubmission->interacteurs_data = consigne_lock::sanitize_student_json(
+                    (string)($submission->interacteurs_data ?? ''));
             }
             $promptbuilder = new ai_prompt_builder($builderoptions);
             // A grid where every part is excluded cannot give a grade: fail rather than invent one.
