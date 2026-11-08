@@ -162,7 +162,7 @@ class answer_leak_filter {
 
     /**
      * Roots of a text: the first five letters of each word of at least four letters, without case or accent
-     * ("Rayons" and "rayon" are the same word), and each standalone number ("50 cm" gives "50"; "FS2" gives nothing).
+     * ("Rayons" and "rayon" are the same word), and each standalone number ("50 cm" and "50cm" give "50", "1 000" gives "1000"; "FS2" gives nothing).
      *
      * @param string $text
      * @return string[]
@@ -176,7 +176,9 @@ class answer_leak_filter {
             'ê' => 'e', 'ë' => 'e', 'î' => 'i', 'ï' => 'i', 'ô' => 'o', 'ö' => 'o', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
             'œ' => 'oe']);
         preg_match_all('/[a-z]{4,}/', $simple, $words);
-        preg_match_all('/(?<![a-z0-9])\d+(?:[.,]\d+)?(?![a-z0-9])/', $simple, $numbers);
+        // Same number whatever its writing: "1 000" (spaces, non-breaking spaces) is "1000", "50cm" holds "50".
+        $simple = preg_replace('/(?<=\d)[\s\x{00A0}\x{202F}](?=\d{3}(?!\d))/u', '', $simple);
+        preg_match_all('/(?<![a-z0-9])\d+(?:[.,]\d+)?/', $simple, $numbers);
         $roots = array_map(fn($w) => substr($w, 0, 5), $words[0]);
         $nums = array_map(fn($n) => str_replace(',', '.', $n), $numbers[0]);
         return array_values(array_unique(array_merge($roots, $nums)));

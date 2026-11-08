@@ -110,3 +110,9 @@ test('a number the student wrote can be quoted back', fn() =>
     f::filter('Tu as écrit 10 cm.', f::forbidden_roots($key, json_encode(['n' => '10 cm']))) === 'Tu as écrit 10 cm.');
 test('a feedback edited by the teacher is filtered too (fail closed)', fn() =>
     f::student_view('Pense au temps de recharge !', [], [], $forbidden)['feedback'] === '');
+test('a level glued to its unit ("50cm") is still caught', fn() =>
+    f::filter('Vise 50cm.', f::forbidden_roots($key, $student)) === '');
+test('thousands separators do not hide a number', fn() =>
+    f::filter('Il faut 1000 m.', f::forbidden_roots(json_encode(['n' => 'Portée 1 000 m']), '')) === ''
+    && f::filter('Il faut 1 000 m.', f::forbidden_roots(json_encode(['n' => 'Portée 1000 m']), '')) === '');
+test('a label like FS2 is still not a number', fn() => !in_array('2', f::roots('Ta FS2 est claire.'), true));
