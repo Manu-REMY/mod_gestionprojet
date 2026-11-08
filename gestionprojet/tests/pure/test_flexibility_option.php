@@ -64,7 +64,8 @@ test('the three CDCF pages pass the instance option', function () {
     return true;
 });
 test('the evaluator and the instructions generator pass the option to the builder', fn() =>
-    strpos(file_get_contents(GP_ROOT . '/classes/ai_evaluator.php'), "new ai_prompt_builder(['flexibility'") !== false
+    strpos(file_get_contents(GP_ROOT . '/classes/ai_evaluator.php'), "\$builderoptions = ['flexibility' => !isset(\$gestionprojet->step4_flexibility)") !== false
+    && strpos(file_get_contents(GP_ROOT . '/classes/ai_evaluator.php'), 'new ai_prompt_builder($builderoptions)') !== false
     && strpos(file_get_contents(GP_ROOT . '/ajax/generate_ai_instructions.php'), "ai_prompt_builder(['flexibility'") !== false);
 test('the grading page hides the flexibility when off', fn() =>
     strpos(file_get_contents(GP_ROOT . '/grading.php'), 'step4_flexibility') !== false);

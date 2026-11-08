@@ -785,6 +785,11 @@ $string['step4_contrainte_placeholder'] = 'Describe the constraint…';
 $string['step4_justification_placeholder'] = 'Justification';
 $string['step4_no_fs_link'] = '— No link to a FS —';
 $string['step4_add_contrainte'] = 'Add a constraint';
+$string['step4_flag_locked'] = 'Provided';
+$string['step4_flag_locked_help'] = 'Provided by the instructions: the student can neither change nor delete it';
+$string['step4_flag_gap'] = 'To fill in';
+$string['step4_flag_gap_help'] = 'Reaches the student empty; the text typed here is shown as a hint';
+$string['step4_gap_placeholder'] = 'To fill in';
 
 // Step 5 - Test Sheet page (student)
 $string['step5_page_title'] = 'TEST SHEET';
@@ -1004,6 +1009,7 @@ $string['grille_evaluee_oui'] = 'Yes';
 $string['grille_evaluee_non'] = 'No';
 $string['grille_status_graded'] = 'Graded';
 $string['grille_status_excluded'] = 'Not graded';
+$string['grille_status_provided'] = 'Not graded (provided by the instructions)';
 $string['grille_add'] = 'Add a part';
 $string['grille_reset'] = 'Restore the default grid';
 $string['grille_up'] = 'Move up';

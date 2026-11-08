@@ -172,6 +172,13 @@ if (!$group) {
     <?php
     require_once($CFG->dirroot . '/mod/gestionprojet/classes/cdcf_helper.php');
     $cdcfdata = \mod_gestionprojet\cdcf_helper::decode($submission->interacteurs_data ?? null);
+    if ((int)($gestionprojet->step4_provided ?? 0) === 1) {
+        // Fields provided or to fill in, read from the consigne (the student copy stores no flag, v2.11.1).
+        $consignejson = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data',
+            ['gestionprojetid' => $gestionprojet->id]);
+        $cdcfdata = \mod_gestionprojet\consigne_lock::with_flags($cdcfdata,
+            \mod_gestionprojet\cdcf_helper::decode($consignejson ?: null));
+    }
     $projetnom = format_string($gestionprojet->name);
     ?>
 
@@ -266,6 +273,11 @@ $langstrings = [
     'justificationPlaceholder' => get_string('step4_justification_placeholder', 'gestionprojet'),
     'noFsLink'                 => get_string('step4_no_fs_link', 'gestionprojet'),
     'addContrainte'            => get_string('step4_add_contrainte', 'gestionprojet'),
+    'flagLocked'               => get_string('step4_flag_locked', 'gestionprojet'),
+    'flagLockedHelp'           => get_string('step4_flag_locked_help', 'gestionprojet'),
+    'flagGap'                  => get_string('step4_flag_gap', 'gestionprojet'),
+    'flagGapHelp'              => get_string('step4_flag_gap_help', 'gestionprojet'),
+    'gapPlaceholder'           => get_string('step4_gap_placeholder', 'gestionprojet'),
 ];
 
 $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[

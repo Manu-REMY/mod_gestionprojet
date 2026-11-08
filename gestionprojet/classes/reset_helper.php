@@ -95,6 +95,11 @@ class reset_helper {
                 $record->$field = $provided->$field;
             }
         }
+        if ($step === 4) {
+            // Same starting copy as the first opening: no lock/gap flag, fields "to fill in" emptied (v2.11.1).
+            $record->interacteurs_data = json_encode(consigne_lock::seed(cdcf_helper::decode($provided->interacteurs_data ?? null)),
+                JSON_UNESCAPED_UNICODE);
+        }
         $record->timemodified = time();
         $DB->update_record($map['student_table'], $record);
 

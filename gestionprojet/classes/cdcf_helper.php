@@ -35,6 +35,32 @@ class cdcf_helper {
     const FLEXIBILITE_CODES = ['', 'F0', 'F1', 'F2', 'F3'];
 
     /**
+     * Consigne flags kept by normalize(): [lock key, gap key]; the lock wins over the gap.
+     * Criteria carry a second pair for their level (niveau and flexibilite).
+     */
+    const FLAG_PAIRS = ['element' => ['locked', 'gap'], 'niveau' => ['niveauLocked', 'niveauGap']];
+
+    /**
+     * Flags of an element of the consigne, written only when true (v2.11.1).
+     *
+     * @param array $src Raw element.
+     * @param string[] $pairs Keys of FLAG_PAIRS to read.
+     * @return array Flag key => true.
+     */
+    private static function flags(array $src, array $pairs): array {
+        $out = [];
+        foreach ($pairs as $pair) {
+            [$lock, $gap] = self::FLAG_PAIRS[$pair];
+            if (!empty($src[$lock])) {
+                $out[$lock] = true;
+            } else if (!empty($src[$gap])) {
+                $out[$gap] = true;
+            }
+        }
+        return $out;
+    }
+
+    /**
      * Default empty CDCF data structure.
      *
      * @return array
@@ -80,7 +106,7 @@ class cdcf_helper {
                 return [
                     'id' => (int)($i['id'] ?? 0),
                     'name' => (string)($i['name'] ?? ''),
-                ];
+                ] + self::flags($i, ['element']);
             }, $data['interactors']));
         }
         if (!empty($data['fonctionsService']) && is_array($data['fonctionsService'])) {
@@ -93,8 +119,8 @@ class cdcf_helper {
                             'description' => (string)($c['description'] ?? ''),
                             'niveau' => (string)($c['niveau'] ?? ''),
                             'flexibilite' => in_array((string)($c['flexibilite'] ?? ''), self::FLEXIBILITE_CODES, true)
-                                ? (string)$c['flexibilite'] : '',
-                        ];
+                                ? (string)($c['flexibilite'] ?? '') : '',
+                        ] + self::flags($c, ['element', 'niveau']);
                     }
                 }
                 return [
@@ -103,7 +129,7 @@ class cdcf_helper {
                     'interactor1Id' => (int)($fs['interactor1Id'] ?? 0),
                     'interactor2Id' => (int)($fs['interactor2Id'] ?? 0),
                     'criteres' => $criteres,
-                ];
+                ] + self::flags($fs, ['element']);
             }, $data['fonctionsService']));
         }
         if (!empty($data['contraintes']) && is_array($data['contraintes'])) {
@@ -113,7 +139,7 @@ class cdcf_helper {
                     'description' => (string)($c['description'] ?? ''),
                     'justification' => (string)($c['justification'] ?? ''),
                     'linkedFsId' => (int)($c['linkedFsId'] ?? 0),
-                ];
+                ] + self::flags($c, ['element']);
             }, $data['contraintes']));
         }
         return $out;

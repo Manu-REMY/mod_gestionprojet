@@ -292,6 +292,47 @@ function gestionprojet_require_group_access($cm, int $groupid, int $userid, $con
 }
 
 /**
+ * Zones of the step 4 grid entirely provided by the consigne shown to students (v2.11.1).
+ *
+ * @param object $gestionprojet Instance record.
+ * @return string[] See consigne_lock::locked_zones(); empty when the consigne is not shown to students.
+ */
+function gestionprojet_cdcf_locked_zones(object $gestionprojet): array {
+    global $DB;
+
+    if ((int)($gestionprojet->step4_provided ?? 0) !== 1) {
+        return [];
+    }
+    $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
+    return \mod_gestionprojet\consigne_lock::locked_zones(\mod_gestionprojet\cdcf_helper::decode($provided ?: null));
+}
+
+/**
+ * Step 4 student copy as the server stores it: what the consigne locks is restored (v2.11.1).
+ *
+ * When the consigne is not shown to students or locks nothing, the JSON is returned unchanged except that
+ * flags sent by the browser are removed: activities without locks store exactly what they did before.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param string $studentjson CDCF JSON sent by the browser.
+ * @return string CDCF JSON to store.
+ */
+function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $studentjson): string {
+    global $DB;
+
+    if ((int)($gestionprojet->step4_provided ?? 0) !== 1) {
+        return \mod_gestionprojet\consigne_lock::sanitize_student_json($studentjson);
+    }
+    $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
+    $consigne = \mod_gestionprojet\cdcf_helper::decode($provided ?: null);
+    if (!\mod_gestionprojet\consigne_lock::has_locks($consigne)) {
+        return \mod_gestionprojet\consigne_lock::sanitize_student_json($studentjson);
+    }
+    $student = \mod_gestionprojet\cdcf_helper::decode($studentjson);
+    return json_encode(\mod_gestionprojet\consigne_lock::enforce($student, $consigne), JSON_UNESCAPED_UNICODE);
+}
+
+/**
  * Get or create student submission record.
  *
  * @param stdClass $gestionprojet The activity record
@@ -355,7 +396,9 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
         if ($isempty) {
             $provided = $DB->get_record('gestionprojet_cdcf_provided', ['gestionprojetid' => $gestionprojet->id]);
             if ($provided && !empty($provided->interacteurs_data)) {
-                $record->interacteurs_data = $provided->interacteurs_data;
+                // Starting copy: no lock/gap flag, fields "to fill in" emptied (v2.11.1).
+                $record->interacteurs_data = json_encode(\mod_gestionprojet\consigne_lock::seed(
+                    \mod_gestionprojet\cdcf_helper::decode($provided->interacteurs_data)), JSON_UNESCAPED_UNICODE);
                 $record->timemodified = time();
                 $DB->update_record('gestionprojet_cdcf', $record);
             }

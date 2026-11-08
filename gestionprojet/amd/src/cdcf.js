@@ -55,6 +55,9 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
         var locked = !!opts.isLocked;
         // Instance option step4_flexibility: when off, criteria have no F0-F3 select.
         var hideFlexibility = opts.showFlexibility === false;
+        // Consigne page (v2.11.1): the teacher marks each field "provided" (locked) or "to fill in" (gap).
+        // Elsewhere the flags come from the consigne (consigne_lock::with_flags) and are applied to the student.
+        var editFlags = !!opts.editFlags;
         var onChange = opts.onChange || function() {};
 
         function emit() { onChange(data); render(); }
@@ -63,6 +66,76 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
             return data.fonctionsService.filter(function(fs) {
                 return fs.interactor1Id === id || fs.interactor2Id === id;
             });
+        }
+
+        /**
+         * Teacher toggles of one field: "provided" and "to fill in", mutually exclusive.
+         *
+         * @param {Object} obj Element carrying the flags.
+         * @param {string} lockKey Flag key of the lock (locked or niveauLocked).
+         * @param {string} gapKey Flag key of the gap (gap or niveauGap).
+         * @returns {HTMLElement|null}
+         */
+        function flagToggles(obj, lockKey, gapKey) {
+            if (!editFlags) { return null; }
+            var wrap = el('span', { className: 'gp-cdcf-flags' });
+            [[lockKey, '🔒 ' + lang.flagLocked, lang.flagLockedHelp, gapKey],
+             [gapKey, '▢ ' + lang.flagGap, lang.flagGapHelp, lockKey]].forEach(function(t) {
+                var on = !!obj[t[0]];
+                var b = el('button', {
+                    type: 'button', className: 'gp-cdcf-flag' + (on ? ' gp-cdcf-flag-on' : ''),
+                    text: t[1], title: t[2], 'aria-pressed': on ? 'true' : 'false',
+                    onclick: function() {
+                        if (obj[t[0]]) {
+                            delete obj[t[0]];
+                        } else {
+                            obj[t[0]] = true;
+                            delete obj[t[3]];
+                        }
+                        emit();
+                    },
+                });
+                if (locked) { b.disabled = true; }
+                wrap.appendChild(b);
+            });
+            return wrap;
+        }
+
+        /**
+         * Show the flags of a field: style in both modes; for the student, a locked field is read-only
+         * and a field to fill in shows the teacher's hint.
+         *
+         * @param {HTMLElement} input Field.
+         * @param {Object} obj Element carrying the flags.
+         * @param {string} lockKey
+         * @param {string} gapKey
+         * @param {string|null} hintKey Key of the hint (hint or niveauHint), null for no hint.
+         * @returns {HTMLElement|null} Badge "provided" to show next to a locked field (student only).
+         */
+        function applyFlags(input, obj, lockKey, gapKey, hintKey) {
+            if (obj[lockKey]) {
+                input.classList.add('gp-cdcf-locked');
+                if (!editFlags) {
+                    input.disabled = true;
+                    input.title = lang.flagLockedHelp;
+                    return el('span', { className: 'gp-cdcf-lock-badge', text: '🔒 ' + lang.flagLocked,
+                        title: lang.flagLockedHelp });
+                }
+            } else if (obj[gapKey]) {
+                input.classList.add('gp-cdcf-gap');
+                if (!editFlags) {
+                    var hint = hintKey && obj[hintKey] ? obj[hintKey] : '';
+                    input.placeholder = hint ? lang.gapPlaceholder + ' — ' + hint : lang.gapPlaceholder;
+                }
+            }
+            return null;
+        }
+
+        /** True when the student may not delete this element (it or one of its criteria is provided). */
+        function isProtected(obj) {
+            if (editFlags) { return false; }
+            if (obj.locked || obj.niveauLocked) { return true; }
+            return (obj.criteres || []).some(function(c) { return c.locked || c.niveauLocked; });
         }
 
         function render() {
@@ -85,6 +158,7 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                     onchange: function(e) { inter.name = e.target.value; emit(); },
                 });
                 if (locked) { input.disabled = true; }
+                var badge = applyFlags(input, inter, 'locked', 'gap', 'hint');
                 var del = el('button', {
                     type: 'button', className: 'gp-cdcf-btn-remove', text: '🗑',
                     onclick: function() {
@@ -92,9 +166,10 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                         emit();
                     },
                 });
-                if (locked || !canRemove) { del.disabled = true; }
+                if (locked || !canRemove || isProtected(inter)) { del.disabled = true; }
                 section.appendChild(el('div', { className: 'gp-cdcf-row' },
-                    [el('span', { className: 'gp-cdcf-badge gp-cdcf-badge-i', text: 'I' + inter.id }), input, del]));
+                    [el('span', { className: 'gp-cdcf-badge gp-cdcf-badge-i', text: 'I' + inter.id }), input, badge,
+                        flagToggles(inter, 'locked', 'gap'), del]));
             });
             if (!locked) {
                 section.appendChild(el('button', {
@@ -173,9 +248,11 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
             });
             desc.value = fs.description;
             if (locked) { desc.disabled = true; }
+            var fsBadge = applyFlags(desc, fs, 'locked', 'gap', 'hint');
 
             var sel1 = renderInteractorSelect(fs.interactor1Id, false, function(v) { fs.interactor1Id = v; emit(); });
             var sel2 = renderInteractorSelect(fs.interactor2Id, true, function(v) { fs.interactor2Id = v; emit(); });
+            if (!editFlags && fs.locked) { sel1.disabled = sel2.disabled = true; }
             var del = el('button', {
                 type: 'button', className: 'gp-cdcf-btn-remove', text: '🗑',
                 onclick: function() {
@@ -183,12 +260,12 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                     emit();
                 },
             });
-            if (locked || data.fonctionsService.length <= 1) { del.disabled = true; }
+            if (locked || data.fonctionsService.length <= 1 || isProtected(fs)) { del.disabled = true; }
 
             head.appendChild(el('div', { className: 'gp-cdcf-fs-arrows' }, [up, down]));
             head.appendChild(badge);
             head.appendChild(el('div', { className: 'gp-cdcf-fs-desc-wrap' }, [
-                el('label', null, [lang.fsDescLabel]), desc,
+                el('label', null, [lang.fsDescLabel]), desc, fsBadge, flagToggles(fs, 'locked', 'gap'),
             ]));
             head.appendChild(el('div', { className: 'gp-cdcf-fs-selects' }, [
                 el('label', null, [lang.fsInteractorsLabel]), sel1, sel2,
@@ -247,10 +324,12 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                 d.disabled = n.disabled = del.disabled = true;
                 if (f) { f.disabled = true; }
             }
-            row.appendChild(d);
-            row.appendChild(n);
-            if (f) { row.appendChild(f); }
-            row.appendChild(del);
+            var dBadge = applyFlags(d, crit, 'locked', 'gap', 'hint');
+            var nBadge = applyFlags(n, crit, 'niveauLocked', 'niveauGap', 'niveauHint');
+            if (f && !editFlags && crit.niveauLocked) { f.disabled = true; }
+            if (isProtected(crit)) { del.disabled = true; }
+            [d, dBadge, flagToggles(crit, 'locked', 'gap'), n, f, nBadge, flagToggles(crit, 'niveauLocked', 'niveauGap'), del]
+                .forEach(function(node) { if (node) { row.appendChild(node); } });
             return row;
         }
 
@@ -304,9 +383,13 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                     },
                 });
                 if (locked) { d.disabled = j.disabled = sel.disabled = del.disabled = true; }
+                var cBadge = applyFlags(d, c, 'locked', 'gap', 'hint');
+                applyFlags(j, c, 'locked', 'gap', null);
+                if (!editFlags && c.locked) { sel.disabled = true; }
+                if (isProtected(c)) { del.disabled = true; }
                 section.appendChild(el('div', { className: 'gp-cdcf-row' }, [
                     el('span', { className: 'gp-cdcf-badge gp-cdcf-badge-c', text: 'C' + (idx + 1) }),
-                    d, j, sel, del,
+                    d, j, sel, cBadge, flagToggles(c, 'locked', 'gap'), del,
                 ]));
             });
             if (!locked) {

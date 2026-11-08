@@ -202,7 +202,7 @@ class ai_evaluator {
             $providedmap = [
                 4 => [
                     'table'      => 'gestionprojet_cdcf_provided',
-                    'comparator' => 'json_normalized',
+                    'comparator' => 'cdcf_seed',
                     'field'      => 'interacteurs_data',
                 ],
                 5 => [
@@ -241,14 +241,31 @@ class ai_evaluator {
             }
 
             // Build prompts.
-            $promptbuilder = new ai_prompt_builder(['flexibility' => !isset($gestionprojet->step4_flexibility)
-                || (bool) $gestionprojet->step4_flexibility]);
+            $builderoptions = ['flexibility' => !isset($gestionprojet->step4_flexibility)
+                || (bool) $gestionprojet->step4_flexibility];
+            // Step 4 consigne shown to students: fields it provides are not graded, and the AI sees which ones
+            // are provided or to fill in (v2.11.1). The flagged copy is only used for the prompt, never stored.
+            $promptsubmission = $submission;
+            if ((int)$evaluation->step === 4 && (int)($gestionprojet->step4_provided ?? 0) === 1
+                    && $providedrec_for_prompt !== null) {
+                $consigne = cdcf_helper::decode($providedrec_for_prompt->interacteurs_data ?? null);
+                $builderoptions['locked_zones'] = consigne_lock::locked_zones($consigne);
+                $promptsubmission = clone $submission;
+                $promptsubmission->interacteurs_data = json_encode(consigne_lock::with_flags(
+                    cdcf_helper::decode($submission->interacteurs_data ?? null), $consigne), JSON_UNESCAPED_UNICODE);
+            } else if ((int)$evaluation->step === 4) {
+                // Only the consigne decides what is provided: flags stored by a forged request are ignored.
+                $promptsubmission = clone $submission;
+                $promptsubmission->interacteurs_data = consigne_lock::sanitize_student_json(
+                    (string)($submission->interacteurs_data ?? ''));
+            }
+            $promptbuilder = new ai_prompt_builder($builderoptions);
             // A grid where every part is excluded cannot give a grade: fail rather than invent one.
             if ((int)$evaluation->step === 4 && !$promptbuilder->graded_parts(4, $teachermodel)) {
                 throw new \Exception(get_string('ai_no_graded_part', 'gestionprojet'));
             }
             $prompts = $promptbuilder->build_prompt(
-                $evaluation->step, $submission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications,
+                $evaluation->step, $promptsubmission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications,
                 !isset($gestionprojet->ai_hide_answers) || (bool) $gestionprojet->ai_hide_answers
             );
 
@@ -755,6 +772,25 @@ class ai_evaluator {
     }
 
     /**
+     * Whether a step 4 copy is still the starting copy given by the consigne (no work done).
+     *
+     * The starting copy is the consigne without flags, its fields "to fill in" emptied (consigne_lock::seed).
+     *
+     * @param string $studentjson CDCF JSON of the student.
+     * @param string $providedjson CDCF JSON of the consigne.
+     * @return bool
+     */
+    public static function cdcf_matches_seed(string $studentjson, string $providedjson): bool {
+        $student = json_decode($studentjson, true);
+        $provided = json_decode($providedjson, true);
+        if (!is_array($student) || !is_array($provided)) {
+            return false;
+        }
+        return consigne_lock::strip_flags(cdcf_helper::normalize($student))
+            === consigne_lock::seed(cdcf_helper::normalize($provided));
+    }
+
+    /**
      * Check whether the provided record has any non-empty content in the comparable fields.
      *
      * @param array $cfg     Provided map entry for the current step.
@@ -789,6 +825,10 @@ class ai_evaluator {
                     return json_encode($studentjson) === json_encode($providedjson);
                 }
                 return false;
+
+            case 'cdcf_seed':
+                return self::cdcf_matches_seed((string)($submission->{$cfg['field']} ?? ''),
+                    (string)($providedrec->{$cfg['field']} ?? ''));
 
             case 'string_strict':
                 $f = $cfg['field'];

@@ -5564,3 +5564,38 @@
 .path-mod-gestionprojet .gp-grille-total {
     font-weight: 600;
 }
+
+/* Consigne fields provided or to fill in (v2.11.1): a shape and a word, never the colour alone. */
+.path-mod-gestionprojet .gp-cdcf-locked {
+    background-color: #eef3fb;
+    border-style: solid;
+    cursor: not-allowed;
+}
+.path-mod-gestionprojet .gp-cdcf-gap {
+    border: 2px dashed #4a7bd0;
+    background-color: #fff;
+}
+.path-mod-gestionprojet .gp-cdcf-lock-badge {
+    font-size: 0.8rem;
+    color: #2f4f7f;
+    white-space: nowrap;
+    align-self: center;
+}
+.path-mod-gestionprojet .gp-cdcf-flags {
+    display: inline-flex;
+    gap: 0.25rem;
+    align-self: center;
+}
+.path-mod-gestionprojet .gp-cdcf-flag {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid #b8c4d6;
+    border-radius: 0.25rem;
+    background: #fff;
+    white-space: nowrap;
+}
+.path-mod-gestionprojet .gp-cdcf-flag-on {
+    border: 2px solid #2f5fb0;
+    background: #e3ecfa;
+    font-weight: 600;
+}

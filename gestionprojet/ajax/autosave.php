@@ -315,6 +315,10 @@ try {
             foreach ($formdata as $key => $value) {
                 if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
+                    if ($key === 'interacteurs_data') {
+                        // Locked elements of the consigne are restored by the server (v2.11.1).
+                        $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value);
+                    }
                     // Note: step4.php handles JSON encoding/decoding before sending/receiving if needed,
                     // but here we just store what we get as string (input values) or JSON if JS sends object?
                     // JS serializeData in step4 sends strings for text inputs, and JSON string for interacteurs.

@@ -173,6 +173,11 @@ $langstrings = [
     'justificationPlaceholder' => get_string('step4_justification_placeholder', 'gestionprojet'),
     'noFsLink'                 => get_string('step4_no_fs_link', 'gestionprojet'),
     'addContrainte'            => get_string('step4_add_contrainte', 'gestionprojet'),
+    'flagLocked'               => get_string('step4_flag_locked', 'gestionprojet'),
+    'flagLockedHelp'           => get_string('step4_flag_locked_help', 'gestionprojet'),
+    'flagGap'                  => get_string('step4_flag_gap', 'gestionprojet'),
+    'flagGapHelp'              => get_string('step4_flag_gap_help', 'gestionprojet'),
+    'gapPlaceholder'           => get_string('step4_gap_placeholder', 'gestionprojet'),
 ];
 
 $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
@@ -186,6 +191,8 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'canRevert'         => false,
     'projetNom'         => $projetnom,
     'showFlexibility' => (bool)($gestionprojet->step4_flexibility ?? 1),
+    // Lock / gap toggles on each field of the consigne (v2.11.1).
+    'editFlags'         => !$readonly,
     'initial'           => $cdcfdata,
     'lang'              => $langstrings,
     'introTextSelector' => '#gp_intro_text_step4',
