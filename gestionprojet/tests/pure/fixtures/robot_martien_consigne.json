@@ -1,0 +1,207 @@
+{
+ "interactors": [
+  {
+   "id": 1,
+   "name": "L'utilisateur",
+   "locked": true
+  },
+  {
+   "id": 2,
+   "name": "L'atmosphère martienne",
+   "locked": true
+  },
+  {
+   "id": 3,
+   "name": "Le sol martien et les obstacles",
+   "locked": true
+  },
+  {
+   "id": 4,
+   "name": "Les autres robots",
+   "locked": true
+  },
+  {
+   "id": 5,
+   "name": "L'énergie",
+   "locked": true
+  }
+ ],
+ "fonctionsService": [
+  {
+   "id": 1,
+   "description": "Permettre à l'utilisateur d'obtenir … l'atmosphère.",
+   "interactor1Id": 1,
+   "interactor2Id": 2,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "… d'envoi des données",
+     "niveau": "",
+     "flexibilite": "",
+     "prefill": true,
+     "niveauGap": true
+    },
+    {
+     "id": 2,
+     "description": "Distance de communication",
+     "niveau": "> …",
+     "flexibilite": "",
+     "locked": true,
+     "niveauPrefill": true
+    }
+   ],
+   "prefill": true
+  },
+  {
+   "id": 2,
+   "description": "Doit résister à l'atmosphère.",
+   "interactor1Id": 2,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Étanchéité du robot",
+     "niveau": "Indice IP 32",
+     "flexibilite": "",
+     "locked": true,
+     "niveauLocked": true
+    }
+   ],
+   "locked": true
+  },
+  {
+   "id": 3,
+   "description": "Doit … la composition de l'atmosphère.",
+   "interactor1Id": 2,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Précision de la mesure …",
+     "niveau": "Erreur de mesure inférieure à 5 %",
+     "flexibilite": "",
+     "prefill": true,
+     "niveauLocked": true
+    }
+   ],
+   "prefill": true
+  },
+  {
+   "id": 4,
+   "description": "Doit … terrain.",
+   "interactor1Id": 3,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "",
+     "niveau": "… km/h",
+     "flexibilite": "",
+     "gap": true,
+     "niveauPrefill": true
+    },
+    {
+     "id": 2,
+     "description": "Hauteur d'obstacle franchissable (marche)",
+     "niveau": "… cm",
+     "flexibilite": "",
+     "locked": true,
+     "niveauPrefill": true
+    },
+    {
+     "id": 3,
+     "description": "Pente maximale gravie",
+     "niveau": "… degrés",
+     "flexibilite": "",
+     "locked": true,
+     "niveauPrefill": true
+    }
+   ],
+   "prefill": true
+  },
+  {
+   "id": 5,
+   "description": "Doit pouvoir … les obstacles en les contournant.",
+   "interactor1Id": 3,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Rayon de braquage",
+     "niveau": "… cm",
+     "flexibilite": "",
+     "locked": true,
+     "niveauPrefill": true
+    },
+    {
+     "id": 2,
+     "description": "Vitesse de virage",
+     "niveau": "… km/h",
+     "flexibilite": "",
+     "locked": true,
+     "niveauPrefill": true
+    },
+    {
+     "id": 3,
+     "description": "… de la trajectoire",
+     "niveau": "… cm",
+     "flexibilite": "",
+     "prefill": true,
+     "niveauPrefill": true
+    }
+   ],
+   "prefill": true
+  },
+  {
+   "id": 6,
+   "description": "Doit … avec les autres robots.",
+   "interactor1Id": 4,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "",
+     "niveau": "Temps < 20 minutes",
+     "flexibilite": "",
+     "gap": true,
+     "niveauLocked": true
+    }
+   ],
+   "prefill": true
+  },
+  {
+   "id": 7,
+   "description": "Doit … en énergie.",
+   "interactor1Id": 5,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "",
+     "niveau": "Temps …",
+     "flexibilite": "",
+     "gap": true,
+     "niveauPrefill": true
+    },
+    {
+     "id": 2,
+     "description": "… de fonctionnement sur batterie",
+     "niveau": "… h",
+     "flexibilite": "",
+     "prefill": true,
+     "niveauPrefill": true
+    }
+   ],
+   "prefill": true
+  }
+ ],
+ "contraintes": [
+  {
+   "id": 1,
+   "description": "Nombre de moteurs : 4 au plus",
+   "justification": "Chaque moteur consomme de l'énergie : le robot doit rester autonome.",
+   "linkedFsId": 7,
+   "locked": true
+  }
+ ]
+}
