@@ -79,6 +79,20 @@ if (!empty($submission)) {
             ['role' => 'progressbar', 'aria-valuemin' => 0, 'aria-valuemax' => 100, 'aria-valuenow' => 0,
                 'aria-label' => get_string('progress_todo_title', 'gestionprojet')]);
         echo html_writer::tag('ul', '', ['class' => 'gp-progress-list', 'data-gp-progress-list' => '1']);
+        $forms = [5 => '#essaiForm', 6 => '#rapportForm', 7 => '#besoinEleveForm'];
+        $PAGE->requires->js_call_amd('mod_gestionprojet/progress_panel', 'init', [[
+            'step' => (int)$step,
+            'formSelector' => $forms[(int)$step] ?? '',
+            'strings' => [
+                'count' => get_string('progress_todo_count', 'gestionprojet'),
+                'done' => get_string('progress_todo_done', 'gestionprojet'),
+                'statement' => get_string('progress_field_statement', 'gestionprojet'),
+                'criterion' => get_string('progress_field_criterion', 'gestionprojet'),
+                'level' => get_string('progress_field_level', 'gestionprojet'),
+                'interactor' => get_string('progress_field_interactor', 'gestionprojet'),
+                'constraint' => get_string('progress_field_constraint', 'gestionprojet'),
+            ],
+        ]]);
     } else {
         echo html_writer::link('#gpProgressMain', get_string('progress_goto_form', 'gestionprojet'));
     }

@@ -1022,6 +1022,11 @@ $string['progress_feedback_title'] = 'Last feedback';
 $string['progress_feedback_none'] = 'No feedback yet.';
 $string['progress_submit'] = 'Submit my final version';
 $string['progress_readonly'] = 'Teacher view: read only';
+$string['progress_field_statement'] = 'statement';
+$string['progress_field_criterion'] = 'criterion';
+$string['progress_field_level'] = 'level';
+$string['progress_field_interactor'] = 'Interactor';
+$string['progress_field_constraint'] = 'Constraint';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Submission graded';

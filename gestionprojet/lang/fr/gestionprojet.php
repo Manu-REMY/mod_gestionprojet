@@ -1022,6 +1022,11 @@ $string['progress_feedback_title'] = 'Dernier retour';
 $string['progress_feedback_none'] = 'Pas encore de retour.';
 $string['progress_submit'] = 'Soumettre ma version finale';
 $string['progress_readonly'] = 'Vue enseignant : lecture seule';
+$string['progress_field_statement'] = 'énoncé';
+$string['progress_field_criterion'] = 'critère';
+$string['progress_field_level'] = 'niveau';
+$string['progress_field_interactor'] = 'Interacteur';
+$string['progress_field_constraint'] = 'Contrainte';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Production notée';

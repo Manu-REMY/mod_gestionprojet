@@ -293,6 +293,8 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
                     type: 'text', value: inter.name, placeholder: lang.interactorPlaceholder,
                     onchange: function(e) { inter.name = e.target.value; emit(); },
                 });
+                // Target of the "to complete" list of the progress panel (v2.12.0).
+                input.setAttribute('data-gp-field', 'i-' + inter.id);
                 if (locked) { input.disabled = true; }
                 if (frozen('interacteurs')) { freezeField(input); }
                 var badge = applyFlags(input, inter, 'locked', 'gap', 'hint');
@@ -384,6 +386,7 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
                 onchange: function(e) { fs.description = e.target.value; emit(); },
             });
             desc.value = fs.description;
+            desc.setAttribute('data-gp-field', 'fs-' + fs.id);
             if (locked) { desc.disabled = true; }
             var fsBadge = applyFlags(desc, fs, 'locked', 'gap', 'hint');
 
@@ -438,6 +441,8 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
                 type: 'text', value: crit.niveau, placeholder: lang.niveauPlaceholder,
                 onchange: function(e) { crit.niveau = e.target.value; emit(); },
             });
+            d.setAttribute('data-gp-field', 'c-' + fs.id + '-' + crit.id);
+            n.setAttribute('data-gp-field', 'n-' + fs.id + '-' + crit.id);
             var f = null;
             if (!hideFlexibility) {
                 f = el('select', { onchange: function(e) { crit.flexibilite = e.target.value; emit(); } });
@@ -504,6 +509,7 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
                     type: 'text', value: c.justification, placeholder: lang.justificationPlaceholder,
                     onchange: function(e) { c.justification = e.target.value; emit(); },
                 });
+                d.setAttribute('data-gp-field', 'k-' + c.id);
                 var sel = el('select', {
                     onchange: function(e) { c.linkedFsId = parseInt(e.target.value, 10); emit(); },
                 });
