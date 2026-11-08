@@ -62,7 +62,7 @@ test('lib.php seeds the CDCF copy with consigne_lock::seed', fn() => strpos($see
 test('lib.php no longer copies the raw consigne JSON', fn() =>
     strpos($seeding, '$record->interacteurs_data = $provided->interacteurs_data') === false);
 test('lib.php defines gestionprojet_cdcf_enforce_consigne', fn() =>
-    strpos($lib, 'function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $studentjson): string') !== false);
+    strpos($lib, 'function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $studentjson') !== false);
 test('the enforce function uses consigne_lock::enforce',
     fn() => strpos(between($lib, 'function gestionprojet_cdcf_enforce_consigne', "\n}\n"), 'consigne_lock::enforce') !== false);
 test('reset to the consigne uses consigne_lock::seed for step 4', fn() =>
@@ -95,7 +95,8 @@ test('consigne without flag: an identical copy matches (current behaviour)', fn(
     ai_evaluator::cdcf_matches_seed(json_encode($plain), json_encode($plain)) === true);
 test('invalid JSON never matches', fn() => ai_evaluator::cdcf_matches_seed('{oops', $pjson) === false);
 
-test('enforce wrapper sanitizes flags on every path', fn() =>
-    substr_count(between(code('lib.php'), 'function gestionprojet_cdcf_enforce_consigne', "\n}\n"), 'consigne_lock::sanitize_student_json') >= 2);
+$enforcebody = between(code('lib.php'), 'function gestionprojet_cdcf_enforce_consigne', "\n}\n");
+test('enforce wrapper sanitizes flags before any return', fn() =>
+    ($pos = strpos($enforcebody, 'consigne_lock::sanitize_student_json')) !== false && $pos < strpos($enforcebody, 'return'));
 test('ai_evaluator strips student flags when the flagged copy is not used', fn() =>
     strpos(code('classes/ai_evaluator.php'), 'consigne_lock::sanitize_student_json') !== false);

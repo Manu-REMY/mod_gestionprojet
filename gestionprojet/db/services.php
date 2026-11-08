@@ -105,4 +105,22 @@ $functions = [
         'ajax'         => true,
         'capabilities' => 'mod/gestionprojet:configureteacherpages',
     ],
+
+    'mod_gestionprojet_request_palier' => [
+        'classname'    => 'mod_gestionprojet\\external\\request_palier',
+        'methodname'   => 'execute',
+        'description'  => 'Ask for the validation of a step 4 level (F, S, TS)',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:submit',
+    ],
+
+    'mod_gestionprojet_retire_palier' => [
+        'classname'    => 'mod_gestionprojet\\external\\retire_palier',
+        'methodname'   => 'execute',
+        'description'  => 'Remove a validated step 4 level and the higher ones',
+        'type'         => 'write',
+        'ajax'         => true,
+        'capabilities' => 'mod/gestionprojet:grade',
+    ],
 ];

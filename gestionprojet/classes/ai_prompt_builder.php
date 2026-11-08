@@ -42,6 +42,9 @@ class ai_prompt_builder {
     /** @var string[] Zones of the grid entirely provided by the step 4 consigne (consigne_lock::locked_zones) */
     private array $lockedzones;
 
+    /** @var string Level asked (F, S, TS): only its parts are graded; empty outside the level mode */
+    private string $palier;
+
     /** @var bool Whether the prompt being built uses the [fourni] / [à compléter] markers */
     private bool $markersinuse = false;
 
@@ -50,11 +53,12 @@ class ai_prompt_builder {
      *
      * @param array $options 'flexibility' (bool, default true): when false, flexibility is left out of the prompts;
      *     'locked_zones' (string[], default none): zones entirely provided by the consigne, their "auto" parts
-     *     are not graded.
+     *     are not graded; 'palier' (string, default ''): level asked (F, S, TS), only its parts are graded.
      */
     public function __construct(array $options = []) {
         $this->flexibility = (bool) ($options['flexibility'] ?? true);
         $this->lockedzones = array_values((array) ($options['locked_zones'] ?? []));
+        $this->palier = (string) ($options['palier'] ?? '');
     }
 
     /** @var array Step-specific field mappings */
@@ -505,8 +509,10 @@ PROMPT;
         if ($step !== 4) {
             return [];
         }
-        return grille::effective_parts(grille::decode($teachermodel->grille_json ?? null, $this->flexibility),
+        $parts = grille::effective_parts(grille::decode($teachermodel->grille_json ?? null, $this->flexibility),
             $this->lockedzones);
+        // Level mode (v2.11.2): only the parts of the level asked.
+        return $this->palier === '' ? $parts : palier::parts_for($parts, $this->palier);
     }
 
     /**

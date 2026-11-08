@@ -65,9 +65,12 @@ class ai_evaluator {
      * @param int $submissionid Submission record ID
      * @param int $groupid Group ID (0 for individual)
      * @param int $userid User ID (0 for group submission)
+     * @param string $palier Level asked (F, S, TS) in the step 4 level mode, '' for a graded evaluation
+     * @param string|null $contenu Copy frozen when the level was asked (judged instead of the live copy)
      * @return int Evaluation record ID
      */
-    public static function queue_evaluation(int $gestionprojetid, int $step, int $submissionid, int $groupid = 0, int $userid = 0): int {
+    public static function queue_evaluation(int $gestionprojetid, int $step, int $submissionid, int $groupid = 0,
+            int $userid = 0, string $palier = '', ?string $contenu = null): int {
         global $DB;
 
         // Get instance configuration.
@@ -99,13 +102,11 @@ class ai_evaluator {
             throw new \Exception(get_string('submissionnotfound', 'gestionprojet'));
         }
 
-        // Check for existing pending/processing evaluation.
-        $existing = $DB->get_record('gestionprojet_ai_evaluations', [
-            'gestionprojetid' => $gestionprojetid,
-            'step' => $step,
-            'submissionid' => $submissionid,
-            'status' => 'pending',
-        ]);
+        // One evaluation at a time per copy: a pending or processing one is returned (double click, two members).
+        $existing = $DB->get_records_select('gestionprojet_ai_evaluations',
+            "gestionprojetid = :gpid AND step = :step AND submissionid = :sid AND status IN ('pending', 'processing')",
+            ['gpid' => $gestionprojetid, 'step' => $step, 'sid' => $submissionid], 'id DESC', 'id', 0, 1);
+        $existing = reset($existing);
 
         if ($existing) {
             // Return existing evaluation ID if already queued.
@@ -122,6 +123,8 @@ class ai_evaluator {
         $evaluation->provider = $aiconfig->provider;
         $evaluation->model = self::get_model_for_provider($aiconfig->provider);
         $evaluation->status = 'pending';
+        $evaluation->palier = $palier;
+        $evaluation->contenu_json = $contenu;
         $evaluation->timecreated = time();
         $evaluation->timemodified = time();
 
@@ -187,6 +190,13 @@ class ai_evaluator {
                 'id' => $evaluation->submissionid,
                 'gestionprojetid' => $evaluation->gestionprojetid,
             ], '*', MUST_EXIST);
+
+            // Level evaluation (v2.11.2): the copy frozen when the level was asked is judged, not the live one.
+            $ispalier = (int)$evaluation->step === 4 && !empty($evaluation->palier);
+            if ($ispalier) {
+                $submission = clone $submission;
+                $submission->interacteurs_data = (string)$evaluation->contenu_json;
+            }
 
             // Get teacher model.
             $teachertable = self::TEACHER_TABLES[$evaluation->step] ?? null;
@@ -259,6 +269,9 @@ class ai_evaluator {
                 $promptsubmission->interacteurs_data = consigne_lock::sanitize_student_json(
                     (string)($submission->interacteurs_data ?? ''));
             }
+            if ($ispalier) {
+                $builderoptions['palier'] = $evaluation->palier;
+            }
             $promptbuilder = new ai_prompt_builder($builderoptions);
             // A grid where every part is excluded cannot give a grade: fail rather than invent one.
             if ((int)$evaluation->step === 4 && !$promptbuilder->graded_parts(4, $teachermodel)) {
@@ -266,7 +279,7 @@ class ai_evaluator {
             }
             $prompts = $promptbuilder->build_prompt(
                 $evaluation->step, $promptsubmission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications,
-                !isset($gestionprojet->ai_hide_answers) || (bool) $gestionprojet->ai_hide_answers
+                $ispalier || !isset($gestionprojet->ai_hide_answers) || (bool) $gestionprojet->ai_hide_answers
             );
 
             // Get AI provider.
@@ -301,6 +314,14 @@ class ai_evaluator {
 
             $DB->update_record('gestionprojet_ai_evaluations', $evaluation);
 
+            // Level evaluation: the server decides the verdict from the points of the level's parts.
+            if ($ispalier) {
+                require_once(__DIR__ . '/../lib.php');
+                $verdict = palier::verdict($result->criteria, $promptbuilder->graded_parts(4, $teachermodel),
+                    (int)($gestionprojet->step4_palier_seuil ?? 80));
+                gestionprojet_palier_record($evaluation, $verdict);
+            }
+
             // Trigger AI evaluation completed event.
             $cm = get_coursemodule_from_instance('gestionprojet', $gestionprojet->id, 0, false, MUST_EXIST);
             $context = \context_module::instance($cm->id);
@@ -315,7 +336,7 @@ class ai_evaluator {
             $event->trigger();
 
             // Auto-apply if configured.
-            if (!empty($gestionprojet->ai_auto_apply)) {
+            if (!empty($gestionprojet->ai_auto_apply) && !$ispalier) {
                 self::apply_evaluation($evaluationid, 0); // 0 = system applied.
             }
 
@@ -402,7 +423,8 @@ class ai_evaluator {
 
         $evaluation = $DB->get_record('gestionprojet_ai_evaluations', ['id' => $evaluationid], '*', MUST_EXIST);
 
-        if ($evaluation->status !== 'completed') {
+        // A level evaluation gives a verdict, never a grade (v2.11.2).
+        if ($evaluation->status !== 'completed' || !empty($evaluation->palier)) {
             return false;
         }
 

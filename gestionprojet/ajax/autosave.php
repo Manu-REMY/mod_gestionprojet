@@ -317,7 +317,7 @@ try {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     if ($key === 'interacteurs_data') {
                         // Locked elements of the consigne are restored by the server (v2.11.1).
-                        $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value);
+                        $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value, $record);
                     }
                     // Note: step4.php handles JSON encoding/decoding before sending/receiving if needed,
                     // but here we just store what we get as string (input values) or JSON if JS sends object?

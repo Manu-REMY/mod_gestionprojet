@@ -993,6 +993,9 @@ $string['step4_paliers'] = 'Valider par paliers (FRA, SAT, TS)';
 $string['step4_paliers_help'] = 'Les élèves demandent la validation d\'un palier à la fois (un bouton par palier de la grille) au lieu de soumettre pour une note sur 20. L\'IA ne note que les parties de ce palier ; il est validé quand les points atteignent le seuil. Un palier validé n\'est jamais retiré par une tentative suivante (seul le professeur peut le retirer) et ses zones ne peuvent plus être modifiées. L\'étape 4 ne met plus à jour le carnet de notes. Désactiver l\'option rend la soumission habituelle ; les paliers validés restent enregistrés et réapparaissent si on la réactive.';
 $string['step4_palier_seuil'] = 'Seuil de validation (%)';
 $string['step4_palier_seuil_help'] = 'Pourcentage des points d\'un palier nécessaire pour le valider (de 0 à 100).';
+$string['palier_disabled'] = 'La validation par paliers n\'est pas disponible pour cette activité.';
+$string['palier_pending_error'] = 'Un palier est déjà en cours de validation : attends le verdict.';
+$string['palier_not_requestable'] = 'Ce palier ne peut pas être demandé maintenant.';
 $string['error_palier_seuil'] = 'Saisis un pourcentage entre 0 et 100.';
 $string['privacy:metadata:palier'] = 'Paliers (FRA, SAT, TS) validés par un groupe ou un élève, avec les membres du groupe à ce moment';
 

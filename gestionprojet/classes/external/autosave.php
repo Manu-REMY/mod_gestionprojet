@@ -374,7 +374,7 @@ class autosave extends external_api {
                             $oldvalue = isset($record->$key) ? $record->$key : null;
                             if ($key === 'interacteurs_data') {
                                 // Locked elements of the consigne are restored by the server (v2.11.1).
-                                $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value);
+                                $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value, $record);
                             }
                             $record->$key = $value;
                             gestionprojet_log_change($gestionprojet->id, 'cdcf', $record->id,

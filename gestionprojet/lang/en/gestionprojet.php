@@ -993,6 +993,9 @@ $string['step4_paliers'] = 'Validate by levels (F, S, TS)';
 $string['step4_paliers_help'] = 'Students ask for the validation of one level at a time (one button per level of the grading grid) instead of submitting for a grade out of 20. The AI only grades the parts of that level; the level is validated when the points reach the threshold. A validated level is never removed by a later attempt (only the teacher can remove it) and its zones can no longer be changed. Step 4 no longer updates the gradebook. Turning the option off brings back the usual submission; validated levels stay stored and come back if it is turned on again.';
 $string['step4_palier_seuil'] = 'Validation threshold (%)';
 $string['step4_palier_seuil_help'] = 'Percentage of the points of a level needed to validate it (0 to 100).';
+$string['palier_disabled'] = 'The validation by levels is not available for this activity.';
+$string['palier_pending_error'] = 'A level is already being validated: wait for the verdict.';
+$string['palier_not_requestable'] = 'This level cannot be asked for now.';
 $string['error_palier_seuil'] = 'Enter a percentage between 0 and 100.';
 $string['privacy:metadata:palier'] = 'Levels (F, S, TS) validated by a group or a student, with the members of the group at that time';
 

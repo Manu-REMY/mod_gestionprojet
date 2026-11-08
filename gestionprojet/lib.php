@@ -316,21 +316,256 @@ function gestionprojet_cdcf_locked_zones(object $gestionprojet): array {
  *
  * @param object $gestionprojet Instance record.
  * @param string $studentjson CDCF JSON sent by the browser.
+ * @param object|null $submission The copy being saved: in the level mode its frozen zones are restored.
  * @return string CDCF JSON to store.
  */
-function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $studentjson): string {
+function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $studentjson, ?object $submission = null): string {
     global $DB;
 
-    if ((int)($gestionprojet->step4_provided ?? 0) !== 1) {
-        return \mod_gestionprojet\consigne_lock::sanitize_student_json($studentjson);
+    $json = \mod_gestionprojet\consigne_lock::sanitize_student_json($studentjson);
+    if ((int)($gestionprojet->step4_provided ?? 0) === 1) {
+        $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
+        $consigne = \mod_gestionprojet\cdcf_helper::decode($provided ?: null);
+        if (\mod_gestionprojet\consigne_lock::has_locks($consigne)) {
+            $json = json_encode(\mod_gestionprojet\consigne_lock::enforce(\mod_gestionprojet\cdcf_helper::decode($studentjson),
+                $consigne), JSON_UNESCAPED_UNICODE);
+        }
     }
-    $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
-    $consigne = \mod_gestionprojet\cdcf_helper::decode($provided ?: null);
-    if (!\mod_gestionprojet\consigne_lock::has_locks($consigne)) {
-        return \mod_gestionprojet\consigne_lock::sanitize_student_json($studentjson);
+
+    // Level mode (v2.11.2): zones of validated levels, and of the level being judged, are frozen as a whole.
+    if ((int)($gestionprojet->step4_paliers ?? 0) !== 1 || !$submission) {
+        return $json;
     }
-    $student = \mod_gestionprojet\cdcf_helper::decode($studentjson);
-    return json_encode(\mod_gestionprojet\consigne_lock::enforce($student, $consigne), JSON_UNESCAPED_UNICODE);
+    $frozen = gestionprojet_palier_frozen_zones($gestionprojet, $submission);
+    if (!$frozen) {
+        return $json;
+    }
+    $student = \mod_gestionprojet\cdcf_helper::decode($json);
+    foreach ($frozen as $evaluationid => $zones) {
+        $contenu = $DB->get_field('gestionprojet_ai_evaluations', 'contenu_json',
+            ['id' => $evaluationid, 'gestionprojetid' => $gestionprojet->id]);
+        if ($contenu === false) {
+            continue;
+        }
+        $student = \mod_gestionprojet\palier::freeze($student, \mod_gestionprojet\cdcf_helper::decode($contenu ?: null), $zones);
+    }
+    return json_encode($student, JSON_UNESCAPED_UNICODE);
+}
+
+/**
+ * Graded parts of the step 4 grid, as the AI grades them (v2.11.2).
+ *
+ * @param object $gestionprojet Instance record.
+ * @return array See grille::effective_parts().
+ */
+function gestionprojet_palier_parts(object $gestionprojet): array {
+    global $DB;
+
+    $grille = $DB->get_field('gestionprojet_cdcf_teacher', 'grille_json', ['gestionprojetid' => $gestionprojet->id]);
+    $flexibility = !isset($gestionprojet->step4_flexibility) || (bool)$gestionprojet->step4_flexibility;
+    return \mod_gestionprojet\grille::effective_parts(\mod_gestionprojet\grille::decode($grille ?: null, $flexibility),
+        gestionprojet_cdcf_locked_zones($gestionprojet));
+}
+
+/**
+ * Zones of a copy frozen by the level mode: evaluation id => zones (its frozen copy is the reference).
+ *
+ * Validated zones (zones_validees) come first; the zones of a level being judged are added when not validated yet.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $submission Step 4 copy (gestionprojet_cdcf).
+ * @return array<int, string[]>
+ */
+function gestionprojet_palier_frozen_zones(object $gestionprojet, object $submission): array {
+    $byevaluation = [];
+    $done = [];
+    foreach ((array)json_decode((string)($submission->zones_validees ?? ''), true) as $zone => $evaluationid) {
+        if ((int)$evaluationid > 0) {
+            $byevaluation[(int)$evaluationid][] = (string)$zone;
+            $done[(string)$zone] = true;
+        }
+    }
+    $pending = gestionprojet_palier_pending($gestionprojet, (int)$submission->id);
+    if ($pending) {
+        foreach (\mod_gestionprojet\palier::zones_for(gestionprojet_palier_parts($gestionprojet), $pending->palier) as $zone) {
+            if (empty($done[$zone])) {
+                $byevaluation[(int)$pending->id][] = $zone;
+            }
+        }
+    }
+    return $byevaluation;
+}
+
+/**
+ * Level evaluation waiting or running for a copy.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param int $submissionid
+ * @return object|null
+ */
+function gestionprojet_palier_pending(object $gestionprojet, int $submissionid): ?object {
+    global $DB;
+
+    $records = $DB->get_records_select('gestionprojet_ai_evaluations',
+        "gestionprojetid = :gpid AND step = 4 AND submissionid = :sid AND palier IS NOT NULL AND palier <> ''
+         AND status IN ('pending', 'processing')",
+        ['gpid' => $gestionprojet->id, 'sid' => $submissionid], 'id DESC', '*', 0, 1);
+    return $records ? reset($records) : null;
+}
+
+/**
+ * State of the level mode for a step 4 copy (v2.11.2).
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $submission Step 4 copy (gestionprojet_cdcf).
+ * @return array enabled, ingrid, validated (levels), rows (validated rows), requestable, pending, last, attempts
+ */
+function gestionprojet_palier_state(object $gestionprojet, object $submission): array {
+    global $DB;
+
+    $ingrid = \mod_gestionprojet\palier::paliers_in_grid(gestionprojet_palier_parts($gestionprojet));
+    $rows = $DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id, 'groupid' => $submission->groupid,
+        'userid' => $submission->userid, 'retire' => 0], 'timecreated ASC');
+    $validated = array_values(array_unique(array_column($rows, 'palier')));
+    $attempts = $DB->get_records_select('gestionprojet_ai_evaluations',
+        "gestionprojetid = :gpid AND step = 4 AND submissionid = :sid AND palier IS NOT NULL AND palier <> ''",
+        ['gpid' => $gestionprojet->id, 'sid' => $submission->id], 'id DESC');
+    $last = null;
+    foreach ($attempts as $attempt) {
+        if (in_array($attempt->status, ['completed', 'failed'], true)) {
+            $last = $attempt;
+            break;
+        }
+    }
+    return [
+        'enabled' => (int)($gestionprojet->step4_paliers ?? 0) === 1,
+        'ingrid' => $ingrid,
+        'validated' => $validated,
+        'rows' => $rows,
+        'requestable' => \mod_gestionprojet\palier::requestable($ingrid, $validated),
+        'pending' => gestionprojet_palier_pending($gestionprojet, (int)$submission->id),
+        'last' => $last,
+        'attempts' => $attempts,
+    ];
+}
+
+/**
+ * Ask for the validation of a level: freeze the copy and queue its AI evaluation (v2.11.2).
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $cm Course module.
+ * @param int $groupid Group checked by the caller (gestionprojet_require_group_access).
+ * @param int $userid
+ * @param string $palier F, S or TS.
+ * @return int Evaluation id.
+ * @throws moodle_exception When the mode is off, the level cannot be asked now, or an evaluation is running.
+ */
+function gestionprojet_palier_request(object $gestionprojet, object $cm, int $groupid, int $userid, string $palier): int {
+    if ((int)($gestionprojet->step4_paliers ?? 0) !== 1 || empty($gestionprojet->ai_enabled)) {
+        throw new moodle_exception('palier_disabled', 'gestionprojet');
+    }
+    $submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $userid, 'cdcf');
+    $state = gestionprojet_palier_state($gestionprojet, $submission);
+    if ($state['pending']) {
+        // One evaluation at a time per copy ('pending' or 'processing').
+        throw new moodle_exception('palier_pending_error', 'gestionprojet');
+    }
+    if (!in_array($palier, $state['requestable'], true)) {
+        throw new moodle_exception('palier_not_requestable', 'gestionprojet');
+    }
+    // The copy judged, and the reference of the zones if the level is validated.
+    $contenu = (string)($submission->interacteurs_data ?? '');
+    return \mod_gestionprojet\ai_evaluator::queue_evaluation((int)$gestionprojet->id, 4, (int)$submission->id,
+        (int)$submission->groupid, (int)$submission->userid, $palier, $contenu);
+}
+
+/**
+ * Record the verdict of a level evaluation; a validated level is added once and its zones are frozen (v2.11.2).
+ *
+ * A later failed attempt never removes a validated level.
+ *
+ * @param object $evaluation Level evaluation (gestionprojet_ai_evaluations).
+ * @param array $verdict palier::verdict() result.
+ */
+function gestionprojet_palier_record(object $evaluation, array $verdict): void {
+    global $DB;
+
+    $DB->set_field('gestionprojet_ai_evaluations', 'palier_valide', $verdict['valide'] ? 1 : 0, ['id' => $evaluation->id]);
+    if (!$verdict['valide']) {
+        return;
+    }
+    $gestionprojet = $DB->get_record('gestionprojet', ['id' => $evaluation->gestionprojetid], '*', MUST_EXIST);
+    $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $evaluation->submissionid,
+        'gestionprojetid' => $gestionprojet->id], '*', MUST_EXIST);
+    $owner = ['gestionprojetid' => $gestionprojet->id, 'groupid' => $submission->groupid, 'userid' => $submission->userid,
+        'palier' => $evaluation->palier, 'retire' => 0];
+    if ($DB->record_exists('gestionprojet_palier', $owner)) {
+        return;
+    }
+
+    // Members at validation time, as plan-classe reads them: [[userid, username], ...].
+    $membres = [];
+    if ((int)$submission->groupid > 0) {
+        foreach (groups_get_members($submission->groupid, 'u.id, u.username') as $member) {
+            $membres[] = [(int)$member->id, $member->username];
+        }
+    } else if ((int)$submission->userid > 0) {
+        $user = $DB->get_record('user', ['id' => $submission->userid], 'id, username');
+        if ($user) {
+            $membres[] = [(int)$user->id, $user->username];
+        }
+    }
+    $now = time();
+    $DB->insert_record('gestionprojet_palier', (object)($owner + [
+        'step' => 4,
+        'evaluationid' => $evaluation->id,
+        'membres' => json_encode($membres),
+        'timecreated' => $now,
+        'timemodified' => $now,
+    ]));
+
+    // Freeze the zones of the level, with the copy judged as reference (zones already frozen keep theirs).
+    $zones = (array)json_decode((string)($submission->zones_validees ?? ''), true);
+    foreach (\mod_gestionprojet\palier::zones_for(gestionprojet_palier_parts($gestionprojet), $evaluation->palier) as $zone) {
+        $zones[$zone] = $zones[$zone] ?? (int)$evaluation->id;
+    }
+    $DB->set_field('gestionprojet_cdcf', 'zones_validees', json_encode($zones), ['id' => $submission->id]);
+}
+
+/**
+ * Remove a validated level, and the higher ones, for its copy; their zones open again (v2.11.2).
+ *
+ * The rows are kept with retire = 1 for the history; the class life app never lowers a level by itself.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param int $palierid Row of gestionprojet_palier.
+ * @return string[] Levels removed.
+ */
+function gestionprojet_palier_retire(object $gestionprojet, int $palierid): array {
+    global $DB;
+
+    $row = $DB->get_record('gestionprojet_palier', ['id' => $palierid, 'gestionprojetid' => $gestionprojet->id, 'retire' => 0],
+        '*', MUST_EXIST);
+    $rows = $DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id, 'groupid' => $row->groupid,
+        'userid' => $row->userid, 'retire' => 0]);
+    $retired = \mod_gestionprojet\palier::retire_cascade($row->palier, array_column($rows, 'palier'));
+    $evaluationids = [];
+    foreach ($rows as $r) {
+        if (in_array($r->palier, $retired, true)) {
+            $DB->update_record('gestionprojet_palier', (object)['id' => $r->id, 'retire' => 1, 'timemodified' => time()]);
+            $evaluationids[] = (int)$r->evaluationid;
+        }
+    }
+    $submission = $DB->get_record('gestionprojet_cdcf', ['gestionprojetid' => $gestionprojet->id, 'groupid' => $row->groupid,
+        'userid' => $row->userid]);
+    if ($submission) {
+        $zones = array_filter((array)json_decode((string)($submission->zones_validees ?? ''), true),
+            function ($evaluationid) use ($evaluationids): bool {
+                return !in_array((int)$evaluationid, $evaluationids, true);
+            });
+        $DB->set_field('gestionprojet_cdcf', 'zones_validees', $zones ? json_encode($zones) : null, ['id' => $submission->id]);
+    }
+    return $retired;
 }
 
 /**
@@ -907,6 +1142,10 @@ function gestionprojet_update_grades($gestionprojet, $userid = 0, $nullifnone = 
         $category = gestionprojet_get_grade_category($gestionprojet);
         $categoryid = $category ? $category->id : null;
 
+        if ((int)$step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1) {
+            // Level mode (v2.11.2): no grade for step 4.
+            return;
+        }
         if ($step !== null) {
             // Update only the specified step.
             if (in_array($step, $gradedsteps) && gestionprojet_is_step_enabled($gestionprojet, $step)) {
@@ -996,6 +1235,11 @@ function gestionprojet_grade_item_update($gestionprojet, $grades = null, $step =
     global $CFG, $DB;
     require_once($CFG->libdir . '/gradelib.php');
     require_once($CFG->libdir . '/grade/grade_item.php');
+
+    // Level mode (v2.11.2): step 4 gives levels, not grades; its grade item is no longer updated.
+    if ((int)$step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1) {
+        return 0;
+    }
 
     if ($step !== null) {
         // Per-step mode: create/update a manual grade item for this step.
