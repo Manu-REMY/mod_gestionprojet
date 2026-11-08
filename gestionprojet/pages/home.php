@@ -460,12 +460,13 @@ if ($isteacher) {
                         'isprovided' => false,
                     ]);
                 } else if ($stepnum === 4) {
-                    $providedflag = isset($gestionprojet->step4_provided) ? (int)$gestionprojet->step4_provided : 0;
-                    if ($providedflag === 1) {
+                    // Consultation cell only when the student does not complete the step: otherwise the consigne
+                    // is already in the work page, which is the only place to go (preco 18).
+                    if (gestionprojet_student_consult_only($gestionprojet, 4)) {
                         $rowconsult[] = gestionprojet_build_student_gantt_cell([
                             'isfilled' => true,
                             'role' => 'consult',
-                            'isenabled' => $stepenabled(4),
+                            'isenabled' => true,
                             'iscomplete' => $providedcomplete(4),
                             'name' => get_string('step4', 'gestionprojet'),
                             'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'provided']))->out(false),
@@ -475,12 +476,13 @@ if ($isteacher) {
                         $rowconsult[] = ['isfilled' => false];
                     }
                 } else if ($stepnum === 9) {
-                    $providedflag = isset($gestionprojet->step9_provided) ? (int)$gestionprojet->step9_provided : 0;
-                    if ($providedflag === 1) {
+                    // Consultation cell only when the student does not complete the step: otherwise the consigne
+                    // is already in the work page, which is the only place to go (preco 18).
+                    if (gestionprojet_student_consult_only($gestionprojet, 9)) {
                         $rowconsult[] = gestionprojet_build_student_gantt_cell([
                             'isfilled' => true,
                             'role' => 'consult',
-                            'isenabled' => $stepenabled(9),
+                            'isenabled' => true,
                             'iscomplete' => $providedcomplete(9),
                             'name' => get_string('step9', 'gestionprojet'),
                             'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 9, 'mode' => 'provided']))->out(false),
@@ -490,12 +492,13 @@ if ($isteacher) {
                         $rowconsult[] = ['isfilled' => false];
                     }
                 } else if ($stepnum === 5) {
-                    $providedflag = isset($gestionprojet->step5_provided) ? (int)$gestionprojet->step5_provided : 0;
-                    if ($providedflag === 1) {
+                    // Consultation cell only when the student does not complete the step: otherwise the consigne
+                    // is already in the work page, which is the only place to go (preco 18).
+                    if (gestionprojet_student_consult_only($gestionprojet, 5)) {
                         $rowconsult[] = gestionprojet_build_student_gantt_cell([
                             'isfilled' => true,
                             'role' => 'consult',
-                            'isenabled' => $stepenabled(5),
+                            'isenabled' => true,
                             'iscomplete' => $providedcomplete(5),
                             'name' => get_string('step5', 'gestionprojet'),
                             'url' => (new \moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 5, 'mode' => 'provided']))->out(false),

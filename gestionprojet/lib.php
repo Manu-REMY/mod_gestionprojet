@@ -555,6 +555,21 @@ function gestionprojet_teacher_pages_locked($gestionprojetid)
 }
 
 /**
+ * Whether a student only consults the teacher's consigne of a step (4, 5 or 9) without completing it.
+ *
+ * True when the consigne is shown (stepN_provided = 1) and the student step is disabled. When students must
+ * complete the step, the consigne is already copied into their work page: no separate consultation page.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param int $step 4, 5 or 9.
+ * @return bool
+ */
+function gestionprojet_student_consult_only(object $gestionprojet, int $step): bool {
+    return (int)($gestionprojet->{'step' . $step . '_provided'} ?? 0) === 1
+        && (int)($gestionprojet->{'enable_step' . $step} ?? 1) !== 1;
+}
+
+/**
  * Check if teacher pages are complete.
  *
  * Only the enabled teacher steps (1 description, 2 besoin, 3 planning) are checked: a disabled step

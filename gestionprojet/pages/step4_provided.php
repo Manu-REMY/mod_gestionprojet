@@ -35,6 +35,11 @@ use mod_gestionprojet\output\icon;
 $canedit = has_capability('mod/gestionprojet:configureteacherpages', $context);
 $readonly = !$canedit;
 
+// A student who must complete the step works on the work page, which already holds the consigne (preco 18).
+if ($readonly && !gestionprojet_student_consult_only($gestionprojet, 4)) {
+    redirect(new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4]));
+}
+
 // Page setup.
 $PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 4, 'mode' => 'provided']);
 $PAGE->set_title(get_string('step4', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
