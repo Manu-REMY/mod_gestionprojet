@@ -327,8 +327,11 @@ function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $stud
         $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
         $consigne = \mod_gestionprojet\cdcf_helper::decode($provided ?: null);
         if (\mod_gestionprojet\consigne_lock::has_locks($consigne)) {
+            // The stored copy tells a page opened before a consigne change from text the student wrote (v2.12.3).
+            $stored = $submission && !empty($submission->interacteurs_data)
+                ? \mod_gestionprojet\cdcf_helper::decode($submission->interacteurs_data) : null;
             $json = json_encode(\mod_gestionprojet\consigne_lock::enforce(\mod_gestionprojet\cdcf_helper::decode($studentjson),
-                $consigne), JSON_UNESCAPED_UNICODE);
+                $consigne, $stored), JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -1128,6 +1131,48 @@ function gestionprojet_has_provided_student_step(object $gestionprojet): bool {
         }
     }
     return false;
+}
+
+/**
+ * The step 4 draft copies follow a consigne the teacher just saved (request 23, v2.12.3).
+ *
+ * Fields provided or pre-filled that a copy still has as the old consigne gave them take the new text; text the
+ * students wrote is kept; copies nobody worked on get the new starting copy (consigne_lock::follow). Submitted
+ * copies are not changed; zones frozen by a validated level are restored (gestionprojet_cdcf_enforce_consigne).
+ *
+ * @param object $gestionprojet Instance record.
+ * @param string $oldjson Consigne JSON before the save.
+ * @return int Number of copies changed.
+ */
+function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjson): int {
+    global $DB, $USER;
+
+    if ((int)($gestionprojet->step4_provided ?? 0) !== 1 || $oldjson === '') {
+        return 0;
+    }
+    $newjson = (string)$DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data',
+        ['gestionprojetid' => $gestionprojet->id]);
+    $old = \mod_gestionprojet\cdcf_helper::decode($oldjson);
+    $new = \mod_gestionprojet\cdcf_helper::decode($newjson ?: null);
+    if ($old === $new) {
+        return 0;
+    }
+    $count = 0;
+    foreach ($DB->get_records('gestionprojet_cdcf', ['gestionprojetid' => $gestionprojet->id, 'status' => 0]) as $copy) {
+        $before = (string)$copy->interacteurs_data;
+        $json = json_encode(\mod_gestionprojet\consigne_lock::follow(
+            \mod_gestionprojet\cdcf_helper::decode($before ?: null), $old, $new), JSON_UNESCAPED_UNICODE);
+        $json = gestionprojet_cdcf_enforce_consigne($gestionprojet, $json, $copy);
+        if ($json === $before) {
+            continue;
+        }
+        $DB->update_record('gestionprojet_cdcf', (object)['id' => $copy->id, 'interacteurs_data' => $json,
+            'timemodified' => time()]);
+        gestionprojet_log_change($gestionprojet->id, 'cdcf', $copy->id, 'interacteurs_data', $before, $json,
+            (int)$USER->id, (int)$copy->groupid);
+        $count++;
+    }
+    return $count;
 }
 
 /**

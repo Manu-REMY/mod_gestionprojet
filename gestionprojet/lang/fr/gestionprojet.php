@@ -804,6 +804,7 @@ $string['reseed_copies'] = 'Réamorcer les copies non commencées';
 $string['reseed_copies_help'] = 'Donne la copie de départ actuelle (verrous, champs pré-remplis et vides) aux copies sur lesquelles personne n\'a encore travaillé.';
 $string['reseed_copies_confirm'] = 'Les copies encore identiques à une copie de départ (brouillon, sans évaluation, sans palier validé) reçoivent la copie de départ actuelle. Les copies où des élèves ont écrit ne sont pas modifiées.';
 $string['reseed_copies_done'] = '{$a} copie(s) réamorcée(s).';
+$string['consigne_copies_follow'] = '{$a} copie(s) d\'élève en brouillon existent déjà. À chaque enregistrement, les champs 🔒 Fourni et ✎ Pré-rempli que les élèves n\'ont pas modifiés prennent le nouveau texte, et les copies non commencées reçoivent la nouvelle copie de départ. Les copies soumises ne changent pas.';
 
 // Step 5 - Page Fiche Essai (élève)
 $string['step5_page_title'] = 'FICHE ESSAI';

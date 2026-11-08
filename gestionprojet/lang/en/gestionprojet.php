@@ -804,6 +804,7 @@ $string['reseed_copies'] = 'Reseed the copies not started';
 $string['reseed_copies_help'] = 'Gives the current starting copy (locks, pre-filled and empty fields) to the copies that nobody has worked on yet.';
 $string['reseed_copies_confirm'] = 'The copies still identical to a starting copy (draft, no evaluation, no validated level) receive the current starting copy. Copies where students wrote something are not changed.';
 $string['reseed_copies_done'] = '{$a} copy(ies) reseeded.';
+$string['consigne_copies_follow'] = '{$a} student draft(s) already exist. At each save, the 🔒 provided and ✎ pre-filled fields the students have not changed take the new text, and the drafts nobody has started get the new starting copy. Submitted work does not change.';
 
 // Step 5 - Test Sheet page (student)
 $string['step5_page_title'] = 'TEST SHEET';

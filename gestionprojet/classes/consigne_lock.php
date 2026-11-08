@@ -168,6 +168,86 @@ class consigne_lock {
     }
 
     /**
+     * A student copy after the teacher changed the consigne (request 23, v2.12.3).
+     *
+     * Elements are matched by id (criteria by FS id and criterion id), never by text. A field provided (locked) or
+     * pre-filled in the new consigne, whose text in the copy is still the old consigne text, takes the new text; a
+     * text the student changed is kept. A copy still untouched gets the new starting copy, even when the structure
+     * changed (element added or removed). The result goes through enforce() with the new consigne.
+     *
+     * @param array $copy Student copy (normalized).
+     * @param array $old Consigne before the change.
+     * @param array $new Consigne after the change.
+     * @return array Copy to store, without flags.
+     */
+    public static function follow(array $copy, array $old, array $new): array {
+        $copy = self::strip_flags($copy);
+        if (self::is_untouched($copy, $old)) {
+            return self::seed($new);
+        }
+        $byid = function (array $list): array {
+            $out = [];
+            foreach ($list as $element) {
+                $out[$element['id']] = $out[$element['id']] ?? $element;
+            }
+            return $out;
+        };
+        // Fields that follow the consigne, with the flags that make them follow.
+        $take = function (array $mine, ?array $was, ?array $now, array $fields) {
+            if ($was === null || $now === null) {
+                return $mine;
+            }
+            foreach ($fields as $field => $flags) {
+                $follows = false;
+                foreach ($flags as $flag) {
+                    $follows = $follows || !empty($now[$flag]);
+                }
+                $before = (string)($was[$field] ?? '');
+                $after = (string)($now[$field] ?? '');
+                if ($follows && $before !== $after && (string)($mine[$field] ?? '') === $before) {
+                    $mine[$field] = $after;
+                }
+            }
+            return $mine;
+        };
+        $main = ['locked', 'prefill'];
+        $level = ['niveauLocked', 'niveauPrefill'];
+
+        $oi = $byid($old['interactors']);
+        $ni = $byid($new['interactors']);
+        foreach ($copy['interactors'] as &$i) {
+            $i = $take($i, $oi[$i['id']] ?? null, $ni[$i['id']] ?? null, ['name' => $main]);
+        }
+        unset($i);
+        $ofs = $byid($old['fonctionsService']);
+        $nfs = $byid($new['fonctionsService']);
+        foreach ($copy['fonctionsService'] as &$fs) {
+            $was = $ofs[$fs['id']] ?? null;
+            $now = $nfs[$fs['id']] ?? null;
+            $fs = $take($fs, $was, $now, ['description' => $main]);
+            if ($was === null || $now === null) {
+                continue;
+            }
+            $oc = $byid($was['criteres']);
+            $nc = $byid($now['criteres']);
+            foreach ($fs['criteres'] as &$c) {
+                $c = $take($c, $oc[$c['id']] ?? null, $nc[$c['id']] ?? null,
+                    ['description' => $main, 'niveau' => $level, 'flexibilite' => ['niveauLocked']]);
+            }
+            unset($c);
+        }
+        unset($fs);
+        $ok = $byid($old['contraintes']);
+        $nk = $byid($new['contraintes']);
+        foreach ($copy['contraintes'] as &$k) {
+            $k = $take($k, $ok[$k['id']] ?? null, $nk[$k['id']] ?? null,
+                ['description' => $main, 'justification' => ['locked']]);
+        }
+        unset($k);
+        return self::enforce($copy, $new);
+    }
+
+    /**
      * Restore what the consigne locks in a student copy (the server is the authority).
      *
      * Without any lock in the consigne, the copy is returned unchanged (flags removed). Otherwise: duplicate ids are
@@ -179,15 +259,29 @@ class consigne_lock {
      * from the consigne (an element the student wrote, or edited before the teacher locked it), it keeps its text
      * under a new id and the consigne element is inserted next to it.
      *
+     * With the stored copy (v2.12.3): a locked field the browser sends with another text, while the stored copy already
+     * has the consigne text at that id, comes from a page opened before the consigne changed (the field is read-only
+     * for the student): it is overwritten, not kept as student text.
+     *
      * @param array $student Student copy (as sent by the browser, normalized).
      * @param array $provided Consigne.
+     * @param array|null $stored Copy stored before this save (normalized), or null.
      * @return array Student copy to store, without flags.
      */
-    public static function enforce(array $student, array $provided): array {
+    public static function enforce(array $student, array $provided, ?array $stored = null): array {
         $student = self::strip_flags($student);
         if (!self::has_locks($provided)) {
             return $student;
         }
+        // Stored elements by id, to tell a stale page from text the student wrote.
+        $stored = $stored ? self::strip_flags($stored) : ['interactors' => [], 'fonctionsService' => [], 'contraintes' => []];
+        $sid = function (array $list, int $id): ?array {
+            $index = self::index_of($list, $id);
+            return $index === null ? null : $list[$index];
+        };
+        $stale = function (?array $kept, array $consigne, array $fields): bool {
+            return $kept !== null && !self::differs($kept, $consigne, $fields);
+        };
 
         // Interactors: locked ones, and those used by a locked FS.
         $needed = [];
@@ -203,7 +297,8 @@ class consigne_lock {
         foreach ($provided['interactors'] as $rank => $pi) {
             $index = self::index_of($student['interactors'], $pi['id']);
             if ($index !== null && !empty($pi['locked'])
-                    && self::differs($student['interactors'][$index], $pi, ['name'])) {
+                    && self::differs($student['interactors'][$index], $pi, ['name'])
+                    && !$stale($sid($stored['interactors'], $pi['id']), $pi, ['name'])) {
                 // The student's interactor keeps its name under a new id; their FS follow it.
                 $remap[$pi['id']] = ++$max;
                 $student['interactors'][$index]['id'] = $max;
@@ -237,7 +332,8 @@ class consigne_lock {
             });
             $index = self::index_of($student['fonctionsService'], $pfs['id']);
             if ($index !== null && !empty($pfs['locked'])
-                    && self::differs($student['fonctionsService'][$index], $pfs, ['description'])) {
+                    && self::differs($student['fonctionsService'][$index], $pfs, ['description'])
+                    && !$stale($sid($stored['fonctionsService'], $pfs['id']), $pfs, ['description'])) {
                 // The student's FS (with its criteria) keeps its text under a new id.
                 $student['fonctionsService'][$index]['id'] = ++$max;
                 $index = null;
@@ -266,7 +362,9 @@ class consigne_lock {
                 $cindex = self::index_of($fs['criteres'], $pc['id']);
                 $lockedfields = array_merge(!empty($pc['locked']) ? ['description'] : [],
                     !empty($pc['niveauLocked']) ? ['niveau'] : []);
-                if ($cindex !== null && self::differs($fs['criteres'][$cindex], $pc, $lockedfields)) {
+                $storedfs = $sid($stored['fonctionsService'], $pfs['id']);
+                if ($cindex !== null && self::differs($fs['criteres'][$cindex], $pc, $lockedfields)
+                        && !$stale($storedfs ? $sid($storedfs['criteres'], $pc['id']) : null, $pc, $lockedfields)) {
                     $fs['criteres'][$cindex]['id'] = ++$cmax;
                     $cindex = null;
                 }
@@ -295,7 +393,8 @@ class consigne_lock {
                 continue;
             }
             $index = self::index_of($student['contraintes'], $pc['id']);
-            if ($index !== null && self::differs($student['contraintes'][$index], $pc, ['description', 'justification'])) {
+            if ($index !== null && self::differs($student['contraintes'][$index], $pc, ['description', 'justification'])
+                    && !$stale($sid($stored['contraintes'], $pc['id']), $pc, ['description', 'justification'])) {
                 $student['contraintes'][$index]['id'] = ++$max;
                 $index = null;
             }

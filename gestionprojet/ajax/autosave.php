@@ -100,6 +100,9 @@ try {
             $record->timecreated = $time;
         }
 
+        // Consigne of step 4 before the save: the draft copies follow it afterwards (v2.12.3).
+        $oldconsigne = (string)($record->interacteurs_data ?? '');
+
         foreach ($formdata as $key => $value) {
             if ($key !== 'id' && in_array($key, $validfields)) {
                 $record->$key = $value;
@@ -112,6 +115,10 @@ try {
             $DB->update_record($tablename, $record);
         } else {
             $record->id = $DB->insert_record($tablename, $record);
+        }
+
+        if ((int)$step === 4) {
+            gestionprojet_cdcf_follow_consigne($gestionprojet, $oldconsigne);
         }
 
         echo json_encode([
