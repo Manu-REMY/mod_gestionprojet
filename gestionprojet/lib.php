@@ -2457,7 +2457,7 @@ function gestionprojet_fast_to_text($datajson) {
         }, $data['fonctionsPrincipales']);
         $fps = array_filter($fps);
         if (!empty($fps)) {
-            $lines[] = 'Fonction principale : ' . implode(' / ', $fps);
+            $lines[] = 'Fonction d\'usage : ' . implode(' / ', $fps);
             $lines[] = '';
         }
     }

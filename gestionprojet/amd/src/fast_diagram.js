@@ -45,7 +45,7 @@ define([], function() {
         var nodes = [], lines = [];
         var fonctions = (data && data.fonctions) || [];
         var fps = (data && data.fonctionsPrincipales) || [];
-        var fpLabel = fps.map(function(fp) { return fp.description; }).filter(Boolean).join(' / ') || 'FP';
+        var fpLabel = fps.map(function(fp) { return fp.description; }).filter(Boolean).join(' / ') || 'FU';
 
         if (fonctions.length === 0) {
             return { nodes: [], lines: [], width: 400, height: 200 };

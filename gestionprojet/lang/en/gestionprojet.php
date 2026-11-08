@@ -145,8 +145,6 @@ $string['finish'] = 'Finish';
 $string['produit'] = 'Product';
 $string['milieu'] = 'Environment of use';
 $string['interacteurs'] = 'Stakeholders';
-$string['fonction_principale'] = 'Main function (MF)';
-$string['fonctions_contraintes'] = 'Constraint functions (CF)';
 
 // Test Sheet (Step 5)
 $string['nom_essai'] = 'Test name';
@@ -455,7 +453,7 @@ $string['privacy:metadata:timemodified'] = 'The time when the record was last mo
 
 // CDCF (Step 4)
 $string['privacy:metadata:gestionprojet_cdcf:userid'] = 'The ID of the user who submitted the requirements specification';
-$string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'JSON data containing stakeholders, constraint functions and criteria';
+$string['privacy:metadata:gestionprojet_cdcf:interacteurs_data'] = 'JSON data containing stakeholders, service functions, constraints and criteria';
 $string['privacy:metadata:gestionprojet_cdcf:status'] = 'The submission status (draft or submitted)';
 $string['privacy:metadata:gestionprojet_cdcf:timesubmitted'] = 'The time when the work was submitted';
 
@@ -641,9 +639,9 @@ Functional Analysis (Octopus Diagram / Functions)
 
 Verbs: Each function must begin with an infinitive verb.
 
-Main Function (MF): Does it correctly connect the user and the subject matter?
+Service functions (SF): Does each one link the product to an interactor, or two interactors together?
 
-Constraint Functions (CF): Are they relevant (Energy, Aesthetics, Safety, Budget, Environment)?
+Constraints: Are they relevant (energy, aesthetics, safety, budget, environment)?
 
 Critical error to watch for: The student must not mention a technical solution (Example: saying "Must have wheels" is an error, they should say "Must allow movement").
 
@@ -727,7 +725,7 @@ Tone: Be encouraging, value efforts, suggest concrete improvements.';
 
 $string['ai_instructions_default_step9'] = 'Role: You are an experienced technology teacher in middle school.
 
-Context for this step: You are grading a FAST diagram. The student translates service functions from the functional specification into technical functions (TF), then into technical solutions (TS), with coherent FP → TF → TS structure (FP = Main Function).
+Context for this step: You are grading a FAST diagram. The student translates service functions from the functional specification into technical functions (TF), then into technical solutions (TS), with coherent usage function → TF → TS structure.
 
 Attention points:
 - Technical functions (TF) cover the service functions from the spec.
@@ -742,13 +740,10 @@ $string['logbook_model_desc'] = 'Define here a sample logbook expected from stud
 $string['logbook_status_header'] = 'Status';
 $string['produit_placeholder'] = 'Expected product name';
 $string['milieu_placeholder'] = 'Expected environment of use';
-$string['fp_placeholder'] = 'Expected main function...';
 $string['add_interactor'] = 'Add a stakeholder';
 $string['interactor_name_placeholder'] = 'Stakeholder name';
 $string['delete_interactor'] = 'Delete';
-$string['fc_description_placeholder'] = 'Constraint function description';
 $string['add_criterion'] = 'Criterion';
-$string['add_constraint_function'] = 'Constraint Function';
 
 // Step 4 - Requirements Specification page (student)
 $string['step4_page_title'] = 'FUNCTIONAL REQUIREMENTS SPECIFICATION';
@@ -811,7 +806,7 @@ $string['step5_page_title'] = 'TEST SHEET';
 $string['step5_page_subtitle'] = 'Experimental approach - Technology';
 $string['step5_general_info'] = 'General information';
 $string['step5_section1_title'] = 'TEST OBJECTIVE';
-$string['step5_fonction_service_label'] = 'What is the service/constraint function that the system must satisfy?';
+$string['step5_fonction_service_label'] = 'Which service function or which constraint must the system satisfy?';
 $string['step5_fonction_service_placeholder'] = 'Describe the service function or constraint to satisfy...';
 $string['step5_niveaux_reussite_label'] = 'What are the levels (values and units) that define the success of the test?';
 $string['step5_niveaux_reussite_placeholder'] = 'Specify the expected values and units of measurement...';
@@ -929,9 +924,9 @@ $string['fast:placeholder'] = 'FAST diagram';
 $string['fast:ai_instructions_label'] = 'AI evaluator instructions';
 $string['fast:ai_instructions_help'] = 'Guide the AI evaluator on what to assess.';
 $string['fast:no_data_to_evaluate'] = 'No FAST data to evaluate.';
-$string['fast:fp_label'] = 'Main function (read-only, from CDCF)';
+$string['fast:fp_label'] = 'Usage function (read-only, from the specifications)';
 $string['fast:ft_label'] = 'Technical functions';
-$string['fast:fp_help'] = 'The main function comes from the functional specifications and cannot be edited here.';
+$string['fast:fp_help'] = 'The usage function comes from the functional specifications and cannot be edited here.';
 
 // Consigne / Correction model split (v2.4.0).
 $string['consigne'] = 'Consigne';
@@ -948,7 +943,7 @@ $string['step5_provided_precautions_placeholder'] = 'One precaution per line (up
 $string['correction_model_badge'] = 'Correction model';
 $string['privacy:metadata:gestionprojet_fast'] = 'Student FAST diagram submissions.';
 $string['privacy:metadata:gestionprojet_fast:userid'] = 'User ID (individual mode).';
-$string['privacy:metadata:gestionprojet_fast:data_json'] = 'FAST diagram data (JSON: FP, FT, sub-FT, ST).';
+$string['privacy:metadata:gestionprojet_fast:data_json'] = 'FAST diagram data (JSON: usage function, FT, sub-FT, ST).';
 $string['privacy:metadata:gestionprojet_fast:status'] = 'Submission status (0=draft, 1=submitted).';
 $string['privacy:metadata:gestionprojet_fast:timesubmitted'] = 'Submission timestamp.';
 

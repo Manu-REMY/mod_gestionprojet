@@ -131,7 +131,7 @@ function($, Notification, Str, FastDiagram, Toast, SaveHooks) {
     function buildForm(data, strings) {
         var frag = document.createDocumentFragment();
 
-        // Fonction Principale (read-only, sourced from CDCF).
+        // Usage function (read-only, sourced from the CDCF; stored under the key fonctionsPrincipales).
         var fps = (data && data.fonctionsPrincipales) || [];
         var nonEmptyFps = fps.filter(function(fp) {
             return fp && fp.description && String(fp.description).trim() !== '';
@@ -141,7 +141,7 @@ function($, Notification, Str, FastDiagram, Toast, SaveHooks) {
             fpSection.appendChild(el('label', { 'class': 'font-weight-bold mb-1' }, strings.fpLabel));
             nonEmptyFps.forEach(function(fp, idx) {
                 var fpItem = el('div', { 'class': 'fast-fp-item d-flex align-items-center gap-2 mb-1' });
-                fpItem.appendChild(el('span', { 'class': 'badge badge-primary' }, 'FP' + (idx + 1)));
+                fpItem.appendChild(el('span', { 'class': 'badge badge-primary' }, 'FU' + (idx + 1)));
                 fpItem.appendChild(el('span', { 'class': 'fast-fp-text' }, fp.description));
                 fpSection.appendChild(fpItem);
             });
