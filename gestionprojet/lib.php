@@ -982,7 +982,8 @@ function gestionprojet_progress_layout_open(): string {
  * @param int $step Step 4 to 9.
  * @param object $submission The copy.
  * @param bool $readonly A teacher looking at a group's or a student's copy: no submit, no feedback request.
- * @return array status, grade, previousgrade, palier, formative, feedback (null when AI is off), cansubmit, canask
+ * @return array status, grade, previousgrade, palier, formative, feedback (teacher comment only when AI is off),
+ *     cansubmit, canask
  */
 function gestionprojet_progress_state(object $gestionprojet, int $step, object $submission, bool $readonly): array {
     global $DB;
@@ -994,36 +995,47 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     $paliermode = $step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1;
     $palier = $paliermode ? gestionprojet_palier_state($gestionprojet, $submission) : null;
     $formative = $aion ? gestionprojet_formative_state($gestionprojet, $step, $submission) : null;
-    $grade = $submission->grade !== null ? (float)$submission->grade : null;
+    // A copy just created by gestionprojet_get_or_create_submission has no grade property yet.
+    $grade = isset($submission->grade) && $submission->grade !== null ? (float)$submission->grade : null;
 
-    $feedback = null;
-    if ($aion) {
-        $applied = $DB->get_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $gestionprojet->id, 'step' => $step,
-            'submissionid' => $submission->id, 'status' => 'applied', 'formatif' => 0], 'timemodified DESC, id DESC', '*', 0, 1);
-        $applied = $applied ? reset($applied) : null;
-        $pick = \mod_gestionprojet\progress::pick_feedback($applied, $formative ? $formative['last'] : null, $grade,
-            (string)($submission->feedback ?? ''), (int)($submission->timemodified ?? 0));
-        $text = $pick['text'];
-        $criteria = [];
-        $suggestions = [];
-        if ($pick['evaluation']) {
-            if ($pick['source'] === 'applied' && isset($pick['evaluation']->show_feedback) && !$pick['evaluation']->show_feedback) {
-                $text = '';
-            }
-            $criteria = json_decode((string)$pick['evaluation']->criteria_json, true) ?: [];
-            if (!isset($pick['evaluation']->show_suggestions) || $pick['evaluation']->show_suggestions) {
-                $suggestions = json_decode((string)$pick['evaluation']->suggestions, true) ?: [];
-            }
+    // The teacher's comment on a grade is shown even when AI is off; AI feedbacks only when it is on.
+    $applied = $aion ? $DB->get_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $gestionprojet->id,
+        'step' => $step, 'submissionid' => $submission->id, 'status' => 'applied', 'formatif' => 0],
+        'timemodified DESC, id DESC', '*', 0, 1) : [];
+    $applied = $applied ? reset($applied) : null;
+    $pick = \mod_gestionprojet\progress::pick_feedback($applied, $formative ? $formative['last'] : null, $grade,
+        (string)($submission->feedback ?? ''), (int)($submission->timesubmitted ?? 0));
+    $text = $pick['text'];
+    $criteria = [];
+    $suggestions = [];
+    $keywords = [];
+    if ($pick['evaluation']) {
+        $evaluation = $pick['evaluation'];
+        if ($pick['source'] === 'applied' && isset($evaluation->show_feedback) && !$evaluation->show_feedback) {
+            $text = '';
         }
-        // Never a word of the correction model the student did not write (always for a formative feedback).
-        if ($pick['source'] === 'formative' || !isset($gestionprojet->ai_hide_answers) || $gestionprojet->ai_hide_answers) {
-            $view = \mod_gestionprojet\answer_leak_filter::student_view($text, $criteria, $suggestions,
-                gestionprojet_answer_leak_roots($gestionprojet, $step, $submission));
-            $text = $view['feedback'];
-            $suggestions = $view['suggestions'];
+        if (!isset($evaluation->show_criteria) || $evaluation->show_criteria) {
+            $criteria = json_decode((string)$evaluation->criteria_json, true) ?: [];
         }
-        $feedback = ['source' => $pick['source'], 'text' => $text, 'suggestions' => $suggestions, 'time' => $pick['time']];
+        if (!isset($evaluation->show_suggestions) || $evaluation->show_suggestions) {
+            $suggestions = json_decode((string)$evaluation->suggestions, true) ?: [];
+        }
+        if ($pick['source'] === 'applied' && (!isset($evaluation->show_keywords_found) || $evaluation->show_keywords_found)) {
+            $keywords = json_decode((string)$evaluation->keywords_found, true) ?: [];
+        }
     }
+    // AI text never shows a word of the correction model the student did not write; the teacher's own comment is
+    // shown as written.
+    if ($pick['source'] !== 'teacher' && $pick['source'] !== 'none'
+            && ($pick['source'] === 'formative' || !isset($gestionprojet->ai_hide_answers) || $gestionprojet->ai_hide_answers)) {
+        $view = \mod_gestionprojet\answer_leak_filter::student_view($text, $criteria, $suggestions,
+            gestionprojet_answer_leak_roots($gestionprojet, $step, $submission));
+        $text = $view['feedback'];
+        $criteria = $view['criteria'];
+        $suggestions = $view['suggestions'];
+    }
+    $feedback = ['source' => $pick['source'], 'text' => $text, 'criteria' => $criteria, 'suggestions' => $suggestions,
+        'keywords' => $keywords, 'time' => $pick['time']];
 
     return [
         'status' => \mod_gestionprojet\progress::status((int)$submission->status, $pending),

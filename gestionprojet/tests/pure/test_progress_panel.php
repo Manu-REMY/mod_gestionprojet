@@ -33,7 +33,7 @@ test('panel has the feedback request button and banner', fn() => strpos($panel, 
     && strpos($panel, "'gpFormativeBanner'") !== false);
 test('panel has the live list holder and a progress bar', fn() => strpos($panel, "'data-gp-progress-list'") !== false
     && strpos($panel, "'role' => 'progressbar'") !== false);
-test('panel: read-only for a teacher looking at a copy', fn() => strpos($panel, "optional_param('groupid'") !== false
+test('panel: read-only for a teacher looking at someone else\'s copy', fn() => strpos($panel, '$USER->id') !== false
     && strpos($panel, "'mod/gestionprojet:grade'") !== false);
 test('panel: level mode reuses the level block', fn() => strpos($panel, 'student_palier_display.php') !== false);
 test('panel: no inline script or style', fn() => stripos($panel, '<script') === false && stripos($panel, '<style') === false);
