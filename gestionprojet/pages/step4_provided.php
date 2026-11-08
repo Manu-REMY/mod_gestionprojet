@@ -73,6 +73,15 @@ echo '<h4>' . get_string('step4_desc_title', 'gestionprojet') . '</h4>';
 echo '<p>' . get_string('step4_desc_text', 'gestionprojet') . '</p>';
 echo '</div>';
 
+// Draft copies follow each save of the consigne (request 23, v2.12.3): say so when there are some.
+if ($canedit && (int)($gestionprojet->step4_provided ?? 0) === 1) {
+    $copiesfollowing = $DB->count_records('gestionprojet_cdcf', ['gestionprojetid' => $gestionprojet->id, 'status' => 0]);
+    if ($copiesfollowing > 0) {
+        echo html_writer::div('ℹ ' . get_string('consigne_copies_follow', 'gestionprojet', $copiesfollowing),
+            'alert alert-warning gp-consigne-copies-follow');
+    }
+}
+
 require_once(__DIR__ . '/teacher_model_styles.php');
 
 // Get navigation for teacher consigne steps (reuse teacher step navigation order, only for editors).
