@@ -2,6 +2,8 @@
 
 Ce document s'adresse à l'agent qui fera évoluer `mod_gestionprojet`. Il part d'un cas réel : le cahier des charges du robot martien en 4e. Emmanuel décidera de ce qui est retenu.
 
+> **Depuis le 08/11/2026, les demandes et leur état se tiennent dans le vault commun** : `/Volumes/DONNEES/Claude code/WIKI/wiki/entities/mod-gestionprojet-demandes.md`. Ce fichier garde le détail historique des points 1 à 23.
+
 ## Contexte
 
 - **Activité :** cm 6974, instance 3, cours 5, section 9 « 4 : ROBOT », intitulée « Ex01 ----> COMPLÉTER LE CAHIER DES CHARGES DU ROBOT ».
@@ -110,3 +112,12 @@ Les essais suivants ont été faits sans rien écrire en base. Une copie fictive
 14. **Bibliothèque `curl` :** les fournisseurs d'IA utilisent la classe `curl` sans `require_once($CFG->libdir . '/filelib.php')`. En CLI, cela donne « Class "curl" not found ». Vérifier que la tâche `evaluate_submission` la charge, sinon l'ajouter dans `base_provider`.
 15. **Rotation de la clé Albert :** le commit `4b3d879` indique que la clé publiée doit être changée chez Albert. La clé chiffrée dans `mod_gestionprojet/gestionprojet_albert_api_key` est-elle la nouvelle ? Ne jamais l'afficher pour le vérifier : comparer des empreintes.
 16. **Tests :** ajouter un test du prompt de l'étape 4 avec la consigne et le corrigé du robot comme jeu de données. Il doit vérifier qu'une copie SAT complète n'est pas pénalisée pour l'absence de contraintes et de flexibilité.
+
+## 23. Modifier le texte d'un critère « Fourni » crée un doublon dans les copies déjà commencées (constat du 08/11, 14h51)
+
+**Constat sur ROBOT MARTIEN (plugin 2.11.3).** L'enseignant a renommé deux critères fournis de la consigne : « Capacité de franchissement d'un obstacle (marche) » est devenu « Hauteur d'obstacle franchissable (marche) », et « Capacité d'ascension » est devenu « Pente maximale gravie ». Il a aussi changé le texte de deux critères pré-remplis. Une copie déjà commencée affichait ensuite 14 critères au lieu de 11 : l'ancien critère, devenu modifiable, et le nouveau, verrouillé, côte à côte. `enforce` ajoute le critère verrouillé de la consigne sans retirer l'ancien de la copie de l'élève.
+
+**À faire :**
+- Associer les critères par leur identifiant (FS, puis critère) plutôt que par leur texte. Un critère « Fourni » dont le texte a changé dans la consigne doit être **remplacé** dans la copie, pas dupliqué.
+- Pour un critère « Pré-rempli » que l'élève n'a pas modifié (son texte est encore l'ancien texte de la consigne), le mettre à jour avec le nouveau texte. S'il l'a modifié, garder son texte.
+- Quand l'enseignant enregistre une consigne modifiée alors que des copies existent, l'avertir : « N copies déjà commencées : les critères fournis y seront mis à jour ».
