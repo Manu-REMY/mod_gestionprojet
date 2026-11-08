@@ -992,6 +992,20 @@ $string['setting_model_desc'] = 'Exact model name sent to the provider. Empty: {
 $string['error:notgroupmember'] = 'You are not a member of this group.';
 $string['ai_hide_answers'] = 'Do not reveal the correction model';
 $string['ai_hide_answers_help'] = 'If enabled, the AI is told never to quote the correction model, and any sentence of the feedback, criteria comments and suggestions using a word or number of the correction model that the student did not write is removed before students see it, including in a feedback edited by the teacher. Missing keywords are never shown to students.';
+$string['formative_limit'] = 'AI feedbacks before submitting (per step)';
+$string['formative_limit_help'] = 'How many times a student (or a group) may ask the AI for feedback on a step before submitting it. The copy stays open, no grade is given; only the submission is graded. 0 = no feedback button.';
+$string['error_formative_limit'] = 'Enter a number between 0 and 20.';
+$string['formative_disabled'] = 'Feedback before submitting is not available for this step.';
+$string['formative_pending_error'] = 'A feedback is already being prepared: wait for it.';
+$string['formative_none_left'] = 'You have used all the feedbacks for this step.';
+$string['formative_title'] = 'Feedback before submitting';
+$string['formative_help'] = 'Ask the AI for advice on your work as it is now. Nothing is submitted and no grade is given: only your submission will be graded.';
+$string['formative_request'] = 'Ask for a feedback ({$a} left)';
+$string['formative_pending'] = 'Your feedback is being prepared…';
+$string['formative_ready'] = 'Your feedback is ready.';
+$string['formative_show'] = 'Show the feedback';
+$string['formative_last'] = 'Last feedback ({$a})';
+$string['formative_error'] = 'The feedback could not be prepared. Try again in a moment.';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Submission graded';

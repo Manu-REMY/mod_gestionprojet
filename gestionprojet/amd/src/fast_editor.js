@@ -22,8 +22,8 @@
  */
 
 define(['jquery', 'core/notification', 'core/str',
-        'mod_gestionprojet/fast_diagram', 'mod_gestionprojet/toast'],
-function($, Notification, Str, FastDiagram, Toast) {
+        'mod_gestionprojet/fast_diagram', 'mod_gestionprojet/toast', 'mod_gestionprojet/save_hooks'],
+function($, Notification, Str, FastDiagram, Toast, SaveHooks) {
 
     var STEP = 9;
     var AUTOSAVE_DELAY_MS = 10000;
@@ -278,6 +278,12 @@ function($, Notification, Str, FastDiagram, Toast) {
                 if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
                 autosave({ showSaving: true, showSaved: true });
             }
+
+            // Immediate save for actions that must judge the copy on screen (formative feedback, v2.11.4).
+            SaveHooks.register(function() {
+                if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+                return isDirty ? autosave({ showSaving: false, showSaved: false }) : null;
+            });
 
             // Manual "Save" button (rendered in templates/step9_form.mustache).
             $(document).on('click', '#fast-save-' + cmid, function(e) {

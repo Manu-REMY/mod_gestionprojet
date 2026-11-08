@@ -66,11 +66,12 @@ class ai_evaluator {
      * @param int $groupid Group ID (0 for individual)
      * @param int $userid User ID (0 for group submission)
      * @param string $palier Level asked (F, S, TS) in the step 4 level mode, '' for a graded evaluation
-     * @param string|null $contenu Copy frozen when the level was asked (judged instead of the live copy)
+     * @param string|null $contenu Copy frozen when the level/feedback was asked (judged instead of the live copy)
+     * @param bool $formatif Formative feedback asked before submitting: never a grade (v2.11.4)
      * @return int Evaluation record ID
      */
     public static function queue_evaluation(int $gestionprojetid, int $step, int $submissionid, int $groupid = 0,
-            int $userid = 0, string $palier = '', ?string $contenu = null): int {
+            int $userid = 0, string $palier = '', ?string $contenu = null, bool $formatif = false): int {
         global $DB;
 
         // Get instance configuration.
@@ -103,9 +104,17 @@ class ai_evaluator {
         }
 
         // One evaluation at a time per copy: a pending or processing one is returned (double click, two members).
+        // Only an evaluation of the same kind is reused: a submission never gets back a running feedback (v2.11.4).
+        $kindparams = ['gpid' => $gestionprojetid, 'step' => $step, 'sid' => $submissionid, 'formatif' => $formatif ? 1 : 0];
+        $kind = " AND (palier IS NULL OR palier = '')";
+        if ($palier !== '') {
+            // Moodle refuses a named parameter the query does not use: add it only when needed.
+            $kind = ' AND palier = :palier';
+            $kindparams['palier'] = $palier;
+        }
         $existing = $DB->get_records_select('gestionprojet_ai_evaluations',
-            "gestionprojetid = :gpid AND step = :step AND submissionid = :sid AND status IN ('pending', 'processing')",
-            ['gpid' => $gestionprojetid, 'step' => $step, 'sid' => $submissionid], 'id DESC', 'id', 0, 1);
+            "gestionprojetid = :gpid AND step = :step AND submissionid = :sid AND status IN ('pending', 'processing')
+             AND formatif = :formatif" . $kind, $kindparams, 'id DESC', 'id', 0, 1);
         $existing = reset($existing);
 
         if ($existing) {
@@ -125,6 +134,7 @@ class ai_evaluator {
         $evaluation->status = 'pending';
         $evaluation->palier = $palier;
         $evaluation->contenu_json = $contenu;
+        $evaluation->formatif = $formatif ? 1 : 0;
         $evaluation->timecreated = time();
         $evaluation->timemodified = time();
 
@@ -196,6 +206,14 @@ class ai_evaluator {
             if ($ispalier) {
                 $submission = clone $submission;
                 $submission->interacteurs_data = (string)$evaluation->contenu_json;
+            }
+            // Formative feedback (v2.11.4): the step fields frozen when it was asked are judged.
+            $isformative = !empty($evaluation->formatif);
+            if ($isformative) {
+                $submission = clone $submission;
+                foreach ((array)json_decode((string)$evaluation->contenu_json, true) as $field => $value) {
+                    $submission->$field = $value;
+                }
             }
 
             // Get teacher model.
@@ -281,7 +299,7 @@ class ai_evaluator {
             }
             $prompts = $promptbuilder->build_prompt(
                 $evaluation->step, $promptsubmission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications,
-                $ispalier || !isset($gestionprojet->ai_hide_answers) || (bool) $gestionprojet->ai_hide_answers
+                $ispalier || $isformative || !isset($gestionprojet->ai_hide_answers) || (bool) $gestionprojet->ai_hide_answers
             );
 
             // Get AI provider.
@@ -338,7 +356,7 @@ class ai_evaluator {
             $event->trigger();
 
             // Auto-apply if configured.
-            if (!empty($gestionprojet->ai_auto_apply) && !$ispalier) {
+            if (!empty($gestionprojet->ai_auto_apply) && !$ispalier && !$isformative) {
                 self::apply_evaluation($evaluationid, 0); // 0 = system applied.
             }
 
@@ -379,7 +397,7 @@ class ai_evaluator {
 
         $result = $DB->get_record_sql(
             'SELECT * FROM {gestionprojet_ai_evaluations}
-             WHERE gestionprojetid = ? AND step = ? AND submissionid = ?
+             WHERE gestionprojetid = ? AND step = ? AND submissionid = ? AND formatif = 0
              ORDER BY timecreated DESC LIMIT 1',
             [$gestionprojetid, $step, $submissionid]
         );
@@ -426,7 +444,7 @@ class ai_evaluator {
         $evaluation = $DB->get_record('gestionprojet_ai_evaluations', ['id' => $evaluationid], '*', MUST_EXIST);
 
         // A level evaluation gives a verdict, never a grade (v2.11.2).
-        if ($evaluation->status !== 'completed' || !empty($evaluation->palier)) {
+        if ($evaluation->status !== 'completed' || !empty($evaluation->palier) || !empty($evaluation->formatif)) {
             return false;
         }
 

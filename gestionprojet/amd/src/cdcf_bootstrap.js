@@ -70,7 +70,8 @@ define([
             }
             Ajax.call([{
                 methodname: 'mod_gestionprojet_submit_step',
-                args: { cmid: cfg.cmid, step: cfg.step, action: 'revert' },
+                // The server knows "unlock" and finds the copy by its group or its user.
+                args: { cmid: cfg.cmid, step: cfg.step, action: 'unlock', groupid: cfg.groupid, userid: cfg.revertUserid || 0 },
             }])[0].done(function(d) {
                 if (d.success) {
                     window.location.reload();

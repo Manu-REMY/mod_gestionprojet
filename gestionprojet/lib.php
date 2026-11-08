@@ -514,15 +514,16 @@ function gestionprojet_palier_request(object $gestionprojet, object $cm, int $gr
 }
 
 /**
- * Lock of a step 4 copy for the level checks (request, verdict).
+ * Lock of a copy for the checks done before queueing an AI evaluation (level, verdict, formative feedback).
  *
  * @param int $submissionid
+ * @param string $table Submission table without prefix (cdcf, essai, ...).
  * @return \core\lock\lock
  * @throws moodle_exception When the copy stays locked (another request is being handled).
  */
-function gestionprojet_palier_lock(int $submissionid): \core\lock\lock {
+function gestionprojet_palier_lock(int $submissionid, string $table = 'cdcf'): \core\lock\lock {
     $factory = \core\lock\lock_config::get_lock_factory('mod_gestionprojet_palier');
-    $lock = $factory->get_lock('cdcf_' . $submissionid, 10);
+    $lock = $factory->get_lock($table . '_' . $submissionid, 10);
     if (!$lock) {
         throw new moodle_exception('palier_pending_error', 'gestionprojet');
     }
@@ -871,6 +872,96 @@ function gestionprojet_teacher_pages_locked($gestionprojetid)
     return ($description && $description->locked) ||
         ($besoin && $besoin->locked) ||
         ($planning && $planning->locked);
+}
+
+/**
+ * State of the formative feedback of a copy (v2.11.4): feedbacks asked before submitting, never graded.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param int $step Step 4 to 9.
+ * @param object $submission The copy.
+ * @return array enabled, limit, used, remaining, pending (evaluation or null), last (last completed feedback or null)
+ */
+function gestionprojet_formative_state(object $gestionprojet, int $step, object $submission): array {
+    global $DB;
+
+    $limit = max(0, (int)($gestionprojet->formative_limit ?? 3));
+    $where = 'gestionprojetid = :gpid AND step = :step AND submissionid = :sid AND formatif = 1';
+    $params = ['gpid' => $gestionprojet->id, 'step' => $step, 'sid' => $submission->id];
+    // A feedback that failed for a technical reason does not count, but the total (failures included) is bounded
+    // to twice the limit: a copy crafted to make the AI fail cannot ask again and again.
+    $used = $DB->count_records_select('gestionprojet_ai_evaluations', $where . " AND status <> 'failed'", $params);
+    $total = $DB->count_records_select('gestionprojet_ai_evaluations', $where, $params);
+    $pending = $DB->get_records_select('gestionprojet_ai_evaluations', $where . " AND status IN ('pending', 'processing')",
+        $params, 'id DESC', '*', 0, 1);
+    $last = $DB->get_records_select('gestionprojet_ai_evaluations', $where . " AND status = 'completed'",
+        $params, 'id DESC', '*', 0, 1);
+    return [
+        'enabled' => $limit > 0 && !empty($gestionprojet->ai_enabled)
+            && !($step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1),
+        'limit' => $limit,
+        'used' => $used,
+        'remaining' => max(0, min($limit - $used, 2 * $limit - $total)),
+        'pending' => $pending ? reset($pending) : null,
+        'last' => $last ? reset($last) : null,
+    ];
+}
+
+/**
+ * Ask the AI for a formative feedback on a copy without submitting it (v2.11.4).
+ *
+ * The copy stays open; the step fields are frozen into the evaluation; no grade is ever applied.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $cm Course module.
+ * @param int $step Step 4 to 9.
+ * @param int $groupid Group checked by the caller (gestionprojet_require_group_access).
+ * @param int $userid
+ * @return int Evaluation id.
+ * @throws moodle_exception When feedback is off, used up, running, or the copy is submitted or past the deadline.
+ */
+function gestionprojet_formative_request(object $gestionprojet, object $cm, int $step, int $groupid, int $userid): int {
+    global $DB;
+
+    $tables = [4 => 'cdcf', 5 => 'essai', 6 => 'rapport', 7 => 'besoin_eleve', 8 => 'carnet', 9 => 'fast'];
+    if (!isset($tables[$step]) || empty($gestionprojet->ai_enabled) || !gestionprojet_is_step_enabled($gestionprojet, $step)
+            || ($step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1)) {
+        throw new moodle_exception('formative_disabled', 'gestionprojet');
+    }
+    $submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $userid, $tables[$step]);
+    if ((int)$submission->status === 1) {
+        throw new moodle_exception('submissionlocked', 'gestionprojet');
+    }
+    $deadline = (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
+        ['gestionprojetid' => $gestionprojet->id]);
+    if ($deadline > 0 && time() > $deadline) {
+        throw new moodle_exception('submissionlocked', 'gestionprojet');
+    }
+
+    // Check and queue under the lock of the copy: a double click never exceeds the limit.
+    $lock = gestionprojet_palier_lock((int)$submission->id, $tables[$step]);
+    try {
+        $state = gestionprojet_formative_state($gestionprojet, $step, $submission);
+        if (!$state['enabled']) {
+            throw new moodle_exception('formative_disabled', 'gestionprojet');
+        }
+        if ($state['pending']) {
+            throw new moodle_exception('formative_pending_error', 'gestionprojet');
+        }
+        if ($state['remaining'] <= 0) {
+            throw new moodle_exception('formative_none_left', 'gestionprojet');
+        }
+        // The copy judged: the step fields as saved now.
+        $submission = $DB->get_record('gestionprojet_' . $tables[$step], ['id' => $submission->id], '*', MUST_EXIST);
+        $contenu = [];
+        foreach (\mod_gestionprojet\ai_prompt_builder::STEP_FIELDS[$step] ?? [] as $field) {
+            $contenu[$field] = $submission->$field ?? null;
+        }
+        return \mod_gestionprojet\ai_evaluator::queue_evaluation((int)$gestionprojet->id, $step, (int)$submission->id,
+            (int)$submission->groupid, (int)$submission->userid, '', json_encode($contenu, JSON_UNESCAPED_UNICODE), true);
+    } finally {
+        $lock->release();
+    }
 }
 
 /**

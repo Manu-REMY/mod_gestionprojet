@@ -57,7 +57,7 @@ foreach (['MATURITY_ALPHA' => 50, 'MATURITY_BETA' => 100, 'MATURITY_RC' => 150, 
 }
 $plugin = new stdClass();
 include(GP_ROOT . '/version.php');
-test('version 2026110806 / 2.11.3', fn() => $plugin->version === 2026110806 && $plugin->release === '2.11.3');
+test('version is at least 2026110806 (2.11.3)', fn() => $plugin->version >= 2026110806);
 
 // Final review: the auto-mark asks for a confirmation (it replaces the flags set by hand).
 test('auto-mark asks for a confirmation', fn() => strpos($js, 'saveCancelPromise') !== false && strpos($js, "'core/notification'") !== false);

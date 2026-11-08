@@ -37,6 +37,7 @@
         <FIELD NAME="step4_flexibility" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=CDCF criteria carry a flexibility F0-F3, 0=hidden and left out of the AI prompt"/>
         <FIELD NAME="step4_paliers" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=step 4 validated level by level (F, S, TS) instead of a grade out of 20"/>
         <FIELD NAME="step4_palier_seuil" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="80" SEQUENCE="false" COMMENT="Percentage of the points of a level needed to validate it"/>
+        <FIELD NAME="formative_limit" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="3" SEQUENCE="false" COMMENT="AI feedbacks a copy may ask for before submitting, per step (0 = none)"/>
         <FIELD NAME="enable_submission" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=student submission enabled"/>
         <FIELD NAME="grade_mode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=combined (single average grade), 1=per_step (separate grade items)"/>
       </FIELDS>
@@ -517,6 +518,7 @@
         <FIELD NAME="palier" TYPE="char" LENGTH="2" NOTNULL="false" SEQUENCE="false" COMMENT="Level asked (F, S, TS), empty for a graded evaluation"/>
         <FIELD NAME="contenu_json" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Copy frozen when the level was asked"/>
         <FIELD NAME="palier_valide" TYPE="int" LENGTH="1" NOTNULL="false" SEQUENCE="false" COMMENT="Verdict of a level evaluation: 1 validated, 0 not"/>
+        <FIELD NAME="formatif" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=formative feedback asked before submitting: never a grade"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

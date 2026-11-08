@@ -832,5 +832,20 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026110805, 'gestionprojet');
     }
 
+    // 2.11.4 — formative AI feedback before submitting (3 per step by default).
+    if ($oldversion < 2026110807) {
+        $table = new xmldb_table('gestionprojet');
+        $field = new xmldb_field('formative_limit', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, '3', 'step4_palier_seuil');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $table = new xmldb_table('gestionprojet_ai_evaluations');
+        $field = new xmldb_field('formatif', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'palier_valide');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026110807, 'gestionprojet');
+    }
+
     return true;
 }

@@ -46,7 +46,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'enable_step5', 'enable_step6', 'enable_step7', 'enable_step8',
             'enable_step9', 'step9_provided',
             'ai_provider', 'ai_api_key', 'ai_enabled', 'ai_auto_apply', 'ai_hide_answers', 'step4_flexibility',
-            'step4_paliers', 'step4_palier_seuil',
+            'step4_paliers', 'step4_palier_seuil', 'formative_limit',
             'enable_submission', 'grade_mode',
         ]);
 
@@ -169,7 +169,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'parsed_feedback', 'criteria_json', 'keywords_found', 'keywords_missing',
             'suggestions', 'status', 'error_message', 'applied_by', 'applied_at',
             'show_feedback', 'show_criteria', 'show_keywords_found',
-            'show_keywords_missing', 'show_suggestions', 'palier', 'contenu_json', 'palier_valide',
+            'show_keywords_missing', 'show_suggestions', 'palier', 'contenu_json', 'palier_valide', 'formatif',
             'timecreated', 'timemodified',
         ]);
 

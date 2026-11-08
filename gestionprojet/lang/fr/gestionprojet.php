@@ -992,6 +992,20 @@ $string['setting_model_desc'] = 'Nom exact du modèle envoyé au fournisseur. Vi
 $string['error:notgroupmember'] = 'Vous n\'êtes pas membre de ce groupe.';
 $string['ai_hide_answers'] = 'Ne pas révéler le corrigé';
 $string['ai_hide_answers_help'] = 'Si activé, l\'IA a pour consigne de ne jamais citer le modèle de correction, et toute phrase du commentaire, des critères et des suggestions contenant un mot ou un nombre du corrigé que l\'élève n\'a pas écrit est retirée avant affichage aux élèves, y compris dans un commentaire modifié par l\'enseignant. Les mots-clés manquants ne sont jamais montrés aux élèves.';
+$string['formative_limit'] = 'Retours de l’IA avant soumission (par étape)';
+$string['formative_limit_help'] = 'Nombre de fois où un élève (ou un groupe) peut demander un retour de l\'IA sur une étape avant de la soumettre. La copie reste ouverte, aucune note n\'est donnée ; seule la soumission est notée. 0 = pas de bouton de retour.';
+$string['error_formative_limit'] = 'Saisis un nombre entre 0 et 20.';
+$string['formative_disabled'] = 'Le retour avant soumission n’est pas disponible pour cette étape.';
+$string['formative_pending_error'] = 'Un retour est déjà en préparation : attends-le.';
+$string['formative_none_left'] = 'Tu as utilisé tous les retours de cette étape.';
+$string['formative_title'] = 'Retour avant soumission';
+$string['formative_help'] = 'Demande à l\'IA des conseils sur ton travail tel qu\'il est maintenant. Rien n\'est soumis et aucune note n\'est donnée : seule ta soumission sera notée.';
+$string['formative_request'] = 'Demander un retour ({$a} restant(s))';
+$string['formative_pending'] = 'Ton retour est en préparation…';
+$string['formative_ready'] = 'Ton retour est prêt.';
+$string['formative_show'] = 'Afficher le retour';
+$string['formative_last'] = 'Dernier retour ({$a})';
+$string['formative_error'] = 'Le retour n\'a pas pu être préparé. Réessaie dans un moment.';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Production notée';

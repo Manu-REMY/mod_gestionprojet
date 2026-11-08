@@ -214,8 +214,9 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str', 'mod_gestionproj
                 mode: this.mode || ''
             };
 
-            // Call the registered Moodle external service.
-            Ajax.call([{
+            // Call the registered Moodle external service. The promise is returned so that a caller can wait for
+            // the save (formative feedback, v2.11.4).
+            return Ajax.call([{
                 methodname: 'mod_gestionprojet_autosave',
                 args: args
             }])[0].done(function(response) {

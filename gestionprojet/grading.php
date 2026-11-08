@@ -381,8 +381,8 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
                                     <button type="button" class="unlock-btn" id="btn-unlock-submission"
                                         data-cmid="<?php echo $cm->id; ?>"
                                         data-step="<?php echo $step; ?>"
-                                        data-groupid="<?php echo $groupid; ?>"
-                                        data-userid="<?php echo $userid ?? 0; ?>">
+                                        data-groupid="<?php echo (int)$submission->groupid; ?>"
+                                        data-userid="<?php echo (int)$submission->userid; ?>">
                                         <?php echo icon::render('lock-open', 'sm'); ?> <?php echo get_string('unlock_submission', 'gestionprojet'); ?>
                                     </button>
                                 <?php endif; ?>

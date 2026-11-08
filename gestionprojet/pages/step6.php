@@ -280,6 +280,10 @@ if ($submission->auteurs) {
 </div>
 
 <?php
+// Formative feedback before submitting (v2.11.4).
+$step = 6;
+require(__DIR__ . '/student_formative_display.php');
+
 $PAGE->requires->js_call_amd('mod_gestionprojet/step6', 'init', [[
     'cmid' => (int)$cm->id,
     'step' => 6,

@@ -304,6 +304,8 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'isLocked'      => (bool)$isLocked,
     'canSubmit'     => (bool)$canSubmit,
     'canRevert'     => (bool)$canRevert,
+    // User of an individual copy, for "revert to draft" (0 for group work).
+    'revertUserid'  => $submission ? (int)$submission->userid : 0,
     'projetNom'     => $projetnom,
     'showFlexibility' => (bool)($gestionprojet->step4_flexibility ?? 1),
     // Zones of validated levels, and of the level being judged: frozen as a whole (v2.11.2).
