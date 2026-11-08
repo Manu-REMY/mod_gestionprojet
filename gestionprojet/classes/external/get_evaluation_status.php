@@ -77,8 +77,9 @@ class get_evaluation_status extends external_api {
         $context = \context_module::instance($cm->id);
         self::validate_context($context);
 
-        // Check basic view capability.
-        require_capability('mod/gestionprojet:view', $context);
+        // Graders only: grades and feedback not yet applied must stay hidden from students,
+        // who poll ajax/get_evaluation_status.php instead.
+        require_capability('mod/gestionprojet:grade', $context);
 
         // Get instance.
         $gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);

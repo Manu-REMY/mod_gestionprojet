@@ -90,6 +90,15 @@ class ai_evaluator {
             throw new \Exception(get_string('ai_api_key_required', 'gestionprojet'));
         }
 
+        // The submission id comes from the browser: it must belong to this activity.
+        $submissiontable = self::STEP_TABLES[$step] ?? null;
+        if (!$submissiontable || !$DB->record_exists($submissiontable, [
+            'id' => $submissionid,
+            'gestionprojetid' => $gestionprojetid,
+        ])) {
+            throw new \Exception(get_string('submissionnotfound', 'gestionprojet'));
+        }
+
         // Check for existing pending/processing evaluation.
         $existing = $DB->get_record('gestionprojet_ai_evaluations', [
             'gestionprojetid' => $gestionprojetid,
@@ -174,7 +183,10 @@ class ai_evaluator {
             if (!$submissiontable) {
                 throw new \Exception('Invalid step number');
             }
-            $submission = $DB->get_record($submissiontable, ['id' => $evaluation->submissionid], '*', MUST_EXIST);
+            $submission = $DB->get_record($submissiontable, [
+                'id' => $evaluation->submissionid,
+                'gestionprojetid' => $evaluation->gestionprojetid,
+            ], '*', MUST_EXIST);
 
             // Get teacher model.
             $teachertable = self::TEACHER_TABLES[$evaluation->step] ?? null;
@@ -381,7 +393,10 @@ class ai_evaluator {
             return false;
         }
 
-        $submission = $DB->get_record($submissiontable, ['id' => $evaluation->submissionid]);
+        $submission = $DB->get_record($submissiontable, [
+            'id' => $evaluation->submissionid,
+            'gestionprojetid' => $evaluation->gestionprojetid,
+        ]);
         if (!$submission) {
             return false;
         }
@@ -488,12 +503,16 @@ class ai_evaluator {
      * Delete an evaluation record.
      *
      * @param int $evaluationid Evaluation ID
+     * @param int $gestionprojetid Instance ID: an evaluation of another activity is never deleted
      * @return bool Success
      */
-    public static function delete_evaluation(int $evaluationid): bool {
+    public static function delete_evaluation(int $evaluationid, int $gestionprojetid): bool {
         global $DB;
 
-        $evaluation = $DB->get_record('gestionprojet_ai_evaluations', ['id' => $evaluationid]);
+        $evaluation = $DB->get_record('gestionprojet_ai_evaluations', [
+            'id' => $evaluationid,
+            'gestionprojetid' => $gestionprojetid,
+        ]);
         if (!$evaluation) {
             return false;
         }

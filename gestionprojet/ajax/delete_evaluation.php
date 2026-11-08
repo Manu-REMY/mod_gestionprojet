@@ -52,7 +52,7 @@ header('Content-Type: application/json');
 try {
     if ($evaluationid > 0) {
         // Delete single evaluation.
-        $success = \mod_gestionprojet\ai_evaluator::delete_evaluation($evaluationid);
+        $success = \mod_gestionprojet\ai_evaluator::delete_evaluation($evaluationid, (int)$gestionprojet->id);
 
         if ($success) {
             echo json_encode([
