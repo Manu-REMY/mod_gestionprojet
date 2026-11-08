@@ -35,6 +35,8 @@
         <FIELD NAME="ai_auto_apply" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=Auto-apply AI grades without teacher review"/>
         <FIELD NAME="ai_hide_answers" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=Never show students words of the correction model they did not write"/>
         <FIELD NAME="step4_flexibility" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=CDCF criteria carry a flexibility F0-F3, 0=hidden and left out of the AI prompt"/>
+        <FIELD NAME="step4_paliers" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=step 4 validated level by level (F, S, TS) instead of a grade out of 20"/>
+        <FIELD NAME="step4_palier_seuil" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="80" SEQUENCE="false" COMMENT="Percentage of the points of a level needed to validate it"/>
         <FIELD NAME="enable_submission" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=student submission enabled"/>
         <FIELD NAME="grade_mode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=combined (single average grade), 1=per_step (separate grade items)"/>
       </FIELDS>
@@ -121,6 +123,7 @@
         <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=individual work"/>
         <FIELD NAME="interacteurs_data" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of interactors with FCs and criteres"/>
+        <FIELD NAME="zones_validees" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON zone => id of the evaluation that validated it (frozen zones)"/>
         <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Note sur 20"/>
         <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Teacher comments"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="User ID for individual submission"/>
@@ -511,6 +514,9 @@
         <FIELD NAME="show_keywords_found" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Show found elements to student"/>
         <FIELD NAME="show_keywords_missing" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Show missing elements to student"/>
         <FIELD NAME="show_suggestions" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Show suggestions to student"/>
+        <FIELD NAME="palier" TYPE="char" LENGTH="2" NOTNULL="false" SEQUENCE="false" COMMENT="Level asked (F, S, TS), empty for a graded evaluation"/>
+        <FIELD NAME="contenu_json" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Copy frozen when the level was asked"/>
+        <FIELD NAME="palier_valide" TYPE="int" LENGTH="1" NOTNULL="false" SEQUENCE="false" COMMENT="Verdict of a level evaluation: 1 validated, 0 not"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -573,6 +579,29 @@
       <INDEXES>
         <INDEX NAME="table_record_idx" UNIQUE="false" FIELDS="tablename, recordid"/>
         <INDEX NAME="timecreated_idx" UNIQUE="false" FIELDS="timecreated"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="gestionprojet_palier" COMMENT="Levels (F, S, TS) validated by a group or a student, read by the class life app">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gestionprojetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="step" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="4" SEQUENCE="false"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=individual work"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=group work"/>
+        <FIELD NAME="palier" TYPE="char" LENGTH="2" NOTNULL="true" SEQUENCE="false" COMMENT="F, S or TS"/>
+        <FIELD NAME="evaluationid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="AI evaluation that validated it"/>
+        <FIELD NAME="membres" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON [[userid, username], ...] at validation time"/>
+        <FIELD NAME="retire" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1=removed by the teacher (kept for history)"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="gestionprojetid" TYPE="foreign" FIELDS="gestionprojetid" REFTABLE="gestionprojet" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="palier_owner_idx" UNIQUE="false" FIELDS="gestionprojetid, groupid, userid"/>
       </INDEXES>
     </TABLE>
 

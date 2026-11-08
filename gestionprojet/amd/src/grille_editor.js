@@ -74,6 +74,8 @@ define([], function() {
         }
 
         var lockedZones = cfg.lockedZones || [];
+        // Level mode (v2.11.2): only the parts with a level are graded, level by level.
+        var paliersMode = !!cfg.paliersMode;
 
         function isGraded(part) {
             if (part.evaluee !== 'auto') {
@@ -156,6 +158,9 @@ define([], function() {
             palier.appendChild(select([['', lang.palierNone], ['F', lang.palierF], ['S', lang.palierS], ['TS', lang.palierTs]], part.palier,
                 function(e) { part.palier = e.target.value; emit(); }, lang.palier));
             palier.appendChild(el('small', {text: ' ' + lang.palierHelp}));
+            if (paliersMode && !part.palier) {
+                palier.appendChild(el('strong', {className: 'gp-grille-nolevel', text: ' ⊘ ' + lang.palierNoneMode}));
+            }
             row.appendChild(palier);
             return row;
         }

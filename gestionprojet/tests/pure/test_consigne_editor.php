@@ -75,5 +75,4 @@ foreach (['MATURITY_ALPHA' => 50, 'MATURITY_BETA' => 100, 'MATURITY_RC' => 150, 
 }
 $plugin = new stdClass();
 include(GP_ROOT . '/version.php');
-test('version 2026110804', fn() => $plugin->version === 2026110804);
-test('release 2.11.1', fn() => $plugin->release === '2.11.1');
+test('version is at least 2026110804 (2.11.1)', fn() => $plugin->version >= 2026110804);

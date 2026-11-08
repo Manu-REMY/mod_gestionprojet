@@ -294,6 +294,8 @@ if ($submission && in_array($step, [4, 5, 6, 7, 8, 9]) && !empty($gestionprojet-
 }
 
 $isSubmitted = $submission && !empty($submission->status) && $submission->status == 1;
+// Level mode (v2.11.2): step 4 shows the levels instead of the graded AI evaluation.
+$palierteacher = $step == 4 && $submission && (int)($gestionprojet->step4_paliers ?? 0) === 1;
 $paramName = $isGroupSubmission ? 'groupid' : 'userid';
 ?>
 
@@ -696,7 +698,10 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
                 // ============================================
                 // AI Evaluation Section (sidebar)
                 // ============================================
-                if ($submission && in_array($step, [4, 5, 6, 7, 8]) && !empty($gestionprojet->ai_enabled)):
+                if ($palierteacher) {
+                    require(__DIR__ . '/pages/teacher_palier_display.php');
+                }
+                if ($submission && in_array($step, [4, 5, 6, 7, 8]) && !empty($gestionprojet->ai_enabled) && !$palierteacher):
                 ?>
                 <div class="ai-evaluation-container">
                     <h4><?php echo icon::render('bot', 'sm', 'purple'); ?> <?php echo get_string('ai_evaluation_section', 'gestionprojet'); ?></h4>

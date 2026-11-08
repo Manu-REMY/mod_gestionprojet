@@ -190,6 +190,19 @@ class provider implements
             'privacy:metadata:gestionprojet_ai_evaluations'
         );
 
+        // Levels (F, S, TS) validated in step 4 (v2.11.2).
+        $collection->add_database_table(
+            'gestionprojet_palier',
+            [
+                'userid' => 'privacy:metadata:gestionprojet_ai_evaluations:userid',
+                'groupid' => 'privacy:metadata:groupid',
+                'palier' => 'privacy:metadata:palier',
+                'membres' => 'privacy:metadata:palier',
+                'timecreated' => 'privacy:metadata:timecreated',
+            ],
+            'privacy:metadata:palier'
+        );
+
         // History/Audit trail table.
         $collection->add_database_table(
             'gestionprojet_history',
@@ -215,6 +228,8 @@ class provider implements
      * @return contextlist The contextlist containing the list of contexts.
      */
     public static function get_contexts_for_userid(int $userid): contextlist {
+        global $DB;
+
         $contextlist = new contextlist();
 
         // Submission tables.
@@ -225,6 +240,7 @@ class provider implements
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
             'gestionprojet_fast',
+            'gestionprojet_palier',
         ];
 
         foreach ($submissiontables as $table) {
@@ -267,6 +283,20 @@ class provider implements
 
         $contextlist->add_from_sql($sql, $params);
 
+        // Levels whose members (at validation time) include the user, even after they left the group.
+        $sql = "SELECT c.id
+                  FROM {context} c
+                  JOIN {course_modules} cm ON cm.id = c.instanceid AND c.contextlevel = :contextlevel
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                  JOIN {gestionprojet} gp ON gp.id = cm.instance
+                  JOIN {gestionprojet_palier} p ON p.gestionprojetid = gp.id
+                 WHERE " . $DB->sql_like('p.membres', ':pattern');
+        $contextlist->add_from_sql($sql, [
+            'contextlevel' => CONTEXT_MODULE,
+            'modname' => 'gestionprojet',
+            'pattern' => '%[' . $userid . ',%',
+        ]);
+
         // History table.
         $sql = "SELECT c.id
                   FROM {context} c
@@ -293,6 +323,8 @@ class provider implements
      * @param userlist $userlist The userlist containing the list of users.
      */
     public static function get_users_in_context(userlist $userlist) {
+        global $DB;
+
         $context = $userlist->get_context();
 
         if (!$context instanceof \context_module) {
@@ -312,6 +344,7 @@ class provider implements
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
             'gestionprojet_fast',
+            'gestionprojet_palier',
         ];
 
         foreach ($submissiontables as $table) {
@@ -354,6 +387,20 @@ class provider implements
                  WHERE cm.id = :instanceid AND ae.applied_by IS NOT NULL";
 
         $userlist->add_from_sql('applied_by', $sql, $params);
+
+        // Members of the validated levels (at validation time).
+        $cm = get_coursemodule_from_id('gestionprojet', $context->instanceid);
+        if ($cm) {
+            $memberids = [];
+            foreach ($DB->get_records('gestionprojet_palier', ['gestionprojetid' => $cm->instance], '', 'id, membres') as $row) {
+                foreach ((array)json_decode((string)$row->membres, true) as $member) {
+                    if (is_array($member) && (int)($member[0] ?? 0) > 0) {
+                        $memberids[(int)$member[0]] = (int)$member[0];
+                    }
+                }
+            }
+            $userlist->add_users(array_values($memberids));
+        }
 
         // History table.
         $sql = "SELECT h.userid
@@ -407,6 +454,38 @@ class provider implements
 
             // Group work is stored with userid 0: it is exported to each member of the group.
             $membergroups = $DB->get_fieldset_select('groups_members', 'groupid', 'userid = ?', [$user->id]);
+
+            // Levels validated (v2.11.2), by the user alone or by one of their groups.
+            $select = 'gestionprojetid = :gpid AND userid = :userid';
+            $params = ['gpid' => $gestionprojet->id, 'userid' => $user->id];
+            if ($membergroups) {
+                [$insql, $inparams] = $DB->get_in_or_equal($membergroups, SQL_PARAMS_NAMED, 'pgrp');
+                $select = "gestionprojetid = :gpid AND (userid = :userid OR (userid = 0 AND groupid $insql))";
+                $params += $inparams;
+            }
+            $paliers = $DB->get_records_select('gestionprojet_palier', $select, $params);
+            // Also the levels whose members (at validation time) include the user.
+            foreach ($DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id]) as $row) {
+                if (!isset($paliers[$row->id]) && \mod_gestionprojet\palier::has_member($row->membres, (int)$user->id)) {
+                    $paliers[$row->id] = $row;
+                }
+            }
+            if ($paliers) {
+                $data = [];
+                foreach ($paliers as $row) {
+                    $data[] = [
+                        'palier' => $row->palier,
+                        'groupwork' => transform::yesno((int)$row->userid === 0),
+                        'removed' => transform::yesno((bool)$row->retire),
+                        'member' => transform::yesno(\mod_gestionprojet\palier::has_member($row->membres, (int)$user->id)),
+                        'timecreated' => transform::datetime($row->timecreated),
+                    ];
+                }
+                writer::with_context($context)->export_data(
+                    [get_string('pluginname', 'gestionprojet'), get_string('privacy:metadata:palier', 'gestionprojet')],
+                    (object) ['paliers' => $data]
+                );
+            }
 
             foreach ($submissiontables as $table => $stepname) {
                 $select = 'gestionprojetid = :gpid AND userid = :userid';
@@ -524,6 +603,7 @@ class provider implements
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
             'gestionprojet_fast',
+            'gestionprojet_palier',
         ];
 
         foreach ($submissiontables as $table) {
@@ -576,6 +656,7 @@ class provider implements
                 'gestionprojet_besoin_eleve',
                 'gestionprojet_carnet',
                 'gestionprojet_fast',
+                'gestionprojet_palier',
             ];
 
             foreach ($submissiontables as $table) {
@@ -584,6 +665,9 @@ class provider implements
                     'userid' => $userid,
                 ]);
             }
+
+            // The user's name and id leave the members of every level (group rows are kept).
+            self::remove_from_palier_members((int)$gestionprojet->id, [(int)$userid]);
 
             // Delete user AI evaluations.
             $DB->delete_records('gestionprojet_ai_evaluations', [
@@ -647,6 +731,7 @@ class provider implements
             'gestionprojet_besoin_eleve',
             'gestionprojet_carnet',
             'gestionprojet_fast',
+            'gestionprojet_palier',
         ];
 
         foreach ($submissiontables as $table) {
@@ -656,6 +741,9 @@ class provider implements
                 array_merge(['gpid' => $gestionprojet->id], $userparams)
             );
         }
+
+        // The users' names and ids leave the members of every level (group rows are kept).
+        self::remove_from_palier_members((int)$gestionprojet->id, array_map('intval', $userids));
 
         // Delete AI evaluations.
         $DB->delete_records_select(
@@ -679,5 +767,27 @@ class provider implements
             "gestionprojetid = :gpid AND userid $usersql",
             array_merge(['gpid' => $gestionprojet->id], $userparams)
         );
+    }
+
+    /**
+     * Remove users from the members stored with the levels of an instance (v2.11.2).
+     *
+     * @param int $gestionprojetid
+     * @param int[] $userids
+     */
+    private static function remove_from_palier_members(int $gestionprojetid, array $userids): void {
+        global $DB;
+
+        foreach ($DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojetid], '', 'id, membres') as $row) {
+            $membres = $row->membres;
+            foreach ($userids as $userid) {
+                if (\mod_gestionprojet\palier::has_member($membres, $userid)) {
+                    $membres = \mod_gestionprojet\palier::remove_member($membres, $userid);
+                }
+            }
+            if ($membres !== $row->membres) {
+                $DB->set_field('gestionprojet_palier', 'membres', $membres, ['id' => $row->id]);
+            }
+        }
     }
 }

@@ -5599,3 +5599,74 @@
     background: #e3ecfa;
     font-weight: 600;
 }
+
+/* Level validation F / S / TS (v2.11.2): a symbol and a word, never the colour alone. */
+.path-mod-gestionprojet .gp-palier {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid #b8c4d6;
+    border-radius: 0.5rem;
+    background: #f7f9fc;
+}
+.path-mod-gestionprojet .gp-palier h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+.path-mod-gestionprojet .gp-palier-status {
+    display: inline-block;
+    margin: 0 0.5rem 0.5rem 0;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+}
+.path-mod-gestionprojet .gp-palier-ok {
+    border: 2px solid #2f5fb0;
+    background: #e3ecfa;
+    color: #1f3f78;
+}
+.path-mod-gestionprojet .gp-palier-ko {
+    border: 2px dashed #c0661a;
+    background: #fdf1e6;
+    color: #7a3d0a;
+}
+.path-mod-gestionprojet .gp-palier-pending {
+    border: 1px solid #b8c4d6;
+    background: #fff;
+    font-weight: 400;
+}
+.path-mod-gestionprojet .gp-palier-later {
+    color: #5a6577;
+    font-weight: 400;
+}
+.path-mod-gestionprojet .gp-palier-request {
+    margin: 0 0.5rem 0.5rem 0;
+}
+.path-mod-gestionprojet .gp-palier-feedback {
+    margin-top: 0.5rem;
+}
+.path-mod-gestionprojet .gp-cdcf-frozen {
+    background-color: #eef1f5;
+    border-style: dotted;
+    cursor: not-allowed;
+}
+
+/* Level validation, grading page (v2.11.2). */
+.path-mod-gestionprojet .gp-palier-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.path-mod-gestionprojet .gp-palier-date {
+    color: #5a6577;
+    font-size: 0.85rem;
+}
+.path-mod-gestionprojet .gp-palier-attempts {
+    font-size: 0.9rem;
+    padding-left: 1.2rem;
+}
+.path-mod-gestionprojet .gp-grille-nolevel {
+    color: #7a3d0a;
+    font-weight: 600;
+}

@@ -374,7 +374,7 @@ class autosave extends external_api {
                             $oldvalue = isset($record->$key) ? $record->$key : null;
                             if ($key === 'interacteurs_data') {
                                 // Locked elements of the consigne are restored by the server (v2.11.1).
-                                $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value);
+                                $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value, $record);
                             }
                             $record->$key = $value;
                             gestionprojet_log_change($gestionprojet->id, 'cdcf', $record->id,
@@ -383,7 +383,13 @@ class autosave extends external_api {
                     }
 
                     $record->timemodified = $time;
-                    $DB->update_record('gestionprojet_cdcf', $record);
+                    // Only the copy: never write back fields read at the start of the request (zones frozen by a level
+                    // verdict that landed meanwhile, v2.11.2).
+                    $DB->update_record('gestionprojet_cdcf', (object)[
+                        'id' => $record->id,
+                        'interacteurs_data' => $record->interacteurs_data,
+                        'timemodified' => $record->timemodified,
+                    ]);
                     break;
 
                 case 5: // Test Sheet (student).

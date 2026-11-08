@@ -317,7 +317,7 @@ try {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     if ($key === 'interacteurs_data') {
                         // Locked elements of the consigne are restored by the server (v2.11.1).
-                        $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value);
+                        $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value, $record);
                     }
                     // Note: step4.php handles JSON encoding/decoding before sending/receiving if needed,
                     // but here we just store what we get as string (input values) or JSON if JS sends object?
@@ -330,7 +330,13 @@ try {
             }
 
             $record->timemodified = $time;
-            $DB->update_record('gestionprojet_cdcf', $record);
+            // Only the copy: never write back fields read at the start of the request (zones frozen by a level
+            // verdict that landed meanwhile, v2.11.2).
+            $DB->update_record('gestionprojet_cdcf', (object)[
+                'id' => $record->id,
+                'interacteurs_data' => $record->interacteurs_data,
+                'timemodified' => $record->timemodified,
+            ]);
 
             $success = true;
             break;
