@@ -237,7 +237,7 @@ foreach (\mod_gestionprojet\grille::ZONES as $zone) {
 }
 $grillelang = [];
 foreach (['nom', 'description', 'poids', 'zones', 'palier', 'palier_none', 'palier_help', 'evaluee', 'evaluee_auto',
-        'evaluee_oui', 'evaluee_non', 'status_graded', 'status_excluded', 'add', 'reset', 'up', 'down', 'remove',
+        'evaluee_oui', 'evaluee_non', 'status_graded', 'status_excluded', 'status_provided', 'add', 'reset', 'up', 'down', 'remove',
         'new_part', 'total', 'palier_f', 'palier_s', 'palier_ts'] as $key) {
     $grillelang[lcfirst(str_replace('_', '', ucwords($key, '_')))] = get_string('grille_' . $key, 'gestionprojet');
 }
@@ -247,6 +247,8 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/grille_editor', 'init', [[
     'initial'  => \mod_gestionprojet\grille::decode($model->grille_json ?? null, $showflex),
     'defaults' => \mod_gestionprojet\grille::default_grid($showflex),
     'zones'    => $grillezones,
+    // Zones entirely provided by the consigne: their "auto" parts are not graded (v2.11.1).
+    'lockedZones' => gestionprojet_cdcf_locked_zones($gestionprojet),
     'lang'     => $grillelang,
 ]]);
 

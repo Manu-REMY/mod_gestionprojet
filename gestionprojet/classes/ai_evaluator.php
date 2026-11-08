@@ -241,14 +241,26 @@ class ai_evaluator {
             }
 
             // Build prompts.
-            $promptbuilder = new ai_prompt_builder(['flexibility' => !isset($gestionprojet->step4_flexibility)
-                || (bool) $gestionprojet->step4_flexibility]);
+            $builderoptions = ['flexibility' => !isset($gestionprojet->step4_flexibility)
+                || (bool) $gestionprojet->step4_flexibility];
+            // Step 4 consigne shown to students: fields it provides are not graded, and the AI sees which ones
+            // are provided or to fill in (v2.11.1). The flagged copy is only used for the prompt, never stored.
+            $promptsubmission = $submission;
+            if ((int)$evaluation->step === 4 && (int)($gestionprojet->step4_provided ?? 0) === 1
+                    && $providedrec_for_prompt !== null) {
+                $consigne = cdcf_helper::decode($providedrec_for_prompt->interacteurs_data ?? null);
+                $builderoptions['locked_zones'] = consigne_lock::locked_zones($consigne);
+                $promptsubmission = clone $submission;
+                $promptsubmission->interacteurs_data = json_encode(consigne_lock::with_flags(
+                    cdcf_helper::decode($submission->interacteurs_data ?? null), $consigne), JSON_UNESCAPED_UNICODE);
+            }
+            $promptbuilder = new ai_prompt_builder($builderoptions);
             // A grid where every part is excluded cannot give a grade: fail rather than invent one.
             if ((int)$evaluation->step === 4 && !$promptbuilder->graded_parts(4, $teachermodel)) {
                 throw new \Exception(get_string('ai_no_graded_part', 'gestionprojet'));
             }
             $prompts = $promptbuilder->build_prompt(
-                $evaluation->step, $submission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications,
+                $evaluation->step, $promptsubmission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications,
                 !isset($gestionprojet->ai_hide_answers) || (bool) $gestionprojet->ai_hide_answers
             );
 

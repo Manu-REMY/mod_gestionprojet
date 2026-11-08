@@ -292,6 +292,22 @@ function gestionprojet_require_group_access($cm, int $groupid, int $userid, $con
 }
 
 /**
+ * Zones of the step 4 grid entirely provided by the consigne shown to students (v2.11.1).
+ *
+ * @param object $gestionprojet Instance record.
+ * @return string[] See consigne_lock::locked_zones(); empty when the consigne is not shown to students.
+ */
+function gestionprojet_cdcf_locked_zones(object $gestionprojet): array {
+    global $DB;
+
+    if ((int)($gestionprojet->step4_provided ?? 0) !== 1) {
+        return [];
+    }
+    $provided = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
+    return \mod_gestionprojet\consigne_lock::locked_zones(\mod_gestionprojet\cdcf_helper::decode($provided ?: null));
+}
+
+/**
  * Step 4 student copy as the server stores it: what the consigne locks is restored (v2.11.1).
  *
  * Returns the JSON unchanged when the consigne is not shown to students or locks nothing,

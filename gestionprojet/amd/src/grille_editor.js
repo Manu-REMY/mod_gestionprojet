@@ -52,7 +52,7 @@ define([], function() {
     /**
      * Start the editor.
      *
-     * @param {Object} cfg fieldId, rootId, initial (grid), defaults (default grid), zones, lang
+     * @param {Object} cfg fieldId, rootId, initial (grid), defaults (default grid), zones, lockedZones, lang
      */
     function init(cfg) {
         var field = document.getElementById(cfg.fieldId);
@@ -73,9 +73,21 @@ define([], function() {
             renderTotal();
         }
 
+        var lockedZones = cfg.lockedZones || [];
+
         function isGraded(part) {
-            // Zones locked by the instructions come in 2.11.1: until then "auto" means graded.
-            return part.evaluee !== 'non';
+            if (part.evaluee !== 'auto') {
+                return part.evaluee === 'oui';
+            }
+            // "auto": excluded when every zone of the part is entirely provided by the consigne.
+            return part.zones.some(function(z) { return lockedZones.indexOf(z) === -1; });
+        }
+
+        function statusText(part) {
+            if (isGraded(part)) {
+                return '✓ ' + lang.statusGraded;
+            }
+            return '⊘ ' + (part.evaluee === 'auto' ? lang.statusProvided : lang.statusExcluded);
         }
 
         var total = el('p', {className: 'gp-grille-total'});
@@ -108,7 +120,7 @@ define([], function() {
                 part.evaluee, function(e) { part.evaluee = e.target.value; emit(); render(); }, lang.evaluee));
             // Graded or excluded: a word and a symbol, never the colour alone.
             head.appendChild(el('span', {className: 'gp-grille-status',
-                text: isGraded(part) ? '✓ ' + lang.statusGraded : '⊘ ' + lang.statusExcluded}));
+                text: statusText(part)}));
 
             var tools = el('span', {className: 'gp-grille-tools'});
             tools.appendChild(el('button', {type: 'button', text: '↑', ariaLabel: lang.up, title: lang.up,
@@ -132,6 +144,8 @@ define([], function() {
                     onchange: function(e) {
                         part.zones = keepHiddenZones(part.zones, z[0], e.target.checked);
                         emit();
+                        // The status may change: a part whose zones are all provided is excluded.
+                        render();
                     }}));
                 label.appendChild(document.createTextNode(' ' + z[1]));
                 zones.appendChild(label);

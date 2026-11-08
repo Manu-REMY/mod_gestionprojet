@@ -39,13 +39,19 @@ class ai_prompt_builder {
     /** @var bool Whether CDCF criteria carry a flexibility (F0-F3): instance option step4_flexibility */
     private bool $flexibility;
 
+    /** @var string[] Zones of the grid entirely provided by the step 4 consigne (consigne_lock::locked_zones) */
+    private array $lockedzones;
+
     /**
      * Constructor.
      *
-     * @param array $options 'flexibility' (bool, default true): when false, flexibility is left out of the prompts.
+     * @param array $options 'flexibility' (bool, default true): when false, flexibility is left out of the prompts;
+     *     'locked_zones' (string[], default none): zones entirely provided by the consigne, their "auto" parts
+     *     are not graded.
      */
     public function __construct(array $options = []) {
         $this->flexibility = (bool) ($options['flexibility'] ?? true);
+        $this->lockedzones = array_values((array) ($options['locked_zones'] ?? []));
     }
 
     /** @var array Step-specific field mappings */
@@ -325,6 +331,10 @@ L'élève a reçu cette consigne déjà partiellement remplie. Considère comme 
 
 $providedtext
 PROMPT;
+            if ($step === 4 && self::consigne_has_flags($providedrec)) {
+                $providedsection .= "\n\nLes champs marqués [fourni] viennent de la consigne : ne les note pas. "
+                    . "Les champs marqués [à compléter] et les éléments ajoutés sont le travail de l'élève.";
+            }
         }
 
         $finalinstruction = $providedrec !== null
@@ -347,6 +357,19 @@ $studenttext
 
 $finalinstruction
 PROMPT;
+    }
+
+    /**
+     * Whether the step 4 consigne marks fields as provided or to fill in (v2.11.1).
+     *
+     * @param object $providedrec Consigne record (interacteurs_data).
+     * @return bool
+     */
+    private static function consigne_has_flags(object $providedrec): bool {
+        require_once(__DIR__ . '/cdcf_helper.php');
+        require_once(__DIR__ . '/consigne_lock.php');
+        $consigne = cdcf_helper::decode($providedrec->interacteurs_data ?? null);
+        return consigne_lock::strip_flags($consigne) !== $consigne;
     }
 
     /**
@@ -477,7 +500,8 @@ PROMPT;
         if ($step !== 4) {
             return [];
         }
-        return grille::effective_parts(grille::decode($teachermodel->grille_json ?? null, $this->flexibility));
+        return grille::effective_parts(grille::decode($teachermodel->grille_json ?? null, $this->flexibility),
+            $this->lockedzones);
     }
 
     /**
@@ -498,7 +522,7 @@ PROMPT;
 
         $out[] = 'INTERACTEURS :';
         foreach ($data['interactors'] as $i) {
-            $out[] = '  • [I' . $i['id'] . '] ' . ($i['name'] !== '' ? $i['name'] : '(sans nom)');
+            $out[] = '  • [I' . $i['id'] . '] ' . ($i['name'] !== '' ? $i['name'] : '(sans nom)') . self::mark($i);
         }
 
         $byid = [];
@@ -519,15 +543,15 @@ PROMPT;
             foreach ($data['fonctionsService'] as $idx => $fs) {
                 $i1 = $byid[$fs['interactor1Id']] ?? '?';
                 $tail = $fs['interactor2Id'] > 0 ? (' ↔ ' . ($byid[$fs['interactor2Id']] ?? '?')) : '';
-                $out[] = sprintf('  • FS%d : %s [%s%s]',
+                $out[] = sprintf('  • FS%d : %s%s [%s%s]',
                     $idx + 1,
                     $fs['description'] !== '' ? $fs['description'] : '(énoncé manquant)',
-                    $i1, $tail);
+                    self::mark($fs), $i1, $tail);
                 foreach ($fs['criteres'] as $cidx => $c) {
-                    $line = sprintf('      - C%d.%d : %s | niveau : %s',
+                    $line = sprintf('      - C%d.%d : %s%s | niveau : %s%s',
                         $idx + 1, $cidx + 1,
-                        $c['description'] !== '' ? $c['description'] : '(critère vide)',
-                        $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)');
+                        $c['description'] !== '' ? $c['description'] : '(critère vide)', self::mark($c),
+                        $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)', self::mark($c, 'niveauLocked', 'niveauGap'));
                     if ($this->flexibility) {
                         $line .= ' | flexibilité : ' . ($c['flexibilite'] !== '' ? $c['flexibilite'] : '(non précisée)');
                     }
@@ -544,15 +568,30 @@ PROMPT;
                 if ($c['linkedFsId'] > 0 && isset($fslabelbyid[$c['linkedFsId']])) {
                     $linked = ' (liée à ' . $fslabelbyid[$c['linkedFsId']] . ')';
                 }
-                $out[] = sprintf('  • C%d : %s%s | Justification : %s',
+                $out[] = sprintf('  • C%d : %s%s%s | Justification : %s',
                     $cidx + 1,
-                    $c['description'] !== '' ? $c['description'] : '(énoncé manquant)',
+                    $c['description'] !== '' ? $c['description'] : '(énoncé manquant)', self::mark($c),
                     $linked,
                     $c['justification'] !== '' ? $c['justification'] : '(non précisée)');
             }
         }
 
         return implode("\n", $out);
+    }
+
+    /**
+     * Marker of a field of the consigne: provided (locked) or to fill in by the student (gap).
+     *
+     * @param array $element CDCF element, with the flags of consigne_lock::with_flags().
+     * @param string $lock Lock flag key.
+     * @param string $gap Gap flag key.
+     * @return string ' [fourni]', ' [à compléter]' or ''.
+     */
+    private static function mark(array $element, string $lock = 'locked', string $gap = 'gap'): string {
+        if (!empty($element[$lock])) {
+            return ' [fourni]';
+        }
+        return !empty($element[$gap]) ? ' [à compléter]' : '';
     }
 
     /**
