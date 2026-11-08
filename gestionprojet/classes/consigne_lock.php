@@ -316,16 +316,10 @@ class consigne_lock {
         if (!is_array($decoded)) {
             return $json;
         }
-        $found = false;
-        array_walk_recursive($decoded, function ($value, $key) use (&$found) {
-            if (in_array($key, self::FLAG_KEYS, true)) {
-                $found = true;
-            }
-        });
-        if (!$found) {
-            return $json;
-        }
-        return json_encode(self::strip_flags(cdcf_helper::normalize($decoded)), JSON_UNESCAPED_UNICODE);
+        // Detect on the normalized form: it reads flags exactly as every reader does, whatever their JSON type.
+        $normalized = cdcf_helper::normalize($decoded);
+        $stripped = self::strip_flags($normalized);
+        return $stripped === $normalized ? $json : json_encode($stripped, JSON_UNESCAPED_UNICODE);
     }
 
     /**

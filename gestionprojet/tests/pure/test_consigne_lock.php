@@ -270,3 +270,6 @@ test('sanitize_student_json removes flags', fn() => no_flags(json_decode(L::sani
 $raw = '{"interactors":[{"id":1,"name":"A"}],"fonctionsService":[],"contraintes":[]}';
 test('sanitize_student_json returns flag-free JSON byte for byte', fn() => L::sanitize_student_json($raw) === $raw);
 test('sanitize_student_json leaves invalid JSON unchanged', fn() => L::sanitize_student_json('{oops') === '{oops');
+$arrayflag = '{"interactors":[{"id":1,"name":"A","locked":[1]}],"fonctionsService":[{"id":1,"criteres":[{"id":1,"niveauGap":{"x":1}}]}]}';
+test('sanitize_student_json removes flags whose value is an array', fn() =>
+    no_flags(cdcf_helper::normalize(json_decode(L::sanitize_student_json($arrayflag), true))));
