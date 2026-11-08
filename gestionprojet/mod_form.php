@@ -156,6 +156,12 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->addElement('selectyesno', 'ai_hide_answers', get_string('ai_hide_answers', 'gestionprojet'));
         $mform->setDefault('ai_hide_answers', 1);
         $mform->addHelpButton('ai_hide_answers', 'ai_hide_answers', 'gestionprojet');
+
+        // Formative feedback before submitting (v2.11.4).
+        $mform->addElement('text', 'formative_limit', get_string('formative_limit', 'gestionprojet'), ['size' => 3]);
+        $mform->setType('formative_limit', PARAM_INT);
+        $mform->setDefault('formative_limit', 3);
+        $mform->addHelpButton('formative_limit', 'formative_limit', 'gestionprojet');
         $mform->hideIf('ai_hide_answers', 'ai_enabled', 'eq', 0);
 
         // Gradebook mode settings.
@@ -203,6 +209,9 @@ class mod_gestionprojet_mod_form extends moodleform_mod
             }
         }
 
+        if (isset($data['formative_limit']) && ((int)$data['formative_limit'] < 0 || (int)$data['formative_limit'] > 20)) {
+            $errors['formative_limit'] = get_string('error_formative_limit', 'gestionprojet');
+        }
         if (isset($data['step4_palier_seuil'])
                 && ((int)$data['step4_palier_seuil'] < 0 || (int)$data['step4_palier_seuil'] > 100)) {
             $errors['step4_palier_seuil'] = get_string('error_palier_seuil', 'gestionprojet');
