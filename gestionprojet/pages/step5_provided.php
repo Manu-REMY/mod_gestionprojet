@@ -35,6 +35,11 @@ use mod_gestionprojet\output\icon;
 $canedit = has_capability('mod/gestionprojet:configureteacherpages', $context);
 $readonly = !$canedit;
 
+// A student who must complete the step works on the work page, which already holds the consigne (preco 18).
+if ($readonly && !gestionprojet_student_consult_only($gestionprojet, 5)) {
+    redirect(new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 5]));
+}
+
 // Page setup.
 $PAGE->set_url('/mod/gestionprojet/view.php', ['id' => $cm->id, 'step' => 5, 'mode' => 'provided']);
 $PAGE->set_title(get_string('step5', 'gestionprojet') . ' — ' . get_string('consigne', 'gestionprojet'));
@@ -81,6 +86,15 @@ $stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 
         <input type="hidden" name="step" value="5">
         <input type="hidden" name="mode" value="provided">
 
+        <?php if ($readonly): ?>
+        <?php if (!empty(trim(strip_tags($model->intro_text ?? '')))): ?>
+        <!-- Readers (students) see the intro text, never its editor. -->
+        <div class="alert alert-info gp-consigne-intro">
+            <?php echo format_text($model->intro_text, FORMAT_HTML, ['context' => $context]); ?>
+        </div>
+        <?php endif; ?>
+        <?php endif; ?>
+        <?php if (!$readonly): ?>
         <!-- Intro text displayed read-only to students at the top of step 5. -->
         <div class="model-form-section gp-intro-section">
             <h3><?php echo icon::render('file-text', 'sm', 'blue'); ?> <?php echo get_string('intro_text_label', 'gestionprojet'); ?></h3>
@@ -98,6 +112,7 @@ $stepnav = $canedit ? gestionprojet_get_teacher_step_navigation($gestionprojet, 
             'autosave' => false,
         ]);
         ?>
+        <?php endif; ?>
 
         <div class="model-form-section">
             <h3><?php echo icon::render('flask-conical', 'sm', 'purple'); ?> <?php echo get_string('step5', 'gestionprojet'); ?></h3>
