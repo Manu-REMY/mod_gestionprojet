@@ -45,7 +45,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'enable_step1', 'enable_step2', 'enable_step3', 'enable_step4',
             'enable_step5', 'enable_step6', 'enable_step7', 'enable_step8',
             'enable_step9', 'step9_provided',
-            'ai_provider', 'ai_api_key', 'ai_enabled', 'ai_auto_apply', 'ai_hide_answers',
+            'ai_provider', 'ai_api_key', 'ai_enabled', 'ai_auto_apply', 'ai_hide_answers', 'step4_flexibility',
             'enable_submission', 'grade_mode',
         ]);
 

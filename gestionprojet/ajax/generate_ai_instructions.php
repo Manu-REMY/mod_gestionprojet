@@ -95,8 +95,11 @@ if ($apikey === '') {
     $respond(['success' => false, 'error' => 'no_provider']);
 }
 
+$gestionprojet = $DB->get_record('gestionprojet', ['id' => $cm->instance], '*', MUST_EXIST);
+
 try {
-    $builder = new \mod_gestionprojet\ai_prompt_builder();
+    $builder = new \mod_gestionprojet\ai_prompt_builder(['flexibility' => !isset($gestionprojet->step4_flexibility)
+        || (bool) $gestionprojet->step4_flexibility]);
     $prompts = $builder->build_meta_prompt($step, $tmpmodel);
 
     $provider = \mod_gestionprojet\ai_evaluator::get_provider($aiconfig->provider, $apikey);

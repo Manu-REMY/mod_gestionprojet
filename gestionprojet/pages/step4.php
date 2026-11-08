@@ -277,6 +277,7 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'canSubmit'     => (bool)$canSubmit,
     'canRevert'     => (bool)$canRevert,
     'projetNom'     => $projetnom,
+    'showFlexibility' => (bool)($gestionprojet->step4_flexibility ?? 1),
     'initial'       => $cdcfdata,
     'lang'          => $langstrings,
     'confirmSubmit' => get_string('confirm_submission', 'gestionprojet'),

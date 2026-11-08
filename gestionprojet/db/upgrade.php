@@ -760,5 +760,15 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026110800, 'gestionprojet');
     }
 
+    // 2.10.4 — option to leave the flexibility (F0-F3) out of the CDCF (on by default: unchanged).
+    if ($oldversion < 2026110802) {
+        $table = new xmldb_table('gestionprojet');
+        $field = new xmldb_field('step4_flexibility', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'ai_hide_answers');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026110802, 'gestionprojet');
+    }
+
     return true;
 }

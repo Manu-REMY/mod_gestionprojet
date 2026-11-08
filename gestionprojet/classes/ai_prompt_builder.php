@@ -36,6 +36,18 @@ require_once($CFG->dirroot . '/mod/gestionprojet/lib.php');
  */
 class ai_prompt_builder {
 
+    /** @var bool Whether CDCF criteria carry a flexibility (F0-F3): instance option step4_flexibility */
+    private bool $flexibility;
+
+    /**
+     * Constructor.
+     *
+     * @param array $options 'flexibility' (bool, default true): when false, flexibility is left out of the prompts.
+     */
+    public function __construct(array $options = []) {
+        $this->flexibility = (bool) ($options['flexibility'] ?? true);
+    }
+
     /** @var array Step-specific field mappings */
     const STEP_FIELDS = [
         4 => ['interacteurs_data'],
@@ -171,6 +183,9 @@ class ai_prompt_builder {
     public function build_system_prompt(int $step, object $teachermodel, ?string $teacherintro = null,
             bool $hideanswers = false): string {
         $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
+        if (!$this->flexibility) {
+            $stepcontext = str_replace(' et flexibilité', '', $stepcontext);
+        }
         $aiinstructions = $teachermodel->ai_instructions ?? '';
         $criteriatext = $this->build_criteria_text($step);
 
@@ -430,7 +445,11 @@ PROMPT;
         $criteria = self::STEP_CRITERIA[$step] ?? [];
         $text = '';
         foreach ($criteria as $criterion) {
-            $text .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$criterion['description']}\n";
+            $description = $criterion['description'];
+            if (!$this->flexibility) {
+                $description = str_replace(' et une flexibilité (F0–F3) cohérente', '', $description);
+            }
+            $text .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$description}\n";
         }
         return $text;
     }
@@ -479,11 +498,14 @@ PROMPT;
                     $fs['description'] !== '' ? $fs['description'] : '(énoncé manquant)',
                     $i1, $tail);
                 foreach ($fs['criteres'] as $cidx => $c) {
-                    $out[] = sprintf('      - C%d.%d : %s | niveau : %s | flexibilité : %s',
+                    $line = sprintf('      - C%d.%d : %s | niveau : %s',
                         $idx + 1, $cidx + 1,
                         $c['description'] !== '' ? $c['description'] : '(critère vide)',
-                        $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)',
-                        $c['flexibilite'] !== '' ? $c['flexibilite'] : '(non précisée)');
+                        $c['niveau'] !== '' ? $c['niveau'] : '(non précisé)');
+                    if ($this->flexibility) {
+                        $line .= ' | flexibilité : ' . ($c['flexibilite'] !== '' ? $c['flexibilite'] : '(non précisée)');
+                    }
+                    $out[] = $line;
                 }
             }
         }
@@ -586,6 +608,9 @@ PROMPT;
      */
     public function build_meta_prompt(int $step, object $teachermodel): array {
         $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
+        if (!$this->flexibility) {
+            $stepcontext = str_replace(' et flexibilité', '', $stepcontext);
+        }
         $criteriatext = $this->build_criteria_text($step);
         $modeltext = $this->format_teacher_model($step, $teachermodel);
 

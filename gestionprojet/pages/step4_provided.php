@@ -185,6 +185,7 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'canSubmit'         => false,
     'canRevert'         => false,
     'projetNom'         => $projetnom,
+    'showFlexibility' => (bool)($gestionprojet->step4_flexibility ?? 1),
     'initial'           => $cdcfdata,
     'lang'              => $langstrings,
     'introTextSelector' => '#gp_intro_text_step4',

@@ -53,6 +53,8 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
         var data = opts.initialData;
         var lang = opts.lang;
         var locked = !!opts.isLocked;
+        // Instance option step4_flexibility: when off, criteria have no F0-F3 select.
+        var hideFlexibility = opts.showFlexibility === false;
         var onChange = opts.onChange || function() {};
 
         function emit() { onChange(data); render(); }
@@ -221,13 +223,16 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                 type: 'text', value: crit.niveau, placeholder: lang.niveauPlaceholder,
                 onchange: function(e) { crit.niveau = e.target.value; emit(); },
             });
-            var f = el('select', { onchange: function(e) { crit.flexibilite = e.target.value; emit(); } });
-            [['', lang.flexNone], ['F0', lang.flexF0], ['F1', lang.flexF1], ['F2', lang.flexF2], ['F3', lang.flexF3]]
-                .forEach(function(p) {
-                    var o = el('option', { value: p[0], text: p[1] });
-                    if (crit.flexibilite === p[0]) { o.selected = true; }
-                    f.appendChild(o);
-                });
+            var f = null;
+            if (!hideFlexibility) {
+                f = el('select', { onchange: function(e) { crit.flexibilite = e.target.value; emit(); } });
+                [['', lang.flexNone], ['F0', lang.flexF0], ['F1', lang.flexF1], ['F2', lang.flexF2], ['F3', lang.flexF3]]
+                    .forEach(function(p) {
+                        var o = el('option', { value: p[0], text: p[1] });
+                        if (crit.flexibilite === p[0]) { o.selected = true; }
+                        f.appendChild(o);
+                    });
+            }
             var del = el('button', {
                 type: 'button', className: 'gp-cdcf-btn-remove', text: '✕',
                 onclick: function() {
@@ -238,10 +243,13 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                     emit();
                 },
             });
-            if (locked) { d.disabled = n.disabled = f.disabled = del.disabled = true; }
+            if (locked) {
+                d.disabled = n.disabled = del.disabled = true;
+                if (f) { f.disabled = true; }
+            }
             row.appendChild(d);
             row.appendChild(n);
-            row.appendChild(f);
+            if (f) { row.appendChild(f); }
             row.appendChild(del);
             return row;
         }

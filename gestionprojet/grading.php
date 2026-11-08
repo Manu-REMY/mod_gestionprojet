@@ -486,7 +486,7 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
                                                 <?php foreach ($fs['criteres'] as $c): ?>
                                                     <li>
                                                         <?php echo s($c['description']); ?> &mdash; <?php echo s($c['niveau']); ?>
-                                                        <?php if ($c['flexibilite'] !== ''): ?>
+                                                        <?php if ($c['flexibilite'] !== '' && (int)($gestionprojet->step4_flexibility ?? 1) === 1): ?>
                                                             (<?php echo s($c['flexibilite']); ?>)
                                                         <?php endif; ?>
                                                     </li>

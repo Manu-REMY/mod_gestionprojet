@@ -979,3 +979,8 @@ $string['event_submission_graded'] = 'Production notée';
 $string['event_submission_created'] = 'Production créée';
 $string['event_ai_evaluation_completed'] = 'Évaluation IA terminée';
 $string['grading'] = 'Correction';
+
+// CDCF settings (v2.10.4).
+$string['step4settings'] = 'Cahier des charges (étape 4)';
+$string['step4_flexibility'] = 'Demander la flexibilité (F0 à F3)';
+$string['step4_flexibility_help'] = 'Si désactivé, les critères n\'ont pas de champ de flexibilité et l\'IA n\'en tient pas compte. Les valeurs déjà saisies sont conservées et réapparaissent si l\'option est réactivée.';

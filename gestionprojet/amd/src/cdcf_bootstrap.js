@@ -53,6 +53,7 @@ define([
             lang: cfg.lang,
             projetNom: cfg.projetNom,
             isLocked: cfg.isLocked,
+            showFlexibility: cfg.showFlexibility,
             onChange: function(data) {
                 dataField.value = JSON.stringify(data);
                 // Notify the autosave dirty-detector that the hidden field changed

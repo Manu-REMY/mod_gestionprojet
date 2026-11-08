@@ -213,6 +213,7 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'canSubmit'         => false,
     'canRevert'         => false,
     'projetNom'         => $projetnom,
+    'showFlexibility' => (bool)($gestionprojet->step4_flexibility ?? 1),
     'initial'           => $cdcfdata,
     'lang'              => $langstrings,
     'redirectAfterSave' => (new moodle_url('/mod/gestionprojet/view.php', ['id' => $cm->id]))->out(false),

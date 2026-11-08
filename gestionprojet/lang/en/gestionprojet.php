@@ -979,3 +979,8 @@ $string['event_submission_graded'] = 'Submission graded';
 $string['event_submission_created'] = 'Submission created';
 $string['event_ai_evaluation_completed'] = 'AI evaluation completed';
 $string['grading'] = 'Grading';
+
+// CDCF settings (v2.10.4).
+$string['step4settings'] = 'Functional specification (step 4)';
+$string['step4_flexibility'] = 'Ask for flexibility (F0 to F3)';
+$string['step4_flexibility_help'] = 'If disabled, criteria have no flexibility field and the AI does not take flexibility into account. Values already entered are kept and come back if the option is enabled again.';

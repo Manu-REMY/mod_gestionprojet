@@ -90,6 +90,12 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->setDefault('enable_submission', 1);
         $mform->addHelpButton('enable_submission', 'enable_submission', 'gestionprojet');
 
+        // CDCF (step 4) settings.
+        $mform->addElement('header', 'step4settings', get_string('step4settings', 'gestionprojet'));
+        $mform->addElement('selectyesno', 'step4_flexibility', get_string('step4_flexibility', 'gestionprojet'));
+        $mform->setDefault('step4_flexibility', 1);
+        $mform->addHelpButton('step4_flexibility', 'step4_flexibility', 'gestionprojet');
+
         // AI Evaluation settings.
         $mform->addElement('header', 'ai_settings', get_string('ai_settings', 'gestionprojet'));
         $mform->setExpanded('ai_settings', false);
