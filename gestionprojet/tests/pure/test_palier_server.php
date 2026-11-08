@@ -124,3 +124,15 @@ foreach (['en', 'fr'] as $l) {
         test("string $k in $l", fn() => !empty($string[$k]));
     }
 }
+
+// Security review: same gates as the submission.
+$requestbody = fn_body($lib, 'gestionprojet_palier_request');
+test('request: step 4 must be enabled', fn() => strpos($requestbody, 'gestionprojet_is_step_enabled($gestionprojet, 4)') !== false);
+test('request: submissions must be enabled', fn() => strpos($requestbody, 'enable_submission') !== false);
+test('request: a submitted (locked) copy is refused', fn() => strpos($requestbody, '->status') !== false);
+test('request: refused after the deadline', fn() => strpos($requestbody, 'deadline_date') !== false);
+foreach (['en', 'fr'] as $l) {
+    $string = [];
+    include(GP_ROOT . "/lang/$l/gestionprojet.php");
+    test("string submissionlocked in $l (thrown by autosave and level request)", fn() => !empty($string['submissionlocked']));
+}

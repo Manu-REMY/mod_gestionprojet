@@ -996,6 +996,15 @@ $string['step4_palier_seuil_help'] = 'Percentage of the points of a level needed
 $string['palier_disabled'] = 'The validation by levels is not available for this activity.';
 $string['palier_pending_error'] = 'A level is already being validated: wait for the verdict.';
 $string['palier_not_requestable'] = 'This level cannot be asked for now.';
+$string['submissionlocked'] = 'This work has been submitted and can no longer be changed.';
+$string['palier_title'] = 'Validation by levels';
+$string['palier_request'] = 'Ask for the validation of level {$a}';
+$string['palier_validated'] = 'Level {$a} validated';
+$string['palier_failed'] = 'Level {$a} not validated: correct your work and try again.';
+$string['palier_pending'] = 'Validation of level {$a} in progress…';
+$string['palier_error'] = 'The validation could not be done. Try again in a moment.';
+$string['palier_frozen_help'] = 'Validated: can no longer be changed';
+$string['palier_score'] = '{$a} % of the points of the level';
 $string['error_palier_seuil'] = 'Enter a percentage between 0 and 100.';
 $string['privacy:metadata:palier'] = 'Levels (F, S, TS) validated by a group or a student, with the members of the group at that time';
 

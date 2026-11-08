@@ -461,10 +461,23 @@ function gestionprojet_palier_state(object $gestionprojet, object $submission): 
  * @throws moodle_exception When the mode is off, the level cannot be asked now, or an evaluation is running.
  */
 function gestionprojet_palier_request(object $gestionprojet, object $cm, int $groupid, int $userid, string $palier): int {
+    global $DB;
+
     if ((int)($gestionprojet->step4_paliers ?? 0) !== 1 || empty($gestionprojet->ai_enabled)) {
         throw new moodle_exception('palier_disabled', 'gestionprojet');
     }
+    // Same gates as the submission: step 4 open, submissions allowed, copy not locked, deadline not passed.
+    if (!gestionprojet_is_step_enabled($gestionprojet, 4) || empty($gestionprojet->enable_submission)) {
+        throw new moodle_exception('palier_disabled', 'gestionprojet');
+    }
     $submission = gestionprojet_get_or_create_submission($gestionprojet, $groupid, $userid, 'cdcf');
+    if ((int)$submission->status === 1) {
+        throw new moodle_exception('submissionlocked', 'gestionprojet');
+    }
+    $deadline = (int)$DB->get_field('gestionprojet_cdcf_teacher', 'deadline_date', ['gestionprojetid' => $gestionprojet->id]);
+    if ($deadline > 0 && time() > $deadline) {
+        throw new moodle_exception('submissionlocked', 'gestionprojet');
+    }
     $state = gestionprojet_palier_state($gestionprojet, $submission);
     if ($state['pending']) {
         // One evaluation at a time per copy ('pending' or 'processing').

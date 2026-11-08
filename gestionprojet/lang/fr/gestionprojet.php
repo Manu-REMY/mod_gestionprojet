@@ -996,6 +996,15 @@ $string['step4_palier_seuil_help'] = 'Pourcentage des points d\'un palier néces
 $string['palier_disabled'] = 'La validation par paliers n\'est pas disponible pour cette activité.';
 $string['palier_pending_error'] = 'Un palier est déjà en cours de validation : attends le verdict.';
 $string['palier_not_requestable'] = 'Ce palier ne peut pas être demandé maintenant.';
+$string['submissionlocked'] = 'Ce travail a été soumis et ne peut plus être modifié.';
+$string['palier_title'] = 'Validation par paliers';
+$string['palier_request'] = 'Faire valider le niveau {$a}';
+$string['palier_validated'] = 'Niveau {$a} validé';
+$string['palier_failed'] = 'Niveau {$a} non validé : corrige ton travail et réessaie.';
+$string['palier_pending'] = 'Validation du niveau {$a} en cours…';
+$string['palier_error'] = 'La validation n\'a pas pu se faire. Réessaie dans un moment.';
+$string['palier_frozen_help'] = 'Validé : ne peut plus être modifié';
+$string['palier_score'] = '{$a} % des points du palier';
 $string['error_palier_seuil'] = 'Saisis un pourcentage entre 0 et 100.';
 $string['privacy:metadata:palier'] = 'Paliers (FRA, SAT, TS) validés par un groupe ou un élève, avec les membres du groupe à ce moment';
 

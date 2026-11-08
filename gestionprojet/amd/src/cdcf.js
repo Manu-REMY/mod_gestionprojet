@@ -58,6 +58,15 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
         // Consigne page (v2.11.1): the teacher marks each field "provided" (locked) or "to fill in" (gap).
         // Elsewhere the flags come from the consigne (consigne_lock::with_flags) and are applied to the student.
         var editFlags = !!opts.editFlags;
+        // Level mode (v2.11.2): zones of a validated level, or of the level being judged, are frozen as a whole
+        // (no change, no deletion, no addition). The server restores them anyway (palier::freeze).
+        var frozenZones = opts.frozenZones || [];
+        function frozen(zone) { return !editFlags && frozenZones.indexOf(zone) !== -1; }
+        function freezeField(node) {
+            node.disabled = true;
+            node.classList.add('gp-cdcf-frozen');
+            node.title = lang.frozenHelp || '';
+        }
         var onChange = opts.onChange || function() {};
 
         function emit() { onChange(data); render(); }
@@ -158,6 +167,7 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                     onchange: function(e) { inter.name = e.target.value; emit(); },
                 });
                 if (locked) { input.disabled = true; }
+                if (frozen('interacteurs')) { freezeField(input); }
                 var badge = applyFlags(input, inter, 'locked', 'gap', 'hint');
                 var del = el('button', {
                     type: 'button', className: 'gp-cdcf-btn-remove', text: '🗑',
@@ -166,12 +176,12 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                         emit();
                     },
                 });
-                if (locked || !canRemove || isProtected(inter)) { del.disabled = true; }
+                if (locked || !canRemove || isProtected(inter) || frozen('interacteurs')) { del.disabled = true; }
                 section.appendChild(el('div', { className: 'gp-cdcf-row' },
                     [el('span', { className: 'gp-cdcf-badge gp-cdcf-badge-i', text: 'I' + inter.id }), input, badge,
                         flagToggles(inter, 'locked', 'gap'), del]));
             });
-            if (!locked) {
+            if (!locked && !frozen('interacteurs')) {
                 section.appendChild(el('button', {
                     type: 'button', className: 'gp-cdcf-btn-add', text: '+ ' + lang.addInteractor,
                     onclick: function() {
@@ -199,7 +209,7 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
             data.fonctionsService.forEach(function(fs, idx) {
                 section.appendChild(renderOneFs(fs, idx));
             });
-            if (!locked) {
+            if (!locked && !frozen('fonctions')) {
                 section.appendChild(el('button', {
                     type: 'button', className: 'gp-cdcf-btn-add', text: '+ ' + lang.addFs,
                     onclick: function() {
@@ -237,8 +247,8 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                 type: 'button', className: 'gp-cdcf-icon-btn', text: '▼',
                 onclick: function() { moveFs(idx, 1); },
             });
-            if (locked || idx === 0) { up.disabled = true; }
-            if (locked || idx === data.fonctionsService.length - 1) { down.disabled = true; }
+            if (locked || idx === 0 || frozen('fonctions')) { up.disabled = true; }
+            if (locked || idx === data.fonctionsService.length - 1 || frozen('fonctions')) { down.disabled = true; }
 
             var badge = el('span', { className: 'gp-cdcf-badge gp-cdcf-badge-fs', text: 'FS' + (idx + 1) });
 
@@ -253,6 +263,7 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
             var sel1 = renderInteractorSelect(fs.interactor1Id, false, function(v) { fs.interactor1Id = v; emit(); });
             var sel2 = renderInteractorSelect(fs.interactor2Id, true, function(v) { fs.interactor2Id = v; emit(); });
             if (!editFlags && fs.locked) { sel1.disabled = sel2.disabled = true; }
+            if (frozen('fonctions')) { freezeField(desc); freezeField(sel1); freezeField(sel2); }
             var del = el('button', {
                 type: 'button', className: 'gp-cdcf-btn-remove', text: '🗑',
                 onclick: function() {
@@ -260,7 +271,7 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                     emit();
                 },
             });
-            if (locked || data.fonctionsService.length <= 1 || isProtected(fs)) { del.disabled = true; }
+            if (locked || data.fonctionsService.length <= 1 || isProtected(fs) || frozen('fonctions')) { del.disabled = true; }
 
             head.appendChild(el('div', { className: 'gp-cdcf-fs-arrows' }, [up, down]));
             head.appendChild(badge);
@@ -277,7 +288,7 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
             fs.criteres.forEach(function(crit) {
                 critList.appendChild(renderCritere(fs, crit));
             });
-            if (!locked) {
+            if (!locked && !frozen('criteres')) {
                 critList.appendChild(el('button', {
                     type: 'button', className: 'gp-cdcf-btn-add-sm', text: '+ ' + lang.addCritere,
                     onclick: function() {
@@ -327,7 +338,10 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
             var dBadge = applyFlags(d, crit, 'locked', 'gap', 'hint');
             var nBadge = applyFlags(n, crit, 'niveauLocked', 'niveauGap', 'niveauHint');
             if (f && !editFlags && crit.niveauLocked) { f.disabled = true; }
-            if (isProtected(crit)) { del.disabled = true; }
+            if (isProtected(crit) || frozen('criteres')) { del.disabled = true; }
+            if (frozen('criteres')) { freezeField(d); }
+            if (frozen('niveaux')) { freezeField(n); }
+            if (f && frozen('flexibilite')) { freezeField(f); }
             [d, dBadge, flagToggles(crit, 'locked', 'gap'), n, f, nBadge, flagToggles(crit, 'niveauLocked', 'niveauGap'), del]
                 .forEach(function(node) { if (node) { row.appendChild(node); } });
             return row;
@@ -387,12 +401,13 @@ define(['mod_gestionprojet/cdcf_diagram'], function(Diagram) {
                 applyFlags(j, c, 'locked', 'gap', null);
                 if (!editFlags && c.locked) { sel.disabled = true; }
                 if (isProtected(c)) { del.disabled = true; }
+                if (frozen('contraintes')) { freezeField(d); freezeField(j); freezeField(sel); del.disabled = true; }
                 section.appendChild(el('div', { className: 'gp-cdcf-row' }, [
                     el('span', { className: 'gp-cdcf-badge gp-cdcf-badge-c', text: 'C' + (idx + 1) }),
                     d, j, sel, cBadge, flagToggles(c, 'locked', 'gap'), del,
                 ]));
             });
-            if (!locked) {
+            if (!locked && !frozen('contraintes')) {
                 section.appendChild(el('button', {
                     type: 'button', className: 'gp-cdcf-btn-add', text: '+ ' + lang.addContrainte,
                     onclick: function() {

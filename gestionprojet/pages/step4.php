@@ -91,7 +91,9 @@ if ($showstudentform) {
 // Check if submitted (only relevant when student form is shown)
 $isSubmitted = $showstudentform && $submission && ($submission->status == 1);
 $isLocked = $isSubmitted; // Lock if submitted
-$canSubmit = $showstudentform && $gestionprojet->enable_submission && !$isSubmitted;
+// Level mode (v2.11.2): one button per level instead of the submission.
+$palierenabled = $showstudentform && $submission && (int)($gestionprojet->step4_paliers ?? 0) === 1;
+$canSubmit = $showstudentform && $gestionprojet->enable_submission && !$isSubmitted && !$palierenabled;
 $canRevert = $showstudentform && has_capability('mod/gestionprojet:grade', $context) && $isSubmitted;
 
 // Autosave handled inline at bottom of file
@@ -162,6 +164,13 @@ if (!$group) {
 
     <!-- AI Evaluation Feedback Display -->
     <?php require_once(__DIR__ . '/student_ai_feedback_display.php'); ?>
+
+    <?php
+    // Level validation block (v2.11.2).
+    if ($palierenabled) {
+        require(__DIR__ . '/student_palier_display.php');
+    }
+    ?>
 
     <!-- Description -->
     <div class="description">
@@ -278,6 +287,7 @@ $langstrings = [
     'flagGap'                  => get_string('step4_flag_gap', 'gestionprojet'),
     'flagGapHelp'              => get_string('step4_flag_gap_help', 'gestionprojet'),
     'gapPlaceholder'           => get_string('step4_gap_placeholder', 'gestionprojet'),
+    'frozenHelp'               => get_string('palier_frozen_help', 'gestionprojet'),
 ];
 
 $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
@@ -290,6 +300,10 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
     'canRevert'     => (bool)$canRevert,
     'projetNom'     => $projetnom,
     'showFlexibility' => (bool)($gestionprojet->step4_flexibility ?? 1),
+    // Zones of validated levels, and of the level being judged: frozen as a whole (v2.11.2).
+    'frozenZones'   => $palierenabled
+        ? array_values(array_unique(array_merge(...array_values(gestionprojet_palier_frozen_zones($gestionprojet, $submission)))))
+        : [],
     'initial'       => $cdcfdata,
     'lang'          => $langstrings,
     'confirmSubmit' => get_string('confirm_submission', 'gestionprojet'),
