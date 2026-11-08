@@ -130,9 +130,7 @@ define([], function() {
                 var label = el('label', {});
                 label.appendChild(el('input', {type: 'checkbox', checked: part.zones.indexOf(z[0]) !== -1,
                     onchange: function(e) {
-                        part.zones = cfg.zones.map(function(x) { return x[0]; }).filter(function(code) {
-                            return code === z[0] ? e.target.checked : part.zones.indexOf(code) !== -1;
-                        });
+                        part.zones = keepHiddenZones(part.zones, z[0], e.target.checked);
                         emit();
                     }}));
                 label.appendChild(document.createTextNode(' ' + z[1]));
@@ -141,11 +139,27 @@ define([], function() {
             row.appendChild(zones);
 
             var palier = el('label', {className: 'gp-grille-palier', text: lang.palier + ' '});
-            palier.appendChild(select([['', lang.palierNone], ['F', 'FRA'], ['S', 'SAT'], ['TS', 'TS']], part.palier,
+            palier.appendChild(select([['', lang.palierNone], ['F', lang.palierF], ['S', lang.palierS], ['TS', lang.palierTs]], part.palier,
                 function(e) { part.palier = e.target.value; emit(); }, lang.palier));
             palier.appendChild(el('small', {text: ' ' + lang.palierHelp}));
             row.appendChild(palier);
             return row;
+        }
+
+        /**
+         * Zones of a part after ticking or unticking one: zones the editor does not show (flexibility when
+         * the instance does not ask for it) are kept, so that enabling the option again finds them.
+         *
+         * @param {string[]} zones Current zones of the part.
+         * @param {string} code Zone ticked or unticked.
+         * @param {boolean} checked
+         * @returns {string[]}
+         */
+        function keepHiddenZones(zones, code, checked) {
+            var shown = cfg.zones.map(function(x) { return x[0]; });
+            var kept = zones.filter(function(c) { return shown.indexOf(c) === -1; });
+            var ticked = shown.filter(function(c) { return c === code ? checked : zones.indexOf(c) !== -1; });
+            return ticked.concat(kept);
         }
 
         function move(index, delta) {

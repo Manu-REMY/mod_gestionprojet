@@ -46,15 +46,19 @@ class grille {
     /**
      * The grid used until the teacher saves one: the former fixed grid of step 4.
      *
+     * @param bool $flexibility Whether the instance asks for flexibility (step4_flexibility): when it does not,
+     *                          the grid neither mentions nor looks at it, so editing its wording cannot bring it back.
      * @return array
      */
-    public static function default_grid(): array {
+    public static function default_grid(bool $flexibility = true): array {
         $parts = [
             ['Interacteurs', 4, 'Les interacteurs sont pertinents et complets', ['interacteurs']],
             ['Fonctions de service', 6, 'Chaque FS exprime un service rendu, est rattachée à 1 ou 2 interacteurs et utilise '
                 . 'un verbe d\'action à l\'infinitif', ['fonctions']],
-            ['Critères', 4, 'Chaque critère a un niveau quantifié et une flexibilité (F0–F3) cohérente',
-                ['criteres', 'niveaux', 'flexibilite']],
+            $flexibility
+                ? ['Critères', 4, 'Chaque critère a un niveau quantifié et une flexibilité (F0–F3) cohérente',
+                    ['criteres', 'niveaux', 'flexibilite']]
+                : ['Critères', 4, 'Chaque critère a un niveau quantifié', ['criteres', 'niveaux']],
             ['Contraintes', 3, 'Les contraintes sont identifiées avec justification', ['contraintes']],
             ['Cohérence globale', 3, 'L\'ensemble est cohérent avec la norme NF EN 16271', ['ensemble']],
         ];
@@ -70,12 +74,13 @@ class grille {
      * Grid stored as JSON, or the default grid when there is none or it cannot be read.
      *
      * @param string|null $json
+     * @param bool $flexibility See default_grid().
      * @return array
      */
-    public static function decode(?string $json): array {
+    public static function decode(?string $json, bool $flexibility = true): array {
         $data = $json === null || trim($json) === '' ? null : json_decode($json, true);
         $grid = is_array($data) ? self::normalize($data) : [];
-        return $grid ?: self::default_grid();
+        return $grid ?: self::default_grid($flexibility);
     }
 
     /**

@@ -1018,3 +1018,6 @@ $string['grille_zone_niveaux'] = 'Levels';
 $string['grille_zone_flexibilite'] = 'Flexibility';
 $string['grille_zone_contraintes'] = 'Constraints';
 $string['grille_zone_ensemble'] = 'Whole specification';
+$string['grille_palier_f'] = 'FRA';
+$string['grille_palier_s'] = 'SAT';
+$string['grille_palier_ts'] = 'TS';

@@ -477,7 +477,7 @@ PROMPT;
         if ($step !== 4) {
             return [];
         }
-        return grille::effective_parts(grille::decode($teachermodel->grille_json ?? null));
+        return grille::effective_parts(grille::decode($teachermodel->grille_json ?? null, $this->flexibility));
     }
 
     /**

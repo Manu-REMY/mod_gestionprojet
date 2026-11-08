@@ -1018,3 +1018,6 @@ $string['grille_zone_niveaux'] = 'Niveaux';
 $string['grille_zone_flexibilite'] = 'Flexibilité';
 $string['grille_zone_contraintes'] = 'Contraintes';
 $string['grille_zone_ensemble'] = 'Cahier des charges entier';
+$string['grille_palier_f'] = 'FRA';
+$string['grille_palier_s'] = 'SAT';
+$string['grille_palier_ts'] = 'TS';

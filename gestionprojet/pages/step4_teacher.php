@@ -227,9 +227,10 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[
 ]]);
 
 // Editable grading grid (v2.11.0).
+$showflex = (bool)($gestionprojet->step4_flexibility ?? 1);
 $grillezones = [];
 foreach (\mod_gestionprojet\grille::ZONES as $zone) {
-    if ($zone === 'flexibilite' && !(int)($gestionprojet->step4_flexibility ?? 1)) {
+    if ($zone === 'flexibilite' && !$showflex) {
         continue;
     }
     $grillezones[] = [$zone, get_string('grille_zone_' . $zone, 'gestionprojet')];
@@ -237,14 +238,14 @@ foreach (\mod_gestionprojet\grille::ZONES as $zone) {
 $grillelang = [];
 foreach (['nom', 'description', 'poids', 'zones', 'palier', 'palier_none', 'palier_help', 'evaluee', 'evaluee_auto',
         'evaluee_oui', 'evaluee_non', 'status_graded', 'status_excluded', 'add', 'reset', 'up', 'down', 'remove',
-        'new_part', 'total'] as $key) {
+        'new_part', 'total', 'palier_f', 'palier_s', 'palier_ts'] as $key) {
     $grillelang[lcfirst(str_replace('_', '', ucwords($key, '_')))] = get_string('grille_' . $key, 'gestionprojet');
 }
 $PAGE->requires->js_call_amd('mod_gestionprojet/grille_editor', 'init', [[
     'fieldId'  => 'grilleDataField',
     'rootId'   => 'grilleRoot',
-    'initial'  => \mod_gestionprojet\grille::decode($model->grille_json ?? null),
-    'defaults' => \mod_gestionprojet\grille::default_grid(),
+    'initial'  => \mod_gestionprojet\grille::decode($model->grille_json ?? null, $showflex),
+    'defaults' => \mod_gestionprojet\grille::default_grid($showflex),
     'zones'    => $grillezones,
     'lang'     => $grillelang,
 ]]);
