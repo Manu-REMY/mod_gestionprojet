@@ -72,8 +72,9 @@ foreach (['en', 'fr'] as $l) {
 // Final review: save every editor before asking (step 9 has its own), and never reload by itself.
 test('button flushes the registered savers (save_hooks) and Autosave', fn() => strpos($js, 'SaveHooks.flushAll()') !== false
     && strpos($js, 'Autosave.save()') !== false);
-test('button: no automatic reload when the feedback is ready, a "show" button instead', fn() =>
-    strpos($js, 'location.reload') === false && strpos($js, 'cfg.strings.show') !== false);
+// v2.12.2: still no reload when the feedback is ready; it is put in place by itself (see test_formative_live.php).
+test('button: no automatic reload when the feedback is ready, shown in place instead', fn() =>
+    strpos($js, 'location.reload') === false && strpos($js, 'Templates.replaceNodeContents(') !== false);
 $hooks = code('amd/src/save_hooks.js');
 test('save_hooks: register and flushAll', fn() => strpos($hooks, 'register') !== false && strpos($hooks, 'flushAll') !== false);
 test('the FAST editor registers its immediate save', fn() => strpos(code('amd/src/fast_editor.js'), 'SaveHooks.register(') !== false);

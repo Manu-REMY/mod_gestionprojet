@@ -82,12 +82,10 @@ try {
     }
 
     // For students: ensure the evaluation belongs to them or their group.
-    if (!$isTeacher) {
-        $isOwner = ($evaluation->userid && $evaluation->userid == $USER->id);
-        $isGroupMember = ($evaluation->groupid && groups_is_member($evaluation->groupid, $USER->id));
-        if (!$isOwner && !$isGroupMember) {
-            throw new \moodle_exception('nopermission');
-        }
+    $isOwner = ($evaluation->userid && $evaluation->userid == $USER->id);
+    $isGroupMember = ($evaluation->groupid && groups_is_member($evaluation->groupid, $USER->id));
+    if (!$isTeacher && !$isOwner && !$isGroupMember) {
+        throw new \moodle_exception('nopermission');
     }
 
     // Get status display info.
@@ -102,6 +100,30 @@ try {
         'timecreated' => $evaluation->timecreated,
         'timemodified' => $evaluation->timemodified,
     ];
+
+    // A finished formative feedback (v2.12.2): the panel shows it in place, so the endpoint sends the same filtered
+    // view the page would render, and whether the student can ask again. Never the grade nor the raw AI text.
+    if (!empty($evaluation->formatif) && in_array($evaluation->status, ['completed', 'failed'], true)) {
+        $table = gestionprojet_get_step_table((int)$evaluation->step);
+        $submission = $table ? $DB->get_record($table, ['id' => $evaluation->submissionid,
+            'gestionprojetid' => $gestionprojet->id]) : null;
+        if ($submission) {
+            // A teacher looking at someone else's copy cannot ask in their place (same rule as the panel).
+            $readonly = $isTeacher && !$isOwner && !$isGroupMember;
+            $state = gestionprojet_progress_state($gestionprojet, (int)$evaluation->step, $submission, $readonly);
+            if ($evaluation->status === 'completed' && $state['feedback']['source'] !== 'none') {
+                $response['feedback_html'] = gestionprojet_progress_feedback_html($state['feedback']);
+            }
+            if ($state['canask'] && !$state['formative']['pending']) {
+                if ($state['formative']['remaining'] > 0) {
+                    $response['ask_label'] = get_string('formative_request', 'gestionprojet',
+                        $state['formative']['remaining']);
+                } else {
+                    $response['none_left'] = '⊘ ' . get_string('formative_none_left', 'gestionprojet');
+                }
+            }
+        }
+    }
 
     // Include results if completed (teachers only — students reload the page to see filtered feedback via student_ai_feedback_display.php).
     if (($evaluation->status === 'completed' || $evaluation->status === 'applied') && $isTeacher) {

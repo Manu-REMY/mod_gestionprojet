@@ -36,10 +36,11 @@ test('a grade typed by hand is dated by the submission', fn() => strpos($body, '
 test('the teacher comment shows even when AI is off', fn() => strpos($body, '$applied = $aion ?') !== false
     && strpos($body, "if (\$aion) {\n        \$applied") === false);
 test('the teacher comment is not filtered', fn() => strpos($body, "\$pick['source'] !== 'teacher'") !== false);
+// v2.12.2: the feedback markup lives in gestionprojet_progress_feedback_html() (lib.php), shared with the endpoint.
 test('the criteria of the applied evaluation are back (show_criteria)', fn() => strpos($body, 'show_criteria') !== false
-    && strpos($panel, "'gp-progress-criteria'") !== false);
+    && strpos(file_get_contents(GP_ROOT . '/lib.php'), "'gp-progress-criteria'") !== false);
 test('the keywords found are back (show_keywords_found)', fn() => strpos($body, 'show_keywords_found') !== false
-    && strpos($panel, "'gp-progress-keywords'") !== false);
+    && strpos(file_get_contents(GP_ROOT . '/lib.php'), "'gp-progress-keywords'") !== false);
 test('submitted but not graded: its own words', fn() => strpos($panel, "'progress_grade_pending'") !== false);
 test('read-only only on someone else\'s copy', fn() => strpos($panel, '$USER->id') !== false);
 test('step 4 list reads the fields being typed', fn() => strpos($js, "hasAttribute('data-gp-field')") !== false

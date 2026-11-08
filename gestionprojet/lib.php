@@ -1049,6 +1049,55 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     ];
 }
 
+
+/**
+ * Student view of a feedback of the progress panel: date, text, suggestions, criteria, keywords (v2.12.2).
+ *
+ * Shared by the panel and by the status endpoint (a formative feedback shown in place when it is ready).
+ *
+ * @param array $feedback The 'feedback' entry of gestionprojet_progress_state() (already filtered for the student).
+ * @return string HTML, every value escaped.
+ */
+function gestionprojet_progress_feedback_html(array $feedback): string {
+    $out = '';
+    $out .= html_writer::tag('p', userdate($feedback['time'], get_string('strftimedatetimeshort')),
+        ['class' => 'gp-progress-date']);
+    if ($feedback['text'] !== '') {
+        $out .= html_writer::tag('p', nl2br(s($feedback['text'])));
+    }
+    if ($feedback['suggestions']) {
+        $out .= html_writer::alist(array_map(function ($suggestion): string {
+            return s(is_scalar($suggestion) ? (string)$suggestion : '');
+        }, $feedback['suggestions']));
+    }
+    // Criteria of the grade (score per criterion), as the former grade block showed them.
+    if ($feedback['criteria']) {
+        $out .= html_writer::tag('h4', get_string('progress_criteria', 'gestionprojet'));
+        $items = [];
+        foreach ($feedback['criteria'] as $criterion) {
+            if (!is_array($criterion)) {
+                continue;
+            }
+            $line = (string)($criterion['name'] ?? '');
+            if (isset($criterion['score'], $criterion['max'])) {
+                $line .= ' : ' . format_float((float)$criterion['score'], 1) . '/' . format_float((float)$criterion['max'], 1);
+            }
+            if (!empty($criterion['comment'])) {
+                $line .= ' — ' . (string)$criterion['comment'];
+            }
+            $items[] = s($line);
+        }
+        $out .= html_writer::alist($items, ['class' => 'gp-progress-criteria']);
+    }
+    if ($feedback['keywords']) {
+        $out .= html_writer::tag('h4', get_string('progress_keywords', 'gestionprojet'));
+        $out .= html_writer::alist(array_map(function ($keyword): string {
+            return '✓ ' . s(is_scalar($keyword) ? (string)$keyword : '');
+        }, $feedback['keywords']), ['class' => 'gp-progress-keywords']);
+    }
+    return $out;
+}
+
 /**
  * Whether a student only consults the teacher's consigne of a step (4, 5 or 9) without completing it.
  *

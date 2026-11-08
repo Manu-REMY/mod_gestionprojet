@@ -5882,3 +5882,31 @@
     font-size: 0.95rem;
     margin: 10px 0 4px;
 }
+
+/* ===== Waiting spinner of the AI banners (v2.12.2): turns while pending, hidden once failed ===== */
+.path-mod-gestionprojet .gp-spinner {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 3px solid #90caf9;
+    border-top-color: #0d47a1;
+    border-radius: 50%;
+    animation: gestionprojet-spin 0.9s linear infinite;
+}
+
+.path-mod-gestionprojet .ai-progress-banner.status-failed .gp-spinner {
+    display: none;
+}
+
+.path-mod-gestionprojet .gp-formative-live .ai-progress-banner {
+    margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* No rotation: a still ring with a thicker arc keeps the meaning, the words say the rest. */
+    .path-mod-gestionprojet .gp-spinner {
+        animation: none;
+        border-top-width: 6px;
+    }
+}
