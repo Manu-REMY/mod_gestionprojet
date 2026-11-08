@@ -115,15 +115,47 @@ $texts = array_column(crits($locked, 1), 'description');
 test('follow: student text in a field locked now is kept next to the provided one', fn() =>
     in_array('Ma marche à moi', $texts, true) && in_array('Hauteur d\'obstacle franchissable (marche)', $texts, true));
 
-// A student page opened before the change sends the old provided text: not taken for student text.
-$browser = $started;
-test('enforce with the stored copy: a stale provided text is not duplicated', fn() =>
-    count(crits(L::enforce($browser, $new, $followed), 1)) === 2
-    && crits(L::enforce($browser, $new, $followed), 1)[0]['description'] === 'Hauteur d\'obstacle franchissable (marche)');
-test('enforce with the stored copy: a stale provided constraint is not duplicated', fn() =>
-    count(L::enforce($browser, $new, $followed)['contraintes']) === 1);
-test('enforce without the stored copy: unchanged behaviour (text kept under a new id)', fn() =>
-    count(crits(L::enforce($browser, $new), 1)) === 3);
+// A student page opened before the change sends the old provided text, with the flags it showed (v2.12.4).
+$browser = L::with_flags($started, $old);
+test('enforce: a field the page showed as provided is overwritten, not duplicated', fn() =>
+    count(crits(L::enforce($browser, $new), 1)) === 2
+    && crits(L::enforce($browser, $new), 1)[0]['description'] === 'Hauteur d\'obstacle franchissable (marche)');
+test('enforce: a provided constraint shown by the page is not duplicated', fn() =>
+    count(L::enforce($browser, $new)['contraintes']) === 1);
+test('enforce: a pre-filled text untouched on an old page takes the new text', fn() =>
+    crits(L::enforce($browser, $new), 1)[1]['description'] === 'Pente maximale gravie …');
+test('enforce: what the student wrote on the old page is kept', fn() => crits(L::enforce($browser, $new), 1)[1]['niveau'] === '≥ 15°');
+test('enforce without flags (no page): unchanged behaviour (text kept under a new id)', fn() =>
+    count(crits(L::enforce($started, $new), 1)) === 3);
+
+// As in production: the browser JSON goes through cdcf_helper::decode() (normalize) before enforce.
+$viaserver = L::enforce(cdcf_helper::normalize($browser), $new);
+test('normalize keeps the starting texts the page showed (hint), enforce uses them', fn() =>
+    crits($viaserver, 1)[1]['description'] === 'Pente maximale gravie …' && count(crits($viaserver, 1)) === 2);
+test('the stored copy never keeps a starting text (hint)', fn() =>
+    strpos(json_encode($viaserver), 'hint') === false && strpos(json_encode($viaserver), 'Hint') === false);
+
+// Final review, scenario A: the teacher locks a field the student is editing (it was pre-filled on the page).
+$pageA = L::with_flags($mine, $open);
+$pageA['fonctionsService'][0]['criteres'][0]['description'] = 'Ma marche à moi, plus';
+$textsA = array_column(crits(L::enforce($pageA, $new), 1), 'description');
+test('review A: text typed in a field locked meanwhile is kept', fn() => in_array('Ma marche à moi, plus', $textsA, true)
+    && in_array('Hauteur d\'obstacle franchissable (marche)', $textsA, true));
+// Scenario B: a gap field locked while the student types.
+$gap = cdcf_helper::normalize(['interactors' => $old['interactors'], 'contraintes' => $old['contraintes'],
+    'fonctionsService' => [array_merge($old['fonctionsService'][0], ['criteres' => [
+        array_merge($old['fonctionsService'][0]['criteres'][0], ['locked' => false, 'gap' => true]),
+        $old['fonctionsService'][0]['criteres'][1]]])]]);
+$pageB = L::with_flags(L::seed($gap), $gap);
+$pageB['fonctionsService'][0]['criteres'][0]['description'] = 'Réponse en cours';
+test('review B: an answer typed in a gap locked meanwhile is kept', fn() =>
+    in_array('Réponse en cours', array_column(crits(L::enforce($pageB, $new), 1), 'description'), true));
+// Scenario C: a copy submitted during the change, back to draft later: the consigne moved on twice.
+$v2 = robot(true);
+$v2['fonctionsService'][0]['criteres'][0]['description'] = 'Hauteur de marche franchissable';
+$reverted = L::follow($started, $new, $v2);
+test('review C: a copy two consigne versions behind gets no duplicate', fn() => count(crits($reverted, 1)) === 2
+    && crits($reverted, 1)[0]['description'] === 'Hauteur de marche franchissable');
 
 // Server side: the consigne save follows the copies; the student save passes the stored copy.
 $lib = (string)file_get_contents(GP_ROOT . '/lib.php');
@@ -131,8 +163,9 @@ $ws = (string)file_get_contents(GP_ROOT . '/classes/external/autosave.php');
 test('lib: gestionprojet_cdcf_follow_consigne() updates the draft copies', fn() =>
     strpos($lib, 'function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjson): int') !== false
     && strpos($lib, 'consigne_lock::follow(') !== false);
-test('lib: the student save gives enforce the stored copy', fn() =>
-    preg_match('/consigne_lock::enforce\([^;]*\$stored\)/s', $lib) === 1);
+test('lib: the student save no longer needs the stored copy (the page flags decide)', fn() =>
+    strpos($lib, '$stored') === false);
+test('lib: the copies follow inside a transaction', fn() => strpos($lib, 'start_delegated_transaction()') !== false);
 test('autosave (consigne, step 4): the copies follow the saved consigne', fn() =>
     strpos($ws, 'gestionprojet_cdcf_follow_consigne($gestionprojet, $oldconsigne)') !== false);
 

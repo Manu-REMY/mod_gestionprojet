@@ -244,7 +244,8 @@ class consigne_lock {
                 ['description' => $main, 'justification' => ['locked']]);
         }
         unset($k);
-        return self::enforce($copy, $new);
+        // The copy as the students saw it under the old consigne: a field provided there holds no student text.
+        return self::enforce(self::with_flags($copy, $old), $new);
     }
 
     /**
@@ -259,28 +260,31 @@ class consigne_lock {
      * from the consigne (an element the student wrote, or edited before the teacher locked it), it keeps its text
      * under a new id and the consigne element is inserted next to it.
      *
-     * With the stored copy (v2.12.3): a locked field the browser sends with another text, while the stored copy already
-     * has the consigne text at that id, comes from a page opened before the consigne changed (the field is read-only
-     * for the student): it is overwritten, not kept as student text.
+     * The flags the page showed (v2.12.4) say what the student could edit: a field shown as provided (locked) holds
+     * no student text, so a different text there comes from a page opened before the consigne changed and is
+     * overwritten; a field shown as pre-filled and left as shown takes the current consigne text. A field the student
+     * could edit keeps its text (under a new id when the consigne now locks it). Trusting these flags only chooses
+     * between overwriting and keeping a text in a field the consigne locks.
      *
-     * @param array $student Student copy (as sent by the browser, normalized).
+     * @param array $student Student copy (as sent by the browser, normalized), with the flags the page showed.
      * @param array $provided Consigne.
-     * @param array|null $stored Copy stored before this save (normalized), or null.
      * @return array Student copy to store, without flags.
      */
-    public static function enforce(array $student, array $provided, ?array $stored = null): array {
-        $student = self::strip_flags($student);
+    public static function enforce(array $student, array $provided): array {
+        $shown = self::shown($student);
+        $student = self::follow_shown_prefill(self::strip_flags($student), $shown, $provided);
         if (!self::has_locks($provided)) {
             return $student;
         }
-        // Stored elements by id, to tell a stale page from text the student wrote.
-        $stored = $stored ? self::strip_flags($stored) : ['interactors' => [], 'fonctionsService' => [], 'contraintes' => []];
-        $sid = function (array $list, int $id): ?array {
-            $index = self::index_of($list, $id);
-            return $index === null ? null : $list[$index];
-        };
-        $stale = function (?array $kept, array $consigne, array $fields): bool {
-            return $kept !== null && !self::differs($kept, $consigne, $fields);
+        // A locked field keeps the student's text only when the page let the student edit it.
+        $kept = function (array $element, array $consigne, array $fields, array $locks): bool {
+            foreach ($fields as $field) {
+                $value = (string)($element[$field] ?? '');
+                if ($value !== '' && $value !== (string)($consigne[$field] ?? '') && empty($locks[$field])) {
+                    return true;
+                }
+            }
+            return false;
         };
 
         // Interactors: locked ones, and those used by a locked FS.
@@ -297,8 +301,7 @@ class consigne_lock {
         foreach ($provided['interactors'] as $rank => $pi) {
             $index = self::index_of($student['interactors'], $pi['id']);
             if ($index !== null && !empty($pi['locked'])
-                    && self::differs($student['interactors'][$index], $pi, ['name'])
-                    && !$stale($sid($stored['interactors'], $pi['id']), $pi, ['name'])) {
+                    && $kept($student['interactors'][$index], $pi, ['name'], $shown['i'][$pi['id']] ?? [])) {
                 // The student's interactor keeps its name under a new id; their FS follow it.
                 $remap[$pi['id']] = ++$max;
                 $student['interactors'][$index]['id'] = $max;
@@ -332,8 +335,7 @@ class consigne_lock {
             });
             $index = self::index_of($student['fonctionsService'], $pfs['id']);
             if ($index !== null && !empty($pfs['locked'])
-                    && self::differs($student['fonctionsService'][$index], $pfs, ['description'])
-                    && !$stale($sid($stored['fonctionsService'], $pfs['id']), $pfs, ['description'])) {
+                    && $kept($student['fonctionsService'][$index], $pfs, ['description'], $shown['fs'][$pfs['id']] ?? [])) {
                 // The student's FS (with its criteria) keeps its text under a new id.
                 $student['fonctionsService'][$index]['id'] = ++$max;
                 $index = null;
@@ -362,9 +364,8 @@ class consigne_lock {
                 $cindex = self::index_of($fs['criteres'], $pc['id']);
                 $lockedfields = array_merge(!empty($pc['locked']) ? ['description'] : [],
                     !empty($pc['niveauLocked']) ? ['niveau'] : []);
-                $storedfs = $sid($stored['fonctionsService'], $pfs['id']);
-                if ($cindex !== null && self::differs($fs['criteres'][$cindex], $pc, $lockedfields)
-                        && !$stale($storedfs ? $sid($storedfs['criteres'], $pc['id']) : null, $pc, $lockedfields)) {
+                if ($cindex !== null && $kept($fs['criteres'][$cindex], $pc, $lockedfields,
+                        $shown['c'][$pfs['id'] . '-' . $pc['id']] ?? [])) {
                     $fs['criteres'][$cindex]['id'] = ++$cmax;
                     $cindex = null;
                 }
@@ -393,8 +394,8 @@ class consigne_lock {
                 continue;
             }
             $index = self::index_of($student['contraintes'], $pc['id']);
-            if ($index !== null && self::differs($student['contraintes'][$index], $pc, ['description', 'justification'])
-                    && !$stale($sid($stored['contraintes'], $pc['id']), $pc, ['description', 'justification'])) {
+            if ($index !== null && $kept($student['contraintes'][$index], $pc, ['description', 'justification'],
+                    $shown['k'][$pc['id']] ?? [])) {
                 $student['contraintes'][$index]['id'] = ++$max;
                 $index = null;
             }
@@ -405,6 +406,104 @@ class consigne_lock {
                 $student['contraintes'][$index] = $locked;
             }
         }
+        return $student;
+    }
+
+    /**
+     * What the page showed for each element of a copy sent by the browser (v2.12.4): fields shown as provided
+     * (locked) and the starting text of the fields shown as pre-filled.
+     *
+     * @param array $student Copy with the flags of with_flags().
+     * @return array ['i' => [id => locks], 'fs' => [id => locks], 'c' => ["fs-c" => locks], 'k' => [id => locks]];
+     *     locks maps a field to true (shown provided) or to ['prefill' => starting text].
+     */
+    private static function shown(array $student): array {
+        $main = function (array $e, array $fields): array {
+            $out = [];
+            foreach ($fields as $field) {
+                if (!empty($e['locked'])) {
+                    $out[$field] = true;
+                } else if (!empty($e['prefill']) && isset($e['hint'])) {
+                    $out[$field] = ['prefill' => (string)$e['hint']];
+                }
+            }
+            return $out;
+        };
+        $shown = ['i' => [], 'fs' => [], 'c' => [], 'k' => []];
+        foreach ($student['interactors'] ?? [] as $i) {
+            $shown['i'][$i['id']] = $shown['i'][$i['id']] ?? $main($i, ['name']);
+        }
+        foreach ($student['fonctionsService'] ?? [] as $fs) {
+            $shown['fs'][$fs['id']] = $shown['fs'][$fs['id']] ?? $main($fs, ['description']);
+            foreach ($fs['criteres'] ?? [] as $c) {
+                $locks = $main($c, ['description']);
+                if (!empty($c['niveauLocked'])) {
+                    $locks['niveau'] = true;
+                    $locks['flexibilite'] = true;
+                } else if (!empty($c['niveauPrefill']) && isset($c['niveauHint'])) {
+                    $locks['niveau'] = ['prefill' => (string)$c['niveauHint']];
+                }
+                $shown['c'][$fs['id'] . '-' . $c['id']] = $shown['c'][$fs['id'] . '-' . $c['id']] ?? $locks;
+            }
+        }
+        foreach ($student['contraintes'] ?? [] as $k) {
+            $shown['k'][$k['id']] = $shown['k'][$k['id']] ?? $main($k, ['description', 'justification']);
+        }
+        return $shown;
+    }
+
+    /**
+     * A field shown as pre-filled and left as shown takes the current consigne text (v2.12.4): a page opened before
+     * the teacher changed the pre-filled text does not bring the old one back.
+     *
+     * @param array $student Copy without flags.
+     * @param array $shown Result of shown().
+     * @param array $provided Consigne.
+     * @return array
+     */
+    private static function follow_shown_prefill(array $student, array $shown, array $provided): array {
+        $update = function (array $e, array $locks, ?array $consigne, array $fieldflags): array {
+            if ($consigne === null) {
+                return $e;
+            }
+            foreach ($locks as $field => $lock) {
+                if (!is_array($lock) || (string)($e[$field] ?? '') !== $lock['prefill']) {
+                    continue;
+                }
+                $follows = false;
+                foreach ($fieldflags[$field] ?? [] as $flag) {
+                    $follows = $follows || !empty($consigne[$flag]);
+                }
+                if ($follows) {
+                    $e[$field] = (string)($consigne[$field] ?? '');
+                }
+            }
+            return $e;
+        };
+        $main = ['name' => ['locked', 'prefill'], 'description' => ['locked', 'prefill'],
+            'justification' => ['locked'], 'niveau' => ['niveauLocked', 'niveauPrefill']];
+        $find = function (array $list, int $id): ?array {
+            $index = self::index_of($list, $id);
+            return $index === null ? null : $list[$index];
+        };
+        foreach ($student['interactors'] as &$i) {
+            $i = $update($i, $shown['i'][$i['id']] ?? [], $find($provided['interactors'], $i['id']), $main);
+        }
+        unset($i);
+        foreach ($student['fonctionsService'] as &$fs) {
+            $pfs = $find($provided['fonctionsService'], $fs['id']);
+            $fs = $update($fs, $shown['fs'][$fs['id']] ?? [], $pfs, $main);
+            foreach ($fs['criteres'] as &$c) {
+                $c = $update($c, $shown['c'][$fs['id'] . '-' . $c['id']] ?? [],
+                    $pfs ? $find($pfs['criteres'], $c['id']) : null, $main);
+            }
+            unset($c);
+        }
+        unset($fs);
+        foreach ($student['contraintes'] as &$k) {
+            $k = $update($k, $shown['k'][$k['id']] ?? [], $find($provided['contraintes'], $k['id']), $main);
+        }
+        unset($k);
         return $student;
     }
 
