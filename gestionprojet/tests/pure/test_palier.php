@@ -47,14 +47,32 @@ test('requestable: S validated → TS', fn() => palier::requestable(['S', 'TS'],
 test('requestable: all validated → none', fn() => palier::requestable(['S', 'TS'], ['S', 'TS']) === []);
 test('requestable: F, S, TS with F validated → S', fn() => palier::requestable(['F', 'S', 'TS'], ['F']) === ['S']);
 
-$c = fn(array $pairs) => array_map(fn($p) => ['name' => 'x', 'score' => $p[0], 'max' => $p[1]], $pairs);
-test('verdict: 8/10 + 4/5 at 80 % → validated, 80 %', fn() => palier::verdict($c([[8, 10], [4, 5]]), 80) === ['valide' => true, 'percent' => 80.0]);
-test('verdict: 7/10 + 4/5 at 80 % → not validated', fn() => palier::verdict($c([[7, 10], [4, 5]]), 80)['valide'] === false);
-test('verdict: no criterion → not validated, 0 %', fn() => palier::verdict([], 80) === ['valide' => false, 'percent' => 0.0]);
-test('verdict: max 0 → not validated', fn() => palier::verdict($c([[3, 0]]), 0)['valide'] === false);
-test('verdict: a score above its max counts as the max', fn() => palier::verdict($c([[15, 10], [0, 10]]), 50)['percent'] === 50.0);
-test('verdict: a negative score counts as 0', fn() => palier::verdict($c([[-5, 10], [10, 10]]), 50)['percent'] === 50.0);
-test('verdict: missing keys → not validated', fn() => palier::verdict([['name' => 'x']], 0)['valide'] === false);
+// Verdict: the points of each part come from the server grid (scaled weights), never from the AI's "max".
+$sparts = palier::parts_for($parts, 'S'); // Fonctions (weight 6 -> 12/20) and Critères (4 -> 8/20).
+$ai = fn(array $rows) => array_map(fn($r) => ['name' => $r[0], 'score' => $r[1], 'max' => $r[2] ?? 99], $rows);
+test('verdict: 10/12 + 6/8 at 80 % → validated, 80 %', fn() =>
+    palier::verdict($ai([['Fonctions', 10], ['Critères', 6]]), $sparts, 80) === ['valide' => true, 'percent' => 80.0]);
+test('verdict: 9/12 + 6/8 at 80 % → not validated', fn() => palier::verdict($ai([['Fonctions', 9], ['Critères', 6]]), $sparts, 80)['valide'] === false);
+test('verdict: no criterion → not validated, 0 %', fn() => palier::verdict([], $sparts, 80) === ['valide' => false, 'percent' => 0.0]);
+test('verdict: no part → not validated', fn() => palier::verdict($ai([['Fonctions', 12]]), [], 0)['valide'] === false);
+test('verdict: a fabricated criterion is ignored', fn() =>
+    palier::verdict($ai([['Fonctions', 2], ['Critères', 2], ['Bonus', 100, 100]]), $sparts, 50)['valide'] === false);
+test('verdict: a score above the part weight counts as the weight', fn() =>
+    palier::verdict($ai([['Fonctions', 500], ['Critères', 0]]), $sparts, 61)['valide'] === false);
+test('verdict: the AI max is ignored (score 1 of "max 1" on a 12-point part is 1 point)', fn() =>
+    palier::verdict($ai([['Fonctions', 1, 1], ['Critères', 8, 8]]), $sparts, 50)['valide'] === false);
+test('verdict: a negative score counts as 0', fn() => palier::verdict($ai([['Fonctions', -5], ['Critères', 8]]), $sparts, 41)['valide'] === false);
+test('verdict: a duplicate criterion counts once', fn() =>
+    palier::verdict($ai([['Fonctions', 12], ['Fonctions', 12], ['Critères', 0]]), $sparts, 61)['valide'] === false);
+test('verdict: names match regardless of case and spaces', fn() =>
+    palier::verdict($ai([['  fonctions ', 12], ['CRITÈRES', 8]]), $sparts, 100)['valide'] === true);
+test('verdict: unmatched names fall back on the order when the counts are equal', fn() =>
+    palier::verdict($ai([['Partie 1', 12], ['Partie 2', 8]]), $sparts, 100)['valide'] === true);
+test('verdict: a missing part scores 0', fn() => palier::verdict($ai([['Fonctions', 12]]), $sparts, 61)['valide'] === false);
+test('verdict: 79.95 % is below 80 % even if it shows 80.0', fn() =>
+    palier::verdict($ai([['Fonctions', 12], ['Critères', 3.99]]), $sparts, 80) === ['valide' => false, 'percent' => 80.0]
+    || palier::verdict($ai([['Fonctions', 11.99], ['Critères', 4]]), $sparts, 80)['valide'] === false);
+test('verdict: missing keys → not validated', fn() => palier::verdict([['name' => 'Fonctions']], $sparts, 0)['valide'] === false);
 
 $frozen = cdcf_helper::normalize([
     'interactors' => [['id' => 1, 'name' => 'Robot'], ['id' => 2, 'name' => 'Sol']],

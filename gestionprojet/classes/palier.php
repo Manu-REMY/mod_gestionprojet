@@ -102,27 +102,61 @@ class palier {
     }
 
     /**
-     * Verdict of an attempt, from the points of the criteria returned by the AI.
+     * Verdict of an attempt, computed by the server from the points of the level's parts.
      *
-     * Scores are bounded to [0, max]. No criterion, or no point to earn, never validates.
+     * The points of each part are its weight on the server grid (grille::scaled_weights of the level's parts);
+     * the AI's own "max" is never trusted. AI criteria are matched to the parts by name (case and spaces ignored);
+     * a part left unmatched takes, when the AI returned exactly one criterion per part, the criterion at its rank
+     * if that criterion matched no part. Unknown or duplicate criteria are ignored, a missing part scores 0, scores
+     * are bounded to [0, weight]. The threshold is compared with the unrounded ratio; no point earned never validates.
      *
-     * @param array $criteria Criteria of the AI response (name, score, max).
+     * @param array $criteria Criteria of the AI response (name, score).
+     * @param array $parts Graded parts of the level (palier::parts_for).
      * @param int $seuil Threshold in % of the points of the level.
-     * @return array ['valide' => bool, 'percent' => float]
+     * @return array ['valide' => bool, 'percent' => float rounded to 0.1]
      */
-    public static function verdict(array $criteria, int $seuil): array {
-        $score = 0.0;
-        $max = 0.0;
-        foreach ($criteria as $criterion) {
-            $m = max(0.0, (float)($criterion['max'] ?? 0));
-            $score += min($m, max(0.0, (float)($criterion['score'] ?? 0)));
-            $max += $m;
-        }
-        if ($max <= 0) {
+    public static function verdict(array $criteria, array $parts, int $seuil): array {
+        if (!$parts || !$criteria) {
             return ['valide' => false, 'percent' => 0.0];
         }
-        $percent = round(100 * $score / $max, 1);
-        return ['valide' => $percent >= $seuil, 'percent' => $percent];
+        $weights = grille::scaled_weights($parts);
+        $norm = function ($name): string {
+            return trim(preg_replace('/\s+/u', ' ', mb_strtolower((string)$name)));
+        };
+        $partbyname = [];
+        foreach ($parts as $index => $part) {
+            $partbyname[$norm($part['nom'])] = $partbyname[$norm($part['nom'])] ?? $index;
+        }
+        $scores = [];
+        $used = [];
+        foreach (array_values($criteria) as $rank => $criterion) {
+            $key = $norm($criterion['name'] ?? '');
+            if (isset($partbyname[$key]) && !isset($scores[$partbyname[$key]])) {
+                $scores[$partbyname[$key]] = $criterion['score'] ?? 0;
+                $used[$rank] = true;
+            }
+        }
+        if (count($criteria) === count($parts)) {
+            $list = array_values($criteria);
+            foreach ($parts as $index => $part) {
+                if (!isset($scores[$index]) && empty($used[$index]) && !isset($partbyname[$norm($list[$index]['name'] ?? '')])) {
+                    $scores[$index] = $list[$index]['score'] ?? 0;
+                }
+            }
+        }
+        $earned = 0.0;
+        $total = 0.0;
+        foreach ($parts as $index => $part) {
+            $w = (float)($weights[$part['id']] ?? 0);
+            $total += $w;
+            $earned += min($w, max(0.0, (float)($scores[$index] ?? 0)));
+        }
+        if ($total <= 0) {
+            return ['valide' => false, 'percent' => 0.0];
+        }
+        $ratio = 100 * $earned / $total;
+        // No point earned never validates, even with a 0 % threshold (an empty or broken AI answer).
+        return ['valide' => $earned > 0 && $ratio >= $seuil, 'percent' => round($ratio, 1)];
     }
 
     /**
