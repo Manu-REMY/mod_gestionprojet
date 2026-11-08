@@ -1005,6 +1005,15 @@ $string['palier_pending'] = 'Validation of level {$a} in progress…';
 $string['palier_error'] = 'The validation could not be done. Try again in a moment.';
 $string['palier_frozen_help'] = 'Validated: can no longer be changed';
 $string['palier_score'] = '{$a} % of the points of the level';
+$string['palier_retire'] = 'Remove';
+$string['palier_retire_confirm'] = 'Remove level {$a}? The higher validated levels are removed too and their zones open again. The class life app is not changed: correct it there by hand if needed.';
+$string['palier_attempts'] = 'Attempts';
+$string['palier_attempt_ok'] = 'validated';
+$string['palier_attempt_ko'] = 'not validated';
+$string['palier_attempt_error'] = 'error';
+$string['palier_attempt_pending'] = 'in progress';
+$string['palier_none_validated'] = 'No level validated yet.';
+$string['grille_palier_none_mode'] = 'no level: not graded in the level mode';
 $string['error_palier_seuil'] = 'Enter a percentage between 0 and 100.';
 $string['privacy:metadata:palier'] = 'Levels (F, S, TS) validated by a group or a student, with the members of the group at that time';
 

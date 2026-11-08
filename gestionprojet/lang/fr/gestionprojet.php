@@ -1005,6 +1005,15 @@ $string['palier_pending'] = 'Validation du niveau {$a} en cours…';
 $string['palier_error'] = 'La validation n\'a pas pu se faire. Réessaie dans un moment.';
 $string['palier_frozen_help'] = 'Validé : ne peut plus être modifié';
 $string['palier_score'] = '{$a} % des points du palier';
+$string['palier_retire'] = 'Retirer';
+$string['palier_retire_confirm'] = 'Retirer le niveau {$a} ? Les paliers supérieurs validés sont retirés aussi et leurs zones rouvertes. L\'appli de vie de classe n\'est pas modifiée : corrige-la à la main si besoin.';
+$string['palier_attempts'] = 'Tentatives';
+$string['palier_attempt_ok'] = 'validé';
+$string['palier_attempt_ko'] = 'non validé';
+$string['palier_attempt_error'] = 'erreur';
+$string['palier_attempt_pending'] = 'en cours';
+$string['palier_none_validated'] = 'Aucun palier validé pour l’instant.';
+$string['grille_palier_none_mode'] = 'sans palier : non évaluée en mode paliers';
 $string['error_palier_seuil'] = 'Saisis un pourcentage entre 0 et 100.';
 $string['privacy:metadata:palier'] = 'Paliers (FRA, SAT, TS) validés par un groupe ou un élève, avec les membres du groupe à ce moment';
 
