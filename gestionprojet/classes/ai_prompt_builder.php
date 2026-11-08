@@ -187,7 +187,7 @@ class ai_prompt_builder {
             $stepcontext = str_replace(' et flexibilité', '', $stepcontext);
         }
         $aiinstructions = $teachermodel->ai_instructions ?? '';
-        $criteriatext = $this->build_criteria_text($step);
+        $criteriatext = $this->build_criteria_text($step, $teachermodel);
 
         $prompt = <<<PROMPT
 Tu es un assistant d'évaluation pédagogique expert en technologie pour le collège et le lycée.
@@ -439,10 +439,22 @@ PROMPT;
      * Build the formatted text of evaluation criteria for a given step.
      *
      * @param int $step Step number
+     * @param object|null $teachermodel Teacher correction model (grille_json for step 4)
      * @return string Bullet list of criteria lines, or empty string if none
      */
-    private function build_criteria_text(int $step): string {
-        $criteria = self::STEP_CRITERIA[$step] ?? [];
+    private function build_criteria_text(int $step, ?object $teachermodel = null): string {
+        if ($step === 4) {
+            // Step 4 grades with the teacher's grid (the former fixed grid when none is saved).
+            $parts = $this->graded_parts(4, $teachermodel ?? new \stdClass());
+            $criteria = [];
+            $weights = grille::scaled_weights($parts);
+            foreach ($parts as $part) {
+                $criteria[] = ['name' => $part['nom'], 'weight' => $weights[$part['id']],
+                    'description' => $part['description']];
+            }
+        } else {
+            $criteria = self::STEP_CRITERIA[$step] ?? [];
+        }
         $text = '';
         foreach ($criteria as $criterion) {
             $description = $criterion['description'];
@@ -452,6 +464,20 @@ PROMPT;
             $text .= "- {$criterion['name']} (poids: {$criterion['weight']}/20): {$description}\n";
         }
         return $text;
+    }
+
+    /**
+     * Parts of the grid graded by the AI (step 4 only, other steps have a fixed grid).
+     *
+     * @param int $step Step number
+     * @param object $teachermodel Teacher correction model (grille_json for step 4)
+     * @return array Graded parts, see grille::effective_parts()
+     */
+    public function graded_parts(int $step, object $teachermodel): array {
+        if ($step !== 4) {
+            return [];
+        }
+        return grille::effective_parts(grille::decode($teachermodel->grille_json ?? null));
     }
 
     /**
@@ -611,7 +637,7 @@ PROMPT;
         if (!$this->flexibility) {
             $stepcontext = str_replace(' et flexibilité', '', $stepcontext);
         }
-        $criteriatext = $this->build_criteria_text($step);
+        $criteriatext = $this->build_criteria_text($step, $teachermodel);
         $modeltext = $this->format_teacher_model($step, $teachermodel);
 
         $system = <<<PROMPT

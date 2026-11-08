@@ -30,6 +30,17 @@ define('GP_ROOT', dirname(__DIR__, 2));
 
 $GLOBALS['gp_failures'] = 0;
 
+// Same class loading as Moodle for the plugin's own classes: mod_gestionprojet\a\b -> classes/a/b.php.
+spl_autoload_register(function (string $class): void {
+    $prefix = 'mod_gestionprojet\\';
+    if (strpos($class, $prefix) === 0) {
+        $file = GP_ROOT . '/classes/' . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+        if (is_file($file)) {
+            require_once($file);
+        }
+    }
+});
+
 // A warning or notice is a bug: make it fail the check that raised it.
 set_error_handler(function (int $severity, string $message, string $file, int $line): bool {
     throw new \ErrorException($message, 0, $severity, $file, $line);

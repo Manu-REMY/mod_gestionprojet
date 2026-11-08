@@ -984,3 +984,6 @@ $string['grading'] = 'Correction';
 $string['step4settings'] = 'Cahier des charges (étape 4)';
 $string['step4_flexibility'] = 'Demander la flexibilité (F0 à F3)';
 $string['step4_flexibility_help'] = 'Si désactivé, les critères n\'ont pas de champ de flexibilité et l\'IA n\'en tient pas compte. Les valeurs déjà saisies sont conservées et réapparaissent si l\'option est réactivée.';
+
+// Editable grid (v2.11.0).
+$string['ai_no_graded_part'] = 'Toutes les parties de la grille sont exclues : l\'IA n\'a rien à noter. Vérifiez la grille du modèle de correction.';

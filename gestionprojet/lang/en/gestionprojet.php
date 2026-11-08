@@ -984,3 +984,6 @@ $string['grading'] = 'Grading';
 $string['step4settings'] = 'Functional specification (step 4)';
 $string['step4_flexibility'] = 'Ask for flexibility (F0 to F3)';
 $string['step4_flexibility_help'] = 'If disabled, criteria have no flexibility field and the AI does not take flexibility into account. Values already entered are kept and come back if the option is enabled again.';
+
+// Editable grid (v2.11.0).
+$string['ai_no_graded_part'] = 'Every part of the grading grid is excluded: the AI has nothing to grade. Check the grid of the correction model.';
