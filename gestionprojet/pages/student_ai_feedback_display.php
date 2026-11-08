@@ -45,23 +45,14 @@ if (!isset($submission->grade) || $submission->grade === null) {
 
 // Get the applied AI evaluation of this submission: an evaluation the teacher has not applied
 // is never shown to students, even when the submission already has a grade.
-$aiEvaluation = null;
-if ($gestionprojet->group_submission && $groupid != 0) {
-    $aiEvaluation = $DB->get_record('gestionprojet_ai_evaluations', [
-        'gestionprojetid' => $gestionprojet->id,
-        'step' => $step,
-        'groupid' => $groupid,
-        'userid' => 0,
-        'status' => 'applied'
-    ]);
-} else {
-    $aiEvaluation = $DB->get_record('gestionprojet_ai_evaluations', [
-        'gestionprojetid' => $gestionprojet->id,
-        'step' => $step,
-        'userid' => $USER->id,
-        'status' => 'applied'
-    ]);
-}
+// The most recently applied one, for this very submission.
+$aiEvaluations = $DB->get_records('gestionprojet_ai_evaluations', [
+    'gestionprojetid' => $gestionprojet->id,
+    'step' => $step,
+    'submissionid' => $submission->id,
+    'status' => 'applied',
+], 'timemodified DESC, id DESC', '*', 0, 1);
+$aiEvaluation = $aiEvaluations ? reset($aiEvaluations) : null;
 
 // Default visibility settings (all visible if no AI evaluation record found).
 $showFeedback = true;
@@ -100,7 +91,6 @@ if ($aiEvaluation) {
     if (!isset($gestionprojet->ai_hide_answers) || $gestionprojet->ai_hide_answers) {
         $view = \mod_gestionprojet\answer_leak_filter::student_view(
             $studentfeedback,
-            $aiEvaluation->parsed_feedback ?? null,
             $criteria,
             $suggestions,
             gestionprojet_answer_leak_roots($gestionprojet, $step, $submission)

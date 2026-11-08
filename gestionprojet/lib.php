@@ -251,19 +251,19 @@ function gestionprojet_answer_leak_roots($gestionprojet, int $step, $submission)
     // The AI instructions describe how to grade, not the expected answer: they would forbid harmless words.
     unset($model->ai_instructions);
 
-    $permitted = [$submission];
+    $permitted = [\mod_gestionprojet\answer_leak_filter::content_text($submission)];
     $providedtables = [4 => 'gestionprojet_cdcf_provided', 5 => 'gestionprojet_essai_provided',
         9 => 'gestionprojet_fast_provided'];
     if (isset($providedtables[$step])) {
         $provided = $DB->get_record($providedtables[$step], ['gestionprojetid' => $gestionprojet->id]);
         if ($provided) {
-            $permitted[] = $provided;
+            $permitted[] = \mod_gestionprojet\answer_leak_filter::content_text($provided);
         }
     }
 
     return \mod_gestionprojet\answer_leak_filter::forbidden_roots(
-        \mod_gestionprojet\answer_leak_filter::text_of($model),
-        \mod_gestionprojet\answer_leak_filter::text_of($permitted)
+        \mod_gestionprojet\answer_leak_filter::content_text($model),
+        implode(' ', $permitted)
     );
 }
 

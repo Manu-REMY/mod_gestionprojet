@@ -79,16 +79,12 @@ test('every common root is a real root (4 or 5 letters, as roots() makes them)',
 // What the student page shows.
 $criteria = [['name' => 'Fonctions', 'score' => 6, 'max' => 6, 'comment' => 'Il manque le rayon de braquage.'],
     ['name' => 'Critères', 'score' => 4, 'max' => 6, 'comment' => 'Critères pertinents.']];
-$v = f::student_view('Pense au temps de recharge. Bon travail.', 'Pense au temps de recharge. Bon travail.',
-    $criteria, ['Indique le temps de recharge.', 'Relis ta copie.'], $forbidden);
+$v = f::student_view('Pense au temps de recharge. Bon travail.', $criteria, ['Indique le temps de recharge.', 'Relis ta copie.'], $forbidden);
 test('the AI feedback is filtered', fn() => $v['feedback'] === 'Bon travail.');
 test('criteria comments are filtered, scores kept', fn() =>
     $v['criteria'][0]['comment'] === '' && $v['criteria'][0]['score'] === 6
     && $v['criteria'][1]['comment'] === 'Critères pertinents.');
 test('a leaking suggestion is dropped', fn() => $v['suggestions'] === ['Relis ta copie.']);
-test('a feedback rewritten by the teacher is shown as written', fn() =>
-    f::student_view('Pense au temps de recharge.', 'Autre texte IA.', [], [], $forbidden)['feedback']
-        === 'Pense au temps de recharge.');
 
 // Wiring in the student page.
 $page = file_get_contents(GP_ROOT . '/pages/student_ai_feedback_display.php');
@@ -98,3 +94,19 @@ test('students only see an evaluation the teacher applied', fn() => strpos($page
 test('the student page filters with student_view when the option is on', fn() =>
     strpos($page, 'answer_leak_filter::student_view(') !== false
     && strpos($page, 'ai_hide_answers') !== false);
+
+// Security review of 8 Nov.
+$record = (object) ['id' => 7, 'gestionprojetid' => 3, 'groupid' => 12, 'userid' => 0, 'status' => 1, 'grade' => '9.00',
+    'feedback' => 'Pense au temps de recharge et au rayon de braquage.', 'timemodified' => 1762590000,
+    'interacteurs_data' => $student];
+test('the stored feedback of a submission is not student text (it would permit every leaked word)', function () use ($key, $record) {
+    $forbidden = f::forbidden_roots($key, f::content_text($record));
+    return in_array('recha', $forbidden, true) && in_array('rayon', $forbidden, true)
+        && strpos(f::content_text($record), 'Hauteur') !== false;
+});
+test('a level of the key (number) the student did not write is forbidden', fn() =>
+    f::filter('Indique 50 cm.', f::forbidden_roots($key, $student)) === '');
+test('a number the student wrote can be quoted back', fn() =>
+    f::filter('Tu as écrit 10 cm.', f::forbidden_roots($key, json_encode(['n' => '10 cm']))) === 'Tu as écrit 10 cm.');
+test('a feedback edited by the teacher is filtered too (fail closed)', fn() =>
+    f::student_view('Pense au temps de recharge !', [], [], $forbidden)['feedback'] === '');

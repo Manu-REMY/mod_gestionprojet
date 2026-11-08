@@ -972,7 +972,7 @@ $string['setting_model'] = 'Model for {$a}';
 $string['setting_model_desc'] = 'Exact model name sent to the provider. Empty: {$a}.';
 $string['error:notgroupmember'] = 'You are not a member of this group.';
 $string['ai_hide_answers'] = 'Do not reveal the correction model';
-$string['ai_hide_answers_help'] = 'If enabled, the AI is told never to quote the correction model, and any sentence of the feedback using a word of the correction model that the student did not write is removed before students see it. Missing keywords are never shown to students.';
+$string['ai_hide_answers_help'] = 'If enabled, the AI is told never to quote the correction model, and any sentence of the feedback, criteria comments and suggestions using a word or number of the correction model that the student did not write is removed before students see it, including in a feedback edited by the teacher. Missing keywords are never shown to students.';
 
 // Event names and notification link (were missing, shown as [[...]]).
 $string['event_submission_graded'] = 'Submission graded';

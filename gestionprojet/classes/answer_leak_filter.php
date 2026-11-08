@@ -77,6 +77,25 @@ class answer_leak_filter {
     }
 
     /**
+     * Content of a record (submission, correction model, provided instructions): its content columns only.
+     * Ids and dates would add stray numbers. The stored feedback and grade of a submission come from the AI
+     * or the teacher: counting them as student text would permit every leaked word.
+     *
+     * @param object|array $submission Record.
+     * @return string
+     */
+    public static function content_text($submission): string {
+        $fields = (array) $submission;
+        foreach (array_keys($fields) as $name) {
+            if (in_array($name, ['id', 'gestionprojetid', 'groupid', 'userid', 'status', 'locked'], true)
+                    || preg_match('/feedback|grade|^time|_date$|_by$|_at$/', $name)) {
+                unset($fields[$name]);
+            }
+        }
+        return self::text_of($fields);
+    }
+
+    /**
      * Roots of the answer key that the student did not write and that are not common words.
      *
      * @param string $answerkey Text (or JSON) of the correction model.
@@ -116,19 +135,16 @@ class answer_leak_filter {
     /**
      * Parts of an AI evaluation as a student may see them.
      *
+     * The stored feedback is filtered too when the teacher edited it: a small edit must not let a leak through.
+     *
      * @param string $feedback Feedback stored on the submission.
-     * @param string|null $aifeedback Feedback written by the AI: a different stored feedback was written
-     *                                by the teacher and is shown as is.
      * @param array $criteria Criteria (name, score, max, comment).
      * @param array $suggestions Suggestions (strings).
      * @param string[] $forbidden From forbidden_roots().
      * @return array ['feedback' => string, 'criteria' => array, 'suggestions' => string[]]
      */
-    public static function student_view(string $feedback, ?string $aifeedback, array $criteria, array $suggestions,
-            array $forbidden): array {
-        if ($aifeedback !== null && trim($feedback) === trim($aifeedback)) {
-            $feedback = self::filter($feedback, $forbidden);
-        }
+    public static function student_view(string $feedback, array $criteria, array $suggestions, array $forbidden): array {
+        $feedback = self::filter($feedback, $forbidden);
         foreach ($criteria as $i => $criterion) {
             if (is_array($criterion) && isset($criterion['comment'])) {
                 $criteria[$i]['comment'] = self::filter((string) $criterion['comment'], $forbidden);
@@ -145,16 +161,24 @@ class answer_leak_filter {
     }
 
     /**
-     * First five letters of each word of at least four letters, without case or accent: "Rayons" and "rayon" are the same word.
+     * Roots of a text: the first five letters of each word of at least four letters, without case or accent
+     * ("Rayons" and "rayon" are the same word), and each standalone number ("50 cm" gives "50"; "FS2" gives nothing).
      *
      * @param string $text
      * @return string[]
      */
     public static function roots(string $text): array {
-        $simple = strtr(mb_strtolower($text), ['à' => 'a', 'â' => 'a', 'ä' => 'a', 'ç' => 'c', 'é' => 'e', 'è' => 'e',
+        $simple = mb_strtolower($text);
+        if (class_exists('Normalizer')) {
+            $simple = preg_replace('/\p{Mn}+/u', '', \Normalizer::normalize($simple, \Normalizer::FORM_D));
+        }
+        $simple = strtr($simple, ['à' => 'a', 'â' => 'a', 'ä' => 'a', 'ç' => 'c', 'é' => 'e', 'è' => 'e',
             'ê' => 'e', 'ë' => 'e', 'î' => 'i', 'ï' => 'i', 'ô' => 'o', 'ö' => 'o', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
             'œ' => 'oe']);
         preg_match_all('/[a-z]{4,}/', $simple, $words);
-        return array_values(array_unique(array_map(fn($w) => substr($w, 0, 5), $words[0])));
+        preg_match_all('/(?<![a-z0-9])\d+(?:[.,]\d+)?(?![a-z0-9])/', $simple, $numbers);
+        $roots = array_map(fn($w) => substr($w, 0, 5), $words[0]);
+        $nums = array_map(fn($n) => str_replace(',', '.', $n), $numbers[0]);
+        return array_values(array_unique(array_merge($roots, $nums)));
     }
 }
