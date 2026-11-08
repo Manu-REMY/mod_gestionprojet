@@ -88,3 +88,7 @@ foreach (['en', 'fr'] as $l) {
         test("string $k in $l", fn() => !empty($string[$k]));
     }
 }
+
+// Security review: failed feedbacks are free but bounded (at most twice the limit in total).
+test('state caps the total requests, failures included, at twice the limit', fn() =>
+    strpos($state, '2 * $limit') !== false && strpos($state, '$total') !== false);

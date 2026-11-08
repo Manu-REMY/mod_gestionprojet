@@ -888,8 +888,10 @@ function gestionprojet_formative_state(object $gestionprojet, int $step, object 
     $limit = max(0, (int)($gestionprojet->formative_limit ?? 3));
     $where = 'gestionprojetid = :gpid AND step = :step AND submissionid = :sid AND formatif = 1';
     $params = ['gpid' => $gestionprojet->id, 'step' => $step, 'sid' => $submission->id];
-    // A feedback that failed for a technical reason does not count.
+    // A feedback that failed for a technical reason does not count, but the total (failures included) is bounded
+    // to twice the limit: a copy crafted to make the AI fail cannot ask again and again.
     $used = $DB->count_records_select('gestionprojet_ai_evaluations', $where . " AND status <> 'failed'", $params);
+    $total = $DB->count_records_select('gestionprojet_ai_evaluations', $where, $params);
     $pending = $DB->get_records_select('gestionprojet_ai_evaluations', $where . " AND status IN ('pending', 'processing')",
         $params, 'id DESC', '*', 0, 1);
     $last = $DB->get_records_select('gestionprojet_ai_evaluations', $where . " AND status = 'completed'",
@@ -899,7 +901,7 @@ function gestionprojet_formative_state(object $gestionprojet, int $step, object 
             && !($step === 4 && (int)($gestionprojet->step4_paliers ?? 0) === 1),
         'limit' => $limit,
         'used' => $used,
-        'remaining' => max(0, $limit - $used),
+        'remaining' => max(0, min($limit - $used, 2 * $limit - $total)),
         'pending' => $pending ? reset($pending) : null,
         'last' => $last ? reset($last) : null,
     ];
