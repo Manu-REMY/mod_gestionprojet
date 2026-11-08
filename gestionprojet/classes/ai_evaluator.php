@@ -236,7 +236,9 @@ class ai_evaluator {
             $providedrec_for_prompt = null;
             $nomodifications = false;
 
-            if (isset($providedmap[$evaluation->step])) {
+            // A consigne hidden from the students (stepN_provided = 0) is neither their starting point nor their intro.
+            if (isset($providedmap[$evaluation->step])
+                    && (int)($gestionprojet->{'step' . $evaluation->step . '_provided'} ?? 0) === 1) {
                 $cfg = $providedmap[$evaluation->step];
                 $providedrec = $DB->get_record($cfg['table'], ['gestionprojetid' => $evaluation->gestionprojetid]);
                 if ($providedrec) {
