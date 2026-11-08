@@ -43,7 +43,8 @@ if (!isset($submission->grade) || $submission->grade === null) {
     return;
 }
 
-// Get the AI evaluation record for this submission to check visibility settings.
+// Get the applied AI evaluation of this submission: an evaluation the teacher has not applied
+// is never shown to students, even when the submission already has a grade.
 $aiEvaluation = null;
 if ($gestionprojet->group_submission && $groupid != 0) {
     $aiEvaluation = $DB->get_record('gestionprojet_ai_evaluations', [
@@ -62,31 +63,12 @@ if ($gestionprojet->group_submission && $groupid != 0) {
     ]);
 }
 
-// If no applied AI evaluation, try to get any completed one.
-if (!$aiEvaluation) {
-    if ($gestionprojet->group_submission && $groupid != 0) {
-        $aiEvaluation = $DB->get_record('gestionprojet_ai_evaluations', [
-            'gestionprojetid' => $gestionprojet->id,
-            'step' => $step,
-            'groupid' => $groupid,
-            'userid' => 0,
-            'status' => 'completed'
-        ]);
-    } else {
-        $aiEvaluation = $DB->get_record('gestionprojet_ai_evaluations', [
-            'gestionprojetid' => $gestionprojet->id,
-            'step' => $step,
-            'userid' => $USER->id,
-            'status' => 'completed'
-        ]);
-    }
-}
-
 // Default visibility settings (all visible if no AI evaluation record found).
 $showFeedback = true;
 $showCriteria = true;
 $showKeywordsFound = true;
-$showKeywordsMissing = true;
+// Missing keywords are words of the correction model: never shown to students.
+$showKeywordsMissing = false;
 $showSuggestions = true;
 
 // Parse AI evaluation data and visibility settings.
@@ -94,13 +76,13 @@ $criteria = [];
 $keywordsFound = [];
 $keywordsMissing = [];
 $suggestions = [];
+$studentfeedback = (string) ($submission->feedback ?? '');
 
 if ($aiEvaluation) {
     // Get visibility settings from the evaluation record.
     $showFeedback = !isset($aiEvaluation->show_feedback) || $aiEvaluation->show_feedback;
     $showCriteria = !isset($aiEvaluation->show_criteria) || $aiEvaluation->show_criteria;
     $showKeywordsFound = !isset($aiEvaluation->show_keywords_found) || $aiEvaluation->show_keywords_found;
-    $showKeywordsMissing = !isset($aiEvaluation->show_keywords_missing) || $aiEvaluation->show_keywords_missing;
     $showSuggestions = !isset($aiEvaluation->show_suggestions) || $aiEvaluation->show_suggestions;
 
     // Parse data only if visible.
@@ -110,16 +92,27 @@ if ($aiEvaluation) {
     if ($showKeywordsFound && !empty($aiEvaluation->keywords_found)) {
         $keywordsFound = json_decode($aiEvaluation->keywords_found, true) ?? [];
     }
-    if ($showKeywordsMissing && !empty($aiEvaluation->keywords_missing)) {
-        $keywordsMissing = json_decode($aiEvaluation->keywords_missing, true) ?? [];
-    }
     if ($showSuggestions && !empty($aiEvaluation->suggestions)) {
         $suggestions = json_decode($aiEvaluation->suggestions, true) ?? [];
+    }
+
+    // Remove every sentence using a word of the correction model the student did not write.
+    if (!isset($gestionprojet->ai_hide_answers) || $gestionprojet->ai_hide_answers) {
+        $view = \mod_gestionprojet\answer_leak_filter::student_view(
+            $studentfeedback,
+            $aiEvaluation->parsed_feedback ?? null,
+            $criteria,
+            $suggestions,
+            gestionprojet_answer_leak_roots($gestionprojet, $step, $submission)
+        );
+        $studentfeedback = $view['feedback'];
+        $criteria = $view['criteria'];
+        $suggestions = $view['suggestions'];
     }
 }
 
 // Check if there's anything to display beyond just the grade.
-$hasDetailedFeedback = ($showFeedback && !empty($submission->feedback))
+$hasDetailedFeedback = ($showFeedback && $studentfeedback !== '')
     || ($showCriteria && !empty($criteria))
     || ($showKeywordsFound && !empty($keywordsFound))
     || ($showKeywordsMissing && !empty($keywordsMissing))
@@ -163,14 +156,14 @@ $gradeFormatted = format_float($submission->grade, 1);
                 <div class="grade-label"><?php echo get_string('ai_grade', 'gestionprojet'); ?></div>
             </div>
 
-            <?php if ($showFeedback && !empty($submission->feedback)): ?>
+            <?php if ($showFeedback && $studentfeedback !== ''): ?>
             <div class="feedback-section">
                 <div class="section-title">
                     <span class="section-icon">💬</span>
                     <span><?php echo get_string('feedback', 'gestionprojet'); ?></span>
                 </div>
                 <div class="feedback-text">
-                    <?php echo nl2br(s($submission->feedback)); ?>
+                    <?php echo nl2br(s($studentfeedback)); ?>
                 </div>
             </div>
             <?php endif; ?>
@@ -243,19 +236,6 @@ $gradeFormatted = format_float($submission->grade, 1);
             </div>
             <?php endif; ?>
 
-            <?php if ($showKeywordsMissing && !empty($keywordsMissing)): ?>
-            <div class="keywords-box missing">
-                <div class="keywords-box-title">
-                    <span>!</span>
-                    <span><?php echo get_string('ai_keywords_missing', 'gestionprojet'); ?></span>
-                </div>
-                <div class="keywords-list">
-                    <?php foreach ($keywordsMissing as $keyword): ?>
-                    <span class="keyword-tag missing"><?php echo s($keyword); ?></span>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>

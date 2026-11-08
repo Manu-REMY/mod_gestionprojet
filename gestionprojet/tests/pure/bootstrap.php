@@ -30,6 +30,15 @@ define('GP_ROOT', dirname(__DIR__, 2));
 
 $GLOBALS['gp_failures'] = 0;
 
+// Classes that require_once $CFG->dirroot . '/mod/gestionprojet/lib.php' get an empty stub:
+// pure checks must not depend on Moodle functions.
+$stubroot = sys_get_temp_dir() . '/gestionprojet_pure_stub';
+if (!is_dir($stubroot . '/mod/gestionprojet')) {
+    mkdir($stubroot . '/mod/gestionprojet', 0777, true);
+}
+file_put_contents($stubroot . '/mod/gestionprojet/lib.php', "<?php\n");
+$CFG = (object) ['dirroot' => $stubroot, 'libdir' => $stubroot . '/lib'];
+
 /**
  * Runs one check and prints PASS or FAIL.
  *

@@ -971,3 +971,5 @@ $string['setting_models_heading_desc'] = 'Model used by each provider for evalua
 $string['setting_model'] = 'Model for {$a}';
 $string['setting_model_desc'] = 'Exact model name sent to the provider. Empty: {$a}.';
 $string['error:notgroupmember'] = 'You are not a member of this group.';
+$string['ai_hide_answers'] = 'Do not reveal the correction model';
+$string['ai_hide_answers_help'] = 'If enabled, the AI is told never to quote the correction model, and any sentence of the feedback using a word of the correction model that the student did not write is removed before students see it. Missing keywords are never shown to students.';

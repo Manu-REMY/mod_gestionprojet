@@ -137,6 +137,11 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->addHelpButton('ai_auto_apply', 'ai_auto_apply', 'gestionprojet');
         $mform->hideIf('ai_auto_apply', 'ai_enabled', 'eq', 0);
 
+        $mform->addElement('selectyesno', 'ai_hide_answers', get_string('ai_hide_answers', 'gestionprojet'));
+        $mform->setDefault('ai_hide_answers', 1);
+        $mform->addHelpButton('ai_hide_answers', 'ai_hide_answers', 'gestionprojet');
+        $mform->hideIf('ai_hide_answers', 'ai_enabled', 'eq', 0);
+
         // Gradebook mode settings.
         $mform->addElement('header', 'gradebook_settings', get_string('gradebook_settings', 'gestionprojet'));
 

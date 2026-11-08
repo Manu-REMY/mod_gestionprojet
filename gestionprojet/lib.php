@@ -228,6 +228,46 @@ function gestionprojet_get_user_group($cm, $userid)
 }
 
 /**
+ * Words of the correction model a student must not read in the feedback: those they did not write
+ * and that are not in the instructions given to them.
+ *
+ * @param stdClass $gestionprojet Activity instance
+ * @param int $step Step number (4-9)
+ * @param stdClass $submission Student submission record
+ * @return string[] Forbidden roots, see \mod_gestionprojet\answer_leak_filter
+ */
+function gestionprojet_answer_leak_roots($gestionprojet, int $step, $submission): array
+{
+    global $DB;
+
+    $teachertable = \mod_gestionprojet\ai_evaluator::TEACHER_TABLES[$step] ?? null;
+    if (!$teachertable) {
+        return [];
+    }
+    $model = $DB->get_record($teachertable, ['gestionprojetid' => $gestionprojet->id]);
+    if (!$model) {
+        return [];
+    }
+    // The AI instructions describe how to grade, not the expected answer: they would forbid harmless words.
+    unset($model->ai_instructions);
+
+    $permitted = [$submission];
+    $providedtables = [4 => 'gestionprojet_cdcf_provided', 5 => 'gestionprojet_essai_provided',
+        9 => 'gestionprojet_fast_provided'];
+    if (isset($providedtables[$step])) {
+        $provided = $DB->get_record($providedtables[$step], ['gestionprojetid' => $gestionprojet->id]);
+        if ($provided) {
+            $permitted[] = $provided;
+        }
+    }
+
+    return \mod_gestionprojet\answer_leak_filter::forbidden_roots(
+        \mod_gestionprojet\answer_leak_filter::text_of($model),
+        \mod_gestionprojet\answer_leak_filter::text_of($permitted)
+    );
+}
+
+/**
  * Check that the user may write in the group sent by the browser, and return it.
  *
  * @param stdClass|cm_info $cm Course module

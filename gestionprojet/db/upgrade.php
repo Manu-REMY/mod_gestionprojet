@@ -750,5 +750,15 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026050900, 'gestionprojet');
     }
 
+    // 2.10.2 — option to keep the correction model out of the feedback shown to students (on by default).
+    if ($oldversion < 2026110800) {
+        $table = new xmldb_table('gestionprojet');
+        $field = new xmldb_field('ai_hide_answers', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'ai_auto_apply');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026110800, 'gestionprojet');
+    }
+
     return true;
 }

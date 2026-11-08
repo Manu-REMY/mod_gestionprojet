@@ -145,10 +145,12 @@ class ai_prompt_builder {
      * @param string|null $teacherintro Optional teacher pedagogical intro text (HTML allowed, will be stripped)
      * @param object|null $providedrec Optional teacher-provided pre-filled consigne record (e.g. cdcf_provided)
      * @param bool $nomodifications True when server-side comparison found the submission identical to the consigne
+     * @param bool $hideanswers Whether the feedback must not reveal the correction model
      * @return array ['system' => string, 'user' => string]
      */
-    public function build_prompt(int $step, object $studentdata, object $teachermodel, ?string $teacherintro = null, ?object $providedrec = null, bool $nomodifications = false): array {
-        $systemprompt = $this->build_system_prompt($step, $teachermodel, $teacherintro);
+    public function build_prompt(int $step, object $studentdata, object $teachermodel, ?string $teacherintro = null,
+            ?object $providedrec = null, bool $nomodifications = false, bool $hideanswers = false): array {
+        $systemprompt = $this->build_system_prompt($step, $teachermodel, $teacherintro, $hideanswers);
         $userprompt = $this->build_user_prompt($step, $studentdata, $teachermodel, $providedrec, $nomodifications);
 
         return [
@@ -163,9 +165,11 @@ class ai_prompt_builder {
      * @param int $step Step number
      * @param object $teachermodel Teacher correction model
      * @param string|null $teacherintro Optional teacher pedagogical intro text (HTML allowed, will be stripped)
+     * @param bool $hideanswers Whether the feedback must not reveal the correction model (instance option ai_hide_answers)
      * @return string System prompt
      */
-    public function build_system_prompt(int $step, object $teachermodel, ?string $teacherintro = null): string {
+    public function build_system_prompt(int $step, object $teachermodel, ?string $teacherintro = null,
+            bool $hideanswers = false): string {
         $stepcontext = self::STEP_CONTEXT[$step] ?? 'Évaluation de production élève';
         $aiinstructions = $teachermodel->ai_instructions ?? '';
         $criteriatext = $this->build_criteria_text($step);
@@ -236,6 +240,19 @@ IMPORTANT:
 - Les erreurs mineures ne doivent pas pénaliser lourdement
 - Valorise les efforts et les bonnes idées de l'élève
 PROMPT;
+
+        if ($hideanswers) {
+            $prompt .= <<<PROMPT
+
+
+CONFIDENTIALITÉ DU CORRIGÉ (l'élève lit ton retour):
+- Ne cite jamais le modèle de correction, ni aucune réponse attendue, même reformulée ou partiellement.
+- N'écris jamais ce qu'il fallait mettre : indique seulement quelle partie est incomplète ou à revoir
+  (par exemple « un critère de la FS2 est à préciser »).
+- Laisse "keywords_missing" vide : [].
+- Dans "feedback", "criteria[].comment" et "suggestions", n'emploie aucun mot du corrigé que l'élève n'a pas écrit.
+PROMPT;
+        }
 
         return $prompt;
     }

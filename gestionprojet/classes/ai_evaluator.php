@@ -243,7 +243,8 @@ class ai_evaluator {
             // Build prompts.
             $promptbuilder = new ai_prompt_builder();
             $prompts = $promptbuilder->build_prompt(
-                $evaluation->step, $submission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications
+                $evaluation->step, $submission, $teachermodel, $teacherintro, $providedrec_for_prompt, $nomodifications,
+                !isset($gestionprojet->ai_hide_answers) || (bool) $gestionprojet->ai_hide_answers
             );
 
             // Get AI provider.
