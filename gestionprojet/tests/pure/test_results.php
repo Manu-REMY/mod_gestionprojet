@@ -116,5 +116,5 @@ test('review: active students only, teachers left out in one query, members with
 // v2.13.1: an activity restricted to a grouping only lists the students of that grouping.
 test('lib: only the members of the grouping of the activity', fn() =>
     preg_match('/function gestionprojet_results_lines\(.*?\n}\n/s', $lib, $rg) === 1
-    && strpos($rg[0], "groups_get_grouping_members((int)\$cm->groupingid, 'u.id')") !== false
+    && strpos($rg[0], "groups_get_grouping_members((int)\$cm->groupingid, 'DISTINCT u.id', 'u.id')") !== false
     && strpos($rg[0], 'if (!empty($cm->groupingid)) {') !== false);
