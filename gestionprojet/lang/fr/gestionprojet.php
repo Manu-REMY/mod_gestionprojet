@@ -785,6 +785,11 @@ $string['step4_contrainte_placeholder'] = 'Décrire la contrainte…';
 $string['step4_justification_placeholder'] = 'Justification';
 $string['step4_no_fs_link'] = '— Sans lien à une FS —';
 $string['step4_add_contrainte'] = 'Ajouter une contrainte';
+$string['step4_flag_locked'] = 'Fourni';
+$string['step4_flag_locked_help'] = 'Fourni par la consigne : l\'élève ne peut ni le modifier ni le supprimer';
+$string['step4_flag_gap'] = 'À compléter';
+$string['step4_flag_gap_help'] = 'Arrive vide chez l\'élève ; le texte saisi ici lui sert d\'indication';
+$string['step4_gap_placeholder'] = 'À compléter';
 
 // Step 5 - Page Fiche Essai (élève)
 $string['step5_page_title'] = 'FICHE ESSAI';

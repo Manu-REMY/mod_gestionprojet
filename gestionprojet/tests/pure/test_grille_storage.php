@@ -32,8 +32,8 @@ test('install.xml declares grille_json in gestionprojet_cdcf_teacher', fn() =>
     && strpos($m[0], 'grille_json') !== false);
 test('upgrade step 2026110803 adds it', fn() =>
     preg_match("/oldversion < 2026110803.*?'grille_json'.*?2026110803, 'gestionprojet'/s", $src('db/upgrade.php')) === 1);
-test('version 2.11.0', fn() => strpos($src('version.php'), '2026110803') !== false
-    && strpos($src('version.php'), "'2.11.0'") !== false);
+test('version is at least 2026110803 (the grille_json upgrade step runs)', fn() =>
+    preg_match('/plugin->version = (\d+);/', $src('version.php'), $m) === 1 && (int)$m[1] >= 2026110803);
 foreach (['ajax/autosave.php', 'classes/external/autosave.php'] as $f) {
     test("$f accepts and normalizes grille_json for step 4", function () use ($src, $f) {
         $code = $src($f);
