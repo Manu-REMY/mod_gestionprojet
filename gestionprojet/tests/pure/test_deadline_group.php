@@ -46,8 +46,8 @@ test('delete_instance cleans the table', fn() =>
     strpos($lib, "delete_records('gestionprojet_deadline_group'") !== false);
 test('lib: gestionprojet_effective_deadline exists', fn() =>
     strpos($lib, 'function gestionprojet_effective_deadline(object $gestionprojet, int $step, object $submission): int') !== false);
-test('version 2.14.0', fn() => strpos($read('version.php'), "\$plugin->version = 2026111105;") !== false
-    && strpos($read('version.php'), "\$plugin->release = '2.14.0';") !== false);
+test('version 2.14.0 or later (upgrade step 2026111105 reached)', fn() =>
+    preg_match('/\$plugin->version = (\d+);/', $read('version.php'), $vm) === 1 && (int)$vm[1] >= 2026111105);
 
 // Task 2: the effective deadline drives every decision.
 $task = $read('classes/task/auto_submit_deadline.php');

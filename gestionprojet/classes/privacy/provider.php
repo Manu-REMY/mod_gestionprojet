@@ -181,6 +181,7 @@ class provider implements
                 'provider' => 'privacy:metadata:gestionprojet_ai_evaluations:provider',
                 'parsed_grade' => 'privacy:metadata:gestionprojet_ai_evaluations:parsed_grade',
                 'parsed_feedback' => 'privacy:metadata:gestionprojet_ai_evaluations:parsed_feedback',
+                'langue_json' => 'privacy:metadata:gestionprojet_ai_evaluations:langue_json',
                 'status' => 'privacy:metadata:gestionprojet_ai_evaluations:status',
                 'applied_by' => 'privacy:metadata:gestionprojet_ai_evaluations:applied_by',
                 'applied_at' => 'privacy:metadata:gestionprojet_ai_evaluations:applied_at',
@@ -538,6 +539,7 @@ class provider implements
                         'provider' => $eval->provider,
                         'grade' => $eval->parsed_grade,
                         'feedback' => $eval->parsed_feedback,
+                        'spelling' => $eval->langue_json,
                         'status' => $eval->status,
                         'timecreated' => transform::datetime($eval->timecreated),
                     ];

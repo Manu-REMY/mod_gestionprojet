@@ -150,7 +150,7 @@ class ai_evaluator {
         if (!$formatif && $palier === '') {
             $interval = get_config('mod_gestionprojet', 'ai_interval');
             $slot = self::slot_time(time(), (int)get_config('mod_gestionprojet', 'ai_next_slot'),
-                $interval === false || $interval === '' ? 6 : (int)$interval);
+                $interval === false || $interval === '' ? 12 : (int)$interval);
             set_config('ai_next_slot', $slot, 'mod_gestionprojet');
             $task->set_next_run_time($slot);
         }
@@ -326,6 +326,10 @@ class ai_evaluator {
             if ($ispalier) {
                 $builderoptions['palier'] = $evaluation->palier;
             }
+            // Spelling graded apart at step 4 (request 32), never in a level request.
+            $spelling = (int)$evaluation->step === 4 && !$ispalier && !empty($gestionprojet->langue_enabled)
+                && (int)($gestionprojet->step4_paliers ?? 0) !== 1;
+            $builderoptions['langue'] = $spelling;
             $promptbuilder = new ai_prompt_builder($builderoptions);
             // A grid where every part is excluded cannot give a grade: fail rather than invent one.
             if ((int)$evaluation->step === 4 && !$promptbuilder->graded_parts(4, $teachermodel)) {
@@ -359,10 +363,47 @@ class ai_evaluator {
                 $result->grade = 0.0;
             }
 
+            // Spelling (request 32): a second call on the texts the student wrote; an unreadable answer fails the whole
+            // correction (never a default grade). Nothing written, or a copy equal to the consigne: 0 point, no call.
+            $langue = null;
+            $spellingraw = '';
+            if ($spelling) {
+                $p = (float)($gestionprojet->langue_points ?? 2);
+                $consignearray = (int)($gestionprojet->step4_provided ?? 0) === 1 && $providedrec_for_prompt !== null
+                    ? (json_decode((string)($providedrec_for_prompt->interacteurs_data ?? ''), true) ?: []) : [];
+                $texts = $nomodifications ? [] : orthographe::judged_texts(
+                    json_decode((string)($promptsubmission->interacteurs_data ?? ''), true) ?: [], $consignearray);
+                $fautes = [];
+                $ecartees = 0;
+                if ($texts) {
+                    $spellingprompts = $promptbuilder->build_spelling_prompt($texts);
+                    $spellingresponse = $provider->evaluate($spellingprompts['system'], $spellingprompts['user'],
+                        $evaluation->model, 1500);
+                    $spellingraw = (string)($spellingresponse['content'] ?? '');
+                    try {
+                        $parsedfautes = orthographe::parse($spellingraw);
+                    } catch (\UnexpectedValueException $e) {
+                        throw new \Exception(get_string('langue_unreadable', 'gestionprojet'));
+                    }
+                    $checked = orthographe::verify($parsedfautes, implode("\n", $texts),
+                        json_decode((string)($gestionprojet->langue_accepted ?? ''), true) ?: []);
+                    $fautes = $checked['fautes'];
+                    $ecartees = $checked['ecartees'];
+                    $response['prompt_tokens'] = ($response['prompt_tokens'] ?? 0) + ($spellingresponse['prompt_tokens'] ?? 0);
+                    $response['completion_tokens'] = ($response['completion_tokens'] ?? 0)
+                        + ($spellingresponse['completion_tokens'] ?? 0);
+                }
+                $langue = ['fautes' => $fautes, 'ecartees' => $ecartees, 'p' => $p, 'vide' => !$texts,
+                    'points' => $texts ? orthographe::points(count($fautes), $p) : 0.0];
+            }
+
             // Update evaluation record with prompts and response.
             $evaluation->prompt_system = $prompts['system'];
             $evaluation->prompt_user = $prompts['user'];
-            $evaluation->raw_response = $response['content'];
+            $evaluation->raw_response = $response['content']
+                . ($spellingraw !== '' ? "\n--- orthographe ---\n" . $spellingraw : '');
+            $evaluation->langue_json = $langue !== null ? json_encode($langue, JSON_UNESCAPED_UNICODE) : null;
+            $evaluation->langue_points = $langue !== null ? $langue['p'] : null;
             $evaluation->prompt_tokens = $response['prompt_tokens'] ?? 0;
             $evaluation->completion_tokens = $response['completion_tokens'] ?? 0;
             $evaluation->parsed_grade = $result->grade;
@@ -493,8 +534,10 @@ class ai_evaluator {
             return false;
         }
 
-        // Determine grade and feedback to apply.
-        $grade = $overridegrade ?? $evaluation->parsed_grade;
+        // Determine grade and feedback to apply: with spelling, the content brought to (20 - P) plus the spelling points.
+        require_once(__DIR__ . '/../lib.php');
+        $gestionprojet = $DB->get_record('gestionprojet', ['id' => $evaluation->gestionprojetid]);
+        $grade = $overridegrade ?? gestionprojet_evaluation_total($gestionprojet ?: new \stdClass(), $evaluation);
         $feedback = $overridefeedback ?? $evaluation->parsed_feedback;
 
         // Update submission record.
@@ -524,7 +567,6 @@ class ai_evaluator {
         $DB->update_record('gestionprojet_ai_evaluations', $evaluation);
 
         // Update Moodle gradebook.
-        $gestionprojet = $DB->get_record('gestionprojet', ['id' => $evaluation->gestionprojetid]);
         if ($gestionprojet) {
             // Determine userid for gradebook update.
             // For group submissions, we need to get the group members.

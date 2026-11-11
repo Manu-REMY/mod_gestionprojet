@@ -42,7 +42,7 @@ if ($ADMIN->fulltree) {
         'mod_gestionprojet/ai_interval',
         get_string('setting_ai_interval', 'gestionprojet'),
         get_string('setting_ai_interval_desc', 'gestionprojet'),
-        '6',
+        '12',
         PARAM_INT
     ));
 

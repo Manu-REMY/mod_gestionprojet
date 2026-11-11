@@ -77,6 +77,10 @@ function gestionprojet_add_instance($data, $mform = null)
         $data->ai_api_key = \mod_gestionprojet\ai_config::encrypt_api_key($data->ai_api_key);
     }
 
+    if (isset($data->langue_accepted)) {
+        $data->langue_accepted = gestionprojet_langue_accepted_from_text((string)$data->langue_accepted);
+    }
+
     $data->id = $DB->insert_record('gestionprojet', $data);
 
     // Create empty teacher pages.
@@ -103,6 +107,9 @@ function gestionprojet_update_instance($data, $mform = null)
 
     $data->timemodified = time();
     $data->id = $data->instance;
+    if (isset($data->langue_accepted)) {
+        $data->langue_accepted = gestionprojet_langue_accepted_from_text((string)$data->langue_accepted);
+    }
 
     // Encrypt API key if provided and changed.
     if (!empty($data->ai_api_key)) {
@@ -291,6 +298,159 @@ function gestionprojet_require_group_access($cm, int $groupid, int $userid, $con
         throw new moodle_exception('error:notgroupmember', 'gestionprojet');
     }
     return $groupid;
+}
+
+/**
+ * Grade of an evaluation as applied: the content grade, or with spelling the content brought to (20 - P) plus the spelling
+ * points (request 32).
+ *
+ * @param object $gestionprojet Instance record (unused today: P is stored with the evaluation).
+ * @param object $evaluation AI evaluation.
+ * @return float
+ */
+function gestionprojet_evaluation_total(object $gestionprojet, object $evaluation): float {
+    if (!isset($evaluation->langue_points) || $evaluation->langue_points === null) {
+        return (float)$evaluation->parsed_grade;
+    }
+    $langue = json_decode((string)($evaluation->langue_json ?? ''), true) ?: [];
+    return \mod_gestionprojet\orthographe::total((float)$evaluation->parsed_grade, (float)$evaluation->langue_points,
+        (float)($langue['points'] ?? 0));
+}
+
+/**
+ * Number of spelling mistakes kept for an evaluation (0 without spelling).
+ *
+ * @param object $evaluation AI evaluation.
+ * @return int
+ */
+function gestionprojet_spelling_count(object $evaluation): int {
+    $langue = json_decode((string)($evaluation->langue_json ?? ''), true);
+    return is_array($langue) ? count($langue['fautes'] ?? []) : 0;
+}
+
+/**
+ * Spelling block of a feedback (request 32): points, then every mistake as "word written → correct form" (D-025).
+ *
+ * Built from data checked by the server (quotations found in the copy, corrections close to them): not filtered.
+ *
+ * @param array|null $langue Decoded langue_json (fautes, points, p), null without spelling.
+ * @param int $dismisscmid Course module id: adds a "Dismiss" button to each mistake (grading page, teachers only).
+ * @return string HTML.
+ */
+function gestionprojet_spelling_block_html(?array $langue, int $dismisscmid = 0): string {
+    if ($langue === null) {
+        return '';
+    }
+    $title = get_string('langue_block_title', 'gestionprojet') . ' : '
+        . format_float((float)($langue['points'] ?? 0), 1, true, true) . ' / ' . format_float((float)($langue['p'] ?? 2), 1, true, true);
+    $out = html_writer::tag('h4', s($title));
+    $fautes = $langue['fautes'] ?? [];
+    if (!empty($langue['vide'])) {
+        $out .= html_writer::tag('p', s(get_string('langue_nothing_written', 'gestionprojet')));
+    } else if (!$fautes) {
+        $out .= html_writer::tag('p', '✓ ' . s(get_string('langue_no_mistake', 'gestionprojet')));
+    } else {
+        $items = [];
+        foreach ($fautes as $faute) {
+            $line = '« ' . s($faute['cite']) . ' » → ' . s($faute['correction']);
+            if ($dismisscmid > 0) {
+                $line .= ' ' . html_writer::tag('button', s(get_string('langue_dismiss', 'gestionprojet')), [
+                    'type' => 'button', 'class' => 'btn btn-link btn-sm gp-langue-dismiss',
+                    'data-cmid' => $dismisscmid, 'data-cite' => $faute['cite']]);
+            }
+            $items[] = $line;
+        }
+        $out .= html_writer::alist($items, ['class' => 'gp-langue-list']);
+    }
+    return html_writer::div($out, 'gp-langue-block');
+}
+
+/**
+ * The teacher dismisses a spelling mistake: the word is accepted for the whole activity, and every corrected copy holding
+ * it is recomputed (request 32: the teacher's decisions prevail over the AI).
+ *
+ * A grade the teacher typed by hand is never overwritten: only a copy whose grade is still the former total gets the new one.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param string $cite Word as the student wrote it.
+ * @return int Corrections recomputed.
+ */
+function gestionprojet_spelling_accept(object $gestionprojet, string $cite): int {
+    global $DB;
+
+    $word = \mod_gestionprojet\orthographe::normalize($cite);
+    if ($word === '') {
+        return 0;
+    }
+    $accepted = json_decode((string)($gestionprojet->langue_accepted ?? ''), true) ?: [];
+    if (!in_array($word, $accepted, true)) {
+        $accepted[] = $word;
+        $gestionprojet->langue_accepted = json_encode($accepted, JSON_UNESCAPED_UNICODE);
+        $DB->set_field('gestionprojet', 'langue_accepted', $gestionprojet->langue_accepted, ['id' => $gestionprojet->id]);
+    }
+    $count = 0;
+    // Only the latest applied correction of a copy sets its grade and level (older ones were replaced).
+    $latest = [];
+    foreach ($DB->get_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $gestionprojet->id, 'step' => 4,
+            'status' => 'applied', 'formatif' => 0], 'timemodified ASC, id ASC', 'id, submissionid') as $row) {
+        $latest[$row->submissionid] = (int)$row->id;
+    }
+    $evaluations = $DB->get_records_select('gestionprojet_ai_evaluations',
+        'gestionprojetid = ? AND step = 4 AND langue_json IS NOT NULL', [$gestionprojet->id]);
+    foreach ($evaluations as $evaluation) {
+        $langue = json_decode((string)$evaluation->langue_json, true);
+        if (!is_array($langue)) {
+            continue;
+        }
+        $fautes = $langue['fautes'] ?? [];
+        $kept = array_values(array_filter($fautes, function (array $faute) use ($word): bool {
+            return \mod_gestionprojet\orthographe::normalize((string)($faute['cite'] ?? '')) !== $word;
+        }));
+        if (count($kept) === count($fautes)) {
+            continue;
+        }
+        $oldtotal = gestionprojet_evaluation_total($gestionprojet, $evaluation);
+        $langue['fautes'] = $kept;
+        $langue['ecartees'] = (int)($langue['ecartees'] ?? 0) + count($fautes) - count($kept);
+        $langue['points'] = \mod_gestionprojet\orthographe::points(count($kept), (float)($langue['p'] ?? 2));
+        $evaluation->langue_json = json_encode($langue, JSON_UNESCAPED_UNICODE);
+        $DB->set_field('gestionprojet_ai_evaluations', 'langue_json', $evaluation->langue_json, ['id' => $evaluation->id]);
+        $count++;
+        if ($evaluation->status !== 'applied' || ($latest[$evaluation->submissionid] ?? 0) !== (int)$evaluation->id) {
+            continue;
+        }
+        $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $evaluation->submissionid,
+            'gestionprojetid' => $gestionprojet->id]);
+        if ($submission && $submission->grade !== null && abs((float)$submission->grade - $oldtotal) <= 0.01) {
+            $DB->set_field('gestionprojet_cdcf', 'grade', gestionprojet_evaluation_total($gestionprojet, $evaluation),
+                ['id' => $submission->id]);
+            $targetuserid = (int)$evaluation->userid;
+            if ((int)($gestionprojet->grade_mode ?? 0) === 1) {
+                gestionprojet_update_grades($gestionprojet, $targetuserid, true, 4);
+            } else {
+                gestionprojet_update_grades($gestionprojet, $targetuserid);
+            }
+        }
+        gestionprojet_level_sync($gestionprojet, $evaluation);
+    }
+    return $count;
+}
+
+/**
+ * Words accepted by the teacher, typed one per line in the form, as stored: JSON list of normalized words (request 32).
+ *
+ * @param string $text One word (or group of words) per line.
+ * @return string JSON list, without empty lines nor duplicates.
+ */
+function gestionprojet_langue_accepted_from_text(string $text): string {
+    $words = [];
+    foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+        $word = \mod_gestionprojet\orthographe::normalize($line);
+        if ($word !== '') {
+            $words[$word] = true;
+        }
+    }
+    return json_encode(array_keys($words), JSON_UNESCAPED_UNICODE);
 }
 
 /**
@@ -713,15 +873,18 @@ function gestionprojet_level_sync(object $gestionprojet, object $evaluation): vo
     }
     $parts = gestionprojet_palier_parts($gestionprojet);
     $criteria = json_decode((string)$evaluation->criteria_json, true) ?: [];
-    // A grade changed by the teacher: the parts are brought to it, so that the level follows the grade (choice A).
-    if ($submission->grade !== null && abs((float)$submission->grade - (float)$evaluation->parsed_grade) > 0.01) {
-        $criteria = \mod_gestionprojet\palier::criteria_for_grade($criteria, $parts, (float)$evaluation->parsed_grade,
-            (float)$submission->grade);
+    // A grade changed by the teacher (compared with the total, spelling included): the parts are brought to it,
+    // so that the level follows the grade (choice A).
+    $total = gestionprojet_evaluation_total($gestionprojet, $evaluation);
+    if ($submission->grade !== null && abs((float)$submission->grade - $total) > 0.01) {
+        $criteria = \mod_gestionprojet\palier::criteria_for_grade($criteria, $parts, $total, (float)$submission->grade);
     }
     $level = \mod_gestionprojet\palier::level_reached($criteria, $parts, (int)($gestionprojet->step4_palier_seuil ?? 80));
     if ($level === null) {
         return;
     }
+    // "TS must be perfect": a spelling mistake caps TS at S (request 32).
+    $level['reached'] = \mod_gestionprojet\orthographe::cap_level($level['reached'], gestionprojet_spelling_count($evaluation));
     $keep = \mod_gestionprojet\palier::levels_up_to($level['reached'], \mod_gestionprojet\palier::paliers_in_grid($parts));
 
     $lock = gestionprojet_palier_lock((int)$submission->id);
@@ -1168,10 +1331,15 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     $criteria = [];
     $suggestions = [];
     $keywords = [];
+    $langue = null;
     if ($pick['evaluation']) {
         $evaluation = $pick['evaluation'];
+        // Spelling checked by the server (request 32), shown as it is: it never holds a word the student did not write.
+        $langue = isset($evaluation->langue_json) && $evaluation->langue_json !== null
+            ? (json_decode((string)$evaluation->langue_json, true) ?: null) : null;
         if ($pick['source'] === 'applied' && isset($evaluation->show_feedback) && !$evaluation->show_feedback) {
             $text = '';
+            $langue = null;
         }
         if (!isset($evaluation->show_criteria) || $evaluation->show_criteria) {
             $criteria = json_decode((string)$evaluation->criteria_json, true) ?: [];
@@ -1198,11 +1366,19 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     $level = null;
     // Not when the teacher changed the grade: the level would contradict it.
     $teachergraded = $pick['source'] === 'applied' && $grade !== null
-        && abs($grade - (float)($pick['evaluation']->parsed_grade ?? -1)) > 0.01;
+        && abs($grade - gestionprojet_evaluation_total($gestionprojet, $pick['evaluation'])) > 0.01;
     if ($step === 4 && !$paliermode && $pick['evaluation'] && !$teachergraded
             && in_array($pick['source'], ['formative', 'applied'], true)) {
         $level = \mod_gestionprojet\palier::level_reached(json_decode((string)$pick['evaluation']->criteria_json, true) ?: [],
             gestionprojet_palier_parts($gestionprojet), (int)($gestionprojet->step4_palier_seuil ?? 80));
+        if ($level !== null) {
+            // "TS must be perfect": a spelling mistake caps TS at S (request 32); the next level is then TS.
+            $capped = \mod_gestionprojet\orthographe::cap_level($level['reached'],
+                gestionprojet_spelling_count($pick['evaluation']));
+            if ($capped !== $level['reached']) {
+                $level = ['reached' => $capped, 'next' => 'TS', 'missing' => [get_string('langue_block_title', 'gestionprojet')]];
+            }
+        }
     }
     // Submitted copy: the level recorded for it is the validated level (request 39, D-040).
     if ($step === 4 && $submitted && !$paliermode) {
@@ -1219,7 +1395,7 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
         }
     }
     $feedback = ['source' => $pick['source'], 'text' => $text, 'criteria' => $criteria, 'suggestions' => $suggestions,
-        'keywords' => $keywords, 'time' => $pick['time'], 'level' => $level];
+        'keywords' => $keywords, 'time' => $pick['time'], 'level' => $level, 'langue' => $langue];
 
     return [
         'status' => \mod_gestionprojet\progress::status((int)$submission->status, $pending),
@@ -1294,6 +1470,7 @@ function gestionprojet_level_banner_html(?array $level): string {
  */
 function gestionprojet_progress_feedback_html(array $feedback): string {
     $out = gestionprojet_level_banner_html($feedback['level'] ?? null);
+    $out .= gestionprojet_spelling_block_html($feedback['langue'] ?? null);
     $out .= html_writer::tag('p', userdate($feedback['time'], get_string('strftimedatetimeshort')),
         ['class' => 'gp-progress-date']);
     if ($feedback['text'] !== '') {

@@ -189,6 +189,11 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/ai_progress', 'init', [[
     'step' => $step,
     'containerSelector' => 'body'
 ]]);
+// Dismiss a spelling mistake for the whole activity (request 32).
+$PAGE->requires->js_call_amd('mod_gestionprojet/spelling_accept', 'init', [[
+    'confirm' => get_string('langue_dismiss_confirm', 'gestionprojet'),
+    'ok' => get_string('langue_dismiss', 'gestionprojet'),
+]]);
 $PAGE->requires->js_call_amd('mod_gestionprojet/grading', 'init', [[
     'cmid' => $cm->id,
     'step' => $step,
@@ -763,9 +768,21 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
 
                         <!-- AI Grade Card -->
                         <div class="ai-grade-card">
-                            <div class="ai-grade-value"><?php echo number_format($aievaluation->parsed_grade, 1); ?>/20</div>
+                            <?php $aitotal = gestionprojet_evaluation_total($gestionprojet, $aievaluation); ?>
+                            <div class="ai-grade-value"><?php echo number_format($aitotal, 1); ?>/20</div>
                             <div class="ai-grade-label"><?php echo get_string('ai_grade', 'gestionprojet'); ?></div>
+                            <?php if ($aievaluation->langue_points !== null): ?>
+                                <?php $langue = json_decode((string)$aievaluation->langue_json, true) ?: []; ?>
+                                <div class="ai-grade-label"><?php echo s(get_string('langue_detail', 'gestionprojet', (object)[
+                                    'content' => format_float((float)$aievaluation->parsed_grade
+                                        * (20 - (float)$aievaluation->langue_points) / 20, 1),
+                                    'contentmax' => format_float(20 - (float)$aievaluation->langue_points, 1, true, true),
+                                    'spelling' => format_float((float)($langue['points'] ?? 0), 1),
+                                    'spellingmax' => format_float((float)$aievaluation->langue_points, 1, true, true)])); ?></div>
+                            <?php endif; ?>
                         </div>
+                        <?php echo gestionprojet_spelling_block_html($aievaluation->langue_json !== null
+                            ? (json_decode((string)$aievaluation->langue_json, true) ?: null) : null, (int)$cm->id); ?>
 
                         <!-- Criteria with progress bars (collapsible) -->
                         <?php if (!empty($result->criteria)): ?>
@@ -878,12 +895,12 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
                                 <button type="button" class="btn-ai btn-ai-apply" id="btn-apply-ai-grade"
                                     data-cmid="<?php echo $cm->id; ?>"
                                     data-evaluationid="<?php echo $aievaluation->id; ?>"
-                                    data-grade="<?php echo $aievaluation->parsed_grade; ?>"
+                                    data-grade="<?php echo $aitotal; ?>"
                                     data-feedback="<?php echo htmlspecialchars($aievaluation->parsed_feedback ?? '', ENT_QUOTES); ?>">
                                     <?php echo icon::render('check-circle', 'sm', 'green'); ?> <?php echo get_string('apply_ai_grade', 'gestionprojet'); ?>
                                 </button>
                                 <button type="button" class="btn-ai btn-ai-modify"
-                                    data-grade="<?php echo $aievaluation->parsed_grade; ?>"
+                                    data-grade="<?php echo $aitotal; ?>"
                                     data-feedback="<?php echo htmlspecialchars($aievaluation->parsed_feedback ?? '', ENT_QUOTES); ?>">
                                     <?php echo icon::render('pencil', 'sm'); ?> <?php echo get_string('apply_with_modifications', 'gestionprojet'); ?>
                                 </button>
