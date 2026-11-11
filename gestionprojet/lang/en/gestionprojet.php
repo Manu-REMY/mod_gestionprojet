@@ -1108,6 +1108,13 @@ $string['grille_zone_ensemble'] = 'Whole specification';
 $string['grille_palier_f'] = 'FRA';
 $string['grille_palier_s'] = 'SAT';
 $string['grille_palier_ts'] = 'TS';
+$string['level_reached'] = 'Level reached: {$a->acronym} ({$a->name})';
+$string['level_none'] = 'Level {$a} not reached yet';
+$string['level_next'] = 'To reach {$a->acronym}, work again on: {$a->parts}.';
+$string['level_work_on'] = 'To work on: {$a}.';
+$string['level_name_f'] = 'fragile mastery';
+$string['level_name_s'] = 'satisfactory mastery';
+$string['level_name_ts'] = 'very good mastery';
 
 // Results page (v2.13.0).
 $string['results'] = 'Results';

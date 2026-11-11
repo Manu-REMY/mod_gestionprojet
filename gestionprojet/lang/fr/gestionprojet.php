@@ -1108,6 +1108,13 @@ $string['grille_zone_ensemble'] = 'Cahier des charges entier';
 $string['grille_palier_f'] = 'FRA';
 $string['grille_palier_s'] = 'SAT';
 $string['grille_palier_ts'] = 'TS';
+$string['level_reached'] = 'Niveau atteint : {$a->acronym} ({$a->name})';
+$string['level_none'] = 'Niveau {$a} pas encore atteint';
+$string['level_next'] = 'Pour atteindre {$a->acronym}, retravaille : {$a->parts}.';
+$string['level_work_on'] = 'À retravailler : {$a}.';
+$string['level_name_f'] = 'maîtrise fragile';
+$string['level_name_s'] = 'maîtrise satisfaisante';
+$string['level_name_ts'] = 'très bonne maîtrise';
 
 // Results page (v2.13.0).
 $string['results'] = 'Résultats';

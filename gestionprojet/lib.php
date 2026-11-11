@@ -1059,8 +1059,15 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
         $criteria = $view['criteria'];
         $suggestions = $view['suggestions'];
     }
+    // Step 4 graded on 20 with a grid that has levels: the level this grade reaches (request 37). Computed from the
+    // AI scores even when the teacher hides the criteria: the level gives no answer away.
+    $level = null;
+    if ($step === 4 && !$paliermode && $pick['evaluation'] && in_array($pick['source'], ['formative', 'applied'], true)) {
+        $level = \mod_gestionprojet\palier::level_reached(json_decode((string)$pick['evaluation']->criteria_json, true) ?: [],
+            gestionprojet_palier_parts($gestionprojet), (int)($gestionprojet->step4_palier_seuil ?? 80));
+    }
     $feedback = ['source' => $pick['source'], 'text' => $text, 'criteria' => $criteria, 'suggestions' => $suggestions,
-        'keywords' => $keywords, 'time' => $pick['time']];
+        'keywords' => $keywords, 'time' => $pick['time'], 'level' => $level];
 
     return [
         'status' => \mod_gestionprojet\progress::status((int)$submission->status, $pending),
@@ -1078,6 +1085,42 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
 
 
 /**
+ * Banner of the level reached by a step 4 grade (request 37): acronym, name and a mark, never the colour alone.
+ *
+ * @param array|null $level See palier::level_reached().
+ * @return string HTML, empty when there is no level to show.
+ */
+function gestionprojet_level_banner_html(?array $level): string {
+    if (!$level) {
+        return '';
+    }
+    $acronym = function (string $code): string {
+        return get_string('grille_palier_' . strtolower($code), 'gestionprojet');
+    };
+    if ($level['reached'] !== '') {
+        $code = strtolower($level['reached']);
+        $main = html_writer::span($acronym($level['reached']), 'gp-level-acronym')
+            . html_writer::span(get_string('level_reached', 'gestionprojet', (object)[
+                'acronym' => $acronym($level['reached']),
+                'name' => get_string('level_name_' . $code, 'gestionprojet')]), 'gp-level-text');
+    } else {
+        $code = 'none';
+        $main = html_writer::span('○', 'gp-level-acronym', ['aria-hidden' => 'true'])
+            . html_writer::span(get_string('level_none', 'gestionprojet', $acronym($level['next'])), 'gp-level-text');
+    }
+    $next = '';
+    if ($level['next'] !== '' && $level['reached'] !== '') {
+        $next = html_writer::div(get_string('level_next', 'gestionprojet', (object)[
+            'acronym' => $acronym($level['next']), 'parts' => implode(', ', $level['missing'])]), 'gp-level-next');
+    } else if ($level['next'] !== '') {
+        $next = html_writer::div(get_string('level_work_on', 'gestionprojet', implode(', ', $level['missing'])),
+            'gp-level-next');
+    }
+    return html_writer::div(html_writer::div($main, 'gp-level-main') . $next, 'gp-level-banner gp-level-' . $code,
+        ['role' => 'status']);
+}
+
+/**
  * Student view of a feedback of the progress panel: date, text, suggestions, criteria, keywords (v2.12.2).
  *
  * Shared by the panel and by the status endpoint (a formative feedback shown in place when it is ready).
@@ -1086,7 +1129,7 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
  * @return string HTML, every value escaped.
  */
 function gestionprojet_progress_feedback_html(array $feedback): string {
-    $out = '';
+    $out = gestionprojet_level_banner_html($feedback['level'] ?? null);
     $out .= html_writer::tag('p', userdate($feedback['time'], get_string('strftimedatetimeshort')),
         ['class' => 'gp-progress-date']);
     if ($feedback['text'] !== '') {
