@@ -42,6 +42,8 @@ test('flexibility off: absent from the grading grid', fn() =>
     stripos($off->build_system_prompt(4, $model), 'flexibilit') === false);
 test('flexibility off: absent from the student data and the model', function () use ($off, $sub, $model) {
     $p = $off->build_prompt(4, $sub, $model);
+    // The random code of the copy frame (v2.13.6) may hold "F1": it is not student data.
+    $p['user'] = preg_replace('/COPIE-[0-9A-F]{8}/', 'COPIE-CODE', $p['user']);
     return stripos($p['user'], 'flexibilit') === false && strpos($p['user'], 'F1') === false
         && strpos($p['user'], '10 cm') !== false;
 });

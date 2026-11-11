@@ -22,7 +22,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
         evaluationid: 0,
         pollInterval: 5000, // 5 seconds
         pollTimer: null,
-        maxPolls: 60, // Max 5 minutes of polling
+        maxPolls: 100, // Max 8 minutes 20 of polling: longer than a slow background correction (v2.13.6)
         pollCount: 0,
         containerSelector: '#ai-progress-container',
         onComplete: null,

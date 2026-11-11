@@ -189,8 +189,9 @@ class ai_summary_generator {
 
         $curl = new \curl();
         $curl->setopt([
-            'CURLOPT_TIMEOUT' => 120,
-            'CURLOPT_CONNECTTIMEOUT' => 30,
+            // Called while the page loads: end before Cloudflare cuts the request (100 s).
+            'CURLOPT_TIMEOUT' => 85,
+            'CURLOPT_CONNECTTIMEOUT' => 15,
         ]);
 
         $headers = self::build_headers($provider, $apikey);

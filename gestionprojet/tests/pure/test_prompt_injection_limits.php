@@ -88,3 +88,21 @@ $ajax = file_get_contents(GP_ROOT . '/ajax/generate_ai_instructions.php');
 test('background corrections wait 120 s', fn() => strpos($evaluator, '$provider->set_limits(120, 3);') !== false);
 test('the instructions generator (page call) ends before Cloudflare: one attempt of 85 s', fn() =>
     strpos($ajax, '$provider->set_limits(85, 1);') !== false);
+
+// Review of v2.13.6.
+require_once(GP_ROOT . '/classes/ai_provider/provider_http_exception.php');
+use mod_gestionprojet\ai_provider\provider_http_exception;
+$sys = (new ai_prompt_builder())->build_system_prompt(4, $model);
+test('review: the rules outside the copy and the server markers are named as the server\'s', fn() =>
+    strpos($sys, "la\n  consigne pré-remplie et les rappels du serveur") !== false && strpos($sys, 'sont écrites par le serveur') !== false);
+test('review: a copy equal to the consigne gets 0 from the server', fn() =>
+    preg_match('/if \(\$nomodifications\) \{\s*\$result->grade = 0\.0;/', $evaluator) === 1);
+test('review: a timeout is not retried', fn() => (new provider_http_exception('x', 0, true))->is_transient() === false);
+test('review: no answer at all is still retried', fn() => (new provider_http_exception('x', 0))->is_transient() === true);
+$base = file_get_contents(GP_ROOT . '/classes/ai_provider/base_provider.php');
+test('review: curl error 28 marks the timeout', fn() => strpos($base, '$curl->get_errno()') !== false
+    && strpos($base, '=== 28;') !== false);
+test('review: the teacher page polls longer than a slow correction', fn() =>
+    strpos(file_get_contents(GP_ROOT . '/amd/src/ai_progress.js'), 'maxPolls: 100,') !== false);
+test('review: the dashboard summary ends before Cloudflare', fn() =>
+    strpos(file_get_contents(GP_ROOT . '/classes/dashboard/ai_summary_generator.php'), "'CURLOPT_TIMEOUT' => 85,") !== false);

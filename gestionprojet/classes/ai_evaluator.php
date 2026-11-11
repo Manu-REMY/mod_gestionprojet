@@ -327,6 +327,10 @@ class ai_evaluator {
             // Parse response.
             $parser = new ai_response_parser();
             $result = $parser->parse($response['content']);
+            // The server compared the copy with the consigne: nothing changed means 0, whatever the AI answered.
+            if ($nomodifications) {
+                $result->grade = 0.0;
+            }
 
             // Update evaluation record with prompts and response.
             $evaluation->prompt_system = $prompts['system'];

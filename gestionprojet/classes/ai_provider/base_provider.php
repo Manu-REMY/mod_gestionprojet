@@ -203,7 +203,9 @@ abstract class base_provider implements provider_interface {
         $httpcode = $curl->get_info()['http_code'] ?? 0;
 
         if ($httpcode === 0) {
-            throw new provider_http_exception(get_string('ai_connection_error', 'gestionprojet'), 0);
+            // Curl error 28: the time limit ran out (not retried, see provider_http_exception::is_transient()).
+            $timedout = (int)($curl->get_errno() ?? 0) === 28;
+            throw new provider_http_exception(get_string('ai_connection_error', 'gestionprojet'), 0, $timedout);
         }
 
         $decoded = json_decode($response, true);
