@@ -309,6 +309,23 @@ function gestionprojet_cdcf_locked_zones(object $gestionprojet): array {
 }
 
 /**
+ * Zones of the step 4 grid absent from both the correction model and the consigne shown to students (request 34).
+ *
+ * @param object $gestionprojet Instance record.
+ * @return string[] See consigne_lock::absent_zones().
+ */
+function gestionprojet_cdcf_absent_zones(object $gestionprojet): array {
+    global $DB;
+
+    $model = $DB->get_field('gestionprojet_cdcf_teacher', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
+    $provided = (int)($gestionprojet->step4_provided ?? 0) === 1
+        ? $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id])
+        : null;
+    return \mod_gestionprojet\consigne_lock::absent_zones(\mod_gestionprojet\cdcf_helper::decode($model ?: null),
+        \mod_gestionprojet\cdcf_helper::decode($provided ?: null));
+}
+
+/**
  * Step 4 student copy as the server stores it: what the consigne locks is restored (v2.11.1).
  *
  * When the consigne is not shown to students or locks nothing, the JSON is returned unchanged except that
@@ -365,7 +382,7 @@ function gestionprojet_palier_parts(object $gestionprojet): array {
     $grille = $DB->get_field('gestionprojet_cdcf_teacher', 'grille_json', ['gestionprojetid' => $gestionprojet->id]);
     $flexibility = !isset($gestionprojet->step4_flexibility) || (bool)$gestionprojet->step4_flexibility;
     return \mod_gestionprojet\grille::effective_parts(\mod_gestionprojet\grille::decode($grille ?: null, $flexibility),
-        gestionprojet_cdcf_locked_zones($gestionprojet));
+        array_merge(gestionprojet_cdcf_locked_zones($gestionprojet), gestionprojet_cdcf_absent_zones($gestionprojet)));
 }
 
 /**

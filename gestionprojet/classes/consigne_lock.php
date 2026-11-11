@@ -635,6 +635,46 @@ class consigne_lock {
     }
 
     /**
+     * Zones of the grading grid absent from both the correction model and the consigne (request 34, v2.13.3).
+     *
+     * Nothing is expected there: an "auto" part about them only is not graded, and the AI must not ask for them.
+     * An empty correction model says nothing about what is expected: no zone is absent then.
+     * Order of grille::ZONES; "ensemble" is never absent.
+     *
+     * @param array $model Correction model (normalized CDCF).
+     * @param array $consigne Consigne shown to students (normalized CDCF), or the default data when there is none.
+     * @return string[]
+     */
+    public static function absent_zones(array $model, array $consigne): array {
+        $filled = function (array $cdcf): array {
+            $has = array_fill_keys(['interacteurs', 'fonctions', 'criteres', 'niveaux', 'flexibilite', 'contraintes'], false);
+            foreach ($cdcf['interactors'] ?? [] as $i) {
+                $has['interacteurs'] = $has['interacteurs'] || trim((string)($i['name'] ?? '')) !== '';
+            }
+            foreach ($cdcf['fonctionsService'] ?? [] as $fs) {
+                $has['fonctions'] = $has['fonctions'] || trim((string)($fs['description'] ?? '')) !== '';
+                foreach ($fs['criteres'] ?? [] as $c) {
+                    $has['criteres'] = $has['criteres'] || trim((string)($c['description'] ?? '')) !== '';
+                    $has['niveaux'] = $has['niveaux'] || trim((string)($c['niveau'] ?? '')) !== '';
+                    $has['flexibilite'] = $has['flexibilite'] || trim((string)($c['flexibilite'] ?? '')) !== '';
+                }
+            }
+            foreach ($cdcf['contraintes'] ?? [] as $c) {
+                $has['contraintes'] = $has['contraintes'] || trim((string)($c['description'] ?? '')) !== '';
+            }
+            return $has;
+        };
+        $inmodel = $filled($model);
+        if (!in_array(true, $inmodel, true)) {
+            return [];
+        }
+        $inconsigne = $filled($consigne);
+        return array_keys(array_filter($inmodel, function (bool $has, string $zone) use ($inconsigne): bool {
+            return !$has && !$inconsigne[$zone];
+        }, ARRAY_FILTER_USE_BOTH));
+    }
+
+    /**
      * An FS of the consigne with its fields "to fill in" emptied (flags kept).
      *
      * @param array $fs

@@ -289,6 +289,13 @@ class ai_evaluator {
                 $promptsubmission->interacteurs_data = consigne_lock::sanitize_student_json(
                     (string)($submission->interacteurs_data ?? ''));
             }
+            if ((int)$evaluation->step === 4) {
+                // Nothing expected where both the correction model and the consigne are empty (request 34).
+                $builderoptions['absent_zones'] = consigne_lock::absent_zones(
+                    cdcf_helper::decode($teachermodel->interacteurs_data ?? null),
+                    cdcf_helper::decode((int)($gestionprojet->step4_provided ?? 0) === 1 && $providedrec_for_prompt !== null
+                        ? ($providedrec_for_prompt->interacteurs_data ?? null) : null));
+            }
             if ($ispalier) {
                 $builderoptions['palier'] = $evaluation->palier;
             }

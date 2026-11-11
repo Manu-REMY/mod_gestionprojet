@@ -43,13 +43,13 @@ $user = (new ai_prompt_builder())->build_user_prompt(4,
     (object) ['interacteurs_data' => json_encode(consigne_lock::with_flags($student, $p))], $model,
     (object) ['interacteurs_data' => json_encode($p)]);
 $part = substr($user, strpos($user, "PRODUCTION DE L'ÉLÈVE"));
-test('a pre-filled statement left as is is marked with the consigne text', fn() =>
-    strpos($part, 'Doit … (terrain). [pré-rempli : « Doit … (terrain). »]') !== false);
-test('a rewritten pre-filled level is marked with the consigne text', fn() =>
-    strpos($part, '5 km/h [pré-rempli : « … km/h »]') !== false);
+test('a pre-filled statement left as is is marked as such (request 33)', fn() =>
+    strpos($part, 'Doit … (terrain). [pré-rempli, laissé tel quel]') !== false);
+test('a completed pre-filled level is marked as the student work, with the starting text', fn() =>
+    strpos($part, "5 km/h [pré-rempli, complété par l'élève ; texte de départ : « … km/h »]") !== false);
 test('provided links are marked', fn() => strpos($part, '[Utilisateur ↔ Atmosphère] [liaison fournie]') !== false);
 test('the rule explains pre-filled fields', fn() =>
-    strpos($user, 'ne crédite jamais un texte laissé tel quel') !== false);
+    strpos($user, 'Un champ [pré-rempli, laissé tel quel] ne rapporte aucun point') !== false);
 $plain = cdcf_helper::normalize(['interactors' => [['id' => 1, 'name' => 'A']]]);
 $plainuser = (new ai_prompt_builder())->build_user_prompt(4, (object) ['interacteurs_data' => json_encode($plain)], $model,
     (object) ['interacteurs_data' => json_encode($plain)]);

@@ -74,6 +74,7 @@ define([], function() {
         }
 
         var lockedZones = cfg.lockedZones || [];
+        var absentZones = cfg.absentZones || [];
         // Level mode (v2.11.2): only the parts with a level are graded, level by level.
         var paliersMode = !!cfg.paliersMode;
 
@@ -81,15 +82,22 @@ define([], function() {
             if (part.evaluee !== 'auto') {
                 return part.evaluee === 'oui';
             }
-            // "auto": excluded when every zone of the part is entirely provided by the consigne.
-            return part.zones.some(function(z) { return lockedZones.indexOf(z) === -1; });
+            // "auto": excluded when every zone of the part is entirely provided by the consigne,
+            // or absent from the correction model and the consigne.
+            return part.zones.some(function(z) {
+                return lockedZones.indexOf(z) === -1 && absentZones.indexOf(z) === -1;
+            });
         }
 
         function statusText(part) {
             if (isGraded(part)) {
                 return '✓ ' + lang.statusGraded;
             }
-            return '⊘ ' + (part.evaluee === 'auto' ? lang.statusProvided : lang.statusExcluded);
+            if (part.evaluee !== 'auto') {
+                return '⊘ ' + lang.statusExcluded;
+            }
+            var absent = part.zones.every(function(z) { return absentZones.indexOf(z) !== -1; });
+            return '⊘ ' + (absent ? lang.statusAbsent : lang.statusProvided);
         }
 
         var total = el('p', {className: 'gp-grille-total'});

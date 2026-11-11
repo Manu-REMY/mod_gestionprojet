@@ -53,6 +53,12 @@ class answer_leak_filter {
     ];
 
     /**
+     * @var string[] Words that end with a full stop without ending the sentence ("ex." in "(ex. « code »)").
+     */
+    const ABBREVIATIONS = ['ex', 'cf', 'env', 'p', 'pp', 'fig', 'vol', 'ref', 'réf', 'd', 'c', 'av', 'apr', 'mr', 'mme',
+        'dr', 'no', 'n', 'vs'];
+
+    /**
      * Plain text of stored data: the string values of arrays, objects and JSON strings, not their keys.
      *
      * @param mixed $value
@@ -120,16 +126,84 @@ class answer_leak_filter {
      * @return string
      */
     public static function filter(string $comment, array $forbidden): string {
+        $comment = trim($comment);
         if (!$forbidden) {
-            return trim($comment);
+            return $comment;
         }
-        $kept = [];
-        foreach (preg_split('/(?<=[.!?…])\s+/u', trim($comment)) as $sentence) {
+        $kept = '';
+        foreach (self::sentences($comment) as $sentence) {
             if (!array_intersect(self::roots($sentence), $forbidden)) {
-                $kept[] = $sentence;
+                $kept .= $sentence;
             }
         }
-        return trim(implode(' ', $kept));
+        return trim(preg_replace('/[ \t]+(?=\n)/', '', $kept));
+    }
+
+    /**
+     * Sentences of a text, each with the spaces that follow it: joined back, they give the text again.
+     *
+     * A sentence ends at a line break, or at . ! ? … followed by a space and a capital letter (or a quote opening
+     * on one), outside parentheses and quotes, and not after an abbreviation. A doubtful end does not split:
+     * removing one long sentence is better than leaving a piece of one (request 35).
+     *
+     * @param string $text
+     * @return string[]
+     */
+    public static function sentences(string $text): array {
+        $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $count = count($chars);
+        $out = [];
+        $current = '';
+        $depth = 0;
+        for ($i = 0; $i < $count; $i++) {
+            $char = $chars[$i];
+            $current .= $char;
+            if ($char === "\n") {
+                $out[] = $current;
+                $current = '';
+                $depth = 0;
+                continue;
+            }
+            if (in_array($char, ['(', '[', '«', '“'], true)) {
+                $depth++;
+            } else if (in_array($char, [')', ']', '»', '”'], true)) {
+                $depth = max(0, $depth - 1);
+            }
+            if ($depth > 0 || !in_array($char, ['.', '!', '?', '…'], true)) {
+                continue;
+            }
+            if ($char === '.' && preg_match('/(\p{L}+)$/u', mb_substr($current, 0, -1), $m)
+                    && in_array(mb_strtolower($m[1]), self::ABBREVIATIONS, true)) {
+                continue;
+            }
+            // Spaces (not line breaks), then a capital letter, or a quote opening on one.
+            $j = $i + 1;
+            while ($j < $count && preg_match('/^[ \t\x{00A0}\x{202F}]$/u', $chars[$j])) {
+                $j++;
+            }
+            if ($j === $i + 1 || $j >= $count) {
+                continue;
+            }
+            $next = $chars[$j];
+            if (in_array($next, ['«', '“', '"'], true)) {
+                $k = $j + 1;
+                while ($k < $count && preg_match('/^[ \x{00A0}\x{202F}]$/u', $chars[$k])) {
+                    $k++;
+                }
+                $next = $chars[$k] ?? '';
+            }
+            if (!preg_match('/^\p{Lu}$/u', $next)) {
+                continue;
+            }
+            $current .= implode('', array_slice($chars, $i + 1, $j - $i - 1));
+            $out[] = $current;
+            $current = '';
+            $i = $j - 1;
+        }
+        if ($current !== '') {
+            $out[] = $current;
+        }
+        return $out;
     }
 
     /**

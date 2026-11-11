@@ -1087,6 +1087,7 @@ $string['grille_evaluee_non'] = 'No';
 $string['grille_status_graded'] = 'Graded';
 $string['grille_status_excluded'] = 'Not graded';
 $string['grille_status_provided'] = 'Not graded (provided by the instructions)';
+$string['grille_status_absent'] = 'Not graded (absent from the correction model)';
 $string['grille_add'] = 'Add a part';
 $string['grille_reset'] = 'Restore the default grid';
 $string['grille_up'] = 'Move up';
