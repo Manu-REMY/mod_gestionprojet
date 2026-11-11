@@ -37,7 +37,10 @@ $read = fn(string $path): string => file_get_contents(GP_ROOT . '/' . $path);
 $evaluator = $read('classes/ai_evaluator.php');
 test('queue_evaluation spaces graded corrections only', fn() =>
     preg_match('/if \(!\$formatif && \$palier === \'\'\) \{.*?self::slot_time\(.*?set_config\(\'ai_next_slot\', \$slot, \'mod_gestionprojet\'\).*?\$task->set_next_run_time\(\$slot\);/s', $evaluator) === 1);
-test('setting ai_interval, 6 s by default', fn() => preg_match("/'mod_gestionprojet\/ai_interval'.*?'6',\s*PARAM_INT/s", $read('settings.php')) === 1);
+// Default 6 s in 2.14.0, 12 s since 2.15.0 (two AI calls per graded correction): see test_langue_settings.
+test('setting ai_interval exists (integer seconds)', fn() => preg_match("/'mod_gestionprojet\/ai_interval'.*?PARAM_INT/s", $read('settings.php')) === 1);
+test('an unset gap falls back on 12 s, as the setting default', fn() =>
+    strpos($evaluator, "\$interval === false || \$interval === '' ? 12 : (int)\$interval") !== false);
 foreach (['en', 'fr'] as $lang) {
     $string = [];
     include(GP_ROOT . "/lang/$lang/gestionprojet.php");

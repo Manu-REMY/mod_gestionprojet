@@ -150,7 +150,7 @@ class ai_evaluator {
         if (!$formatif && $palier === '') {
             $interval = get_config('mod_gestionprojet', 'ai_interval');
             $slot = self::slot_time(time(), (int)get_config('mod_gestionprojet', 'ai_next_slot'),
-                $interval === false || $interval === '' ? 6 : (int)$interval);
+                $interval === false || $interval === '' ? 12 : (int)$interval);
             set_config('ai_next_slot', $slot, 'mod_gestionprojet');
             $task->set_next_run_time($slot);
         }
