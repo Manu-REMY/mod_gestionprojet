@@ -48,3 +48,19 @@ test('lib: gestionprojet_effective_deadline exists', fn() =>
     strpos($lib, 'function gestionprojet_effective_deadline(object $gestionprojet, int $step, object $submission): int') !== false);
 test('version 2.14.0', fn() => strpos($read('version.php'), "\$plugin->version = 2026111105;") !== false
     && strpos($read('version.php'), "\$plugin->release = '2.14.0';") !== false);
+
+// Task 2: the effective deadline drives every decision.
+$task = $read('classes/task/auto_submit_deadline.php');
+foreach (['classes/task/auto_submit_deadline.php', 'lib.php', 'pages/student_dates_display.php',
+        'pages/student_submission_section.php'] as $path) {
+    $code = $read($path);
+    test("$path: no decision on the raw step deadline", fn() =>
+        !preg_match('/deadline_date\s*(>|<=|<)\s*\$now|\$teachermodel->deadline_date > \$now/', $code));
+}
+test('lib: deadline checks use the effective deadline', fn() =>
+    substr_count($lib, 'gestionprojet_effective_deadline($gestionprojet, ') >= 4);
+test('the task also picks instances whose class date has passed', fn() =>
+    strpos($task, '{gestionprojet_deadline_group}') !== false && strpos($task, 'gestionprojet_effective_deadline(') !== false);
+test('the date displays read the effective deadline', fn() =>
+    strpos($read('pages/student_dates_display.php'), 'gestionprojet_effective_deadline(') !== false
+    && strpos($read('pages/student_submission_section.php'), 'gestionprojet_effective_deadline(') !== false);

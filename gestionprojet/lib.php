@@ -555,7 +555,7 @@ function gestionprojet_palier_request(object $gestionprojet, object $cm, int $gr
     if ((int)$submission->status === 1) {
         throw new moodle_exception('submissionlocked', 'gestionprojet');
     }
-    $deadline = (int)$DB->get_field('gestionprojet_cdcf_teacher', 'deadline_date', ['gestionprojetid' => $gestionprojet->id]);
+    $deadline = gestionprojet_effective_deadline($gestionprojet, 4, $submission);
     if ($deadline > 0 && time() > $deadline) {
         throw new moodle_exception('submissionlocked', 'gestionprojet');
     }
@@ -999,8 +999,7 @@ function gestionprojet_formative_request(object $gestionprojet, object $cm, int 
     if ((int)$submission->status === 1) {
         throw new moodle_exception('submissionlocked', 'gestionprojet');
     }
-    $deadline = (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
-        ['gestionprojetid' => $gestionprojet->id]);
+    $deadline = gestionprojet_effective_deadline($gestionprojet, $step, $submission);
     if ($deadline > 0 && time() > $deadline) {
         throw new moodle_exception('formative_deadline_passed', 'gestionprojet');
     }
@@ -1064,8 +1063,7 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     $formative = $aion ? gestionprojet_formative_state($gestionprojet, $step, $submission) : null;
     // Past the deadline no feedback can be asked any more (a page left open across it would offer the button).
     $tables = [4 => 'cdcf', 5 => 'essai', 6 => 'rapport', 7 => 'besoin_eleve', 8 => 'carnet', 9 => 'fast'];
-    $deadline = isset($tables[$step]) ? (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
-        ['gestionprojetid' => $gestionprojet->id]) : 0;
+    $deadline = isset($tables[$step]) ? gestionprojet_effective_deadline($gestionprojet, $step, $submission) : 0;
     $deadlinepassed = $deadline > 0 && time() > $deadline;
     // A copy just created by gestionprojet_get_or_create_submission has no grade property yet.
     $grade = isset($submission->grade) && $submission->grade !== null ? (float)$submission->grade : null;
@@ -2352,13 +2350,12 @@ function gestionprojet_check_deadline_submissions($gestionprojet) {
             continue;
         }
 
-        // Get teacher model with deadline.
-        $teachermodel = $DB->get_record($stepconfig['teacher_table'], [
-            'gestionprojetid' => $gestionprojet->id
-        ]);
-
-        // Skip if no deadline or deadline not passed.
-        if (!$teachermodel || empty($teachermodel->deadline_date) || $teachermodel->deadline_date > $now) {
+        // Skip quickly when neither the step nor any class of the step has a deadline already passed.
+        $passed = $DB->record_exists_select($stepconfig['teacher_table'],
+            'gestionprojetid = ? AND deadline_date > 0 AND deadline_date <= ?', [$gestionprojet->id, $now])
+            || $DB->record_exists_select('gestionprojet_deadline_group',
+            'gestionprojetid = ? AND step = ? AND deadline_date > 0 AND deadline_date <= ?', [$gestionprojet->id, $stepnum, $now]);
+        if (!$passed) {
             continue;
         }
 
@@ -2373,6 +2370,11 @@ function gestionprojet_check_deadline_submissions($gestionprojet) {
         }
 
         foreach ($drafts as $draft) {
+            // Each copy has its own deadline: the latest date of its classes, else the step's (request 40).
+            $deadline = gestionprojet_effective_deadline($gestionprojet, $stepnum, $draft);
+            if ($deadline <= 0 || $deadline > $now) {
+                continue;
+            }
             try {
                 // Update to submitted status.
                 $draft->status = 1; // Submitted

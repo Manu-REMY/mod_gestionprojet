@@ -67,13 +67,15 @@ class auto_submit_deadline extends \core\task\scheduled_task {
             mtrace("  Processing step {$stepnum} ({$stepconfig['name']})...");
 
             // Get all teacher models with a deadline_date that has passed and is not 0.
-            $sql = "SELECT t.*, g.id as gestionprojetid, g.course, g.group_submission, g.enable_step{$stepnum}
-                    FROM {{$stepconfig['teacher_table']}} t
-                    JOIN {gestionprojet} g ON g.id = t.gestionprojetid
-                    WHERE t.deadline_date > 0
-                      AND t.deadline_date <= :now";
+            // Instances whose step deadline has passed, or the deadline of one of their classes (request 40).
+            $sql = "SELECT g.id AS gestionprojetid, g.enable_step{$stepnum}
+                      FROM {gestionprojet} g
+                     WHERE g.id IN (SELECT t.gestionprojetid FROM {{$stepconfig['teacher_table']}} t
+                                     WHERE t.deadline_date > 0 AND t.deadline_date <= :now1)
+                        OR g.id IN (SELECT d.gestionprojetid FROM {gestionprojet_deadline_group} d
+                                     WHERE d.step = :step AND d.deadline_date > 0 AND d.deadline_date <= :now2)";
 
-            $teachermodels = $DB->get_records_sql($sql, ['now' => $now]);
+            $teachermodels = $DB->get_records_sql($sql, ['now1' => $now, 'now2' => $now, 'step' => $stepnum]);
 
             if (empty($teachermodels)) {
                 mtrace("    No expired deadlines found for step {$stepnum}.");
@@ -88,9 +90,8 @@ class auto_submit_deadline extends \core\task\scheduled_task {
                     continue;
                 }
 
-                // Use date() instead of userdate() to avoid IntlTimeZone dependency in CLI context.
-                $deadlinestr = date('Y-m-d H:i:s', $model->deadline_date);
-                mtrace("    Processing instance {$model->gestionprojetid} (deadline: {$deadlinestr})...");
+                mtrace("    Processing instance {$model->gestionprojetid}...");
+                $gestionprojet = $DB->get_record('gestionprojet', ['id' => $model->gestionprojetid], '*', MUST_EXIST);
 
                 // Get all draft submissions (status = 0) for this step and instance.
                 $drafts = $DB->get_records($stepconfig['table'], [
@@ -104,6 +105,11 @@ class auto_submit_deadline extends \core\task\scheduled_task {
                 }
 
                 foreach ($drafts as $draft) {
+                    // Each copy has its own deadline: the latest date of its classes, else the step's.
+                    $deadline = gestionprojet_effective_deadline($gestionprojet, $stepnum, $draft);
+                    if ($deadline <= 0 || $deadline > $now) {
+                        continue;
+                    }
                     try {
                         // Update to submitted status.
                         $draft->status = 1; // Submitted
@@ -130,7 +136,6 @@ class auto_submit_deadline extends \core\task\scheduled_task {
 
                         // Trigger AI evaluation if enabled (wrapped in try-catch to not block submission).
                         try {
-                            $gestionprojet = $DB->get_record('gestionprojet', ['id' => $model->gestionprojetid], '*', MUST_EXIST);
                             gestionprojet_trigger_ai_evaluation_safe($gestionprojet, $stepnum, $draft);
                         } catch (\Throwable $aierror) {
                             mtrace("        WARNING: AI evaluation trigger failed: " . $aierror->getMessage());
