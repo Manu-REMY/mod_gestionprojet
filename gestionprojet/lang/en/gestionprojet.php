@@ -1111,6 +1111,7 @@ $string['grille_palier_f'] = 'FRA';
 $string['grille_palier_s'] = 'SAT';
 $string['grille_palier_ts'] = 'TS';
 $string['level_reached'] = 'Level reached: {$a->acronym} ({$a->name})';
+$string['level_validated'] = 'Level validated: {$a->acronym} ({$a->name})';
 $string['level_none'] = 'Level {$a} not reached yet';
 $string['level_next'] = 'To reach {$a->acronym}, work again on: {$a->parts}.';
 $string['level_work_on'] = 'To work on: {$a}.';

@@ -1193,6 +1193,20 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
         $level = \mod_gestionprojet\palier::level_reached(json_decode((string)$pick['evaluation']->criteria_json, true) ?: [],
             gestionprojet_palier_parts($gestionprojet), (int)($gestionprojet->step4_palier_seuil ?? 80));
     }
+    // Submitted copy: the level recorded for it is the validated level (request 39, D-040).
+    if ($step === 4 && $submitted && !$paliermode) {
+        $validated = array_column($DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id,
+            'retire' => 0] + gestionprojet_palier_owner($submission), '', 'id, palier'), 'palier');
+        $top = '';
+        foreach (\mod_gestionprojet\palier::ORDER as $code) {
+            if (in_array($code, $validated, true)) {
+                $top = $code;
+            }
+        }
+        if ($top !== '') {
+            $level = ['reached' => $top, 'next' => '', 'missing' => [], 'validated' => true];
+        }
+    }
     $feedback = ['source' => $pick['source'], 'text' => $text, 'criteria' => $criteria, 'suggestions' => $suggestions,
         'keywords' => $keywords, 'time' => $pick['time'], 'level' => $level];
 
@@ -1224,6 +1238,17 @@ function gestionprojet_level_banner_html(?array $level): string {
     $acronym = function (string $code): string {
         return get_string('grille_palier_' . strtolower($code), 'gestionprojet');
     };
+    if (!empty($level['validated']) && $level['reached'] !== '') {
+        // Level recorded at submission (request 39): a check mark, then the level.
+        $code = strtolower($level['reached']);
+        $main = html_writer::span(s($acronym($level['reached'])), 'gp-level-acronym')
+            . html_writer::span('✓', 'gp-level-check', ['aria-hidden' => 'true'])
+            . html_writer::span(s(get_string('level_validated', 'gestionprojet', (object)[
+                'acronym' => $acronym($level['reached']),
+                'name' => get_string('level_name_' . $code, 'gestionprojet')])), 'gp-level-text');
+        return html_writer::div(html_writer::div($main, 'gp-level-main'), 'gp-level-banner gp-level-' . $code,
+            ['role' => 'status']);
+    }
     if ($level['reached'] !== '') {
         $code = strtolower($level['reached']);
         $main = html_writer::span(s($acronym($level['reached'])), 'gp-level-acronym')

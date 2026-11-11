@@ -49,3 +49,21 @@ test('sync: under the lock of the copy', fn() => strpos($sync, 'gestionprojet_pa
     && strpos($sync, '->release()') !== false);
 test('apply_evaluation calls the sync after updating the copy', fn() =>
     preg_match('/\$DB->update_record\(\$submissiontable, \$submission\);.*?gestionprojet_level_sync\(/s', $evaluator) === 1);
+
+// Task 5: "Niveau … validé" for the student after submission.
+preg_match('/function gestionprojet_progress_state\(.*?\n\}\n/s', $lib, $m);
+$state = $m[0] ?? '';
+preg_match('/function gestionprojet_level_banner_html\(.*?\n\}\n/s', $lib, $m);
+$banner = $m[0] ?? '';
+test('state: a submitted copy outside the level mode shows its highest validated level', fn() =>
+    strpos($state, "get_records('gestionprojet_palier'") !== false && strpos($state, "'validated' => true") !== false
+    && strpos($state, '$submitted && !$paliermode') !== false);
+test('banner: validated level, a check mark and its own escaped sentence', fn() =>
+    strpos($banner, "!empty(\$level['validated'])") !== false && strpos($banner, "'level_validated'") !== false
+    && strpos($banner, "'✓'") !== false);
+foreach (['en', 'fr'] as $lang) {
+    $string = [];
+    include(GP_ROOT . "/lang/$lang/gestionprojet.php");
+    test("string level_validated ($lang)", fn() => !empty($string['level_validated'])
+        && strpos($string['level_validated'], '{$a->acronym}') !== false);
+}

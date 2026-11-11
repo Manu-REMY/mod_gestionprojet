@@ -103,7 +103,8 @@ test('css: one style per level, namespaced', fn() => strpos($css, '.path-mod-ges
 test('lib: the banner escapes every sentence (part names typed by the teacher)', function () use ($lib) {
     preg_match('/function gestionprojet_level_banner_html.*?\n}\n/s', $lib, $m);
     $body = $m[0] ?? '';
-    return $body !== '' && substr_count($body, 'html_writer::span(s(') === 3 && substr_count($body, 'html_writer::div(s(') === 2;
+    // v2.14.0: the validated level adds an acronym and a sentence (5 escaped spans).
+    return $body !== '' && substr_count($body, 'html_writer::span(s(') === 5 && substr_count($body, 'html_writer::div(s(') === 2;
 });
 
 // Review of v2.13.5.

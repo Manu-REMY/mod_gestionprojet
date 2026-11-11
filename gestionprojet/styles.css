@@ -5940,6 +5940,11 @@
     font-size: 0.9rem;
 }
 
+.path-mod-gestionprojet .gp-level-check {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
 .path-mod-gestionprojet .gp-level-next {
     margin-top: 6px;
     font-size: 0.9rem;
