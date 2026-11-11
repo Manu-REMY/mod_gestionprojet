@@ -130,7 +130,8 @@ $requestbody = fn_body($lib, 'gestionprojet_palier_request');
 test('request: step 4 must be enabled', fn() => strpos($requestbody, 'gestionprojet_is_step_enabled($gestionprojet, 4)') !== false);
 test('request: submissions must be enabled', fn() => strpos($requestbody, 'enable_submission') !== false);
 test('request: a submitted (locked) copy is refused', fn() => strpos($requestbody, '->status') !== false);
-test('request: refused after the deadline', fn() => strpos($requestbody, 'deadline_date') !== false);
+test('request: refused after the deadline (effective deadline of the copy, v2.14.0)', fn() =>
+    strpos($requestbody, 'gestionprojet_effective_deadline($gestionprojet, 4, $submission)') !== false);
 foreach (['en', 'fr'] as $l) {
     $string = [];
     include(GP_ROOT . "/lang/$l/gestionprojet.php");
