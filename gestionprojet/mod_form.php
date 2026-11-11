@@ -105,6 +105,21 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->setDefault('step4_palier_seuil', 80);
         $mform->addHelpButton('step4_palier_seuil', 'step4_palier_seuil', 'gestionprojet');
 
+        // Spelling graded at step 4 (request 32, D-024): on by default, 2 points out of 20 at least.
+        $mform->addElement('selectyesno', 'langue_enabled', get_string('langue_enabled', 'gestionprojet'));
+        $mform->setDefault('langue_enabled', 1);
+        $mform->addHelpButton('langue_enabled', 'langue_enabled', 'gestionprojet');
+        $mform->addElement('text', 'langue_points', get_string('langue_points', 'gestionprojet'), ['size' => 4]);
+        $mform->setType('langue_points', PARAM_FLOAT);
+        $mform->setDefault('langue_points', 2);
+        $mform->addHelpButton('langue_points', 'langue_points', 'gestionprojet');
+        $mform->hideIf('langue_points', 'langue_enabled', 'eq', 0);
+        $mform->addElement('textarea', 'langue_accepted', get_string('langue_accepted', 'gestionprojet'),
+            ['rows' => 4, 'cols' => 40]);
+        $mform->setType('langue_accepted', PARAM_TEXT);
+        $mform->addHelpButton('langue_accepted', 'langue_accepted', 'gestionprojet');
+        $mform->hideIf('langue_accepted', 'langue_enabled', 'eq', 0);
+
         // AI Evaluation settings.
         $mform->addElement('header', 'ai_settings', get_string('ai_settings', 'gestionprojet'));
         $mform->setExpanded('ai_settings', false);
@@ -211,11 +226,29 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         if (isset($data['formative_limit']) && ((int)$data['formative_limit'] < 0 || (int)$data['formative_limit'] > 20)) {
             $errors['formative_limit'] = get_string('error_formative_limit', 'gestionprojet');
         }
+        $languepoints = $data['langue_points'] ?? null;
+        if (!empty($data['langue_enabled'])
+                && (!is_numeric($languepoints) || (float)$languepoints < 2 || (float)$languepoints > 10)) {
+            $errors['langue_points'] = get_string('error_langue_points', 'gestionprojet');
+        }
         if (isset($data['step4_palier_seuil'])
                 && ((int)$data['step4_palier_seuil'] < 0 || (int)$data['step4_palier_seuil'] > 100)) {
             $errors['step4_palier_seuil'] = get_string('error_palier_seuil', 'gestionprojet');
         }
 
         return $errors;
+    }
+
+    /**
+     * Accepted words (stored as JSON) shown one per line.
+     *
+     * @param array $defaultvalues
+     */
+    public function data_preprocessing(&$defaultvalues) {
+        parent::data_preprocessing($defaultvalues);
+        if (isset($defaultvalues['langue_accepted'])) {
+            $words = json_decode((string)$defaultvalues['langue_accepted'], true);
+            $defaultvalues['langue_accepted'] = is_array($words) ? implode("\n", $words) : '';
+        }
     }
 }

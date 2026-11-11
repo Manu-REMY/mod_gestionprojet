@@ -77,6 +77,10 @@ function gestionprojet_add_instance($data, $mform = null)
         $data->ai_api_key = \mod_gestionprojet\ai_config::encrypt_api_key($data->ai_api_key);
     }
 
+    if (isset($data->langue_accepted)) {
+        $data->langue_accepted = gestionprojet_langue_accepted_from_text((string)$data->langue_accepted);
+    }
+
     $data->id = $DB->insert_record('gestionprojet', $data);
 
     // Create empty teacher pages.
@@ -103,6 +107,9 @@ function gestionprojet_update_instance($data, $mform = null)
 
     $data->timemodified = time();
     $data->id = $data->instance;
+    if (isset($data->langue_accepted)) {
+        $data->langue_accepted = gestionprojet_langue_accepted_from_text((string)$data->langue_accepted);
+    }
 
     // Encrypt API key if provided and changed.
     if (!empty($data->ai_api_key)) {
@@ -291,6 +298,23 @@ function gestionprojet_require_group_access($cm, int $groupid, int $userid, $con
         throw new moodle_exception('error:notgroupmember', 'gestionprojet');
     }
     return $groupid;
+}
+
+/**
+ * Words accepted by the teacher, typed one per line in the form, as stored: JSON list of normalized words (request 32).
+ *
+ * @param string $text One word (or group of words) per line.
+ * @return string JSON list, without empty lines nor duplicates.
+ */
+function gestionprojet_langue_accepted_from_text(string $text): string {
+    $words = [];
+    foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+        $word = \mod_gestionprojet\orthographe::normalize($line);
+        if ($word !== '') {
+            $words[$word] = true;
+        }
+    }
+    return json_encode(array_keys($words), JSON_UNESCAPED_UNICODE);
 }
 
 /**

@@ -865,5 +865,37 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026111105, 'gestionprojet');
     }
 
+    // 2.15.0 — spelling graded at step 4 (request 32), on in every activity (D-024).
+    if ($oldversion < 2026111106) {
+        $table = new xmldb_table('gestionprojet');
+        $fields = [
+            new xmldb_field('langue_enabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'formative_limit'),
+            new xmldb_field('langue_points', XMLDB_TYPE_NUMBER, '5, 2', null, XMLDB_NOTNULL, null, '2', 'langue_enabled'),
+            new xmldb_field('langue_accepted', XMLDB_TYPE_TEXT, null, null, null, null, null, 'langue_points'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        $table = new xmldb_table('gestionprojet_ai_evaluations');
+        $fields = [
+            new xmldb_field('langue_json', XMLDB_TYPE_TEXT, null, null, null, null, null, 'formatif'),
+            new xmldb_field('langue_points', XMLDB_TYPE_NUMBER, '5, 2', null, null, null, null, 'langue_json'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        $DB->set_field('gestionprojet', 'langue_enabled', 1, []);
+        $DB->set_field('gestionprojet', 'langue_points', 2, []);
+        // Two AI calls per graded correction now: 12 s apart keeps 10 calls a minute. Another value chosen is kept.
+        if (get_config('mod_gestionprojet', 'ai_interval') === '6') {
+            set_config('ai_interval', 12, 'mod_gestionprojet');
+        }
+        upgrade_mod_savepoint(true, 2026111106, 'gestionprojet');
+    }
+
     return true;
 }
