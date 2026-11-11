@@ -114,6 +114,10 @@ try {
 
     $provider = \mod_gestionprojet\ai_evaluator::get_provider($aiconfig->provider, $apikey);
     $model = \mod_gestionprojet\ai_evaluator::get_model_for_provider($aiconfig->provider);
+    // The page waits for this call: one attempt that ends before Cloudflare cuts the request (100 s).
+    if ($provider instanceof \mod_gestionprojet\ai_provider\base_provider) {
+        $provider->set_limits(85, 1);
+    }
 
     $response = $provider->evaluate($prompts['system'], $prompts['user'], $model, 1500);
 

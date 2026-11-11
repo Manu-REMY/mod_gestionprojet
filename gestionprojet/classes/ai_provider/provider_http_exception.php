@@ -32,12 +32,33 @@ defined('MOODLE_INTERNAL') || die();
  */
 class provider_http_exception extends \Exception {
 
+    /** @var bool Whether the call ran out of time (curl error 28) rather than finding no server */
+    private bool $timedout;
+
+    /**
+     * Constructor.
+     *
+     * @param string $message
+     * @param int $code HTTP status, 0 when there was no answer.
+     * @param bool $timedout Whether the call ran out of time.
+     */
+    public function __construct(string $message, int $code = 0, bool $timedout = false) {
+        parent::__construct($message, $code);
+        $this->timedout = $timedout;
+    }
+
     /**
      * Whether trying again later may succeed: no answer, rate limit or provider error.
+     *
+     * A call that ran out of time is not retried (v2.13.6): the model is slow, not unreachable, and each attempt
+     * would hold a background task runner of the whole site for the full time limit.
      *
      * @return bool
      */
     public function is_transient(): bool {
+        if ($this->timedout) {
+            return false;
+        }
         $status = $this->getCode();
         return $status === 0 || $status === 408 || $status === 429 || $status >= 500;
     }

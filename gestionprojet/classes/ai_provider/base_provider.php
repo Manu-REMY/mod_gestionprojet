@@ -203,7 +203,9 @@ abstract class base_provider implements provider_interface {
         $httpcode = $curl->get_info()['http_code'] ?? 0;
 
         if ($httpcode === 0) {
-            throw new provider_http_exception(get_string('ai_connection_error', 'gestionprojet'), 0);
+            // Curl error 28: the time limit ran out (not retried, see provider_http_exception::is_transient()).
+            $timedout = (int)($curl->get_errno() ?? 0) === 28;
+            throw new provider_http_exception(get_string('ai_connection_error', 'gestionprojet'), 0, $timedout);
         }
 
         $decoded = json_decode($response, true);
@@ -235,6 +237,20 @@ abstract class base_provider implements provider_interface {
             return $response['message'];
         }
         return "HTTP Error: $httpcode";
+    }
+
+    /**
+     * Time limit of one call and number of attempts (v2.13.6).
+     *
+     * A background correction can wait longer than the default; a call made while a page waits must end before
+     * Cloudflare cuts the request (100 s), so it gets one attempt only.
+     *
+     * @param int $timeout Seconds, at least 1.
+     * @param int $maxretries Attempts, at least 1.
+     */
+    public function set_limits(int $timeout, int $maxretries): void {
+        $this->timeout = max(1, $timeout);
+        $this->maxretries = max(1, $maxretries);
     }
 
     /**
