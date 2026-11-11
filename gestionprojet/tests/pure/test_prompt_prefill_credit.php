@@ -46,6 +46,8 @@ $student = consigne_lock::seed($p);
 $student['fonctionsService'][0]['description'] = 'Permettre au propriétaire de sécuriser son domicile.';
 $student['fonctionsService'][0]['criteres'][0]['description'] = 'Portée de détection';
 $student['fonctionsService'][0]['criteres'][0]['niveau'] = '';
+// Only the "…" removed and the case changed: nothing added (review).
+$student['fonctionsService'][1]['criteres'][0]['description'] = 'temps de';
 $model = (object) ['ai_instructions' => '', 'interacteurs_data' => ''];
 $user = (new ai_prompt_builder())->build_user_prompt(4,
     (object) ['interacteurs_data' => json_encode(consigne_lock::with_flags($student, $p))], $model,
@@ -57,6 +59,8 @@ test('a completed pre-filled statement is marked as completed by the student', f
         . "texte de départ : « Permettre au propriétaire de … son domicile. »]") !== false);
 test('a pre-filled field left as is says so, without a quote that looks like an empty field', fn() =>
     strpos($part, "… l'intrus. [pré-rempli, laissé tel quel]") !== false);
+test('removing the "…" or changing the case is not completing', fn() =>
+    strpos($part, "temps de [pré-rempli, laissé tel quel]") !== false);
 test('a pre-filled field emptied by the student says so', fn() =>
     strpos($part, "niveau : (non précisé) [pré-rempli, vidé par l'élève]") !== false);
 

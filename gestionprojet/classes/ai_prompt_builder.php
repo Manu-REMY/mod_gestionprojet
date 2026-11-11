@@ -516,9 +516,16 @@ PROMPT;
             'criteres' => "les critères d'appréciation", 'niveaux' => 'les niveaux (valeurs et unités)',
             'flexibilite' => 'la flexibilité', 'contraintes' => 'les contraintes'];
         // Nothing expected there (request 34): the AI must neither ask for it nor take points for its absence.
+        // A zone that the teacher forces to be graded (part set to "Oui") is not said absent: that would give its points away.
+        $forced = [];
+        foreach ($step === 4 ? $parts : [] as $part) {
+            if ($part['evaluee'] === 'oui') {
+                $forced = array_merge($forced, $part['zones']);
+            }
+        }
         $absent = [];
         foreach ($step === 4 ? $this->absentzones : [] as $zone) {
-            if (isset($labels[$zone]) && ($zone !== 'flexibilite' || $this->flexibility)) {
+            if (isset($labels[$zone]) && ($zone !== 'flexibilite' || $this->flexibility) && !in_array($zone, $forced, true)) {
                 $absent[] = $labels[$zone];
             }
         }
@@ -706,7 +713,11 @@ PROMPT;
             return ' [pré-rempli]';
         }
         $text = trim((string)($element[$field] ?? ''));
-        if ($text === $start) {
+        // Only punctuation, case or the "…" changed: nothing added, the field is left as is.
+        $bare = function (string $value): string {
+            return preg_replace('/[^\p{L}\p{N}]+/u', '', mb_strtolower($value)) ?? '';
+        };
+        if ($text !== '' && $bare($text) === $bare($start)) {
             return ' [pré-rempli, laissé tel quel]';
         }
         if ($text === '') {

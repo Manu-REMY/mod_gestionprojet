@@ -312,12 +312,14 @@ function gestionprojet_cdcf_locked_zones(object $gestionprojet): array {
  * Zones of the step 4 grid absent from both the correction model and the consigne shown to students (request 34).
  *
  * @param object $gestionprojet Instance record.
+ * @param string|null $modeljson Correction model being edited (not saved yet); null reads the saved one.
  * @return string[] See consigne_lock::absent_zones().
  */
-function gestionprojet_cdcf_absent_zones(object $gestionprojet): array {
+function gestionprojet_cdcf_absent_zones(object $gestionprojet, ?string $modeljson = null): array {
     global $DB;
 
-    $model = $DB->get_field('gestionprojet_cdcf_teacher', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]);
+    $model = $modeljson ?? $DB->get_field('gestionprojet_cdcf_teacher', 'interacteurs_data',
+        ['gestionprojetid' => $gestionprojet->id]);
     $provided = (int)($gestionprojet->step4_provided ?? 0) === 1
         ? $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id])
         : null;

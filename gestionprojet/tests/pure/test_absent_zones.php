@@ -81,6 +81,20 @@ test('flexibility off: the absent flexibility is not mentioned', fn() => strpos(
 $plain = (new ai_prompt_builder(['flexibility' => false]))->build_system_prompt(4, $teacher);
 test('no absent zone: no sentence about it', fn() => strpos($plain, 'Le modèle de correction ne contient pas') === false);
 
+// A part forced to "Oui" stays graded: the AI must not be told that nothing is expected there (review).
+$forcedteacher = clone $teacher;
+$forcedgrid = grille::default_grid(false);
+$forcedgrid[3]['evaluee'] = 'oui';
+$forcedteacher->grille_json = json_encode($forcedgrid);
+$forcedsystem = $builder->build_system_prompt(4, $forcedteacher);
+test('forced part: graded and not said absent', fn() => strpos($forcedsystem, '- Contraintes (poids') !== false
+    && strpos($forcedsystem, 'ne contient pas : les contraintes') === false);
+
+// The instructions generator judges the model shown on the page, not the saved one (review).
+$ajax = file_get_contents(GP_ROOT . '/ajax/generate_ai_instructions.php');
+test('generator: absent zones from the model being edited', fn() =>
+    strpos($ajax, "gestionprojet_cdcf_absent_zones(\$gestionprojet,\n            (string)(\$tmpmodel->interacteurs_data") !== false);
+
 // Teacher page: the grid editor tells why a part is not graded.
 $page = file_get_contents(GP_ROOT . '/pages/step4_teacher.php');
 $js = file_get_contents(GP_ROOT . '/amd/src/grille_editor.js');
