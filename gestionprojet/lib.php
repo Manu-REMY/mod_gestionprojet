@@ -1099,21 +1099,22 @@ function gestionprojet_level_banner_html(?array $level): string {
     };
     if ($level['reached'] !== '') {
         $code = strtolower($level['reached']);
-        $main = html_writer::span($acronym($level['reached']), 'gp-level-acronym')
-            . html_writer::span(get_string('level_reached', 'gestionprojet', (object)[
+        $main = html_writer::span(s($acronym($level['reached'])), 'gp-level-acronym')
+            . html_writer::span(s(get_string('level_reached', 'gestionprojet', (object)[
                 'acronym' => $acronym($level['reached']),
-                'name' => get_string('level_name_' . $code, 'gestionprojet')]), 'gp-level-text');
+                'name' => get_string('level_name_' . $code, 'gestionprojet')])), 'gp-level-text');
     } else {
         $code = 'none';
         $main = html_writer::span('○', 'gp-level-acronym', ['aria-hidden' => 'true'])
-            . html_writer::span(get_string('level_none', 'gestionprojet', $acronym($level['next'])), 'gp-level-text');
+            . html_writer::span(s(get_string('level_none', 'gestionprojet', $acronym($level['next']))), 'gp-level-text');
     }
+    // Part names are typed by the teacher: the whole sentence is escaped, never interpreted as HTML.
     $next = '';
     if ($level['next'] !== '' && $level['reached'] !== '') {
-        $next = html_writer::div(get_string('level_next', 'gestionprojet', (object)[
-            'acronym' => $acronym($level['next']), 'parts' => implode(', ', $level['missing'])]), 'gp-level-next');
+        $next = html_writer::div(s(get_string('level_next', 'gestionprojet', (object)[
+            'acronym' => $acronym($level['next']), 'parts' => implode(', ', $level['missing'])])), 'gp-level-next');
     } else if ($level['next'] !== '') {
-        $next = html_writer::div(get_string('level_work_on', 'gestionprojet', implode(', ', $level['missing'])),
+        $next = html_writer::div(s(get_string('level_work_on', 'gestionprojet', implode(', ', $level['missing']))),
             'gp-level-next');
     }
     return html_writer::div(html_writer::div($main, 'gp-level-main') . $next, 'gp-level-banner gp-level-' . $code,
