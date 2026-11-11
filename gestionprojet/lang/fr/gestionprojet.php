@@ -984,6 +984,8 @@ $string['reset_error_internal'] = 'Une erreur interne est survenue. Veuillez ré
 // AI model settings (v2.10.2).
 $string['setting_models_heading'] = 'Modèles d\'IA';
 $string['setting_models_heading_desc'] = 'Modèle utilisé par chaque fournisseur pour les évaluations, les synthèses et le test de connexion. Laisser vide pour utiliser le modèle par défaut.';
+$string['setting_ai_interval'] = 'Écart entre deux corrections notées (secondes)';
+$string['setting_ai_interval_desc'] = 'Les corrections des copies soumises partent une à une, espacées de ce nombre de secondes, pour rester sous la limite de requêtes du fournisseur d\'IA (6 s : 10 corrections par minute). 0 : pas d\'espacement. Les retours formatifs ne sont pas espacés.';
 $string['setting_model'] = 'Modèle pour {$a}';
 $string['setting_model_desc'] = 'Nom exact du modèle envoyé au fournisseur. Vide : {$a}.';
 $string['error:notgroupmember'] = 'Vous n\'êtes pas membre de ce groupe.';
@@ -1109,6 +1111,7 @@ $string['grille_palier_f'] = 'FRA';
 $string['grille_palier_s'] = 'SAT';
 $string['grille_palier_ts'] = 'TS';
 $string['level_reached'] = 'Niveau atteint : {$a->acronym} ({$a->name})';
+$string['level_validated'] = 'Niveau validé : {$a->acronym} ({$a->name})';
 $string['level_none'] = 'Niveau {$a} pas encore atteint';
 $string['level_next'] = 'Pour atteindre {$a->acronym}, retravaille : {$a->parts}.';
 $string['level_work_on'] = 'À retravailler : {$a}.';

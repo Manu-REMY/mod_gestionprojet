@@ -37,6 +37,15 @@ if ($ADMIN->fulltree) {
         )
     ));
 
+    // Spacing of graded corrections, under the provider's rate limit (request 40, v2.14.0).
+    $settings->add(new admin_setting_configtext(
+        'mod_gestionprojet/ai_interval',
+        get_string('setting_ai_interval', 'gestionprojet'),
+        get_string('setting_ai_interval_desc', 'gestionprojet'),
+        '6',
+        PARAM_INT
+    ));
+
     // AI model per provider: one place to change it when a provider retires a model.
     $settings->add(new admin_setting_heading(
         'mod_gestionprojet/modelsheading',

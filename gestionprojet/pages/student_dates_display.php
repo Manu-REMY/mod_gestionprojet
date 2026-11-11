@@ -44,7 +44,9 @@ if (isset($teacherTables[$step])) {
 
 // Get dates from teacher model.
 $submissionDate = $teacherModel->submission_date ?? 0;
-$deadlineDate = $teacherModel->deadline_date ?? 0;
+// The deadline of this copy: its class may have its own date (request 40).
+$deadlineDate = isset($submission) ? gestionprojet_effective_deadline($gestionprojet, (int)$step, $submission)
+    : (int)($teacherModel->deadline_date ?? 0);
 
 // Calculate status.
 $now = time();

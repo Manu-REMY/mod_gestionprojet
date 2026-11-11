@@ -984,6 +984,8 @@ $string['reset_error_internal'] = 'An internal error occurred. Please try again 
 // AI model settings (v2.10.2).
 $string['setting_models_heading'] = 'AI models';
 $string['setting_models_heading_desc'] = 'Model used by each provider for evaluations, summaries and the connection test. Leave empty to use the default model.';
+$string['setting_ai_interval'] = 'Gap between two graded corrections (seconds)';
+$string['setting_ai_interval_desc'] = 'Corrections of submitted copies leave one by one, this number of seconds apart, to stay under the AI provider\'s rate limit (6 s: 10 corrections a minute). 0: no spacing. Formative feedback is not spaced.';
 $string['setting_model'] = 'Model for {$a}';
 $string['setting_model_desc'] = 'Exact model name sent to the provider. Empty: {$a}.';
 $string['error:notgroupmember'] = 'You are not a member of this group.';
@@ -1109,6 +1111,7 @@ $string['grille_palier_f'] = 'FRA';
 $string['grille_palier_s'] = 'SAT';
 $string['grille_palier_ts'] = 'TS';
 $string['level_reached'] = 'Level reached: {$a->acronym} ({$a->name})';
+$string['level_validated'] = 'Level validated: {$a->acronym} ({$a->name})';
 $string['level_none'] = 'Level {$a} not reached yet';
 $string['level_next'] = 'To reach {$a->acronym}, work again on: {$a->parts}.';
 $string['level_work_on'] = 'To work on: {$a}.';

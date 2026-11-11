@@ -847,5 +847,23 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026110807, 'gestionprojet');
     }
 
+    // 2.14.0 — deadline of a step per group (a class), written by the class planning (request 40).
+    if ($oldversion < 2026111105) {
+        $table = new xmldb_table('gestionprojet_deadline_group');
+        if (!$dbman->table_exists($table)) {
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+            $table->add_field('gestionprojetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('step', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('groupid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('deadline_date', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_key('gestionprojetid', XMLDB_KEY_FOREIGN, ['gestionprojetid'], 'gestionprojet', ['id']);
+            $table->add_index('deadline_group_uix', XMLDB_INDEX_UNIQUE, ['gestionprojetid', 'step', 'groupid']);
+            $dbman->create_table($table);
+        }
+        upgrade_mod_savepoint(true, 2026111105, 'gestionprojet');
+    }
+
     return true;
 }

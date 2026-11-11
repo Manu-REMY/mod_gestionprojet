@@ -144,10 +144,37 @@ class ai_evaluator {
         $task = new \mod_gestionprojet\task\evaluate_submission();
         $task->set_custom_data((object) ['evaluationid' => $evaluationid]);
         $task->set_component('mod_gestionprojet');
+        // Graded corrections leave one every N seconds, under the provider's rate limit (request 40); a formative
+        // feedback leaves at once: a student is waiting for it.
+        // A level validation request is not spaced either: a student waits for its verdict.
+        if (!$formatif && $palier === '') {
+            $interval = get_config('mod_gestionprojet', 'ai_interval');
+            $slot = self::slot_time(time(), (int)get_config('mod_gestionprojet', 'ai_next_slot'),
+                $interval === false || $interval === '' ? 6 : (int)$interval);
+            set_config('ai_next_slot', $slot, 'mod_gestionprojet');
+            $task->set_next_run_time($slot);
+        }
 
         \core\task\manager::queue_adhoc_task($task);
 
         return $evaluationid;
+    }
+
+    /**
+     * Time slot of a graded correction: now, or the interval after the last slot given when that is later.
+     *
+     * A slot in the past (idle site) gives now: the queue never makes a correction wait for an old slot.
+     *
+     * @param int $now Current time.
+     * @param int $lastslot Last slot given (mod_gestionprojet/ai_next_slot), 0 when none.
+     * @param int $interval Seconds between two corrections; 0 or less: no spacing.
+     * @return int Timestamp of the slot.
+     */
+    public static function slot_time(int $now, int $lastslot, int $interval): int {
+        if ($interval <= 0) {
+            return $now;
+        }
+        return max($now, $lastslot + $interval);
     }
 
     /**
@@ -517,6 +544,15 @@ class ai_evaluator {
             } else {
                 // Combined mode: recalculate the combined average.
                 gestionprojet_update_grades($gestionprojet, $targetuserid);
+            }
+
+            // Step 4: the level of the applied correction is the validated level (request 39, D-040).
+            require_once(__DIR__ . '/../lib.php');
+            // The grade is applied: a failure here (lock timeout) must not turn the correction into a failed one.
+            try {
+                gestionprojet_level_sync($gestionprojet, $evaluation);
+            } catch (\Throwable $e) {
+                debugging('Level sync failed for evaluation ' . $evaluation->id . ': ' . $e->getMessage(), DEBUG_NORMAL);
             }
         }
 

@@ -164,6 +164,7 @@ function gestionprojet_delete_instance($id)
     $DB->delete_records('gestionprojet_ai_summaries', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_palier', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_deadline_group', ['gestionprojetid' => $id]);
 
     // Delete the instance.
     $DB->delete_records('gestionprojet', ['id' => $id]);
@@ -290,6 +291,61 @@ function gestionprojet_require_group_access($cm, int $groupid, int $userid, $con
         throw new moodle_exception('error:notgroupmember', 'gestionprojet');
     }
     return $groupid;
+}
+
+/**
+ * Deadline of a copy: the latest date of its groups (work group, classes of its members), else the step's (request 40).
+ *
+ * @param object $gestionprojet Instance record.
+ * @param int $step Student step (4 to 9).
+ * @param object $submission The copy (groupid, userid).
+ * @return int Timestamp, 0 when there is no deadline.
+ */
+function gestionprojet_effective_deadline(object $gestionprojet, int $step, object $submission): int {
+    global $DB;
+
+    $tables = [4 => 'cdcf', 5 => 'essai', 6 => 'rapport', 7 => 'besoin_eleve', 8 => 'carnet', 9 => 'fast'];
+    if (!isset($tables[$step])) {
+        return 0;
+    }
+    // Step date and class dates read once per activity and step: pages and tasks call this for every copy.
+    static $cache = [];
+    $key = $gestionprojet->id . '-' . $step;
+    $cache[$key] = $cache[$key] ?? [
+        'step' => (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
+            ['gestionprojetid' => $gestionprojet->id]),
+        'groups' => $DB->get_records_menu('gestionprojet_deadline_group',
+            ['gestionprojetid' => $gestionprojet->id, 'step' => $step], '', 'groupid, deadline_date'),
+    ];
+    $stepdeadline = $cache[$key]['step'];
+    $overrides = $cache[$key]['groups'];
+    if (!$overrides) {
+        return $stepdeadline;
+    }
+    // Groups of the copy: its work group, and every course group of its members (classes 3A, 3B...). Only members who
+    // submit count: a teacher who belongs to every class group must not give a group another class's date.
+    $groupids = [];
+    $members = [];
+    if ((int)($submission->groupid ?? 0) > 0) {
+        $groupids[] = (int)$submission->groupid;
+        if ((int)($submission->userid ?? 0) === 0) {
+            $members = array_keys(get_enrolled_users(context_course::instance((int)$gestionprojet->course),
+                'mod/gestionprojet:submit', (int)$submission->groupid, 'u.id'));
+        }
+    }
+    if ((int)($submission->userid ?? 0) > 0) {
+        $members[] = (int)$submission->userid;
+    }
+    foreach ($members as $userid) {
+        $groupids = array_merge($groupids, groups_get_user_groups((int)$gestionprojet->course, (int)$userid)[0] ?? []);
+    }
+    $dates = [];
+    foreach (array_unique($groupids) as $groupid) {
+        if (isset($overrides[$groupid])) {
+            $dates[] = (int)$overrides[$groupid];
+        }
+    }
+    return \mod_gestionprojet\deadline::effective($stepdeadline, $dates);
 }
 
 /**
@@ -508,7 +564,7 @@ function gestionprojet_palier_request(object $gestionprojet, object $cm, int $gr
     if ((int)$submission->status === 1) {
         throw new moodle_exception('submissionlocked', 'gestionprojet');
     }
-    $deadline = (int)$DB->get_field('gestionprojet_cdcf_teacher', 'deadline_date', ['gestionprojetid' => $gestionprojet->id]);
+    $deadline = gestionprojet_effective_deadline($gestionprojet, 4, $submission);
     if ($deadline > 0 && time() > $deadline) {
         throw new moodle_exception('submissionlocked', 'gestionprojet');
     }
@@ -591,24 +647,11 @@ function gestionprojet_palier_record_locked(object $gestionprojet, object $evalu
         return;
     }
 
-    // Members at validation time, as plan-classe reads them: [[userid, username], ...].
-    $membres = [];
-    if ((int)$submission->userid === 0 && (int)$submission->groupid > 0) {
-        // Group work: every member of the group; individual work: the student alone, even inside a course group.
-        foreach (groups_get_members($submission->groupid, 'u.id, u.username') as $member) {
-            $membres[] = [(int)$member->id, $member->username];
-        }
-    } else if ((int)$submission->userid > 0) {
-        $user = $DB->get_record('user', ['id' => $submission->userid], 'id, username');
-        if ($user) {
-            $membres[] = [(int)$user->id, $user->username];
-        }
-    }
     $now = time();
     $DB->insert_record('gestionprojet_palier', (object)($owner + [
         'step' => 4,
         'evaluationid' => $evaluation->id,
-        'membres' => json_encode($membres),
+        'membres' => gestionprojet_palier_members($submission),
         'timecreated' => $now,
         'timemodified' => $now,
     ]));
@@ -619,6 +662,99 @@ function gestionprojet_palier_record_locked(object $gestionprojet, object $evalu
         $zones[$zone] = $zones[$zone] ?? (int)$evaluation->id;
     }
     $DB->set_field('gestionprojet_cdcf', 'zones_validees', json_encode($zones), ['id' => $submission->id]);
+}
+
+/**
+ * Members of a copy at validation time, as plan-classe reads them: JSON [[userid, username], ...].
+ *
+ * Group work: every member of the group; individual work: the student alone, even inside a course group.
+ *
+ * @param object $submission Step 4 copy.
+ * @return string JSON.
+ */
+function gestionprojet_palier_members(object $submission): string {
+    global $DB;
+
+    $membres = [];
+    if ((int)$submission->userid === 0 && (int)$submission->groupid > 0) {
+        foreach (groups_get_members($submission->groupid, 'u.id, u.username') as $member) {
+            $membres[] = [(int)$member->id, $member->username];
+        }
+    } else if ((int)$submission->userid > 0) {
+        $user = $DB->get_record('user', ['id' => $submission->userid], 'id, username');
+        if ($user) {
+            $membres[] = [(int)$user->id, $user->username];
+        }
+    }
+    return json_encode($membres);
+}
+
+/**
+ * Record the level of a step 4 copy when its correction is applied, outside the level mode (request 39, D-040).
+ *
+ * The validated levels become exactly those reached by the applied correction: the missing ones are added, the ones
+ * no longer reached are marked retire (kept for the history, never deleted). Nothing changes when the teacher changed
+ * the level cannot be judged; a grade changed by the teacher brings every part to it first (choice A of Emmanuel).
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $evaluation Applied evaluation.
+ */
+function gestionprojet_level_sync(object $gestionprojet, object $evaluation): void {
+    global $DB;
+
+    if ((int)$evaluation->step !== 4 || (int)($gestionprojet->step4_paliers ?? 0) === 1
+            || !empty($evaluation->formatif) || !empty($evaluation->palier)) {
+        return;
+    }
+    $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $evaluation->submissionid,
+        'gestionprojetid' => $gestionprojet->id]);
+    if (!$submission) {
+        return;
+    }
+    $parts = gestionprojet_palier_parts($gestionprojet);
+    $criteria = json_decode((string)$evaluation->criteria_json, true) ?: [];
+    // A grade changed by the teacher: the parts are brought to it, so that the level follows the grade (choice A).
+    if ($submission->grade !== null && abs((float)$submission->grade - (float)$evaluation->parsed_grade) > 0.01) {
+        $criteria = \mod_gestionprojet\palier::criteria_for_grade($criteria, $parts, (float)$evaluation->parsed_grade,
+            (float)$submission->grade);
+    }
+    $level = \mod_gestionprojet\palier::level_reached($criteria, $parts, (int)($gestionprojet->step4_palier_seuil ?? 80));
+    if ($level === null) {
+        return;
+    }
+    $keep = \mod_gestionprojet\palier::levels_up_to($level['reached'], \mod_gestionprojet\palier::paliers_in_grid($parts));
+
+    $lock = gestionprojet_palier_lock((int)$submission->id);
+    try {
+        $now = time();
+        $owner = ['gestionprojetid' => $gestionprojet->id] + gestionprojet_palier_owner($submission);
+        $have = [];
+        foreach ($DB->get_records('gestionprojet_palier', $owner + ['retire' => 0]) as $row) {
+            if (in_array($row->palier, $keep, true)) {
+                $have[$row->palier] = true;
+                continue;
+            }
+            $DB->set_field('gestionprojet_palier', 'retire', 1, ['id' => $row->id]);
+            $DB->set_field('gestionprojet_palier', 'timemodified', $now, ['id' => $row->id]);
+        }
+        $membres = gestionprojet_palier_members($submission);
+        foreach ($keep as $palier) {
+            if (isset($have[$palier])) {
+                continue;
+            }
+            $DB->insert_record('gestionprojet_palier', (object)($owner + [
+                'step' => 4,
+                'palier' => $palier,
+                'evaluationid' => $evaluation->id,
+                'membres' => $membres,
+                'retire' => 0,
+                'timecreated' => $now,
+                'timemodified' => $now,
+            ]));
+        }
+    } finally {
+        $lock->release();
+    }
 }
 
 /**
@@ -952,8 +1088,7 @@ function gestionprojet_formative_request(object $gestionprojet, object $cm, int 
     if ((int)$submission->status === 1) {
         throw new moodle_exception('submissionlocked', 'gestionprojet');
     }
-    $deadline = (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
-        ['gestionprojetid' => $gestionprojet->id]);
+    $deadline = gestionprojet_effective_deadline($gestionprojet, $step, $submission);
     if ($deadline > 0 && time() > $deadline) {
         throw new moodle_exception('formative_deadline_passed', 'gestionprojet');
     }
@@ -1017,8 +1152,7 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     $formative = $aion ? gestionprojet_formative_state($gestionprojet, $step, $submission) : null;
     // Past the deadline no feedback can be asked any more (a page left open across it would offer the button).
     $tables = [4 => 'cdcf', 5 => 'essai', 6 => 'rapport', 7 => 'besoin_eleve', 8 => 'carnet', 9 => 'fast'];
-    $deadline = isset($tables[$step]) ? (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
-        ['gestionprojetid' => $gestionprojet->id]) : 0;
+    $deadline = isset($tables[$step]) ? gestionprojet_effective_deadline($gestionprojet, $step, $submission) : 0;
     $deadlinepassed = $deadline > 0 && time() > $deadline;
     // A copy just created by gestionprojet_get_or_create_submission has no grade property yet.
     $grade = isset($submission->grade) && $submission->grade !== null ? (float)$submission->grade : null;
@@ -1070,6 +1204,20 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
         $level = \mod_gestionprojet\palier::level_reached(json_decode((string)$pick['evaluation']->criteria_json, true) ?: [],
             gestionprojet_palier_parts($gestionprojet), (int)($gestionprojet->step4_palier_seuil ?? 80));
     }
+    // Submitted copy: the level recorded for it is the validated level (request 39, D-040).
+    if ($step === 4 && $submitted && !$paliermode) {
+        $validated = array_column($DB->get_records('gestionprojet_palier', ['gestionprojetid' => $gestionprojet->id,
+            'retire' => 0] + gestionprojet_palier_owner($submission), '', 'id, palier'), 'palier');
+        $top = '';
+        foreach (\mod_gestionprojet\palier::ORDER as $code) {
+            if (in_array($code, $validated, true)) {
+                $top = $code;
+            }
+        }
+        if ($top !== '') {
+            $level = ['reached' => $top, 'next' => '', 'missing' => [], 'validated' => true];
+        }
+    }
     $feedback = ['source' => $pick['source'], 'text' => $text, 'criteria' => $criteria, 'suggestions' => $suggestions,
         'keywords' => $keywords, 'time' => $pick['time'], 'level' => $level];
 
@@ -1101,6 +1249,17 @@ function gestionprojet_level_banner_html(?array $level): string {
     $acronym = function (string $code): string {
         return get_string('grille_palier_' . strtolower($code), 'gestionprojet');
     };
+    if (!empty($level['validated']) && $level['reached'] !== '') {
+        // Level recorded at submission (request 39): a check mark, then the level.
+        $code = strtolower($level['reached']);
+        $main = html_writer::span(s($acronym($level['reached'])), 'gp-level-acronym')
+            . html_writer::span('✓', 'gp-level-check', ['aria-hidden' => 'true'])
+            . html_writer::span(s(get_string('level_validated', 'gestionprojet', (object)[
+                'acronym' => $acronym($level['reached']),
+                'name' => get_string('level_name_' . $code, 'gestionprojet')])), 'gp-level-text');
+        return html_writer::div(html_writer::div($main, 'gp-level-main'), 'gp-level-banner gp-level-' . $code,
+            ['role' => 'status']);
+    }
     if ($level['reached'] !== '') {
         $code = strtolower($level['reached']);
         $main = html_writer::span(s($acronym($level['reached'])), 'gp-level-acronym')
@@ -2305,13 +2464,12 @@ function gestionprojet_check_deadline_submissions($gestionprojet) {
             continue;
         }
 
-        // Get teacher model with deadline.
-        $teachermodel = $DB->get_record($stepconfig['teacher_table'], [
-            'gestionprojetid' => $gestionprojet->id
-        ]);
-
-        // Skip if no deadline or deadline not passed.
-        if (!$teachermodel || empty($teachermodel->deadline_date) || $teachermodel->deadline_date > $now) {
+        // Skip quickly when neither the step nor any class of the step has a deadline already passed.
+        $passed = $DB->record_exists_select($stepconfig['teacher_table'],
+            'gestionprojetid = ? AND deadline_date > 0 AND deadline_date <= ?', [$gestionprojet->id, $now])
+            || $DB->record_exists_select('gestionprojet_deadline_group',
+            'gestionprojetid = ? AND step = ? AND deadline_date > 0 AND deadline_date <= ?', [$gestionprojet->id, $stepnum, $now]);
+        if (!$passed) {
             continue;
         }
 
@@ -2326,6 +2484,11 @@ function gestionprojet_check_deadline_submissions($gestionprojet) {
         }
 
         foreach ($drafts as $draft) {
+            // Each copy has its own deadline: the latest date of its classes, else the step's (request 40).
+            $deadline = gestionprojet_effective_deadline($gestionprojet, $stepnum, $draft);
+            if ($deadline <= 0 || $deadline > $now) {
+                continue;
+            }
             try {
                 // Update to submitted status.
                 $draft->status = 1; // Submitted
