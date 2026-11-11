@@ -334,9 +334,10 @@ function gestionprojet_spelling_count(object $evaluation): int {
  * Built from data checked by the server (quotations found in the copy, corrections close to them): not filtered.
  *
  * @param array|null $langue Decoded langue_json (fautes, points, p), null without spelling.
+ * @param int $dismisscmid Course module id: adds a "Dismiss" button to each mistake (grading page, teachers only).
  * @return string HTML.
  */
-function gestionprojet_spelling_block_html(?array $langue): string {
+function gestionprojet_spelling_block_html(?array $langue, int $dismisscmid = 0): string {
     if ($langue === null) {
         return '';
     }
@@ -349,11 +350,82 @@ function gestionprojet_spelling_block_html(?array $langue): string {
     } else {
         $items = [];
         foreach ($fautes as $faute) {
-            $items[] = '« ' . s($faute['cite']) . ' » → ' . s($faute['correction']);
+            $line = '« ' . s($faute['cite']) . ' » → ' . s($faute['correction']);
+            if ($dismisscmid > 0) {
+                $line .= ' ' . html_writer::tag('button', s(get_string('langue_dismiss', 'gestionprojet')), [
+                    'type' => 'button', 'class' => 'btn btn-link btn-sm gp-langue-dismiss',
+                    'data-cmid' => $dismisscmid, 'data-cite' => $faute['cite']]);
+            }
+            $items[] = $line;
         }
         $out .= html_writer::alist($items, ['class' => 'gp-langue-list']);
     }
     return html_writer::div($out, 'gp-langue-block');
+}
+
+/**
+ * The teacher dismisses a spelling mistake: the word is accepted for the whole activity, and every corrected copy holding
+ * it is recomputed (request 32: the teacher's decisions prevail over the AI).
+ *
+ * A grade the teacher typed by hand is never overwritten: only a copy whose grade is still the former total gets the new one.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param string $cite Word as the student wrote it.
+ * @return int Corrections recomputed.
+ */
+function gestionprojet_spelling_accept(object $gestionprojet, string $cite): int {
+    global $DB;
+
+    $word = \mod_gestionprojet\orthographe::normalize($cite);
+    if ($word === '') {
+        return 0;
+    }
+    $accepted = json_decode((string)($gestionprojet->langue_accepted ?? ''), true) ?: [];
+    if (!in_array($word, $accepted, true)) {
+        $accepted[] = $word;
+        $gestionprojet->langue_accepted = json_encode($accepted, JSON_UNESCAPED_UNICODE);
+        $DB->set_field('gestionprojet', 'langue_accepted', $gestionprojet->langue_accepted, ['id' => $gestionprojet->id]);
+    }
+    $count = 0;
+    $evaluations = $DB->get_records_select('gestionprojet_ai_evaluations',
+        'gestionprojetid = ? AND step = 4 AND langue_json IS NOT NULL', [$gestionprojet->id]);
+    foreach ($evaluations as $evaluation) {
+        $langue = json_decode((string)$evaluation->langue_json, true);
+        if (!is_array($langue)) {
+            continue;
+        }
+        $fautes = $langue['fautes'] ?? [];
+        $kept = array_values(array_filter($fautes, function (array $faute) use ($word): bool {
+            return \mod_gestionprojet\orthographe::normalize((string)($faute['cite'] ?? '')) !== $word;
+        }));
+        if (count($kept) === count($fautes)) {
+            continue;
+        }
+        $oldtotal = gestionprojet_evaluation_total($gestionprojet, $evaluation);
+        $langue['fautes'] = $kept;
+        $langue['ecartees'] = (int)($langue['ecartees'] ?? 0) + count($fautes) - count($kept);
+        $langue['points'] = \mod_gestionprojet\orthographe::points(count($kept), (float)($langue['p'] ?? 2));
+        $evaluation->langue_json = json_encode($langue, JSON_UNESCAPED_UNICODE);
+        $DB->set_field('gestionprojet_ai_evaluations', 'langue_json', $evaluation->langue_json, ['id' => $evaluation->id]);
+        $count++;
+        if ($evaluation->status !== 'applied') {
+            continue;
+        }
+        $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $evaluation->submissionid,
+            'gestionprojetid' => $gestionprojet->id]);
+        if ($submission && $submission->grade !== null && abs((float)$submission->grade - $oldtotal) <= 0.01) {
+            $DB->set_field('gestionprojet_cdcf', 'grade', gestionprojet_evaluation_total($gestionprojet, $evaluation),
+                ['id' => $submission->id]);
+            $targetuserid = (int)$evaluation->userid;
+            if ((int)($gestionprojet->grade_mode ?? 0) === 1) {
+                gestionprojet_update_grades($gestionprojet, $targetuserid, true, 4);
+            } else {
+                gestionprojet_update_grades($gestionprojet, $targetuserid);
+            }
+        }
+        gestionprojet_level_sync($gestionprojet, $evaluation);
+    }
+    return $count;
 }
 
 /**

@@ -189,6 +189,10 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/ai_progress', 'init', [[
     'step' => $step,
     'containerSelector' => 'body'
 ]]);
+// Dismiss a spelling mistake for the whole activity (request 32).
+$PAGE->requires->js_call_amd('mod_gestionprojet/spelling_accept', 'init', [[
+    'confirm' => get_string('langue_dismiss_confirm', 'gestionprojet'),
+]]);
 $PAGE->requires->js_call_amd('mod_gestionprojet/grading', 'init', [[
     'cmid' => $cm->id,
     'step' => $step,
@@ -777,7 +781,7 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
                             <?php endif; ?>
                         </div>
                         <?php echo gestionprojet_spelling_block_html($aievaluation->langue_json !== null
-                            ? (json_decode((string)$aievaluation->langue_json, true) ?: null) : null); ?>
+                            ? (json_decode((string)$aievaluation->langue_json, true) ?: null) : null, (int)$cm->id); ?>
 
                         <!-- Criteria with progress bars (collapsible) -->
                         <?php if (!empty($result->criteria)): ?>
