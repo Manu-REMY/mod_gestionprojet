@@ -146,7 +146,8 @@ class ai_evaluator {
         $task->set_component('mod_gestionprojet');
         // Graded corrections leave one every N seconds, under the provider's rate limit (request 40); a formative
         // feedback leaves at once: a student is waiting for it.
-        if (!$formatif) {
+        // A level validation request is not spaced either: a student waits for its verdict.
+        if (!$formatif && $palier === '') {
             $interval = get_config('mod_gestionprojet', 'ai_interval');
             $slot = self::slot_time(time(), (int)get_config('mod_gestionprojet', 'ai_next_slot'),
                 $interval === false || $interval === '' ? 6 : (int)$interval);
@@ -547,7 +548,12 @@ class ai_evaluator {
 
             // Step 4: the level of the applied correction is the validated level (request 39, D-040).
             require_once(__DIR__ . '/../lib.php');
-            gestionprojet_level_sync($gestionprojet, $evaluation);
+            // The grade is applied: a failure here (lock timeout) must not turn the correction into a failed one.
+            try {
+                gestionprojet_level_sync($gestionprojet, $evaluation);
+            } catch (\Throwable $e) {
+                debugging('Level sync failed for evaluation ' . $evaluation->id . ': ' . $e->getMessage(), DEBUG_NORMAL);
+            }
         }
 
         return true;

@@ -36,10 +36,12 @@ test('interval 0: no spacing', fn() => ai_evaluator::slot_time(1000, 1004, 0) ==
 $read = fn(string $path): string => file_get_contents(GP_ROOT . '/' . $path);
 $evaluator = $read('classes/ai_evaluator.php');
 test('queue_evaluation spaces graded corrections only', fn() =>
-    preg_match('/if \(!\$formatif\) \{.*?self::slot_time\(.*?set_config\(\'ai_next_slot\', \$slot, \'mod_gestionprojet\'\).*?\$task->set_next_run_time\(\$slot\);/s', $evaluator) === 1);
+    preg_match('/if \(!\$formatif && \$palier === \'\'\) \{.*?self::slot_time\(.*?set_config\(\'ai_next_slot\', \$slot, \'mod_gestionprojet\'\).*?\$task->set_next_run_time\(\$slot\);/s', $evaluator) === 1);
 test('setting ai_interval, 6 s by default', fn() => preg_match("/'mod_gestionprojet\/ai_interval'.*?'6',\s*PARAM_INT/s", $read('settings.php')) === 1);
 foreach (['en', 'fr'] as $lang) {
     $string = [];
     include(GP_ROOT . "/lang/$lang/gestionprojet.php");
     test("strings ($lang)", fn() => !empty($string['setting_ai_interval']) && !empty($string['setting_ai_interval_desc']));
 }
+test('review: a level validation request is not spaced (a student waits for it)', fn() =>
+    strpos($evaluator, 'if (!$formatif && $palier === \'\') {') !== false);

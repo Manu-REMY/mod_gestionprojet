@@ -207,6 +207,35 @@ class palier {
     }
 
     /**
+     * AI criteria brought to a grade the teacher changed (choice A of Emmanuel, 11/11/2026).
+     *
+     * Every part keeps its share relative to the others: its score is multiplied by teacher grade / AI grade.
+     * When the AI gave 0, every part gets the same share, teacher grade / 20, on its weight scaled to 20.
+     *
+     * @param array $criteria AI criteria (name, score, max).
+     * @param array $parts Graded parts of the grid.
+     * @param float $aigrade Grade given by the AI, on 20.
+     * @param float $grade Grade applied by the teacher, on 20.
+     * @return array Criteria (name, score, max) for part_shares() and level_reached().
+     */
+    public static function criteria_for_grade(array $criteria, array $parts, float $aigrade, float $grade): array {
+        if ($aigrade > 0) {
+            $factor = $grade / $aigrade;
+            return array_map(function ($criterion) use ($factor): array {
+                $criterion = (array)$criterion;
+                $criterion['score'] = (float)($criterion['score'] ?? 0) * $factor;
+                return $criterion;
+            }, $criteria);
+        }
+        $weights = grille::scaled_weights($parts);
+        $share = max(0.0, min(1.0, $grade / 20));
+        return array_map(function (array $part) use ($weights, $share): array {
+            $weight = (float)($weights[$part['id']] ?? 0);
+            return ['name' => $part['nom'], 'score' => $weight * $share, 'max' => $weight];
+        }, array_values($parts));
+    }
+
+    /**
      * Levels of the grid up to the one reached, from the lowest (request 39).
      *
      * @param string $reached Level reached, '' when none.

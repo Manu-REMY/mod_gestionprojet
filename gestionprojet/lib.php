@@ -308,20 +308,29 @@ function gestionprojet_effective_deadline(object $gestionprojet, int $step, obje
     if (!isset($tables[$step])) {
         return 0;
     }
-    $stepdeadline = (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
-        ['gestionprojetid' => $gestionprojet->id]);
-    $overrides = $DB->get_records_menu('gestionprojet_deadline_group',
-        ['gestionprojetid' => $gestionprojet->id, 'step' => $step], '', 'groupid, deadline_date');
+    // Step date and class dates read once per activity and step: pages and tasks call this for every copy.
+    static $cache = [];
+    $key = $gestionprojet->id . '-' . $step;
+    $cache[$key] = $cache[$key] ?? [
+        'step' => (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
+            ['gestionprojetid' => $gestionprojet->id]),
+        'groups' => $DB->get_records_menu('gestionprojet_deadline_group',
+            ['gestionprojetid' => $gestionprojet->id, 'step' => $step], '', 'groupid, deadline_date'),
+    ];
+    $stepdeadline = $cache[$key]['step'];
+    $overrides = $cache[$key]['groups'];
     if (!$overrides) {
         return $stepdeadline;
     }
-    // Groups of the copy: its work group, and every course group of its members (classes 3A, 3B...).
+    // Groups of the copy: its work group, and every course group of its members (classes 3A, 3B...). Only members who
+    // submit count: a teacher who belongs to every class group must not give a group another class's date.
     $groupids = [];
     $members = [];
     if ((int)($submission->groupid ?? 0) > 0) {
         $groupids[] = (int)$submission->groupid;
         if ((int)($submission->userid ?? 0) === 0) {
-            $members = array_keys(groups_get_members((int)$submission->groupid, 'u.id'));
+            $members = array_keys(get_enrolled_users(context_course::instance((int)$gestionprojet->course),
+                'mod/gestionprojet:submit', (int)$submission->groupid, 'u.id'));
         }
     }
     if ((int)($submission->userid ?? 0) > 0) {
@@ -685,7 +694,7 @@ function gestionprojet_palier_members(object $submission): string {
  *
  * The validated levels become exactly those reached by the applied correction: the missing ones are added, the ones
  * no longer reached are marked retire (kept for the history, never deleted). Nothing changes when the teacher changed
- * the grade (the level would contradict it; the teacher can still remove a level) or when the level cannot be judged.
+ * the level cannot be judged; a grade changed by the teacher brings every part to it first (choice A of Emmanuel).
  *
  * @param object $gestionprojet Instance record.
  * @param object $evaluation Applied evaluation.
@@ -702,12 +711,14 @@ function gestionprojet_level_sync(object $gestionprojet, object $evaluation): vo
     if (!$submission) {
         return;
     }
-    if ($submission->grade !== null && abs((float)$submission->grade - (float)$evaluation->parsed_grade) > 0.01) {
-        return;
-    }
     $parts = gestionprojet_palier_parts($gestionprojet);
-    $level = \mod_gestionprojet\palier::level_reached(json_decode((string)$evaluation->criteria_json, true) ?: [],
-        $parts, (int)($gestionprojet->step4_palier_seuil ?? 80));
+    $criteria = json_decode((string)$evaluation->criteria_json, true) ?: [];
+    // A grade changed by the teacher: the parts are brought to it, so that the level follows the grade (choice A).
+    if ($submission->grade !== null && abs((float)$submission->grade - (float)$evaluation->parsed_grade) > 0.01) {
+        $criteria = \mod_gestionprojet\palier::criteria_for_grade($criteria, $parts, (float)$evaluation->parsed_grade,
+            (float)$submission->grade);
+    }
+    $level = \mod_gestionprojet\palier::level_reached($criteria, $parts, (int)($gestionprojet->step4_palier_seuil ?? 80));
     if ($level === null) {
         return;
     }

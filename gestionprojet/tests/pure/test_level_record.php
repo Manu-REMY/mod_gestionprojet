@@ -67,3 +67,28 @@ foreach (['en', 'fr'] as $lang) {
     test("string level_validated ($lang)", fn() => !empty($string['level_validated'])
         && strpos($string['level_validated'], '{$a->acronym}') !== false);
 }
+
+// Review of 2.14.0, choice A of Emmanuel (11/11): a grade changed by the teacher rescales the parts.
+$gparts = \mod_gestionprojet\grille::effective_parts(\mod_gestionprojet\grille::normalize([
+    ['id' => 1, 'nom' => 'FS', 'poids' => 8, 'zones' => ['fonctions'], 'palier' => 'F'],
+    ['id' => 2, 'nom' => 'Critères', 'poids' => 6, 'zones' => ['criteres'], 'palier' => 'S'],
+    ['id' => 3, 'nom' => 'Niveaux', 'poids' => 6, 'zones' => ['niveaux'], 'palier' => 'TS'],
+]));
+$ai16 = [['name' => 'FS', 'score' => 8, 'max' => 8], ['name' => 'Critères', 'score' => 6, 'max' => 6],
+    ['name' => 'Niveaux', 'score' => 2, 'max' => 6]];
+$scaled = palier::criteria_for_grade($ai16, $gparts, 16.0, 9.0);
+test('A: every score is multiplied by teacher grade / AI grade', fn() =>
+    abs($scaled[0]['score'] - 4.5) < 0.001 && abs($scaled[1]['score'] - 3.375) < 0.001 && $scaled[0]['max'] === 8);
+test('A: 16 → 9 lowers SAT to nothing (FS at 56 %)', fn() => palier::level_reached($scaled, $gparts, 80)['reached'] === '');
+$ai16b = [['name' => 'FS', 'score' => 8, 'max' => 8], ['name' => 'Critères', 'score' => 6, 'max' => 6],
+    ['name' => 'Niveaux', 'score' => 4, 'max' => 6]];
+$up = palier::criteria_for_grade($ai16b, $gparts, 16.0, 20.0);
+test('A: raising the grade can raise the level (levels 67 % → 83 %, others capped at their max)', fn() =>
+    palier::level_reached($ai16b, $gparts, 80)['reached'] === 'S' && palier::level_reached($up, $gparts, 80)['reached'] === 'TS');
+$zero = palier::criteria_for_grade([['name' => 'FS', 'score' => 0, 'max' => 8]], $gparts, 0.0, 15.0);
+test('A: AI grade 0: every part at teacher grade / 20', fn() => count($zero) === 3
+    && abs($zero[0]['score'] / $zero[0]['max'] - 0.75) < 0.001 && palier::level_reached($zero, $gparts, 80)['reached'] === '');
+preg_match('/function gestionprojet_level_sync\(object \$gestionprojet, object \$evaluation\): void \{.*?\n\}\n/s', $lib, $m);
+test('A: the sync rescales instead of leaving the levels', fn() => strpos($m[0] ?? '', 'palier::criteria_for_grade(') !== false);
+test('review: an error in the level sync never turns an applied correction into a failed one', fn() =>
+    preg_match('/try \{\s*gestionprojet_level_sync\(\$gestionprojet, \$evaluation\);\s*\} catch \(\\\\Throwable \$e\) \{\s*debugging\(/', $evaluator) === 1);

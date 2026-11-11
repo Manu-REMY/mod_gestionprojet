@@ -64,3 +64,12 @@ test('the task also picks instances whose class date has passed', fn() =>
 test('the date displays read the effective deadline', fn() =>
     strpos($read('pages/student_dates_display.php'), 'gestionprojet_effective_deadline(') !== false
     && strpos($read('pages/student_submission_section.php'), 'gestionprojet_effective_deadline(') !== false);
+
+// Review of 2.14.0.
+preg_match('/function gestionprojet_effective_deadline\(.*?\n\}\n/s', $lib, $m);
+$eff = $m[0] ?? '';
+test('review: step and group dates read once per activity and step (static cache)', fn() =>
+    strpos($eff, 'static $cache = [];') !== false && strpos($eff, "\$cache[\$key] ??") !== false);
+test('review: only members who submit count (a teacher in every class group does not)', fn() =>
+    strpos($eff, "get_enrolled_users(") !== false && strpos($eff, "'mod/gestionprojet:submit'") !== false
+    && strpos($eff, 'groups_get_members(') === false);
