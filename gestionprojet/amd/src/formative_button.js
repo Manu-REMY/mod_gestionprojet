@@ -21,6 +21,9 @@
  * banner by itself (v2.12.2), without reloading: the student keeps typing and loses nothing. The ask button comes
  * back when another feedback can be asked for.
  *
+ * While waiting, a window in the middle of the screen says so (request 36, v2.13.4): spinner and words. The student
+ * may close it and keep working; when the feedback is ready the window says so and shows it on click.
+ *
  * @module     mod_gestionprojet/formative_button
  * @copyright  2026 Emmanuel REMY
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -31,6 +34,120 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     'use strict';
 
     var POLL_MS = 5000;
+
+    /** @type {?Object} The waiting window: overlay, title, detail, button; null when closed. */
+    var modal = null;
+
+    /**
+     * Close the waiting window.
+     */
+    function closeWait() {
+        if (!modal) {
+            return;
+        }
+        document.removeEventListener('keydown', modal.onKey);
+        if (modal.overlay.parentNode) {
+            modal.overlay.parentNode.removeChild(modal.overlay);
+        }
+        modal = null;
+    }
+
+    /**
+     * Put a label and an action on the window button.
+     *
+     * @param {string} label
+     * @param {Function} action
+     */
+    function setButton(label, action) {
+        modal.button.textContent = label;
+        modal.button.onclick = action;
+        modal.button.focus();
+    }
+
+    /**
+     * Open the waiting window (once): spinner, words, and a button to keep working.
+     *
+     * @param {Object} strings pending, waitDetail, keepWorking
+     */
+    function openWait(strings) {
+        if (modal || !strings) {
+            return;
+        }
+        var overlay = document.createElement('div');
+        overlay.className = 'gp-formative-modal';
+        var box = document.createElement('div');
+        box.className = 'gp-formative-modal-box';
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-modal', 'true');
+        box.setAttribute('aria-labelledby', 'gpFormativeModalTitle');
+        var spinner = document.createElement('span');
+        spinner.className = 'gp-formative-modal-spinner';
+        spinner.setAttribute('aria-hidden', 'true');
+        var text = document.createElement('div');
+        text.className = 'gp-formative-modal-text';
+        text.setAttribute('aria-live', 'polite');
+        var title = document.createElement('p');
+        title.className = 'gp-formative-modal-title';
+        title.id = 'gpFormativeModalTitle';
+        title.textContent = strings.pending;
+        var detail = document.createElement('p');
+        detail.className = 'gp-formative-modal-detail';
+        detail.textContent = strings.waitDetail;
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-outline-primary';
+        text.appendChild(title);
+        text.appendChild(detail);
+        box.appendChild(spinner);
+        box.appendChild(text);
+        box.appendChild(button);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        modal = {overlay: overlay, box: box, spinner: spinner, title: title, detail: detail, button: button,
+            onKey: function(event) {
+                if (event.key === 'Escape') {
+                    closeWait();
+                }
+            }};
+        document.addEventListener('keydown', modal.onKey);
+        setButton(strings.keepWorking, closeWait);
+    }
+
+    /**
+     * The feedback is ready: say so in the window (if still open), show the feedback on click.
+     *
+     * @param {Object} strings ready, show
+     * @param {HTMLElement} live Region holding the feedback
+     */
+    function showReady(strings, live) {
+        if (!modal) {
+            return;
+        }
+        modal.box.classList.add('gp-formative-modal-ready');
+        modal.spinner.textContent = '✓';
+        modal.title.textContent = strings.ready;
+        modal.detail.textContent = '';
+        setButton(strings.show, function() {
+            closeWait();
+            live.scrollIntoView({behavior: 'smooth', block: 'center'});
+        });
+    }
+
+    /**
+     * The feedback failed: say so in the window (if still open), with a close button.
+     *
+     * @param {Object} strings error, close
+     */
+    function showFailed(strings) {
+        if (!modal) {
+            return;
+        }
+        modal.box.classList.add('gp-formative-modal-failed');
+        modal.spinner.textContent = '!';
+        modal.title.textContent = strings.error;
+        modal.detail.textContent = '';
+        setButton(strings.close, closeWait);
+    }
 
     /**
      * Save every editor of the page and wait (a failed save does not block).
@@ -58,11 +175,12 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
      * Ask for a feedback when the button is clicked: save the copy, call the web service, reload.
      *
      * @param {HTMLElement} button
-     * @param {Object} cfg cmid, step, groupid
+     * @param {Object} cfg cmid, step, groupid, strings
      */
     function wireAsk(button, cfg) {
         button.addEventListener('click', function() {
             button.disabled = true;
+            openWait(cfg.strings);
             // Save the copy on screen first: the feedback is about what the student sees.
             saveCopy()
                 .then(function() {
@@ -76,6 +194,7 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
                     return null;
                 })
                 .catch(function(error) {
+                    closeWait();
                     button.disabled = false;
                     Notification.exception(error);
                 });
@@ -125,13 +244,14 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     /**
      * Follow a running feedback; when it is ready, show it in place of the banner (no click, no reload).
      *
-     * @param {Object} cfg cmid, step, groupid, pendingId, statusUrl, bannerId, strings {error}
+     * @param {Object} cfg cmid, step, groupid, pendingId, statusUrl, bannerId, strings
      */
     function follow(cfg) {
         var live = document.getElementById(cfg.bannerId);
         if (!live) {
             return;
         }
+        openWait(cfg.strings);
         // Polls may overlap on a slow server: the finished feedback is handled once.
         var done = false;
         var timer = setInterval(function() {
@@ -149,8 +269,12 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
                     restoreAsk(data, cfg);
                     if (data.status === 'completed' && data.feedback_html) {
                         // Server-rendered and escaped (the same view as after a reload).
-                        return Templates.replaceNodeContents(live, data.feedback_html, '');
+                        return Templates.replaceNodeContents(live, data.feedback_html, '').then(function() {
+                            showReady(cfg.strings, live);
+                            return null;
+                        });
                     }
+                    showFailed(cfg.strings);
                     var banner = live.querySelector('.ai-progress-banner');
                     if (banner) {
                         banner.className = banner.className.replace(/\bstatus-\S+/g, '') + ' status-failed';
