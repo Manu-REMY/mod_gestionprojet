@@ -80,3 +80,16 @@ test('a pre-filled field left as is is not judged', fn() => !in_array('Permettre
 test('a completed pre-filled field and free fields are judged', fn() =>
     in_array('Portée de detection', $texts, true) && in_array('Voleur', $texts, true) && in_array('Prix bas', $texts, true));
 test('empty fields are not judged', fn() => !in_array('', $texts, true));
+
+// Review of 2.15.0.
+test('review: a multi-word quotation cut inside a word is dismissed', fn() =>
+    orthographe::verify([['cite' => 'Alarme son', 'correction' => 'alarme sont', 'type' => 'homophone']], $text, [])['fautes'] === []);
+$consigne = ['contraintes' => [['id' => 1, 'description' => 'Coût', 'justification' => 'Texte du prof']]];
+$copy2 = ['contraintes' => [['id' => 1, 'description' => 'Coût', 'locked' => true, 'justification' => 'Texte du prof'],
+    ['id' => 2, 'description' => '', 'justification' => 'Mon idée']]];
+$t2 = orthographe::judged_texts($copy2, $consigne);
+test('review: a justification left as the consigne gave it is not judged', fn() =>
+    !in_array('Texte du prof', $t2, true) && in_array('Mon idée', $t2, true));
+test('review: flexibility codes are not text', fn() =>
+    orthographe::judged_texts(['fonctionsService' => [['description' => '', 'criteres' => [['description' => '', 'niveau' => '',
+        'flexibilite' => 'F1']]]]]) === []);

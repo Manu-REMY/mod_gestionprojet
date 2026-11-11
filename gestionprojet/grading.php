@@ -192,6 +192,7 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/ai_progress', 'init', [[
 // Dismiss a spelling mistake for the whole activity (request 32).
 $PAGE->requires->js_call_amd('mod_gestionprojet/spelling_accept', 'init', [[
     'confirm' => get_string('langue_dismiss_confirm', 'gestionprojet'),
+    'ok' => get_string('langue_dismiss', 'gestionprojet'),
 ]]);
 $PAGE->requires->js_call_amd('mod_gestionprojet/grading', 'init', [[
     'cmid' => $cm->id,
@@ -775,9 +776,9 @@ $paramName = $isGroupSubmission ? 'groupid' : 'userid';
                                 <div class="ai-grade-label"><?php echo s(get_string('langue_detail', 'gestionprojet', (object)[
                                     'content' => format_float((float)$aievaluation->parsed_grade
                                         * (20 - (float)$aievaluation->langue_points) / 20, 1),
-                                    'contentmax' => format_float(20 - (float)$aievaluation->langue_points, 0),
+                                    'contentmax' => format_float(20 - (float)$aievaluation->langue_points, 1, true, true),
                                     'spelling' => format_float((float)($langue['points'] ?? 0), 1),
-                                    'spellingmax' => format_float((float)$aievaluation->langue_points, 0)])); ?></div>
+                                    'spellingmax' => format_float((float)$aievaluation->langue_points, 1, true, true)])); ?></div>
                             <?php endif; ?>
                         </div>
                         <?php echo gestionprojet_spelling_block_html($aievaluation->langue_json !== null

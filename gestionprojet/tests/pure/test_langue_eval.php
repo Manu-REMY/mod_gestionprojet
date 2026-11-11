@@ -64,3 +64,8 @@ $ev = (object) ['parsed_grade' => 15, 'langue_points' => 2, 'langue_json' => jso
 test('total: 15 on 20, 1 spelling point → 14.5', fn() => gestionprojet_evaluation_total(new stdClass(), $ev) === 14.5);
 test('total: no spelling → content grade', fn() =>
     gestionprojet_evaluation_total(new stdClass(), (object) ['parsed_grade' => 12.5, 'langue_points' => null]) === 12.5);
+test('review: no spelling call in level mode', fn() => strpos($evaluator, "(int)(\$gestionprojet->step4_paliers ?? 0) !== 1") !== false);
+test('review: an unreadable spelling answer fails with a language string', fn() =>
+    strpos($evaluator, "get_string('langue_unreadable', 'gestionprojet')") !== false);
+test('review: the consigne is passed to judge only the student text', fn() =>
+    strpos($evaluator, 'orthographe::judged_texts(') !== false && strpos($evaluator, ', $consignearray)') !== false);

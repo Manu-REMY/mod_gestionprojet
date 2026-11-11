@@ -39,7 +39,7 @@ define(['core/notification'], function(Notification) {
         /**
          * Wire the "Dismiss" buttons of the spelling block.
          *
-         * @param {Object} cfg confirm (question asked before dismissing)
+         * @param {Object} cfg confirm (question asked before dismissing), ok (label of the button that confirms)
          */
         init: function(cfg) {
             document.addEventListener('click', function(event) {
@@ -48,7 +48,7 @@ define(['core/notification'], function(Notification) {
                     return;
                 }
                 var question = cfg.confirm.split('{$a}').join(escapeHtml(button.dataset.cite));
-                Notification.saveCancelPromise('', question, 'OK')
+                Notification.saveCancelPromise('', question, cfg.ok)
                     .then(function() {
                         button.disabled = true;
                         var body = new URLSearchParams();

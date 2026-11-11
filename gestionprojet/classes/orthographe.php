@@ -38,9 +38,10 @@ class orthographe {
      * Texts written by the student in a step 4 copy: provided fields and pre-filled fields left as is are not judged.
      *
      * @param array $flagged Copy, with the flags of consigne_lock::with_flags() when a consigne is shown.
+     * @param array $consigne Consigne shown to students (justifications carry no flag: one left as given is not judged).
      * @return string[] Non-empty texts.
      */
-    public static function judged_texts(array $flagged): array {
+    public static function judged_texts(array $flagged, array $consigne = []): array {
         $out = [];
         $take = function (array $element, string $field, string $lock, string $prefill, string $hint) use (&$out): void {
             $text = trim((string)($element[$field] ?? ''));
@@ -60,11 +61,19 @@ class orthographe {
             foreach ($fs['criteres'] ?? [] as $c) {
                 $take((array)$c, 'description', 'locked', 'prefill', 'hint');
                 $take((array)$c, 'niveau', 'niveauLocked', 'niveauPrefill', 'niveauHint');
-                $take((array)$c, 'flexibilite', 'locked', 'none', 'none');
+                // Flexibility is a code (F0 to F3), not text: never judged.
             }
+        }
+        $given = [];
+        foreach ($consigne['contraintes'] ?? [] as $c) {
+            $given[(int)($c['id'] ?? 0)] = self::bare((string)($c['justification'] ?? ''));
         }
         foreach ($flagged['contraintes'] ?? [] as $c) {
             $take((array)$c, 'description', 'locked', 'prefill', 'hint');
+            $justification = (string)($c['justification'] ?? '');
+            if (isset($given[(int)($c['id'] ?? 0)]) && $given[(int)$c['id']] === self::bare($justification)) {
+                continue;
+            }
             $take((array)$c, 'justification', 'locked', 'none', 'none');
         }
         return $out;
@@ -114,9 +123,9 @@ class orthographe {
             $correction = trim((string)($faute['correction'] ?? ''));
             $needle = self::collapse(mb_strtolower($cite));
             $key = self::normalize($cite);
-            $found = $needle !== '' && (preg_match('/\s/u', $needle)
-                ? mb_strpos($haystack, $needle) !== false
-                : preg_match('/(?<![\p{L}\p{N}])' . preg_quote($needle, '/') . '(?![\p{L}\p{N}])/u', $haystack) === 1);
+            // Whole words, also for a quotation of several words: never a piece of a word the student wrote.
+            $found = $needle !== ''
+                && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($needle, '/') . '(?![\p{L}\p{N}])/u', $haystack) === 1;
             $close = $correction !== '' && mb_strtolower($correction) !== mb_strtolower($cite)
                 && self::close($cite, $correction);
             if (!$found || !$close || in_array($key, $accepted, true)) {

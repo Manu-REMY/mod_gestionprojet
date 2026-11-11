@@ -57,3 +57,6 @@ foreach (['en', 'fr'] as $lang) {
 }
 test('js: the word of the student is escaped in the confirmation (security review)', fn() =>
     strpos($js, 'escapeHtml(button.dataset.cite)') !== false && strpos($js, "'<': '&lt;'") !== false);
+test('review: only the latest applied correction of a copy changes its grade and level', fn() =>
+    strpos($fn, '$latest[$evaluation->submissionid] ?? 0) !== (int)$evaluation->id') !== false);
+test('review: "OK" comes from the language files', fn() => strpos($js, "cfg.ok") !== false && strpos($js, "'OK'") === false);

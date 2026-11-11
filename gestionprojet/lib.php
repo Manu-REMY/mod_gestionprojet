@@ -345,7 +345,9 @@ function gestionprojet_spelling_block_html(?array $langue, int $dismisscmid = 0)
         . format_float((float)($langue['points'] ?? 0), 1, true, true) . ' / ' . format_float((float)($langue['p'] ?? 2), 1, true, true);
     $out = html_writer::tag('h4', s($title));
     $fautes = $langue['fautes'] ?? [];
-    if (!$fautes) {
+    if (!empty($langue['vide'])) {
+        $out .= html_writer::tag('p', s(get_string('langue_nothing_written', 'gestionprojet')));
+    } else if (!$fautes) {
         $out .= html_writer::tag('p', '✓ ' . s(get_string('langue_no_mistake', 'gestionprojet')));
     } else {
         $items = [];
@@ -387,6 +389,12 @@ function gestionprojet_spelling_accept(object $gestionprojet, string $cite): int
         $DB->set_field('gestionprojet', 'langue_accepted', $gestionprojet->langue_accepted, ['id' => $gestionprojet->id]);
     }
     $count = 0;
+    // Only the latest applied correction of a copy sets its grade and level (older ones were replaced).
+    $latest = [];
+    foreach ($DB->get_records('gestionprojet_ai_evaluations', ['gestionprojetid' => $gestionprojet->id, 'step' => 4,
+            'status' => 'applied', 'formatif' => 0], 'timemodified ASC, id ASC', 'id, submissionid') as $row) {
+        $latest[$row->submissionid] = (int)$row->id;
+    }
     $evaluations = $DB->get_records_select('gestionprojet_ai_evaluations',
         'gestionprojetid = ? AND step = 4 AND langue_json IS NOT NULL', [$gestionprojet->id]);
     foreach ($evaluations as $evaluation) {
@@ -408,7 +416,7 @@ function gestionprojet_spelling_accept(object $gestionprojet, string $cite): int
         $evaluation->langue_json = json_encode($langue, JSON_UNESCAPED_UNICODE);
         $DB->set_field('gestionprojet_ai_evaluations', 'langue_json', $evaluation->langue_json, ['id' => $evaluation->id]);
         $count++;
-        if ($evaluation->status !== 'applied') {
+        if ($evaluation->status !== 'applied' || ($latest[$evaluation->submissionid] ?? 0) !== (int)$evaluation->id) {
             continue;
         }
         $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $evaluation->submissionid,

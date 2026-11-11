@@ -327,7 +327,8 @@ class ai_evaluator {
                 $builderoptions['palier'] = $evaluation->palier;
             }
             // Spelling graded apart at step 4 (request 32), never in a level request.
-            $spelling = (int)$evaluation->step === 4 && !$ispalier && !empty($gestionprojet->langue_enabled);
+            $spelling = (int)$evaluation->step === 4 && !$ispalier && !empty($gestionprojet->langue_enabled)
+                && (int)($gestionprojet->step4_paliers ?? 0) !== 1;
             $builderoptions['langue'] = $spelling;
             $promptbuilder = new ai_prompt_builder($builderoptions);
             // A grid where every part is excluded cannot give a grade: fail rather than invent one.
@@ -368,8 +369,10 @@ class ai_evaluator {
             $spellingraw = '';
             if ($spelling) {
                 $p = (float)($gestionprojet->langue_points ?? 2);
+                $consignearray = (int)($gestionprojet->step4_provided ?? 0) === 1 && $providedrec_for_prompt !== null
+                    ? (json_decode((string)($providedrec_for_prompt->interacteurs_data ?? ''), true) ?: []) : [];
                 $texts = $nomodifications ? [] : orthographe::judged_texts(
-                    json_decode((string)($promptsubmission->interacteurs_data ?? ''), true) ?: []);
+                    json_decode((string)($promptsubmission->interacteurs_data ?? ''), true) ?: [], $consignearray);
                 $fautes = [];
                 $ecartees = 0;
                 if ($texts) {
@@ -377,7 +380,12 @@ class ai_evaluator {
                     $spellingresponse = $provider->evaluate($spellingprompts['system'], $spellingprompts['user'],
                         $evaluation->model, 1500);
                     $spellingraw = (string)($spellingresponse['content'] ?? '');
-                    $checked = orthographe::verify(orthographe::parse($spellingraw), implode("\n", $texts),
+                    try {
+                        $parsedfautes = orthographe::parse($spellingraw);
+                    } catch (\UnexpectedValueException $e) {
+                        throw new \Exception(get_string('langue_unreadable', 'gestionprojet'));
+                    }
+                    $checked = orthographe::verify($parsedfautes, implode("\n", $texts),
                         json_decode((string)($gestionprojet->langue_accepted ?? ''), true) ?: []);
                     $fautes = $checked['fautes'];
                     $ecartees = $checked['ecartees'];
@@ -385,7 +393,7 @@ class ai_evaluator {
                     $response['completion_tokens'] = ($response['completion_tokens'] ?? 0)
                         + ($spellingresponse['completion_tokens'] ?? 0);
                 }
-                $langue = ['fautes' => $fautes, 'ecartees' => $ecartees, 'p' => $p,
+                $langue = ['fautes' => $fautes, 'ecartees' => $ecartees, 'p' => $p, 'vide' => !$texts,
                     'points' => $texts ? orthographe::points(count($fautes), $p) : 0.0];
             }
 

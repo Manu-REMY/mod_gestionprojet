@@ -57,3 +57,5 @@ foreach (['en', 'fr'] as $lang) {
         && !empty($string['langue_detail']) && strpos($string['langue_detail'], '{$a->content}') !== false);
 }
 test('css', fn() => strpos(file_get_contents(GP_ROOT . '/styles.css'), '.path-mod-gestionprojet .gp-langue-block') !== false);
+test('review: nothing written is said, not "no mistake"', fn() => strpos($block, "'langue_nothing_written'") !== false);
+test('review: maxima printed with their decimals', fn() => strpos($grading, "format_float(20 - (float)\$aievaluation->langue_points, 1, true, true)") !== false);
