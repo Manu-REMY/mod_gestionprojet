@@ -177,12 +177,17 @@ class ai_response_parser {
                 continue;
             }
 
-            $normalized[] = [
+            $item = [
                 'name' => $this->sanitize_text($criterion['name'] ?? 'Critère'),
                 'score' => (float) ($criterion['score'] ?? 0),
                 'max' => (float) ($criterion['max'] ?? 5),
                 'comment' => $this->sanitize_text($criterion['comment'] ?? ''),
             ];
+            // The default max is for display only: the level verdict must not take it for the AI's (v2.13.5).
+            if (!isset($criterion['max']) || !is_numeric($criterion['max'])) {
+                $item['max_missing'] = true;
+            }
+            $normalized[] = $item;
         }
 
         return $normalized;

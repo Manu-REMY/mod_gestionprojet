@@ -102,23 +102,20 @@ class palier {
     }
 
     /**
-     * Verdict of an attempt, computed by the server from the points of the level's parts.
+     * Share of the points earned on each part (0 to 1), from the AI criteria.
      *
-     * The points of each part are its weight on the server grid (grille::scaled_weights of the level's parts);
-     * the AI's own "max" is never trusted. AI criteria are matched to the parts by name (case and spaces ignored),
-     * then by a name starting with the part name followed by a non-letter. Unknown or duplicate criteria are ignored
-     * (an unknown name never earns points), a missing part scores 0, scores
-     * are bounded to [0, weight]. The threshold is compared with the unrounded ratio; no point earned never validates.
+     * AI criteria are matched to the parts by name (case and spaces ignored), then by a name starting with the part
+     * name followed by a non-letter. Unknown or duplicate criteria are ignored (an unknown name never earns points),
+     * a missing part scores 0. The AI may grade a part on its weight scaled to 20 (grille::scaled_weights of the
+     * parts given) or on the weight the teacher typed (poids, when its instructions quote it, request 38): the teacher
+     * weight is used only when the AI gave it as its max and the score does not exceed it; otherwise (any other max,
+     * a max filled in by the parser, a score above it) the scaled weight is used.
      *
-     * @param array $criteria Criteria of the AI response (name, score).
-     * @param array $parts Graded parts of the level (palier::parts_for).
-     * @param int $seuil Threshold in % of the points of the level.
-     * @return array ['valide' => bool, 'percent' => float rounded to 0.1]
+     * @param array $criteria Criteria of the AI response (name, score, max).
+     * @param array $parts Graded parts the AI was given.
+     * @return array [part index => share in [0, 1], or null when no criterion matches the part], for every part.
      */
-    public static function verdict(array $criteria, array $parts, int $seuil): array {
-        if (!$parts || !$criteria) {
-            return ['valide' => false, 'percent' => 0.0];
-        }
+    public static function part_shares(array $criteria, array $parts): array {
         $weights = grille::scaled_weights($parts);
         $norm = function ($name): string {
             return trim(preg_replace('/\s+/u', ' ', mb_strtolower((string)$name)));
@@ -127,12 +124,12 @@ class palier {
         foreach ($parts as $index => $part) {
             $partbyname[$norm($part['nom'])] = $partbyname[$norm($part['nom'])] ?? $index;
         }
-        $scores = [];
+        $found = [];
         $used = [];
         foreach (array_values($criteria) as $rank => $criterion) {
             $key = $norm($criterion['name'] ?? '');
-            if (isset($partbyname[$key]) && !isset($scores[$partbyname[$key]])) {
-                $scores[$partbyname[$key]] = $criterion['score'] ?? 0;
+            if (isset($partbyname[$key]) && !isset($found[$partbyname[$key]])) {
+                $found[$partbyname[$key]] = $criterion;
                 $used[$rank] = true;
             }
         }
@@ -144,27 +141,110 @@ class palier {
             $key = $norm($criterion['name'] ?? '');
             foreach ($parts as $index => $part) {
                 $partname = $norm($part['nom']);
-                if (!isset($scores[$index]) && $partname !== ''
+                if (!isset($found[$index]) && $partname !== ''
                         && preg_match('/^' . preg_quote($partname, '/') . '(?![\p{L}\p{N}])/u', $key)) {
-                    $scores[$index] = $criterion['score'] ?? 0;
+                    $found[$index] = $criterion;
                     $used[$rank] = true;
                     break;
                 }
             }
         }
+        $shares = [];
+        foreach ($parts as $index => $part) {
+            $scaled = (float)($weights[$part['id']] ?? 0);
+            $criterion = $found[$index] ?? null;
+            if ($criterion === null) {
+                $shares[$index] = null;
+                continue;
+            }
+            if ($scaled <= 0) {
+                $shares[$index] = 0.0;
+                continue;
+            }
+            $score = is_numeric($criterion['score'] ?? null) ? (float)$criterion['score'] : 0.0;
+            $outof = $scaled;
+            $max = empty($criterion['max_missing']) && isset($criterion['max']) && is_numeric($criterion['max'])
+                ? (float)$criterion['max'] : null;
+            if ($max !== null && $max > 0 && abs($max - (float)$part['poids']) < 0.001 && $score <= $max + 0.001) {
+                $outof = (float)$part['poids'];
+            }
+            $shares[$index] = min(1.0, max(0.0, $score / $outof));
+        }
+        return $shares;
+    }
+
+    /**
+     * Verdict of an attempt, computed by the server from the points of the level's parts.
+     *
+     * Each part is worth its weight on the server grid (grille::scaled_weights of the level's parts); the share earned
+     * on it comes from part_shares(). The threshold is compared with the unrounded ratio; no point earned never
+     * validates.
+     *
+     * @param array $criteria Criteria of the AI response (name, score, max).
+     * @param array $parts Graded parts of the level (palier::parts_for).
+     * @param int $seuil Threshold in % of the points of the level.
+     * @return array ['valide' => bool, 'percent' => float rounded to 0.1]
+     */
+    public static function verdict(array $criteria, array $parts, int $seuil): array {
+        if (!$parts || !$criteria) {
+            return ['valide' => false, 'percent' => 0.0];
+        }
+        $weights = grille::scaled_weights($parts);
+        $shares = self::part_shares($criteria, $parts);
         $earned = 0.0;
         $total = 0.0;
         foreach ($parts as $index => $part) {
             $w = (float)($weights[$part['id']] ?? 0);
             $total += $w;
-            $earned += min($w, max(0.0, (float)($scores[$index] ?? 0)));
+            $earned += $w * (float)($shares[$index] ?? 0);
         }
         if ($total <= 0) {
             return ['valide' => false, 'percent' => 0.0];
         }
         $ratio = 100 * $earned / $total;
         // No point earned never validates, even with a 0 % threshold (an empty or broken AI answer).
-        return ['valide' => $earned > 0 && $ratio >= $seuil, 'percent' => round($ratio, 1)];
+        return ['valide' => $earned > 0 && $ratio >= $seuil - 1e-9, 'percent' => round($ratio, 1)];
+    }
+
+    /**
+     * Level reached by a grade on the whole grid (20-point mode, request 37).
+     *
+     * A part is acquired when its share reaches the threshold; a level is reached when all its parts and those of
+     * every lower level are acquired. The next level is the first one not reached, with its parts not acquired.
+     * When a part with a level matches no criterion (the AI named it otherwise, or the grid changed since), nothing
+     * is said: the banner is only informative and must not report a level that was not judged.
+     *
+     * @param array $criteria Criteria of the AI response (name, score, max).
+     * @param array $parts Graded parts of the whole grid, as the AI was given them.
+     * @param int $seuil Threshold in % for a part.
+     * @return array|null ['reached' => '' or level, 'next' => '' or level, 'missing' => part names]; null when the
+     *     grid has no level or there is no criterion.
+     */
+    public static function level_reached(array $criteria, array $parts, int $seuil): ?array {
+        $levels = self::paliers_in_grid($parts);
+        if (!$levels || !$criteria) {
+            return null;
+        }
+        $shares = self::part_shares($criteria, $parts);
+        foreach ($parts as $index => $part) {
+            if (($part['palier'] ?? '') !== '' && $shares[$index] === null) {
+                return null;
+            }
+        }
+        $reached = '';
+        $missing = [];
+        foreach ($levels as $level) {
+            foreach ($parts as $index => $part) {
+                if (($part['palier'] ?? '') === $level && 100 * $shares[$index] < $seuil - 1e-9) {
+                    $missing[] = $part['nom'];
+                }
+            }
+            if ($missing) {
+                return ['reached' => $reached, 'next' => $level, 'missing' => $missing];
+            }
+            $reached = $level;
+        }
+        return ['reached' => $reached, 'next' => '', 'missing' => []];
     }
 
     /**

@@ -125,8 +125,15 @@ if (!empty($submission)) {
                 'groupid' => (int)$groupid,
                 'statusUrl' => (new moodle_url('/mod/gestionprojet/ajax/get_evaluation_status.php'))->out(false),
                 'bannerId' => 'gpFormativeBanner',
+                // Waiting window (request 36): words of the spinner, of the ready and failed states.
                 'strings' => [
+                    'pending' => get_string('formative_pending', 'gestionprojet'),
+                    'waitDetail' => get_string('formative_wait_detail', 'gestionprojet'),
+                    'keepWorking' => get_string('formative_keep_working', 'gestionprojet'),
+                    'ready' => get_string('formative_ready', 'gestionprojet'),
+                    'show' => get_string('formative_show', 'gestionprojet'),
                     'error' => get_string('formative_error', 'gestionprojet'),
+                    'close' => get_string('formative_close', 'gestionprojet'),
                 ],
             ]]);
         } else if ($progress['feedback']['source'] !== 'none') {
@@ -152,6 +159,13 @@ if (!empty($submission)) {
                 'step' => (int)$step,
                 'groupid' => (int)$groupid,
                 'buttonId' => 'gpFormativeButton',
+                'strings' => [
+                    'pending' => get_string('formative_pending', 'gestionprojet'),
+                    'waitDetail' => get_string('formative_wait_detail', 'gestionprojet'),
+                    'keepWorking' => get_string('formative_keep_working', 'gestionprojet'),
+                    'error' => get_string('formative_error', 'gestionprojet'),
+                    'close' => get_string('formative_close', 'gestionprojet'),
+                ],
             ]]);
         } else {
             echo html_writer::div('⊘ ' . get_string('formative_none_left', 'gestionprojet'), 'gp-formative-none');

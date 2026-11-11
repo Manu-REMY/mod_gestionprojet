@@ -5911,6 +5911,165 @@
     }
 }
 
+/* ===== Level reached by a step 4 grade (request 37, v2.13.5): PRONOTE colours, doubled by the acronym ===== */
+.path-mod-gestionprojet .gp-level-banner {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid #c9d3e3;
+    border-left: 6px solid #6b7280;
+    border-radius: 6px;
+    background: #f3f4f6;
+    color: #1d2433;
+}
+
+.path-mod-gestionprojet .gp-level-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+}
+
+.path-mod-gestionprojet .gp-level-acronym {
+    flex: 0 0 auto;
+    min-width: 2.6rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #6b7280;
+    color: #fff;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.path-mod-gestionprojet .gp-level-next {
+    margin-top: 6px;
+    font-size: 0.9rem;
+}
+
+.path-mod-gestionprojet .gp-level-banner.gp-level-f {
+    border-left-color: #e08a3c;
+    background: #fef4ea;
+}
+
+.path-mod-gestionprojet .gp-level-banner.gp-level-f .gp-level-acronym {
+    background: #a8570f;
+}
+
+.path-mod-gestionprojet .gp-level-banner.gp-level-s {
+    border-left-color: #2f63b8;
+    background: #e9f0fb;
+}
+
+.path-mod-gestionprojet .gp-level-banner.gp-level-s .gp-level-acronym {
+    background: #2a58a6;
+}
+
+.path-mod-gestionprojet .gp-level-banner.gp-level-ts {
+    border-left-color: #173f86;
+    background: #e4ecf8;
+}
+
+.path-mod-gestionprojet .gp-level-banner.gp-level-ts .gp-level-acronym {
+    background: #173f86;
+}
+
+.path-mod-gestionprojet .gp-level-banner.gp-level-none .gp-level-acronym {
+    background: transparent;
+    color: #4b5563;
+    border: 2px solid #6b7280;
+}
+
+/* ===== Waiting for a formative feedback: window in the middle of the screen (request 36, v2.13.4) ===== */
+.path-mod-gestionprojet .gp-formative-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1060;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(22, 24, 27, 0.45);
+}
+
+.path-mod-gestionprojet .gp-formative-modal-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    max-width: 30rem;
+    width: 100%;
+    padding: 20px 24px;
+    background: #eef4fb;
+    border: 1px solid #b9cde6;
+    border-left: 6px solid #2f6fb3;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    color: #16181b;
+}
+
+.path-mod-gestionprojet .gp-formative-modal-spinner {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border: 5px solid #c8d8ec;
+    border-top-color: #2f6fb3;
+    border-radius: 50%;
+    animation: gestionprojet-spin 1s linear infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.path-mod-gestionprojet .gp-formative-modal-text {
+    flex: 1 1 14rem;
+}
+
+.path-mod-gestionprojet .gp-formative-modal-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.path-mod-gestionprojet .gp-formative-modal-detail {
+    margin: 4px 0 0;
+    color: #4b5563;
+}
+
+.path-mod-gestionprojet .gp-formative-modal-detail:empty {
+    display: none;
+}
+
+.path-mod-gestionprojet .gp-formative-modal-box .btn {
+    margin-left: auto;
+}
+
+/* Ready: a still ring with a check mark; failed: an exclamation mark on a light orange (never the colour alone). */
+.path-mod-gestionprojet .gp-formative-modal-ready .gp-formative-modal-spinner,
+.path-mod-gestionprojet .gp-formative-modal-failed .gp-formative-modal-spinner {
+    animation: none;
+    border-color: #2f6fb3;
+    color: #2f6fb3;
+}
+
+.path-mod-gestionprojet .gp-formative-modal-failed {
+    background: #fdf1e6;
+    border-color: #f0c9a3;
+    border-left-color: #b8601a;
+}
+
+.path-mod-gestionprojet .gp-formative-modal-failed .gp-formative-modal-spinner {
+    border-color: #b8601a;
+    color: #b8601a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .path-mod-gestionprojet .gp-formative-modal-spinner {
+        animation: none;
+        border-top-width: 8px;
+    }
+}
+
 /* ===== Submit modal: ask for a feedback instead of submitting (v2.12.2) ===== */
 .path-mod-gestionprojet .gp-submit-ask-instead {
     margin-top: 1rem;
