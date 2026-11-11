@@ -1062,7 +1062,11 @@ function gestionprojet_progress_state(object $gestionprojet, int $step, object $
     // Step 4 graded on 20 with a grid that has levels: the level this grade reaches (request 37). Computed from the
     // AI scores even when the teacher hides the criteria: the level gives no answer away.
     $level = null;
-    if ($step === 4 && !$paliermode && $pick['evaluation'] && in_array($pick['source'], ['formative', 'applied'], true)) {
+    // Not when the teacher changed the grade: the level would contradict it.
+    $teachergraded = $pick['source'] === 'applied' && $grade !== null
+        && abs($grade - (float)($pick['evaluation']->parsed_grade ?? -1)) > 0.01;
+    if ($step === 4 && !$paliermode && $pick['evaluation'] && !$teachergraded
+            && in_array($pick['source'], ['formative', 'applied'], true)) {
         $level = \mod_gestionprojet\palier::level_reached(json_decode((string)$pick['evaluation']->criteria_json, true) ?: [],
             gestionprojet_palier_parts($gestionprojet), (int)($gestionprojet->step4_palier_seuil ?? 80));
     }

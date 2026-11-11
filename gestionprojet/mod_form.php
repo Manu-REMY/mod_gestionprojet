@@ -104,7 +104,6 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->setType('step4_palier_seuil', PARAM_INT);
         $mform->setDefault('step4_palier_seuil', 80);
         $mform->addHelpButton('step4_palier_seuil', 'step4_palier_seuil', 'gestionprojet');
-        $mform->hideIf('step4_palier_seuil', 'step4_paliers', 'eq', 0);
 
         // AI Evaluation settings.
         $mform->addElement('header', 'ai_settings', get_string('ai_settings', 'gestionprojet'));

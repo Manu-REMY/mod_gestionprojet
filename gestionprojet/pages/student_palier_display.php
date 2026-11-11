@@ -71,8 +71,11 @@ if ($last && !$pending) {
         if ((int)$last->palier_valide !== 1) {
             echo html_writer::div('⊘ ' . get_string('palier_failed', 'gestionprojet', $label), 'gp-palier-status gp-palier-ko');
         }
-        echo html_writer::tag('p', get_string('palier_score', 'gestionprojet', format_float($verdict['percent'], 1)),
-            ['class' => 'gp-palier-score']);
+        // An attempt judged by an older rule keeps its verdict: its score is not shown when today's rule differs.
+        if ($verdict['valide'] === ((int)$last->palier_valide === 1)) {
+            echo html_writer::tag('p', get_string('palier_score', 'gestionprojet', format_float($verdict['percent'], 1)),
+                ['class' => 'gp-palier-score']);
+        }
         if ($view['feedback'] !== '') {
             echo html_writer::tag('p', nl2br(s($view['feedback'])));
         }

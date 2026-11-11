@@ -141,8 +141,10 @@ foreach (['en', 'fr'] as $l) {
 $sys = (new ai_prompt_builder(['palier' => 'S']))->build_system_prompt(4, $model);
 test('palier prompt asks for exactly one criterion per part with its exact name', fn() =>
     strpos($sys, 'exactement un critère par partie') !== false && strpos($sys, '« Fonctions »') !== false);
-test('no level: no such instruction', fn() =>
-    strpos((new ai_prompt_builder())->build_system_prompt(4, $model), 'exactement un critère par partie') === false);
+// Outside the level mode a grid with levels also asks for the exact names (level reached, v2.13.5),
+// but never the level-mode rule that nothing else is graded.
+test('no level mode: no level-only instruction', fn() =>
+    strpos((new ai_prompt_builder())->build_system_prompt(4, $model), "N'évalue rien d'autre") === false);
 
 // Preprod run: in a SAT request the AI still penalised the missing levels (another level's zone).
 test('palier prompt names what is not graded in this level', fn() =>

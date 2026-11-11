@@ -534,6 +534,13 @@ PROMPT;
                 . "Rien n'est attendu là : ne le demande pas, ne retire aucun point pour son absence, "
                 . "ni dans la cohérence d'ensemble.\n";
         }
+        if ($step === 4 && $this->palier === '' && $criteria && palier::paliers_in_grid($parts)) {
+            // Grid with levels: the server matches the criteria to the parts by name for the level reached (request 37).
+            $names = implode(', ', array_map(function (array $c): string {
+                return '« ' . $c['name'] . ' »';
+            }, $criteria));
+            $text .= "\nRéponds avec exactement un critère par partie de cette grille, en reprenant son nom exact : {$names}.\n";
+        }
         if ($step === 4 && $this->palier !== '' && $criteria) {
             // Level mode: the server matches the AI criteria to the parts by name (palier::verdict).
             $names = implode(', ', array_map(function (array $c): string {

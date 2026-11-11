@@ -107,12 +107,13 @@ class palier {
      * AI criteria are matched to the parts by name (case and spaces ignored), then by a name starting with the part
      * name followed by a non-letter. Unknown or duplicate criteria are ignored (an unknown name never earns points),
      * a missing part scores 0. The AI may grade a part on its weight scaled to 20 (grille::scaled_weights of the
-     * parts given) or on the weight the teacher typed (poids, when its instructions quote it, request 38): its "max"
-     * is used only when it is one of these two; any other max is never trusted and the scaled weight is used.
+     * parts given) or on the weight the teacher typed (poids, when its instructions quote it, request 38): the teacher
+     * weight is used only when the AI gave it as its max and the score does not exceed it; otherwise (any other max,
+     * a max filled in by the parser, a score above it) the scaled weight is used.
      *
      * @param array $criteria Criteria of the AI response (name, score, max).
      * @param array $parts Graded parts the AI was given.
-     * @return array [part index => share in [0, 1]], for every part.
+     * @return array [part index => share in [0, 1], or null when no criterion matches the part], for every part.
      */
     public static function part_shares(array $criteria, array $parts): array {
         $weights = grille::scaled_weights($parts);
@@ -152,16 +153,21 @@ class palier {
         foreach ($parts as $index => $part) {
             $scaled = (float)($weights[$part['id']] ?? 0);
             $criterion = $found[$index] ?? null;
-            if ($criterion === null || $scaled <= 0) {
+            if ($criterion === null) {
+                $shares[$index] = null;
+                continue;
+            }
+            if ($scaled <= 0) {
                 $shares[$index] = 0.0;
                 continue;
             }
+            $score = is_numeric($criterion['score'] ?? null) ? (float)$criterion['score'] : 0.0;
             $outof = $scaled;
-            $max = isset($criterion['max']) && is_numeric($criterion['max']) ? (float)$criterion['max'] : null;
-            if ($max !== null && $max > 0 && abs($max - (float)$part['poids']) < 0.001) {
+            $max = empty($criterion['max_missing']) && isset($criterion['max']) && is_numeric($criterion['max'])
+                ? (float)$criterion['max'] : null;
+            if ($max !== null && $max > 0 && abs($max - (float)$part['poids']) < 0.001 && $score <= $max + 0.001) {
                 $outof = (float)$part['poids'];
             }
-            $score = is_numeric($criterion['score'] ?? null) ? (float)$criterion['score'] : 0.0;
             $shares[$index] = min(1.0, max(0.0, $score / $outof));
         }
         return $shares;
@@ -190,7 +196,7 @@ class palier {
         foreach ($parts as $index => $part) {
             $w = (float)($weights[$part['id']] ?? 0);
             $total += $w;
-            $earned += $w * $shares[$index];
+            $earned += $w * (float)($shares[$index] ?? 0);
         }
         if ($total <= 0) {
             return ['valide' => false, 'percent' => 0.0];
@@ -204,8 +210,9 @@ class palier {
      * Level reached by a grade on the whole grid (20-point mode, request 37).
      *
      * A part is acquired when its share reaches the threshold; a level is reached when all its parts and those of
-     * every lower level are acquired. The next level is the first one not reached, with its parts not acquired (and
-     * those of lower levels, which block it too).
+     * every lower level are acquired. The next level is the first one not reached, with its parts not acquired.
+     * When a part with a level matches no criterion (the AI named it otherwise, or the grid changed since), nothing
+     * is said: the banner is only informative and must not report a level that was not judged.
      *
      * @param array $criteria Criteria of the AI response (name, score, max).
      * @param array $parts Graded parts of the whole grid, as the AI was given them.
@@ -219,6 +226,11 @@ class palier {
             return null;
         }
         $shares = self::part_shares($criteria, $parts);
+        foreach ($parts as $index => $part) {
+            if (($part['palier'] ?? '') !== '' && $shares[$index] === null) {
+                return null;
+            }
+        }
         $reached = '';
         $missing = [];
         foreach ($levels as $level) {

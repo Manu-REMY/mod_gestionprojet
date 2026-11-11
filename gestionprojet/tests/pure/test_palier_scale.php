@@ -70,7 +70,8 @@ $none = palier::level_reached($ai([['Fonctions de service', 5, 8], ["Critères d
 test('37: FS at 62.5 %: no level, F next', fn() => $none['reached'] === '' && $none['next'] === 'F'
     && $none['missing'] === ['Fonctions de service']);
 test('37: at exactly the threshold the part is acquired', fn() =>
-    palier::level_reached($ai([['Fonctions de service', 6.4, 8]]), $parts, 80)['reached'] === 'F');
+    palier::level_reached($ai([['Fonctions de service', 6.4, 8], ["Critères d'appréciation", 0, 6], ["Niveaux d'exigence", 0, 6]]),
+        $parts, 80)['reached'] === 'F');
 test('37: a grid without levels gives nothing', fn() =>
     palier::level_reached($full, grille::effective_parts(grille::default_grid(false)), 80) === null);
 test('37: no criteria gives nothing', fn() => palier::level_reached([], $parts, 80) === null);
@@ -104,3 +105,40 @@ test('lib: the banner escapes every sentence (part names typed by the teacher)',
     $body = $m[0] ?? '';
     return $body !== '' && substr_count($body, 'html_writer::span(s(') === 3 && substr_count($body, 'html_writer::div(s(') === 2;
 });
+
+// Review of v2.13.5.
+$five = grille::effective_parts(grille::normalize([
+    ['id' => 1, 'nom' => 'A', 'poids' => 5, 'zones' => ['fonctions'], 'palier' => 'S'],
+    ['id' => 2, 'nom' => 'B', 'poids' => 5, 'zones' => ['criteres'], 'palier' => 'S'],
+    ['id' => 3, 'nom' => 'C', 'poids' => 5, 'zones' => ['niveaux'], 'palier' => 'S'],
+]));
+$missing = array_map(fn($n) => ['name' => $n, 'score' => 5, 'max' => 5, 'max_missing' => true], ['A', 'B', 'C']);
+test('review: a max filled in by the parser is not the teacher weight (5 of 6.67 is 75 %)', fn() =>
+    palier::verdict($missing, palier::parts_for($five, 'S'), 80)['valide'] === false);
+$ones = grille::effective_parts(grille::normalize([
+    ['id' => 1, 'nom' => 'A', 'poids' => 1, 'zones' => ['fonctions'], 'palier' => 'S'],
+    ['id' => 2, 'nom' => 'B', 'poids' => 1, 'zones' => ['criteres'], 'palier' => 'S'],
+]));
+test('review: a score above the teacher weight falls back on the scaled weight (7 of 10)', fn() =>
+    palier::verdict($ai([['A', 7, 1], ['B', 7, 1]]), palier::parts_for($ones, 'S'), 80) === ['valide' => false, 'percent' => 70.0]);
+test('review: a part with a level that matches no criterion: no banner', fn() =>
+    palier::level_reached($ai([['FS', 8, 8], ['Critères', 6, 6], ['Niveaux', 6, 6]]), $parts, 80) === null);
+$parser = new \mod_gestionprojet\ai_response_parser();
+$parsed = $parser->parse(json_encode(['grade' => 10, 'feedback' => 'x', 'criteria' => [['name' => 'A', 'score' => 5]]]));
+test('review: the parser marks a missing max', fn() => !empty($parsed->criteria[0]['max_missing']));
+$parsed2 = $parser->parse(json_encode(['grade' => 10, 'feedback' => 'x', 'criteria' => [['name' => 'A', 'score' => 5, 'max' => 8]]]));
+test('review: a given max is not marked missing', fn() => !isset($parsed2->criteria[0]['max_missing']));
+test('review: no banner when the teacher changed the grade', fn() => strpos($lib, '$teachergraded') !== false
+    && strpos($lib, '!$teachergraded') !== false);
+$student = $read('pages/student_palier_display.php');
+$teacher = $read('pages/teacher_palier_display.php');
+test('review: an old attempt never shows a score that contradicts its verdict', fn() =>
+    substr_count($student . $teacher, "if (\$verdict['valide'] === ((int)") === 2);
+$builder = new \mod_gestionprojet\ai_prompt_builder(['flexibility' => false]);
+$system = $builder->build_system_prompt(4, (object) ['ai_instructions' => '', 'grille_json' => json_encode($parts)]);
+test('review: grid with levels on 20: the AI must reuse the exact part names', fn() =>
+    strpos($system, 'en reprenant son nom exact : « Fonctions de service »') !== false);
+$plain = $builder->build_system_prompt(4, (object) ['ai_instructions' => '']);
+test('review: grid without levels: no such sentence', fn() => strpos($plain, 'en reprenant son nom exact') === false);
+test('review: the threshold is always shown in the form', fn() =>
+    strpos($read('mod_form.php'), "hideIf('step4_palier_seuil'") === false);

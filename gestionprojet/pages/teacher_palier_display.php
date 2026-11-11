@@ -70,10 +70,13 @@ if ($palierstate['attempts']) {
             $criteria = json_decode((string)$attempt->criteria_json, true) ?: [];
             $verdict = \mod_gestionprojet\palier::verdict($criteria,
                 \mod_gestionprojet\palier::parts_for($palierparts, (string)$attempt->palier), $seuil);
-            $status = ((int)$attempt->palier_valide === 1
+            $status = (int)$attempt->palier_valide === 1
                     ? '✓ ' . get_string('palier_attempt_ok', 'gestionprojet')
-                    : '⊘ ' . get_string('palier_attempt_ko', 'gestionprojet'))
-                . ' — ' . get_string('palier_score', 'gestionprojet', format_float($verdict['percent'], 1));
+                    : '⊘ ' . get_string('palier_attempt_ko', 'gestionprojet');
+            // An attempt judged by an older rule keeps its verdict: its score is not shown when today's rule differs.
+            if ($verdict['valide'] === ((int)$attempt->palier_valide === 1)) {
+                $status .= ' — ' . get_string('palier_score', 'gestionprojet', format_float($verdict['percent'], 1));
+            }
         }
         $items[] = s($label . ' · ' . $when . ' · ' . $status);
     }
