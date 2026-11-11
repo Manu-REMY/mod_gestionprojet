@@ -196,6 +196,7 @@ echo html_writer::start_tag('form', [
     'method' => 'get',
     'action' => $PAGE->url->out_omit_querystring(),
     'class' => 'mb-4',
+    'id' => 'gpReportFilters',
 ]);
 
 // Hidden field for activity mode.
@@ -308,20 +309,8 @@ echo html_writer::tag('span', get_string('summary_tokens', 'gestionprojet', numb
 echo html_writer::end_div();
 echo html_writer::end_div();
 
-// Handle date conversion for form submission.
-echo html_writer::script("
-    document.querySelector('form').addEventListener('submit', function(e) {
-        var datefrom = document.getElementById('datefrom').value;
-        var dateto = document.getElementById('dateto').value;
+// Date conversion on submit: done by the report_log AMD module (no inline JS).
 
-        if (datefrom) {
-            document.getElementById('datefrom').value = Math.floor(new Date(datefrom).getTime() / 1000);
-        }
-        if (dateto) {
-            document.getElementById('dateto').value = Math.floor(new Date(dateto).getTime() / 1000);
-        }
-    });
-");
 
 // Output table.
 $table->out($perpage, true);

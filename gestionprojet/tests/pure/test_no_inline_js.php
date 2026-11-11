@@ -32,7 +32,7 @@ foreach ($it as $file) {
         continue;
     }
     $code = file_get_contents($file->getPathname());
-    if (preg_match('/js_init_code\(|js_amd_inline\(|<script\b/i', $code)) {
+    if (preg_match('/js_init_code\(|js_init_call\(|js_amd_inline\(|html_writer::script\(|<script\b/i', $code)) {
         $found[] = $path;
     }
 }

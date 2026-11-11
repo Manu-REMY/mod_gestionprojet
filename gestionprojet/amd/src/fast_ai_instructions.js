@@ -41,10 +41,11 @@ define(['mod_gestionprojet/generate_ai_instructions'], function(GenerateAi) {
             if (Array.isArray(obj)) {
                 return obj.length === 0;
             }
-            // FAST data: an object of arrays and objects; empty when none of them holds anything.
+            // FAST data: an object of arrays and objects; empty when none of them holds anything
+            // (flags such as populatedFromCdcf: true do not count, as before).
             return !Object.keys(obj).some(function(k) {
                 var v = obj[k];
-                return v && (Array.isArray(v) ? v.length > 0 : (typeof v === 'object' ? Object.keys(v).length > 0 : true));
+                return v && (Array.isArray(v) ? v.length > 0 : Object.keys(v).length > 0);
             });
         } catch (e) {
             return false;

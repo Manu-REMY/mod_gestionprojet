@@ -30,10 +30,24 @@ define(['jquery'], function($) {
          * @param {Object} strings showMore, showLess, expandPrompts, collapsePrompts
          */
         init: function(strings) {
+            // The filter form sends the dates as timestamps.
+            var form = document.getElementById('gpReportFilters');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    ['datefrom', 'dateto'].forEach(function(id) {
+                        var input = document.getElementById(id);
+                        if (input && input.value) {
+                            input.value = Math.floor(new Date(input.value).getTime() / 1000);
+                        }
+                    });
+                });
+            }
+
             $(document).on('click', '.show-more-btn', function(e) {
                 e.preventDefault();
                 var btn = $(this);
-                var fullText = String(btn.data('full-text'));
+                // Raw attribute: .data() would turn a JSON response into an object.
+                var fullText = String(btn.attr('data-full-text') || '');
                 var pre = btn.prev('pre');
                 if (btn.hasClass('expanded')) {
                     pre.text(fullText.substring(0, 500) + '...');
