@@ -23,6 +23,18 @@
 define(['core/notification'], function(Notification) {
     'use strict';
 
+    /**
+     * Text made safe for the HTML body of the confirmation modal: the word comes from a student copy.
+     *
+     * @param {string} text
+     * @returns {string}
+     */
+    function escapeHtml(text) {
+        return String(text).replace(/[&<>"']/g, function(c) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+        });
+    }
+
     return {
         /**
          * Wire the "Dismiss" buttons of the spelling block.
@@ -35,7 +47,8 @@ define(['core/notification'], function(Notification) {
                 if (!button || button.disabled) {
                     return;
                 }
-                Notification.saveCancelPromise('', cfg.confirm.replace('{$a}', button.dataset.cite), 'OK')
+                var question = cfg.confirm.split('{$a}').join(escapeHtml(button.dataset.cite));
+                Notification.saveCancelPromise('', question, 'OK')
                     .then(function() {
                         button.disabled = true;
                         var body = new URLSearchParams();

@@ -55,3 +55,5 @@ foreach (['en', 'fr'] as $lang) {
     include(GP_ROOT . "/lang/$lang/gestionprojet.php");
     test("strings ($lang)", fn() => !empty($string['langue_dismiss']) && !empty($string['langue_dismiss_confirm']));
 }
+test('js: the word of the student is escaped in the confirmation (security review)', fn() =>
+    strpos($js, 'escapeHtml(button.dataset.cite)') !== false && strpos($js, "'<': '&lt;'") !== false);
