@@ -5983,6 +5983,25 @@
     border: 2px solid #6b7280;
 }
 
+/* ===== Spelling block (request 32, v2.15.0): words and arrows, never colour alone ===== */
+.path-mod-gestionprojet .gp-langue-block {
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border: 1px solid #c9d3e3;
+    border-radius: 6px;
+    background: #f7f9fc;
+}
+
+.path-mod-gestionprojet .gp-langue-block h4 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+}
+
+.path-mod-gestionprojet .gp-langue-list {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
 /* ===== Waiting for a formative feedback: window in the middle of the screen (request 36, v2.13.4) ===== */
 .path-mod-gestionprojet .gp-formative-modal {
     position: fixed;

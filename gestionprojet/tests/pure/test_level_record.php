@@ -39,8 +39,9 @@ test('lib: gestionprojet_level_sync exists', fn() => $sync !== '');
 test('sync: only step 4, outside the level mode, graded evaluations', fn() =>
     strpos($sync, '(int)$evaluation->step !== 4') !== false && strpos($sync, 'step4_paliers') !== false
     && strpos($sync, '$evaluation->formatif') !== false && strpos($sync, '$evaluation->palier') !== false);
-test('sync: a grade changed by the teacher leaves the levels as they are', fn() =>
-    strpos($sync, 'abs((float)$submission->grade - (float)$evaluation->parsed_grade) > 0.01') !== false);
+// Choice A (D-041), then 2.15.0: the teacher grade is compared with the total (spelling included).
+test('sync: a grade changed by the teacher is detected against the total', fn() =>
+    strpos($sync, 'abs((float)$submission->grade - $total) > 0.01') !== false);
 test('sync: nothing when the level cannot be judged (null)', fn() =>
     preg_match('/\$level === null\) \{\s*return;/', $sync) === 1);
 test('sync: a level no longer reached is marked retire, never deleted', fn() =>
