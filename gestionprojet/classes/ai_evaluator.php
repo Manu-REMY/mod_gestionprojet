@@ -544,6 +544,10 @@ class ai_evaluator {
                 // Combined mode: recalculate the combined average.
                 gestionprojet_update_grades($gestionprojet, $targetuserid);
             }
+
+            // Step 4: the level of the applied correction is the validated level (request 39, D-040).
+            require_once(__DIR__ . '/../lib.php');
+            gestionprojet_level_sync($gestionprojet, $evaluation);
         }
 
         return true;

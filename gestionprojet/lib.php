@@ -638,24 +638,11 @@ function gestionprojet_palier_record_locked(object $gestionprojet, object $evalu
         return;
     }
 
-    // Members at validation time, as plan-classe reads them: [[userid, username], ...].
-    $membres = [];
-    if ((int)$submission->userid === 0 && (int)$submission->groupid > 0) {
-        // Group work: every member of the group; individual work: the student alone, even inside a course group.
-        foreach (groups_get_members($submission->groupid, 'u.id, u.username') as $member) {
-            $membres[] = [(int)$member->id, $member->username];
-        }
-    } else if ((int)$submission->userid > 0) {
-        $user = $DB->get_record('user', ['id' => $submission->userid], 'id, username');
-        if ($user) {
-            $membres[] = [(int)$user->id, $user->username];
-        }
-    }
     $now = time();
     $DB->insert_record('gestionprojet_palier', (object)($owner + [
         'step' => 4,
         'evaluationid' => $evaluation->id,
-        'membres' => json_encode($membres),
+        'membres' => gestionprojet_palier_members($submission),
         'timecreated' => $now,
         'timemodified' => $now,
     ]));
@@ -666,6 +653,97 @@ function gestionprojet_palier_record_locked(object $gestionprojet, object $evalu
         $zones[$zone] = $zones[$zone] ?? (int)$evaluation->id;
     }
     $DB->set_field('gestionprojet_cdcf', 'zones_validees', json_encode($zones), ['id' => $submission->id]);
+}
+
+/**
+ * Members of a copy at validation time, as plan-classe reads them: JSON [[userid, username], ...].
+ *
+ * Group work: every member of the group; individual work: the student alone, even inside a course group.
+ *
+ * @param object $submission Step 4 copy.
+ * @return string JSON.
+ */
+function gestionprojet_palier_members(object $submission): string {
+    global $DB;
+
+    $membres = [];
+    if ((int)$submission->userid === 0 && (int)$submission->groupid > 0) {
+        foreach (groups_get_members($submission->groupid, 'u.id, u.username') as $member) {
+            $membres[] = [(int)$member->id, $member->username];
+        }
+    } else if ((int)$submission->userid > 0) {
+        $user = $DB->get_record('user', ['id' => $submission->userid], 'id, username');
+        if ($user) {
+            $membres[] = [(int)$user->id, $user->username];
+        }
+    }
+    return json_encode($membres);
+}
+
+/**
+ * Record the level of a step 4 copy when its correction is applied, outside the level mode (request 39, D-040).
+ *
+ * The validated levels become exactly those reached by the applied correction: the missing ones are added, the ones
+ * no longer reached are marked retire (kept for the history, never deleted). Nothing changes when the teacher changed
+ * the grade (the level would contradict it; the teacher can still remove a level) or when the level cannot be judged.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $evaluation Applied evaluation.
+ */
+function gestionprojet_level_sync(object $gestionprojet, object $evaluation): void {
+    global $DB;
+
+    if ((int)$evaluation->step !== 4 || (int)($gestionprojet->step4_paliers ?? 0) === 1
+            || !empty($evaluation->formatif) || !empty($evaluation->palier)) {
+        return;
+    }
+    $submission = $DB->get_record('gestionprojet_cdcf', ['id' => $evaluation->submissionid,
+        'gestionprojetid' => $gestionprojet->id]);
+    if (!$submission) {
+        return;
+    }
+    if ($submission->grade !== null && abs((float)$submission->grade - (float)$evaluation->parsed_grade) > 0.01) {
+        return;
+    }
+    $parts = gestionprojet_palier_parts($gestionprojet);
+    $level = \mod_gestionprojet\palier::level_reached(json_decode((string)$evaluation->criteria_json, true) ?: [],
+        $parts, (int)($gestionprojet->step4_palier_seuil ?? 80));
+    if ($level === null) {
+        return;
+    }
+    $keep = \mod_gestionprojet\palier::levels_up_to($level['reached'], \mod_gestionprojet\palier::paliers_in_grid($parts));
+
+    $lock = gestionprojet_palier_lock((int)$submission->id);
+    try {
+        $now = time();
+        $owner = ['gestionprojetid' => $gestionprojet->id] + gestionprojet_palier_owner($submission);
+        $have = [];
+        foreach ($DB->get_records('gestionprojet_palier', $owner + ['retire' => 0]) as $row) {
+            if (in_array($row->palier, $keep, true)) {
+                $have[$row->palier] = true;
+                continue;
+            }
+            $DB->set_field('gestionprojet_palier', 'retire', 1, ['id' => $row->id]);
+            $DB->set_field('gestionprojet_palier', 'timemodified', $now, ['id' => $row->id]);
+        }
+        $membres = gestionprojet_palier_members($submission);
+        foreach ($keep as $palier) {
+            if (isset($have[$palier])) {
+                continue;
+            }
+            $DB->insert_record('gestionprojet_palier', (object)($owner + [
+                'step' => 4,
+                'palier' => $palier,
+                'evaluationid' => $evaluation->id,
+                'membres' => $membres,
+                'retire' => 0,
+                'timecreated' => $now,
+                'timemodified' => $now,
+            ]));
+        }
+    } finally {
+        $lock->release();
+    }
 }
 
 /**

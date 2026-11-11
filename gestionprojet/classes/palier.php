@@ -207,6 +207,29 @@ class palier {
     }
 
     /**
+     * Levels of the grid up to the one reached, from the lowest (request 39).
+     *
+     * @param string $reached Level reached, '' when none.
+     * @param string[] $ingrid Levels of the grid (paliers_in_grid).
+     * @return string[]
+     */
+    public static function levels_up_to(string $reached, array $ingrid): array {
+        $out = [];
+        if ($reached === '') {
+            return $out;
+        }
+        foreach (self::ORDER as $level) {
+            if (in_array($level, $ingrid, true)) {
+                $out[] = $level;
+            }
+            if ($level === $reached) {
+                break;
+            }
+        }
+        return $out;
+    }
+
+    /**
      * Level reached by a grade on the whole grid (20-point mode, request 37).
      *
      * A part is acquired when its share reaches the threshold; a level is reached when all its parts and those of
