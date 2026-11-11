@@ -61,8 +61,10 @@ test('owner of an individual copy inside a group: the student alone (groupid 0)'
 test('owner of a group copy: the group (userid 0)', fn() =>
     gestionprojet_palier_owner((object) ['groupid' => 7, 'userid' => 0]) === ['groupid' => 7, 'userid' => 0]);
 $lib = code('lib.php');
+// v2.14.0: the members rule moved, unchanged, to gestionprojet_palier_members(), shared with the level sync.
 test('record: members are the group only for a group copy', fn() =>
-    preg_match('/if \(\(int\)\$submission->userid === 0 && \(int\)\$submission->groupid > 0\)/', fn_body($lib, 'gestionprojet_palier_record_locked')) === 1);
+    preg_match('/if \(\(int\)\$submission->userid === 0 && \(int\)\$submission->groupid > 0\)/', fn_body($lib, 'gestionprojet_palier_members')) === 1
+    && strpos(fn_body($lib, 'gestionprojet_palier_record_locked'), 'gestionprojet_palier_members($submission)') !== false);
 foreach (['gestionprojet_palier_state', 'gestionprojet_palier_record_locked'] as $fn) {
     test("$fn uses gestionprojet_palier_owner", fn() => strpos(fn_body($lib, $fn), 'gestionprojet_palier_owner(') !== false);
 }
