@@ -301,6 +301,23 @@ function gestionprojet_require_group_access($cm, int $groupid, int $userid, $con
 }
 
 /**
+ * Grade of an evaluation as applied: the content grade, or with spelling the content brought to (20 - P) plus the spelling
+ * points (request 32).
+ *
+ * @param object $gestionprojet Instance record (unused today: P is stored with the evaluation).
+ * @param object $evaluation AI evaluation.
+ * @return float
+ */
+function gestionprojet_evaluation_total(object $gestionprojet, object $evaluation): float {
+    if (!isset($evaluation->langue_points) || $evaluation->langue_points === null) {
+        return (float)$evaluation->parsed_grade;
+    }
+    $langue = json_decode((string)($evaluation->langue_json ?? ''), true) ?: [];
+    return \mod_gestionprojet\orthographe::total((float)$evaluation->parsed_grade, (float)$evaluation->langue_points,
+        (float)($langue['points'] ?? 0));
+}
+
+/**
  * Words accepted by the teacher, typed one per line in the form, as stored: JSON list of normalized words (request 32).
  *
  * @param string $text One word (or group of words) per line.
