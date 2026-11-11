@@ -60,7 +60,8 @@ test('state: failed feedbacks do not count', fn() => strpos($state, "'failed'") 
 test('request: refused when the limit is 0 or reached', fn() => strpos($request, "['remaining']") !== false);
 test('request: refused when a feedback is running', fn() => strpos($request, "['pending']") !== false);
 test('request: refused on a submitted copy', fn() => strpos($request, '->status') !== false);
-test('request: refused after the deadline', fn() => strpos($request, 'deadline_date') !== false);
+test('request: refused after the deadline (effective deadline of the copy, v2.14.0)', fn() =>
+    strpos($request, 'gestionprojet_effective_deadline($gestionprojet, $step, $submission)') !== false);
 test('request: refused in level mode for step 4', fn() => strpos($request, 'step4_paliers') !== false);
 test('request: under the lock of the copy', fn() => strpos($request, 'gestionprojet_palier_lock(') !== false && strpos($request, '->release()') !== false);
 test('request: freezes the step fields of the copy', fn() => strpos($request, 'ai_prompt_builder::STEP_FIELDS') !== false);
