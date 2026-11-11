@@ -164,6 +164,7 @@ function gestionprojet_delete_instance($id)
     $DB->delete_records('gestionprojet_ai_summaries', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_history', ['gestionprojetid' => $id]);
     $DB->delete_records('gestionprojet_palier', ['gestionprojetid' => $id]);
+    $DB->delete_records('gestionprojet_deadline_group', ['gestionprojetid' => $id]);
 
     // Delete the instance.
     $DB->delete_records('gestionprojet', ['id' => $id]);
@@ -290,6 +291,52 @@ function gestionprojet_require_group_access($cm, int $groupid, int $userid, $con
         throw new moodle_exception('error:notgroupmember', 'gestionprojet');
     }
     return $groupid;
+}
+
+/**
+ * Deadline of a copy: the latest date of its groups (work group, classes of its members), else the step's (request 40).
+ *
+ * @param object $gestionprojet Instance record.
+ * @param int $step Student step (4 to 9).
+ * @param object $submission The copy (groupid, userid).
+ * @return int Timestamp, 0 when there is no deadline.
+ */
+function gestionprojet_effective_deadline(object $gestionprojet, int $step, object $submission): int {
+    global $DB;
+
+    $tables = [4 => 'cdcf', 5 => 'essai', 6 => 'rapport', 7 => 'besoin_eleve', 8 => 'carnet', 9 => 'fast'];
+    if (!isset($tables[$step])) {
+        return 0;
+    }
+    $stepdeadline = (int)$DB->get_field('gestionprojet_' . $tables[$step] . '_teacher', 'deadline_date',
+        ['gestionprojetid' => $gestionprojet->id]);
+    $overrides = $DB->get_records_menu('gestionprojet_deadline_group',
+        ['gestionprojetid' => $gestionprojet->id, 'step' => $step], '', 'groupid, deadline_date');
+    if (!$overrides) {
+        return $stepdeadline;
+    }
+    // Groups of the copy: its work group, and every course group of its members (classes 3A, 3B...).
+    $groupids = [];
+    $members = [];
+    if ((int)($submission->groupid ?? 0) > 0) {
+        $groupids[] = (int)$submission->groupid;
+        if ((int)($submission->userid ?? 0) === 0) {
+            $members = array_keys(groups_get_members((int)$submission->groupid, 'u.id'));
+        }
+    }
+    if ((int)($submission->userid ?? 0) > 0) {
+        $members[] = (int)$submission->userid;
+    }
+    foreach ($members as $userid) {
+        $groupids = array_merge($groupids, groups_get_user_groups((int)$gestionprojet->course, (int)$userid)[0] ?? []);
+    }
+    $dates = [];
+    foreach (array_unique($groupids) as $groupid) {
+        if (isset($overrides[$groupid])) {
+            $dates[] = (int)$overrides[$groupid];
+        }
+    }
+    return \mod_gestionprojet\deadline::effective($stepdeadline, $dates);
 }
 
 /**
