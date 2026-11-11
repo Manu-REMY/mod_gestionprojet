@@ -5998,7 +5998,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     .path-mod-gestionprojet .gp-formative-modal-spinner {
-        animation-duration: 3s;
+        animation: none;
+        border-top-width: 8px;
     }
 }
 

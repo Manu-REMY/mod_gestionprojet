@@ -49,7 +49,12 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
         if (modal.overlay.parentNode) {
             modal.overlay.parentNode.removeChild(modal.overlay);
         }
+        // Give the focus back where the student was (the editor, or the ask button).
+        var back = modal.returnFocus;
         modal = null;
+        if (back && document.body.contains(back) && typeof back.focus === 'function') {
+            back.focus();
+        }
     }
 
     /**
@@ -61,15 +66,21 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     function setButton(label, action) {
         modal.button.textContent = label;
         modal.button.onclick = action;
+        modal.button.hidden = false;
+        modal.closable = true;
         modal.button.focus();
     }
 
     /**
      * Open the waiting window (once): spinner, words, and a button to keep working.
      *
+     * While the feedback is being asked for (closable false), the window cannot be closed: the page reloads once the
+     * request is queued, and anything typed meanwhile would be lost. That lasts a few seconds; a failure closes it.
+     *
      * @param {Object} strings pending, waitDetail, keepWorking
+     * @param {boolean} closable Whether the student may close it now.
      */
-    function openWait(strings) {
+    function openWait(strings, closable) {
         if (modal || !strings) {
             return;
         }
@@ -104,13 +115,26 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
         overlay.appendChild(box);
         document.body.appendChild(overlay);
         modal = {overlay: overlay, box: box, spinner: spinner, title: title, detail: detail, button: button,
+            closable: false, returnFocus: document.activeElement,
             onKey: function(event) {
-                if (event.key === 'Escape') {
+                if (event.key === 'Escape' && modal && modal.closable) {
                     closeWait();
+                } else if (event.key === 'Tab' && modal) {
+                    // Keep the keyboard in the window: its only control is the button.
+                    event.preventDefault();
+                    if (!modal.button.hidden) {
+                        modal.button.focus();
+                    }
                 }
             }};
         document.addEventListener('keydown', modal.onKey);
-        setButton(strings.keepWorking, closeWait);
+        if (closable) {
+            setButton(strings.keepWorking, closeWait);
+        } else {
+            button.hidden = true;
+            box.setAttribute('tabindex', '-1');
+            box.focus();
+        }
     }
 
     /**
@@ -180,7 +204,7 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     function wireAsk(button, cfg) {
         button.addEventListener('click', function() {
             button.disabled = true;
-            openWait(cfg.strings);
+            openWait(cfg.strings, false);
             // Save the copy on screen first: the feedback is about what the student sees.
             saveCopy()
                 .then(function() {
@@ -251,7 +275,7 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
         if (!live) {
             return;
         }
-        openWait(cfg.strings);
+        openWait(cfg.strings, true);
         // Polls may overlap on a slow server: the finished feedback is handled once.
         var done = false;
         var timer = setInterval(function() {
@@ -272,6 +296,9 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
                         return Templates.replaceNodeContents(live, data.feedback_html, '').then(function() {
                             showReady(cfg.strings, live);
                             return null;
+                        }).catch(function() {
+                            // Shown after a reload anyway; the window must not stay on "in preparation".
+                            showFailed(cfg.strings);
                         });
                     }
                     showFailed(cfg.strings);

@@ -36,9 +36,22 @@ test('js: the words are read aloud when they change', fn() => strpos($js, "'aria
 test('js: spinner plus words, never the spinner alone', fn() => strpos($js, 'gp-formative-modal-spinner') !== false
     && strpos($js, 'strings.pending') !== false && strpos($js, 'strings.waitDetail') !== false);
 test('js: the window opens on the ask click, before saving', fn() =>
-    preg_match('/button\.disabled = true;\s*openWait\(cfg\.strings\);\s*\/\/[^\n]*\n\s*saveCopy\(\)/', $js) === 1);
+    preg_match('/button\.disabled = true;\s*openWait\(cfg\.strings, false\);\s*\/\/[^\n]*\n\s*saveCopy\(\)/', $js) === 1);
+test('js: not closable while asking (the page reloads after), closable while pending (review)', fn() =>
+    strpos($js, "event.key === 'Escape' && modal && modal.closable") !== false && strpos($js, 'button.hidden = true;') !== false
+    && strpos($js, 'openWait(cfg.strings, true);') !== false);
+test('js: focus kept in the window and given back on close (review)', fn() => strpos($js, "event.key === 'Tab'") !== false
+    && strpos($js, 'returnFocus: document.activeElement') !== false);
+test('js: a failed render does not leave the window on "in preparation" (review)', fn() =>
+    preg_match('/showReady\(cfg\.strings, live\);.*?\.catch\(function\(\) \{.*?showFailed\(cfg\.strings\);/s', $js) === 1);
+test('lang: no "right-hand column" (one column on a phone) (review)', function () {
+    $string = [];
+    include(GP_ROOT . '/lang/fr/gestionprojet.php');
+    return strpos($string['formative_wait_detail'], 'colonne') === false
+        && strpos($string['formative_wait_detail'], 'Mon avancement') !== false;
+});
 test('js: the window opens while a feedback is pending', fn() =>
-    preg_match('/function follow\(cfg\) \{.*?openWait\(cfg\.strings\);/s', $js) === 1);
+    preg_match('/function follow\(cfg\) \{.*?openWait\(cfg\.strings, true\);/s', $js) === 1);
 test('js: "keep working" closes it, Escape too', fn() => strpos($js, 'strings.keepWorking') !== false
     && strpos($js, "event.key === 'Escape'") !== false);
 test('js: ready -> says so and shows the feedback on click', fn() => strpos($js, 'strings.ready') !== false
@@ -67,7 +80,7 @@ foreach (['en', 'fr'] as $lang) {
 
 test('css: centred over the page, namespaced', fn() => strpos($css, '.path-mod-gestionprojet .gp-formative-modal {') !== false
     && strpos($css, '.path-mod-gestionprojet .gp-formative-modal-box {') !== false);
-test('css: spinner slowed down for reduced motion', fn() =>
+test('css: spinner still for reduced motion', fn() =>
     preg_match('/prefers-reduced-motion: reduce\)\s*\{\s*\.path-mod-gestionprojet \.gp-formative-modal-spinner/', $css) === 1);
 test('build formative_button.min.js is up to date', fn() => is_file(GP_ROOT . '/amd/build/formative_button.min.js')
     && filemtime(GP_ROOT . '/amd/build/formative_button.min.js') >= filemtime(GP_ROOT . '/amd/src/formative_button.js'));
