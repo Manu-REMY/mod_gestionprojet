@@ -311,6 +311,10 @@ class ai_evaluator {
 
             // Get AI provider.
             $provider = self::get_provider($aiconfig->provider, $apikey);
+            // Background task: no page waits, a slow model gets 120 s per attempt (Albert bench of 09/11/2026).
+            if ($provider instanceof ai_provider\base_provider) {
+                $provider->set_limits(120, 3);
+            }
 
             // Call AI.
             $response = $provider->evaluate(

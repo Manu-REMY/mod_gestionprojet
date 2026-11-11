@@ -238,6 +238,20 @@ abstract class base_provider implements provider_interface {
     }
 
     /**
+     * Time limit of one call and number of attempts (v2.13.6).
+     *
+     * A background correction can wait longer than the default; a call made while a page waits must end before
+     * Cloudflare cuts the request (100 s), so it gets one attempt only.
+     *
+     * @param int $timeout Seconds, at least 1.
+     * @param int $maxretries Attempts, at least 1.
+     */
+    public function set_limits(int $timeout, int $maxretries): void {
+        $this->timeout = max(1, $timeout);
+        $this->maxretries = max(1, $maxretries);
+    }
+
+    /**
      * Call a function with retry logic.
      *
      * @param callable $callback Function to call
