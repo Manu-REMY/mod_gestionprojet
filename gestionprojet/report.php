@@ -196,6 +196,7 @@ echo html_writer::start_tag('form', [
     'method' => 'get',
     'action' => $PAGE->url->out_omit_querystring(),
     'class' => 'mb-4',
+    'id' => 'gpReportFilters',
 ]);
 
 // Hidden field for activity mode.
@@ -308,66 +309,20 @@ echo html_writer::tag('span', get_string('summary_tokens', 'gestionprojet', numb
 echo html_writer::end_div();
 echo html_writer::end_div();
 
-// Handle date conversion for form submission.
-echo html_writer::script("
-    document.querySelector('form').addEventListener('submit', function(e) {
-        var datefrom = document.getElementById('datefrom').value;
-        var dateto = document.getElementById('dateto').value;
+// Date conversion on submit: done by the report_log AMD module (no inline JS).
 
-        if (datefrom) {
-            document.getElementById('datefrom').value = Math.floor(new Date(datefrom).getTime() / 1000);
-        }
-        if (dateto) {
-            document.getElementById('dateto').value = Math.floor(new Date(dateto).getTime() / 1000);
-        }
-    });
-");
 
 // Output table.
 $table->out($perpage, true);
 
 // Load AMD module for expand/collapse.
-$PAGE->requires->js_amd_inline("
-    require(['jquery'], function(\$) {
-        // Handle show more buttons.
-        \$(document).on('click', '.show-more-btn', function(e) {
-            e.preventDefault();
-            var btn = \$(this);
-            var fullText = btn.data('full-text');
-            var pre = btn.prev('pre');
+// Buttons of the AI log, in an AMD module (no inline JS); strings passed as data, never pasted in code.
+$PAGE->requires->js_call_amd('mod_gestionprojet/report_log', 'init', [[
+    'showMore' => get_string('show_more', 'gestionprojet'),
+    'showLess' => get_string('show_less', 'gestionprojet'),
+    'expandPrompts' => get_string('expand_prompts', 'gestionprojet'),
+    'collapsePrompts' => get_string('collapse_prompts', 'gestionprojet'),
+]]);
 
-            if (btn.hasClass('expanded')) {
-                // Collapse.
-                pre.text(fullText.substring(0, 500) + '...');
-                btn.text('" . get_string('show_more', 'gestionprojet') . "');
-                btn.removeClass('expanded');
-            } else {
-                // Expand.
-                pre.text(fullText);
-                btn.text('" . get_string('show_less', 'gestionprojet') . "');
-                btn.addClass('expanded');
-            }
-        });
-
-        // Handle expand/collapse buttons (Bootstrap 5 compatible).
-        \$(document).on('click', '.ai-log-expand', function() {
-            var btn = \$(this);
-            var targetId = btn.attr('data-bs-target');
-            var target = \$(targetId);
-
-            // Toggle visibility.
-            target.toggleClass('show');
-
-            // Update button text and aria-expanded.
-            if (target.hasClass('show')) {
-                btn.text('" . get_string('collapse_prompts', 'gestionprojet') . "');
-                btn.attr('aria-expanded', 'true');
-            } else {
-                btn.text('" . get_string('expand_prompts', 'gestionprojet') . "');
-                btn.attr('aria-expanded', 'false');
-            }
-        });
-    });
-");
 
 echo $OUTPUT->footer();
