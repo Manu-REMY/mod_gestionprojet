@@ -106,7 +106,10 @@ if ($step === 4) {
 try {
     $builder = new \mod_gestionprojet\ai_prompt_builder(['flexibility' => !isset($gestionprojet->step4_flexibility)
         || (bool) $gestionprojet->step4_flexibility,
-        'locked_zones' => $step === 4 ? gestionprojet_cdcf_locked_zones($gestionprojet) : []]);
+        'locked_zones' => $step === 4 ? gestionprojet_cdcf_locked_zones($gestionprojet) : [],
+        // The model shown on the page, maybe not saved yet: the instructions must match what the teacher sees.
+        'absent_zones' => $step === 4 ? gestionprojet_cdcf_absent_zones($gestionprojet,
+            (string)($tmpmodel->interacteurs_data ?? '')) : []]);
     $prompts = $builder->build_meta_prompt($step, $tmpmodel);
 
     $provider = \mod_gestionprojet\ai_evaluator::get_provider($aiconfig->provider, $apikey);

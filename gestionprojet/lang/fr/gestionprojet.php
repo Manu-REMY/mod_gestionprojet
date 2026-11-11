@@ -1087,6 +1087,7 @@ $string['grille_evaluee_non'] = 'Non';
 $string['grille_status_graded'] = 'Notée';
 $string['grille_status_excluded'] = 'Non notée';
 $string['grille_status_provided'] = 'Non notée (fournie par la consigne)';
+$string['grille_status_absent'] = 'Non notée (absente du modèle de correction)';
 $string['grille_add'] = 'Ajouter une partie';
 $string['grille_reset'] = 'Rétablir la grille par défaut';
 $string['grille_up'] = 'Monter';

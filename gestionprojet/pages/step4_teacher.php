@@ -237,7 +237,7 @@ foreach (\mod_gestionprojet\grille::ZONES as $zone) {
 }
 $grillelang = [];
 foreach (['nom', 'description', 'poids', 'zones', 'palier', 'palier_none', 'palier_help', 'evaluee', 'evaluee_auto',
-        'evaluee_oui', 'evaluee_non', 'status_graded', 'status_excluded', 'status_provided', 'palier_none_mode', 'add', 'reset', 'up', 'down', 'remove',
+        'evaluee_oui', 'evaluee_non', 'status_graded', 'status_excluded', 'status_provided', 'status_absent', 'palier_none_mode', 'add', 'reset', 'up', 'down', 'remove',
         'new_part', 'total', 'palier_f', 'palier_s', 'palier_ts'] as $key) {
     $grillelang[lcfirst(str_replace('_', '', ucwords($key, '_')))] = get_string('grille_' . $key, 'gestionprojet');
 }
@@ -249,6 +249,8 @@ $PAGE->requires->js_call_amd('mod_gestionprojet/grille_editor', 'init', [[
     'zones'    => $grillezones,
     // Zones entirely provided by the consigne: their "auto" parts are not graded (v2.11.1).
     'lockedZones' => gestionprojet_cdcf_locked_zones($gestionprojet),
+    // Zones absent from the correction model and the consigne: their "auto" parts are not graded (request 34).
+    'absentZones' => gestionprojet_cdcf_absent_zones($gestionprojet),
     // Level mode (v2.11.2): a part without level is not graded.
     'paliersMode' => (int)($gestionprojet->step4_paliers ?? 0) === 1,
     'lang'     => $grillelang,
