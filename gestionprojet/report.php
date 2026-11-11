@@ -327,47 +327,13 @@ echo html_writer::script("
 $table->out($perpage, true);
 
 // Load AMD module for expand/collapse.
-$PAGE->requires->js_amd_inline("
-    require(['jquery'], function(\$) {
-        // Handle show more buttons.
-        \$(document).on('click', '.show-more-btn', function(e) {
-            e.preventDefault();
-            var btn = \$(this);
-            var fullText = btn.data('full-text');
-            var pre = btn.prev('pre');
+// Buttons of the AI log, in an AMD module (no inline JS); strings passed as data, never pasted in code.
+$PAGE->requires->js_call_amd('mod_gestionprojet/report_log', 'init', [[
+    'showMore' => get_string('show_more', 'gestionprojet'),
+    'showLess' => get_string('show_less', 'gestionprojet'),
+    'expandPrompts' => get_string('expand_prompts', 'gestionprojet'),
+    'collapsePrompts' => get_string('collapse_prompts', 'gestionprojet'),
+]]);
 
-            if (btn.hasClass('expanded')) {
-                // Collapse.
-                pre.text(fullText.substring(0, 500) + '...');
-                btn.text('" . get_string('show_more', 'gestionprojet') . "');
-                btn.removeClass('expanded');
-            } else {
-                // Expand.
-                pre.text(fullText);
-                btn.text('" . get_string('show_less', 'gestionprojet') . "');
-                btn.addClass('expanded');
-            }
-        });
-
-        // Handle expand/collapse buttons (Bootstrap 5 compatible).
-        \$(document).on('click', '.ai-log-expand', function() {
-            var btn = \$(this);
-            var targetId = btn.attr('data-bs-target');
-            var target = \$(targetId);
-
-            // Toggle visibility.
-            target.toggleClass('show');
-
-            // Update button text and aria-expanded.
-            if (target.hasClass('show')) {
-                btn.text('" . get_string('collapse_prompts', 'gestionprojet') . "');
-                btn.attr('aria-expanded', 'true');
-            } else {
-                btn.text('" . get_string('expand_prompts', 'gestionprojet') . "');
-                btn.attr('aria-expanded', 'false');
-            }
-        });
-    });
-");
 
 echo $OUTPUT->footer();
