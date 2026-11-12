@@ -70,3 +70,20 @@ test('short class names in namespaced files are resolvable', function () {
     }
     return !$bad;
 });
+
+test('external functions use the core_external classes, not the deprecated global aliases', function () {
+    // Moodle 4.2 renamed external_api & co. to core_external\...; the global aliases log a
+    // deprecation notice on Moodle 5.3 (12 Nov: generate_ai_summary still used them).
+    $bad = [];
+    foreach (glob(GP_ROOT . '/classes/external/*.php') as $file) {
+        $src = file_get_contents($file);
+        if (preg_match('/^use\s+(external_\w+)\s*;/m', $src, $m)
+                || preg_match('/externallib\.php/', $src)) {
+            $bad[] = basename($file) . ': ' . ($m[1] ?? 'externallib.php');
+        }
+    }
+    foreach ($bad as $b) {
+        echo "      $b\n";
+    }
+    return !$bad;
+});
