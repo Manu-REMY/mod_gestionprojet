@@ -969,7 +969,7 @@ Attendu : 10 tests OK.
 
 - [ ] **Step 9.5 : Validation visuelle élève**
 
-Se connecter en tant que `3a1` / `3a1@Preprod2026` sur https://preprod.ent-occitanie.com/, ouvrir l'activité gestionprojet du cours TEST (id=2), et vérifier :
+Se connecter en tant que `3a1` (mot de passe : TESTING.md local, non versionné) sur https://preprod.ent-occitanie.com/, ouvrir l'activité gestionprojet du cours TEST (id=2), et vérifier :
 
   - [ ] Le bandeau « Vous travaillez en groupe : 3A » est toujours présent
   - [ ] Le Gantt 2 lignes × 8 colonnes s'affiche
@@ -987,7 +987,7 @@ Se connecter en tant que `3a1` / `3a1@Preprod2026` sur https://preprod.ent-occit
 
 - [ ] **Step 9.6 : Validation visuelle non-régression enseignant**
 
-Se connecter en tant que `prof` / `Prof@Preprod2026`, ouvrir la même activité, vérifier :
+Se connecter en tant que `prof` (mot de passe : TESTING.md local, non versionné), ouvrir la même activité, vérifier :
 
   - [ ] Le Gantt enseignant 3 lignes × 8 colonnes s'affiche
   - [ ] Les checkboxes fonctionnent (toggle activate/désactiver)
