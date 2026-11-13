@@ -76,10 +76,19 @@ test('external functions use the core_external classes, not the deprecated globa
     // deprecation notice on Moodle 5.3 (12 Nov: generate_ai_summary still used them).
     $bad = [];
     foreach (glob(GP_ROOT . '/classes/external/*.php') as $file) {
-        $src = file_get_contents($file);
-        if (preg_match('/^use\s+(external_\w+)\s*;/m', $src, $m)
-                || preg_match('/externallib\.php/', $src)) {
-            $bad[] = basename($file) . ': ' . ($m[1] ?? 'externallib.php');
+        // Comments are ignored. Legacy forms: "use external_x;", "use \external_x;", a grouped use
+        // starting with external_x, or a fully qualified \external_x reference in the code.
+        $code = '';
+        foreach (token_get_all(file_get_contents($file)) as $t) {
+            if (is_array($t) && in_array($t[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+            $code .= is_array($t) ? $t[1] : $t;
+        }
+        if (preg_match('/^\s*use\s+\\\\?external_\w+/m', $code, $m)
+                || preg_match('/(?<![\w\\\\])\\\\external_\w+/', $code, $m)
+                || preg_match('/externallib\.php/', $code, $m)) {
+            $bad[] = basename($file) . ': ' . trim($m[0]);
         }
     }
     foreach ($bad as $b) {

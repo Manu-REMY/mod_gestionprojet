@@ -39,8 +39,8 @@ test('upgrade: every instance gets spelling on, 2 points', fn() =>
     && strpos($step, "set_field('gestionprojet', 'langue_points', 2, [])") !== false);
 test('upgrade: gap 6 s becomes 12 s, another choice is kept', fn() =>
     preg_match("/get_config\('mod_gestionprojet', 'ai_interval'\) === '6'.*?set_config\('ai_interval', 12, 'mod_gestionprojet'\)/s", $step) === 1);
-test('version 2.15.0', fn() => strpos($read('version.php'), '$plugin->version = 2026111106;') !== false
-    && strpos($read('version.php'), "\$plugin->release = '2.15.0';") !== false);
+test('version 2.15.0 or later', fn() => preg_match('/\$plugin->version = (\d+);/', $read('version.php'), $m) === 1
+    && (int)$m[1] >= 2026111106);
 $form = $read('mod_form.php');
 test('form: the three settings', fn() => strpos($form, "'langue_enabled'") !== false && strpos($form, "'langue_points'") !== false
     && strpos($form, "'langue_accepted'") !== false);
