@@ -82,6 +82,67 @@ if ($canedit && (int)($gestionprojet->step4_provided ?? 0) === 1) {
     }
 }
 
+// FS drawn per copy (request 42, v2.16.0): which FS each group completes; draw again, or give a draw to a started copy.
+if ($canedit && gestionprojet_cdcf_draw_mode($gestionprojet)) {
+    $consignefs = gestionprojet_cdcf_consigne($gestionprojet);
+    $fslist = function (array $ranks): string {
+        return implode(', ', array_map(function (int $r): string {
+            return 'FS' . $r;
+        }, $ranks));
+    };
+    echo html_writer::start_div('model-form-section gp-fs-tirage');
+    echo html_writer::tag('h3', get_string('fs_tirage_title', 'gestionprojet'));
+    if (gestionprojet_cdcf_draw_mode($gestionprojet) === 1) {
+        echo html_writer::tag('p', get_string('fs_tirage_mode_random', 'gestionprojet', (int)$gestionprojet->step4_fs_tirage));
+    } else {
+        $sujets = array_map(function (array $sujet) use ($consignefs, $fslist): string {
+            return $fslist(\mod_gestionprojet\fs_tirage::rangs($consignefs, $sujet));
+        }, \mod_gestionprojet\fs_tirage::decode_sujets($gestionprojet->step4_fs_sujets));
+        echo html_writer::tag('p', get_string('fs_tirage_mode_sujets', 'gestionprojet', implode(' · ', $sujets)));
+    }
+    $missing = \mod_gestionprojet\fs_tirage::missing($consignefs, \mod_gestionprojet\cdcf_helper::decode(
+        $DB->get_field('gestionprojet_cdcf_teacher', 'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]) ?: null));
+    if ($missing) {
+        $items = array_map(function (array $m) use ($consignefs, $fslist): string {
+            return $fslist(\mod_gestionprojet\fs_tirage::rangs($consignefs, [$m['fs']])) . ' ('
+                . get_string('fs_tirage_champ_' . $m['champ'], 'gestionprojet') . ')';
+        }, $missing);
+        echo html_writer::div('⚠ ' . get_string('fs_tirage_missing', 'gestionprojet', implode(', ', $items)),
+            'alert alert-warning');
+    }
+    $rows = gestionprojet_fs_tirage_rows($gestionprojet);
+    if (!$rows) {
+        echo html_writer::tag('p', get_string('fs_tirage_nocopy', 'gestionprojet'), ['class' => 'text-muted']);
+    } else {
+        $table = new html_table();
+        $table->attributes['class'] = 'generaltable gp-fs-tirage-table';
+        $table->head = [get_string('fs_tirage_col_copy', 'gestionprojet'), get_string('fs_tirage_col_fs', 'gestionprojet'),
+            get_string('fs_tirage_col_state', 'gestionprojet'), ''];
+        foreach ($rows as $row) {
+            $button = '';
+            if ($row['fs'] && $row['etat'] === 'pas_commencee') {
+                $button = html_writer::tag('button', get_string('fs_tirage_redraw', 'gestionprojet'), ['type' => 'button',
+                    'class' => 'btn btn-sm btn-outline-secondary gp-fs-tirage-action', 'data-copyid' => $row['id'],
+                    'data-action' => 'refaire']);
+            } else if (!$row['fs'] && $row['etat'] === 'commencee') {
+                $button = html_writer::tag('button', get_string('fs_tirage_apply', 'gestionprojet'), ['type' => 'button',
+                    'class' => 'btn btn-sm btn-outline-warning gp-fs-tirage-action', 'data-copyid' => $row['id'],
+                    'data-action' => 'appliquer']);
+            }
+            $table->data[] = [s($row['nom']), $row['fs'] ? $fslist($row['fs']) : get_string('fs_tirage_all', 'gestionprojet'),
+                get_string('fs_tirage_state_' . $row['etat'], 'gestionprojet'), $button];
+        }
+        echo html_writer::table($table);
+    }
+    echo html_writer::end_div();
+    $PAGE->requires->js_call_amd('mod_gestionprojet/fs_tirage_admin', 'init', [[
+        'cmid' => (int)$cm->id,
+        'confirmRedraw' => get_string('fs_tirage_redraw_confirm', 'gestionprojet'),
+        'confirmApply' => get_string('fs_tirage_apply_confirm', 'gestionprojet'),
+        'ok' => get_string('confirm'),
+    ]]);
+}
+
 require_once(__DIR__ . '/teacher_model_styles.php');
 
 // Get navigation for teacher consigne steps (reuse teacher step navigation order, only for editors).

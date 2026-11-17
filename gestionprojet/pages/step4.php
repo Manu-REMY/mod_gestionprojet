@@ -178,10 +178,10 @@ if (!$group) {
     $cdcfdata = \mod_gestionprojet\cdcf_helper::decode($submission->interacteurs_data ?? null);
     if ((int)($gestionprojet->step4_provided ?? 0) === 1) {
         // Fields provided or to fill in, read from the consigne (the student copy stores no flag, v2.11.1).
-        $consignejson = $DB->get_field('gestionprojet_cdcf_provided', 'interacteurs_data',
-            ['gestionprojetid' => $gestionprojet->id]);
-        $cdcfdata = \mod_gestionprojet\consigne_lock::with_flags($cdcfdata,
-            \mod_gestionprojet\cdcf_helper::decode($consignejson ?: null));
+        // The consigne of this copy: the FS it did not draw are given complete (request 42, v2.16.0).
+        $copyconsigne = gestionprojet_cdcf_consigne($gestionprojet, $submission);
+        $cdcfdata = \mod_gestionprojet\consigne_lock::with_flags($cdcfdata, $copyconsigne);
+        $drawnfs = \mod_gestionprojet\fs_tirage::rangs($copyconsigne, gestionprojet_cdcf_drawn($gestionprojet, $submission));
     }
     $projetnom = format_string($gestionprojet->name);
     ?>
@@ -196,6 +196,14 @@ if (!$group) {
             <?php echo get_string('step4_norm_intro', 'gestionprojet'); ?>
         </div>
 
+        <?php if (!empty($drawnfs)): ?>
+        <!-- FS drawn by this copy (request 42): the others are given complete. -->
+        <div class="alert alert-info gp-fs-tirage-notice">
+            <?php echo get_string('fs_tirage_notice', 'gestionprojet', implode(', ', array_map(function (int $r): string {
+                return 'FS' . $r;
+            }, $drawnfs))); ?>
+        </div>
+        <?php endif; ?>
         <div id="cdcfRoot" class="gp-cdcf-root"></div>
 
         <!-- Actions section -->
@@ -285,6 +293,8 @@ $langstrings = [
     'prefillBadge'             => get_string('step4_prefill_badge', 'gestionprojet'),
     'prefillNotice'            => get_string('step4_prefill_notice', 'gestionprojet'),
     'frozenHelp'               => get_string('palier_frozen_help', 'gestionprojet'),
+    'fsTireeBand'              => get_string('fs_tiree_band', 'gestionprojet'),
+    'fsDonneeBand'             => get_string('fs_donnee_band', 'gestionprojet'),
 ];
 
 $PAGE->requires->js_call_amd('mod_gestionprojet/cdcf_bootstrap', 'init', [[

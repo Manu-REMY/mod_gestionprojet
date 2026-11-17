@@ -154,6 +154,8 @@ try {
         $validfields = $tableinfo['fields'];
 
         $record = $DB->get_record($tablename, ['gestionprojetid' => $gestionprojet->id]);
+        // Correction model of step 4 before the save: with FS drawn per copy, the copies follow it (v2.16.0).
+        $oldmodel = (string)($record->interacteurs_data ?? '');
         if (!$record) {
             $record = new stdClass();
             $record->gestionprojetid = $gestionprojet->id;
@@ -176,6 +178,11 @@ try {
             $DB->update_record($tablename, $record);
         } else {
             $record->id = $DB->insert_record($tablename, $record);
+        }
+
+        if ((int)$step === 4 && gestionprojet_cdcf_draw_mode($gestionprojet)) {
+            gestionprojet_cdcf_follow_consigne($gestionprojet, (string)$DB->get_field('gestionprojet_cdcf_provided',
+                'interacteurs_data', ['gestionprojetid' => $gestionprojet->id]), $oldmodel);
         }
 
         $success = true;

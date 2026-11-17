@@ -6152,3 +6152,38 @@
     font-weight: 600;
     background-color: #eef1f5;
 }
+
+/* Step 4, FS drawn per copy (request 42, D-089): drawn FS in a thick dark frame with a band, given FS pale. */
+.path-mod-gestionprojet .gp-cdcf-fs-card.gp-cdcf-fs-tiree {
+    border: 3px solid #1e3a8a;
+    padding-top: 0;
+}
+.path-mod-gestionprojet .gp-cdcf-fs-card.gp-cdcf-fs-donnee {
+    border: 1px solid #d1d5db;
+    background: #f5f6f8;
+    color: #4b5563;
+    padding-top: 0;
+}
+.path-mod-gestionprojet .gp-cdcf-fs-band {
+    margin: 0 -12px 10px;
+    padding: 6px 12px;
+    font-weight: 700;
+    border-radius: 5px 5px 0 0;
+}
+.path-mod-gestionprojet .gp-cdcf-fs-tiree .gp-cdcf-fs-band {
+    background: #1e3a8a;
+    color: #fff;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+.path-mod-gestionprojet .gp-cdcf-fs-donnee .gp-cdcf-fs-band {
+    background: #e5e7eb;
+    color: #374151;
+}
+/* The band of a given FS already says it is provided: no badge on each of its fields. */
+.path-mod-gestionprojet .gp-cdcf-fs-donnee .gp-cdcf-lock-badge {
+    display: none;
+}
+.path-mod-gestionprojet .gp-fs-tirage-notice {
+    border-left: 6px solid #1e3a8a;
+}

@@ -438,6 +438,12 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
         function renderOneFs(fs, idx) {
             var card = el('div', { className: 'gp-cdcf-fs-card' });
             var head = el('div', { className: 'gp-cdcf-fs-head' });
+            // FS drawn by the copy, or given complete (request 42, D-089): a band says which, the frame shows it.
+            if (!editFlags && (fs.tiree || fs.donnee)) {
+                card.classList.add(fs.tiree ? 'gp-cdcf-fs-tiree' : 'gp-cdcf-fs-donnee');
+                card.appendChild(el('div', { className: 'gp-cdcf-fs-band',
+                    text: (fs.tiree ? '✏️ ' + lang.fsTireeBand : '🔒 ' + lang.fsDonneeBand) + ' · FS' + (idx + 1) }));
+            }
 
             var up = el('button', {
                 type: 'button', className: 'gp-cdcf-icon-btn', text: '▲',
@@ -489,7 +495,7 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
             fs.criteres.forEach(function(crit) {
                 critList.appendChild(renderCritere(fs, crit));
             });
-            if (!locked && !frozen('criteres')) {
+            if (!locked && !frozen('criteres') && !(fs.donnee && !editFlags)) {
                 critList.appendChild(el('button', {
                     type: 'button', className: 'gp-cdcf-btn-add-sm', text: '+ ' + lang.addCritere,
                     onclick: function() {
@@ -541,7 +547,7 @@ define(['mod_gestionprojet/cdcf_diagram', 'core/notification'], function(Diagram
             var dBadge = applyFlags(d, crit, 'locked', 'gap', 'hint');
             var nBadge = applyFlags(n, crit, 'niveauLocked', 'niveauGap', 'niveauHint');
             if (f && !editFlags && crit.niveauLocked) { f.disabled = true; }
-            if (isProtected(crit) || frozen('criteres')) { del.disabled = true; }
+            if (isProtected(crit) || frozen('criteres') || (fs.donnee && !editFlags)) { del.disabled = true; }
             if (frozen('criteres')) { freezeField(d); }
             if (frozen('niveaux')) { freezeField(n); }
             if (f && frozen('flexibilite')) { freezeField(f); }

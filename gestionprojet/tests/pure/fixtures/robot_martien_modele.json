@@ -1,0 +1,168 @@
+{
+ "interactors": [
+  {
+   "id": 1,
+   "name": "L'utilisateur"
+  },
+  {
+   "id": 2,
+   "name": "L'atmosphère martienne"
+  },
+  {
+   "id": 3,
+   "name": "Le sol martien et les obstacles"
+  },
+  {
+   "id": 4,
+   "name": "Les autres robots"
+  },
+  {
+   "id": 5,
+   "name": "L'énergie"
+  }
+ ],
+ "fonctionsService": [
+  {
+   "id": 1,
+   "description": "Permettre à l'utilisateur d'obtenir des informations sur l'atmosphère.",
+   "interactor1Id": 1,
+   "interactor2Id": 2,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Vitesse d'envoi des données (débit)",
+     "niveau": "1 kb/s (bit/s)",
+     "flexibilite": ""
+    },
+    {
+     "id": 2,
+     "description": "Distance de communication",
+     "niveau": "> 300 millions de km (Mkm)",
+     "flexibilite": ""
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "description": "Doit résister à l'atmosphère.",
+   "interactor1Id": 2,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Étanchéité du robot",
+     "niveau": "Indice IP 32",
+     "flexibilite": ""
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "description": "Doit mesurer la composition de l'atmosphère.",
+   "interactor1Id": 2,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Précision de la mesure du taux de dioxyde de carbone (CO2)",
+     "niveau": "Erreur de mesure inférieure à 5 %",
+     "flexibilite": ""
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "description": "Doit se déplacer sur le terrain.",
+   "interactor1Id": 3,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Vitesse de déplacement",
+     "niveau": "5 km/h au moins",
+     "flexibilite": ""
+    },
+    {
+     "id": 2,
+     "description": "Hauteur d'obstacle franchissable (marche)",
+     "niveau": "Hauteur = 3 cm",
+     "flexibilite": ""
+    },
+    {
+     "id": 3,
+     "description": "Pente maximale gravie",
+     "niveau": "5 degrés",
+     "flexibilite": ""
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "description": "Doit pouvoir éviter les obstacles en les contournant.",
+   "interactor1Id": 3,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Rayon de braquage",
+     "niveau": "20 cm au plus",
+     "flexibilite": ""
+    },
+    {
+     "id": 2,
+     "description": "Vitesse de virage",
+     "niveau": "Valeur en km/h, au choix des élèves",
+     "flexibilite": ""
+    },
+    {
+     "id": 3,
+     "description": "Précision de la trajectoire",
+     "niveau": "Écart de moins de 5 cm",
+     "flexibilite": ""
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "description": "Doit collaborer avec les autres robots.",
+   "interactor1Id": 4,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Temps de réaction à une demande",
+     "niveau": "Temps < 20 minutes",
+     "flexibilite": ""
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "description": "Doit être autonome en énergie.",
+   "interactor1Id": 5,
+   "interactor2Id": 0,
+   "criteres": [
+    {
+     "id": 1,
+     "description": "Temps de recharge",
+     "niveau": "Temps < 360 minutes",
+     "flexibilite": ""
+    },
+    {
+     "id": 2,
+     "description": "Durée de fonctionnement sur batterie",
+     "niveau": "14 h au moins",
+     "flexibilite": ""
+    }
+   ]
+  }
+ ],
+ "contraintes": [
+  {
+   "id": 1,
+   "description": "Nombre de moteurs : 4 au plus",
+   "justification": "Chaque moteur consomme de l'énergie : le robot doit rester autonome.",
+   "linkedFsId": 7
+  }
+ ]
+}
