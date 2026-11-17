@@ -1191,3 +1191,6 @@ $string['fs_tirage_submitted'] = 'Cette copie est soumise : son tirage ne peut p
 $string['fs_tirage_started'] = 'Cette copie est commencée : son tirage ne peut plus être refait.';
 $string['fs_tirage_badaction'] = 'Cette action ne convient pas à cette copie.';
 $string['fs_tirage_nothing'] = 'Aucune FS à tirer : la consigne n\'a rien à compléter.';
+$string['fs_tirage_busy'] = 'Le tirage de cette copie est en cours : recharge la page dans quelques secondes.';
+$string['fs_tirage_frozen'] = 'Des niveaux sont validés sur cette copie : son tirage ne peut plus changer.';
+$string['fs_tirage_changed'] = 'Les FS de ton groupe ont changé : recharge la page. Ce qui était déjà enregistré est conservé.';

@@ -330,6 +330,8 @@ try {
                 if ($key !== 'id' && in_array($key, $validfields)) {
                     $oldvalue = isset($record->$key) ? $record->$key : null;
                     if ($key === 'interacteurs_data') {
+                        // A page that showed another draw of FS must be reloaded (request 42).
+                        gestionprojet_cdcf_check_draw($gestionprojet, (string)$value, $record);
                         // Locked elements of the consigne are restored by the server (v2.11.1).
                         $value = gestionprojet_cdcf_enforce_consigne($gestionprojet, (string)$value, $record);
                     }

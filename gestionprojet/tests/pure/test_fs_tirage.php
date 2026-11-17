@@ -148,36 +148,48 @@ test('enforce: a forged text in a given FS gets the model text back', function (
 });
 test('is_untouched: the seed of the copy consigne is a starting copy', fn() => L::is_untouched($copy, $mine));
 
-// Criteria added by hand to a given FS are dropped (the page offers no button there).
-$added = $copy;
+// A criterion added by hand to a given FS is kept: student text is never dropped (review of 2.16.0).
+$added = $flagged;
 foreach ($added['fonctionsService'] as &$fs) {
     if ($fs['id'] === 3) {
         $fs['criteres'][] = ['id' => 9, 'description' => 'En plus', 'niveau' => '', 'flexibilite' => ''];
     }
 }
 unset($fs);
-test('given_shape: a criterion added to a given FS is dropped', fn() => T::given_shape($added, $mine) === $copy);
-test('given_shape: a copy without draw is unchanged', fn() => T::given_shape($added, $consigne) === $added);
+test('enforce: a criterion added to a given FS is kept', fn() =>
+    in_array('En plus', array_column(fs_of(L::enforce($added, $mine), 3)['criteres'], 'description'), true));
 
-// Predefined subjects (precision of 17/11 15h45): the teacher writes FS numbers (rank in the consigne), one subject a line.
-$p = T::parse_sujets("FS1, FS4, FS6\n\n 3 5 7 \n", $consigne);
-test('parse_sujets: one subject a line, blank lines skipped', fn() => $p['sujets'] === [[1, 4, 6], [3, 5, 7]] && !$p['erreurs']);
-test('parse_sujets: duplicates removed and ids sorted', fn() => T::parse_sujets('6, 1, 6', $consigne)['sujets'] === [[1, 6]]);
-test('parse_sujets: an FS with nothing to complete is refused', fn() =>
-    T::parse_sujets("1, 2, 4", $consigne)['erreurs'] === [['ligne' => 1, 'fs' => 2]]);
-test('parse_sujets: a number beyond the consigne is refused', fn() =>
-    T::parse_sujets("1, 4\n1, 9", $consigne)['erreurs'] === [['ligne' => 2, 'fs' => 9]]);
-test('parse_sujets: ranks, not ids, when they differ', function () use ($consigne) {
-    $moved = $consigne;
-    $moved['fonctionsService'] = array_reverse($moved['fonctionsService']);
-    return T::parse_sujets('FS1', $moved)['sujets'] === [[7]];
+// Back to "every FS": the fields given with the model text get back the shared starting text; student text stays.
+$released = T::release($copy, $mine, $consigne);
+test('release: a given FS statement gets back its pre-filled text', fn() =>
+    fs_of($released, 3)['description'] === fs_of($consigne, 3)['description']);
+test('release: a given criterion "to fill in" is emptied', fn() => fs_of($released, 7)['criteres'][0]['description'] === '');
+test('release: a given level gets back its pre-filled text', fn() =>
+    fs_of($released, 7)['criteres'][1]['niveau'] === fs_of($consigne, 7)['criteres'][1]['niveau']);
+test('release: the copy is the shared starting copy again', fn() => $released === L::seed($consigne));
+$edited = $copy;
+foreach ($edited['fonctionsService'] as &$fs) {
+    if ($fs['id'] === 6) {
+        $fs['criteres'][0]['description'] = 'Délai de réponse';
+    }
+    if ($fs['id'] === 1) {
+        $fs['criteres'][0]['niveau'] = '2 kb/s';
+    }
+}
+unset($fs);
+$released = T::release($edited, $mine, $consigne);
+test('release: a drawn FS keeps the student text', fn() => fs_of($released, 1)['criteres'][0]['niveau'] === '2 kb/s');
+test('release: a given field the students changed keeps their text', function () use ($mine, $consigne, $copy) {
+    $changed = $copy;
+    foreach ($changed['fonctionsService'] as &$fs) {
+        if ($fs['id'] === 7) {
+            $fs['criteres'][0]['description'] = 'Durée de recharge';
+        }
+    }
+    unset($fs);
+    return fs_of(T::release($changed, $mine, $consigne), 7)['criteres'][0]['description'] === 'Durée de recharge';
 });
-test('format_sujets: back to FS numbers', fn() => T::format_sujets([[1, 4, 6], [3, 5, 7]], $consigne) === "FS1, FS4, FS6\nFS3, FS5, FS7");
-test('rangs: FS numbers of ids', fn() => T::rangs($consigne, [7, 1]) === [1, 7]);
-test('sujet_of: index of the subject of a draw', fn() => T::sujet_of([[1, 4, 6], [3, 5, 7]], [3, 5, 7]) === 1
-    && T::sujet_of([[1, 4, 6]], [1, 4]) === null);
-test('choose_sujet: the subject drawn the fewest times in the class', fn() =>
-    T::choose_sujet([[1, 4, 6], [3, 5, 7]], [0 => 2, 1 => 1], [], $first) === [3, 5, 7]);
-test('choose_sujet: no subject gives nothing', fn() => T::choose_sujet([], [], [], $first) === []);
-test('decode_sujets: stored JSON read back, junk dropped', fn() =>
-    T::decode_sujets('[[1,4,6],[],"x",[3,"5",7]]') === [[1, 4, 6], [3, 5, 7]] && T::decode_sujets(null) === []);
+
+// A draw whose FS left the consigne no longer applies.
+test('valid: drawn FS still to complete', fn() => T::valid([1, 4, 6], $consigne) === [1, 4, 6]);
+test('valid: a deleted FS or an FS now provided is left out', fn() => T::valid([1, 2, 99], $consigne) === [1]);

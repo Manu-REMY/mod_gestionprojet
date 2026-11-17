@@ -176,35 +176,65 @@ class fs_tirage {
     }
 
     /**
-     * Criteria of a given FS are those of the consigne of the copy: a criterion added there is dropped.
+     * A copy whose draw is dropped (the teacher went back to "every FS"): every field its consigne gave with the model
+     * text, and still holding that text, gets back what the shared consigne starts with (empty or pre-filled text).
+     * A text the students changed is kept.
      *
      * @param array $copy Student copy (normalized, without flags).
-     * @param array $consigne Consigne of the copy (result of consigne()).
+     * @param array $was Consigne of the copy with its draw (result of consigne()).
+     * @param array $now Shared consigne.
      * @return array
      */
-    public static function given_shape(array $copy, array $consigne): array {
-        $given = [];
-        foreach ($consigne['fonctionsService'] ?? [] as $fs) {
-            if (!empty($fs['donnee'])) {
-                $given[$fs['id']] = array_map(function (array $c): int {
-                    return (int)$c['id'];
-                }, $fs['criteres']);
-            }
-        }
-        if (!$given) {
-            return $copy;
-        }
+    public static function release(array $copy, array $was, array $now): array {
+        $seed = consigne_lock::seed($now);
+        $wasfs = self::by_id($was['fonctionsService'] ?? []);
+        $nowfs = self::by_id($now['fonctionsService'] ?? []);
+        $seedfs = self::by_id($seed['fonctionsService'] ?? []);
+        // A field given by the draw: provided in the copy consigne, not provided in the shared one.
+        $given = function (array $before, array $after, string $lock): bool {
+            return !empty($before[$lock]) && empty($after[$lock]);
+        };
         foreach ($copy['fonctionsService'] as &$fs) {
-            if (!isset($given[$fs['id']])) {
+            $w = $wasfs[$fs['id']] ?? null;
+            $n = $nowfs[$fs['id']] ?? null;
+            $start = $seedfs[$fs['id']] ?? null;
+            if ($w === null || $n === null || $start === null || empty($w['donnee'])) {
                 continue;
             }
-            $ids = $given[$fs['id']];
-            $fs['criteres'] = array_values(array_filter($fs['criteres'], function (array $c) use ($ids): bool {
-                return in_array((int)$c['id'], $ids, true);
-            }));
+            if ($given($w, $n, 'locked') && $fs['description'] === $w['description']) {
+                $fs['description'] = $start['description'];
+            }
+            $wc = self::by_id($w['criteres']);
+            $nc = self::by_id($n['criteres']);
+            $sc = self::by_id($start['criteres']);
+            foreach ($fs['criteres'] as &$c) {
+                if (!isset($wc[$c['id']], $nc[$c['id']], $sc[$c['id']])) {
+                    continue;
+                }
+                if ($given($wc[$c['id']], $nc[$c['id']], 'locked') && $c['description'] === $wc[$c['id']]['description']) {
+                    $c['description'] = $sc[$c['id']]['description'];
+                }
+                if ($given($wc[$c['id']], $nc[$c['id']], 'niveauLocked') && $c['niveau'] === $wc[$c['id']]['niveau']
+                        && $c['flexibilite'] === $wc[$c['id']]['flexibilite']) {
+                    $c['niveau'] = $sc[$c['id']]['niveau'];
+                    $c['flexibilite'] = $sc[$c['id']]['flexibilite'];
+                }
+            }
+            unset($c);
         }
         unset($fs);
         return $copy;
+    }
+
+    /**
+     * The drawn ids that still count: FS of the consigne that still have something to complete.
+     *
+     * @param int[] $drawn Stored draw.
+     * @param array $consigne Shared consigne.
+     * @return int[] Empty: the draw no longer applies, the copy completes every FS.
+     */
+    public static function valid(array $drawn, array $consigne): array {
+        return array_values(array_intersect(array_map('intval', $drawn), self::eligible($consigne)));
     }
 
     /**

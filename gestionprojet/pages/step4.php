@@ -181,7 +181,10 @@ if (!$group) {
         // The consigne of this copy: the FS it did not draw are given complete (request 42, v2.16.0).
         $copyconsigne = gestionprojet_cdcf_consigne($gestionprojet, $submission);
         $cdcfdata = \mod_gestionprojet\consigne_lock::with_flags($cdcfdata, $copyconsigne);
-        $drawnfs = \mod_gestionprojet\fs_tirage::rangs($copyconsigne, gestionprojet_cdcf_drawn($gestionprojet, $submission));
+        $drawnids = gestionprojet_cdcf_drawn($gestionprojet, $submission);
+        $drawnfs = \mod_gestionprojet\fs_tirage::rangs($copyconsigne, $drawnids);
+        // The draw this page shows goes back with each save: a save from a page with another draw is refused.
+        $cdcfdata['fsTirees'] = $drawnids;
     }
     $projetnom = format_string($gestionprojet->name);
     ?>

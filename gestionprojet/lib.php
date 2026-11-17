@@ -111,6 +111,8 @@ function gestionprojet_update_instance($data, $mform = null)
 
     $data->timemodified = time();
     $data->id = $data->instance;
+    // Draw of FS per copy before the change: going back to "every FS" releases the draws (request 42).
+    $beforedraw = $DB->get_record('gestionprojet', ['id' => $data->id]);
     if (isset($data->langue_accepted)) {
         $data->langue_accepted = gestionprojet_langue_accepted_from_text((string)$data->langue_accepted);
     }
@@ -132,6 +134,9 @@ function gestionprojet_update_instance($data, $mform = null)
     // Update gradebook items (may need to create/remove items if grade_mode changed).
     $gestionprojet = $DB->get_record('gestionprojet', ['id' => $data->id]);
     gestionprojet_update_grades($gestionprojet);
+    if ($beforedraw && gestionprojet_cdcf_draw_mode($beforedraw) && !gestionprojet_cdcf_draw_mode($gestionprojet)) {
+        gestionprojet_cdcf_release_draws($beforedraw, $gestionprojet);
+    }
 
     return $result;
 }
@@ -602,13 +607,16 @@ function gestionprojet_cdcf_draw_mode(object $gestionprojet): int {
  *
  * @param object $gestionprojet Instance record.
  * @param object|null $copy Record of gestionprojet_cdcf.
- * @return int[] Empty when the copy completes every FS.
+ * @param array|null $consigne Shared consigne, when the caller has it.
+ * @return int[] Empty when the copy completes every FS (no draw, or no drawn FS left in the consigne).
  */
-function gestionprojet_cdcf_drawn(object $gestionprojet, ?object $copy): array {
-    if (!$copy || !gestionprojet_cdcf_draw_mode($gestionprojet)) {
+function gestionprojet_cdcf_drawn(object $gestionprojet, ?object $copy, ?array $consigne = null): array {
+    if (!$copy || !gestionprojet_cdcf_draw_mode($gestionprojet) || empty($copy->fs_tirees)) {
         return [];
     }
-    return \mod_gestionprojet\fs_tirage::decode($copy->fs_tirees ?? null);
+    // Only the drawn FS that are still in the consigne with something to complete count (review of 2.16.0).
+    return \mod_gestionprojet\fs_tirage::valid(\mod_gestionprojet\fs_tirage::decode($copy->fs_tirees),
+        $consigne ?? gestionprojet_fs_consigne_of((int)$gestionprojet->id));
 }
 
 /**
@@ -629,7 +637,7 @@ function gestionprojet_cdcf_consigne(object $gestionprojet, ?object $copy = null
             ['gestionprojetid' => $gestionprojet->id]);
     }
     $consigne = \mod_gestionprojet\cdcf_helper::decode($consignejson ?: null);
-    $drawn = gestionprojet_cdcf_drawn($gestionprojet, $copy);
+    $drawn = gestionprojet_cdcf_drawn($gestionprojet, $copy, $consigne);
     if (!$drawn) {
         return $consigne;
     }
@@ -703,20 +711,68 @@ function gestionprojet_cdcf_class_groups(object $gestionprojet, int $groupid): a
  * @param object $copy Record of gestionprojet_cdcf (updated in place).
  * @return int[] Drawn FS ids; empty when there is nothing to draw.
  */
-function gestionprojet_cdcf_draw(object $gestionprojet, object $copy): array {
+function gestionprojet_cdcf_draw(object $gestionprojet, object $copy, bool $replace = false): array {
+    $mode = gestionprojet_cdcf_draw_mode($gestionprojet);
+    if (!$mode || empty($copy->id)) {
+        return [];
+    }
+    // Two members open the page at the same time: one draw only (review of 2.16.0).
+    $lock = \core\lock\lock_config::get_lock_factory('mod_gestionprojet_tirage')->get_lock('cdcf_' . (int)$copy->id, 10);
+    if (!$lock) {
+        throw new moodle_exception('fs_tirage_busy', 'gestionprojet');
+    }
+    try {
+        return gestionprojet_cdcf_draw_locked($gestionprojet, $copy, $mode, $replace);
+    } finally {
+        $lock->release();
+    }
+}
+
+/**
+ * Draw of a step 4 copy, under the lock of the copy (see gestionprojet_cdcf_draw()).
+ *
+ * @param object $gestionprojet Instance record.
+ * @param object $copy Record of gestionprojet_cdcf (updated in place from the database, then with the draw).
+ * @param int $mode Draw mode (gestionprojet_cdcf_draw_mode()).
+ * @param bool $replace True: the teacher draws again a copy not started.
+ * @return int[] Drawn FS ids.
+ */
+function gestionprojet_cdcf_draw_locked(object $gestionprojet, object $copy, int $mode, bool $replace): array {
     global $DB, $USER;
 
-    $mode = gestionprojet_cdcf_draw_mode($gestionprojet);
-    if (!$mode || (int)$copy->status !== 0) {
+    $fresh = $DB->get_record('gestionprojet_cdcf', ['id' => $copy->id], '*', MUST_EXIST);
+    foreach (get_object_vars($fresh) as $key => $value) {
+        $copy->$key = $value;
+    }
+    if ((int)$copy->status !== 0) {
         return [];
     }
     $base = gestionprojet_cdcf_consigne($gestionprojet);
+    $current = gestionprojet_cdcf_drawn($gestionprojet, $copy, $base);
+    if ($current && !$replace) {
+        // Another request drew first.
+        return $current;
+    }
+    if ($replace) {
+        if (!gestionprojet_cdcf_not_started($gestionprojet, $copy)) {
+            throw new moodle_exception('fs_tirage_started', 'gestionprojet');
+        }
+        // Back to the shared starting copy, then a new draw.
+        $copy->fs_tirees = null;
+        $copy->interacteurs_data = json_encode(\mod_gestionprojet\consigne_lock::seed($base), JSON_UNESCAPED_UNICODE);
+    }
     $eligible = \mod_gestionprojet\fs_tirage::eligible($base);
     $sujets = \mod_gestionprojet\fs_tirage::decode_sujets($gestionprojet->step4_fs_sujets ?? null);
     if (!$eligible) {
         return [];
     }
+    // A stale draw (its FS left the consigne) is replaced like no draw at all.
+    $copy->fs_tirees = null;
     $notstarted = gestionprojet_cdcf_not_started($gestionprojet, $copy);
+    if (!$notstarted && gestionprojet_palier_frozen_zones($gestionprojet, $copy)) {
+        // Zones validated by a level keep their content: a draw would give them the model text.
+        throw new moodle_exception('fs_tirage_frozen', 'gestionprojet');
+    }
     $classgroups = gestionprojet_cdcf_class_groups($gestionprojet, (int)$copy->groupid);
     // Times each FS (mode 1) or each subject (mode 2) was drawn by the other copies, in the class and in the activity.
     $classcounts = [];
@@ -740,22 +796,23 @@ function gestionprojet_cdcf_draw(object $gestionprojet, object $copy): array {
         return (int)$tied[random_int(0, count($tied) - 1)];
     };
     $drawn = $mode === 2
-        ? \mod_gestionprojet\fs_tirage::choose_sujet($sujets, $classcounts, $totalcounts, $pick)
+        ? \mod_gestionprojet\fs_tirage::valid(\mod_gestionprojet\fs_tirage::choose_sujet($sujets, $classcounts,
+            $totalcounts, $pick), $base)
         : \mod_gestionprojet\fs_tirage::choose($eligible, (int)$gestionprojet->step4_fs_tirage, $classcounts,
             $totalcounts, $pick);
     if (!$drawn) {
         return [];
     }
-    $before = (string)($copy->interacteurs_data ?? '');
+    $before = (string)($fresh->interacteurs_data ?? '');
     $copy->fs_tirees = json_encode($drawn);
-    $consigne = gestionprojet_cdcf_consigne($gestionprojet, $copy);
+    $consigne = gestionprojet_cdcf_consigne($gestionprojet, $copy, null);
     if ($notstarted) {
         $copy->interacteurs_data = json_encode(\mod_gestionprojet\consigne_lock::seed($consigne), JSON_UNESCAPED_UNICODE);
     } else {
         // Every field of a non-drawn FS is shown provided: enforce gives it the model text.
         $flagged = \mod_gestionprojet\consigne_lock::with_flags(\mod_gestionprojet\cdcf_helper::decode($before ?: null), $consigne);
-        $copy->interacteurs_data = json_encode(\mod_gestionprojet\fs_tirage::given_shape(
-            \mod_gestionprojet\consigne_lock::enforce($flagged, $consigne), $consigne), JSON_UNESCAPED_UNICODE);
+        $copy->interacteurs_data = json_encode(\mod_gestionprojet\consigne_lock::enforce($flagged, $consigne),
+            JSON_UNESCAPED_UNICODE);
         gestionprojet_log_change($gestionprojet->id, 'cdcf', $copy->id, 'interacteurs_data', $before,
             $copy->interacteurs_data, $USER->id, (int)$copy->groupid);
     }
@@ -784,7 +841,7 @@ function gestionprojet_fs_tirage_rows(object $gestionprojet): array {
             $user = $DB->get_record('user', ['id' => $copy->userid]);
             $nom = $user ? fullname($user) : '';
         }
-        $drawn = \mod_gestionprojet\fs_tirage::decode($copy->fs_tirees ?? null);
+        $drawn = gestionprojet_cdcf_drawn($gestionprojet, $copy, $consigne);
         if ((int)$copy->status === 1) {
             $etat = 'soumise';
         } else {
@@ -797,6 +854,59 @@ function gestionprojet_fs_tirage_rows(object $gestionprojet): array {
         return strnatcasecmp($a['nom'], $b['nom']);
     });
     return $rows;
+}
+
+/**
+ * Refuse a student save sent from a page that showed another draw than the stored one (review of 2.16.0).
+ *
+ * The page sends the drawn FS it showed (fsTirees). A page opened before the draw, before the teacher drew again or
+ * changed the mode, would otherwise store model text as student work or lose what the students wrote.
+ *
+ * @param object $gestionprojet Instance record.
+ * @param string $studentjson CDCF JSON sent by the browser.
+ * @param object $copy Stored copy.
+ * @throws moodle_exception fs_tirage_changed: the page must be reloaded.
+ */
+function gestionprojet_cdcf_check_draw(object $gestionprojet, string $studentjson, object $copy): void {
+    if ((int)($gestionprojet->step4_provided ?? 0) !== 1) {
+        return;
+    }
+    $raw = json_decode($studentjson, true);
+    $shown = is_array($raw) && isset($raw['fsTirees']) && is_array($raw['fsTirees'])
+        ? \mod_gestionprojet\fs_tirage::decode(json_encode($raw['fsTirees'])) : [];
+    $indatabase = gestionprojet_cdcf_drawn($gestionprojet, $copy);
+    sort($indatabase);
+    if ($shown !== $indatabase) {
+        throw new moodle_exception('fs_tirage_changed', 'gestionprojet');
+    }
+}
+
+/**
+ * The teacher went back to "every FS": the draft copies drop their draw (review of 2.16.0).
+ *
+ * Each field the draw gave with the model text, still holding it, gets back the shared starting text (fs_tirage::release);
+ * what the students wrote stays. Submitted copies are not changed.
+ *
+ * @param object $before Instance record before the change (draw on).
+ * @param object $after Instance record after the change (draw off).
+ * @return int Number of copies changed.
+ */
+function gestionprojet_cdcf_release_draws(object $before, object $after): int {
+    global $DB;
+
+    $count = 0;
+    $now = gestionprojet_cdcf_consigne($after);
+    $copies = $DB->get_records_select('gestionprojet_cdcf', 'gestionprojetid = ? AND status = 0 AND fs_tirees IS NOT NULL',
+        [$before->id]);
+    foreach ($copies as $copy) {
+        $was = gestionprojet_cdcf_consigne($before, $copy);
+        $json = json_encode(\mod_gestionprojet\fs_tirage::release(
+            \mod_gestionprojet\cdcf_helper::decode($copy->interacteurs_data ?: null), $was, $now), JSON_UNESCAPED_UNICODE);
+        $DB->update_record('gestionprojet_cdcf', (object)['id' => $copy->id, 'fs_tirees' => null, 'interacteurs_data' => $json,
+            'timemodified' => time()]);
+        $count++;
+    }
+    return $count;
 }
 
 /**
@@ -819,19 +929,14 @@ function gestionprojet_fs_tirage_action(object $gestionprojet, int $copyid, stri
     if ((int)$copy->status !== 0) {
         throw new moodle_exception('fs_tirage_submitted', 'gestionprojet');
     }
-    $notstarted = gestionprojet_cdcf_not_started($gestionprojet, $copy);
     if ($action === 'refaire') {
-        if (!$notstarted) {
-            throw new moodle_exception('fs_tirage_started', 'gestionprojet');
-        }
-        // Back to the shared starting copy, then a new draw.
-        $copy->fs_tirees = null;
-        $copy->interacteurs_data = json_encode(\mod_gestionprojet\consigne_lock::seed(gestionprojet_cdcf_consigne($gestionprojet)),
-            JSON_UNESCAPED_UNICODE);
-    } else if ($action !== 'appliquer' || $notstarted || !empty($copy->fs_tirees)) {
+        $drawn = gestionprojet_cdcf_draw($gestionprojet, $copy, true);
+    } else if ($action === 'appliquer' && !gestionprojet_cdcf_drawn($gestionprojet, $copy)
+            && !gestionprojet_cdcf_not_started($gestionprojet, $copy)) {
+        $drawn = gestionprojet_cdcf_draw($gestionprojet, $copy);
+    } else {
         throw new moodle_exception('fs_tirage_badaction', 'gestionprojet');
     }
-    $drawn = gestionprojet_cdcf_draw($gestionprojet, $copy);
     if (!$drawn) {
         throw new moodle_exception('fs_tirage_nothing', 'gestionprojet');
     }
@@ -913,8 +1018,8 @@ function gestionprojet_cdcf_enforce_consigne(object $gestionprojet, string $stud
         $consigne = gestionprojet_cdcf_consigne($gestionprojet, $submission);
         if (\mod_gestionprojet\consigne_lock::has_locks($consigne)) {
             // The flags the page showed tell a page opened before a consigne change from student text (v2.12.4).
-            $json = json_encode(\mod_gestionprojet\fs_tirage::given_shape(\mod_gestionprojet\consigne_lock::enforce(
-                \mod_gestionprojet\cdcf_helper::decode($studentjson), $consigne), $consigne), JSON_UNESCAPED_UNICODE);
+            $json = json_encode(\mod_gestionprojet\consigne_lock::enforce(\mod_gestionprojet\cdcf_helper::decode($studentjson),
+                $consigne), JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -1393,7 +1498,7 @@ function gestionprojet_get_or_create_submission($gestionprojet, $groupid, $useri
             }
         }
         // FS drawn on the first visit of a copy nobody worked on (request 42, v2.16.0).
-        if (gestionprojet_cdcf_draw_mode($gestionprojet) && empty($record->fs_tirees)
+        if (gestionprojet_cdcf_draw_mode($gestionprojet) && !gestionprojet_cdcf_drawn($gestionprojet, $record)
                 && gestionprojet_cdcf_not_started($gestionprojet, $record)) {
             gestionprojet_cdcf_draw($gestionprojet, $record);
         }

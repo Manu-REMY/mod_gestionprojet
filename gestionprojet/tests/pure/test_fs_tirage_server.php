@@ -48,9 +48,29 @@ test('backup: settings and the draw of each copy', function () use ($read) {
     $b = $read('backup/moodle2/backup_gestionprojet_stepslib.php');
     return strpos($b, "'step4_fs_mode', 'step4_fs_tirage', 'step4_fs_sujets'") && strpos($b, "'zones_validees', 'fs_tirees'");
 });
-test('enforce uses the consigne of the copy and drops criteria added to given FS', fn() =>
+test('enforce uses the consigne of the copy and never drops student text', fn() =>
     strpos($body('gestionprojet_cdcf_enforce_consigne'), 'gestionprojet_cdcf_consigne($gestionprojet, $submission)')
-    && strpos($body('gestionprojet_cdcf_enforce_consigne'), 'fs_tirage::given_shape('));
+    && strpos($lib, 'given_shape') === false);
+test('review 1: the draw runs under a lock of the copy and re-reads it', function () use ($body) {
+    $draw = $body('gestionprojet_cdcf_draw');
+    $locked = $body('gestionprojet_cdcf_draw_locked');
+    return strpos($draw, "get_lock_factory('mod_gestionprojet_tirage')") && strpos($draw, '$lock->release()')
+        && strpos($locked, 'get_record(\'gestionprojet_cdcf\', [\'id\' => $copy->id]') && strpos($locked, 'if ($current && !$replace)');
+});
+test('review 1: a save from a page showing another draw is refused (both endpoints)', function () use ($read, $body) {
+    $check = 'gestionprojet_cdcf_check_draw($gestionprojet, (string)$value, $record);';
+    return strpos($read('ajax/autosave.php'), $check) && strpos($read('classes/external/autosave.php'), $check)
+        && strpos($body('gestionprojet_cdcf_check_draw'), "'fs_tirage_changed'")
+        && strpos($read('pages/step4.php'), "\$cdcfdata['fsTirees'] = \$drawnids;");
+});
+test('review 3: back to "every FS" releases the draws of the draft copies', fn() =>
+    strpos($body('gestionprojet_update_instance'), 'gestionprojet_cdcf_release_draws($beforedraw, $gestionprojet)')
+    && strpos($body('gestionprojet_cdcf_release_draws'), 'fs_tirage::release(')
+    && strpos($body('gestionprojet_cdcf_release_draws'), "'fs_tirees' => null"));
+test('review 4: only drawn FS still in the consigne count', fn() =>
+    strpos($body('gestionprojet_cdcf_drawn'), 'fs_tirage::valid(') !== false);
+test('review 5: no draw on a copy with validated zones', fn() =>
+    strpos($body('gestionprojet_cdcf_draw_locked'), "'fs_tirage_frozen'") !== false);
 test('follow: per copy, before and after, consigne and model', fn() =>
     strpos($body('gestionprojet_cdcf_follow_consigne'), 'gestionprojet_cdcf_consigne($gestionprojet, $copy, $oldjson, $oldmodeljson)')
     && strpos($body('gestionprojet_cdcf_follow_consigne'), 'gestionprojet_cdcf_consigne($gestionprojet, $copy, $newjson, $modeljson)'));

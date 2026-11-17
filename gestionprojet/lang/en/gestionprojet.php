@@ -1191,3 +1191,6 @@ $string['fs_tirage_submitted'] = 'This copy is submitted: its draw cannot change
 $string['fs_tirage_started'] = 'This copy is started: its draw cannot be done again.';
 $string['fs_tirage_badaction'] = 'This action does not fit this copy.';
 $string['fs_tirage_nothing'] = 'No FS to draw: the consigne has nothing to complete.';
+$string['fs_tirage_busy'] = 'The draw of this copy is in progress: reload the page in a few seconds.';
+$string['fs_tirage_frozen'] = 'Levels are validated on this copy: its draw cannot change.';
+$string['fs_tirage_changed'] = 'The FS of your group have changed: reload the page. What was already saved is kept.';
