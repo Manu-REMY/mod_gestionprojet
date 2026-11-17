@@ -114,3 +114,7 @@ test('request 43: public state of a copy, read only', function () use ($body) {
     return $b !== '' && strpos($b, 'insert_record') === false && strpos($b, 'update_record') === false
         && strpos($b, 'gestionprojet_cdcf_draw(') === false && strpos($b, "'niveau'") !== false;
 });
+test('review 3: hiding the consigne from the home page releases the draws too', fn() =>
+    strpos($read('ajax/toggle_step.php'), 'gestionprojet_cdcf_release_draws($gestionprojet, $after);') !== false);
+test('a refused save tells the student why', fn() => strpos($read('amd/src/autosave.js'), 'Toast.error(response.message') !== false
+    && strpos($read('amd/build/autosave.min.js'), 'lastErrorShown') !== false);
