@@ -33,6 +33,7 @@
 define('AJAX_SCRIPT', true);
 
 require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../lib.php');
 
 require_login();
 require_sesskey();
@@ -70,6 +71,11 @@ $update = new stdClass();
 $update->id = $gestionprojet->id;
 $update->$field = $enabled;
 $DB->update_record('gestionprojet', $update);
+// Consigne of step 4 hidden: the draws of FS no longer apply, the draft copies drop them (request 42).
+$after = $DB->get_record('gestionprojet', ['id' => $gestionprojet->id], '*', MUST_EXIST);
+if (gestionprojet_cdcf_draw_mode($gestionprojet) && !gestionprojet_cdcf_draw_mode($after)) {
+    gestionprojet_cdcf_release_draws($gestionprojet, $after);
+}
 
 echo json_encode([
     'success' => true,

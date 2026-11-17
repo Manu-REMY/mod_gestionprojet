@@ -97,8 +97,9 @@ class reset_helper {
         }
         if ($step === 4) {
             // Same starting copy as the first opening: no lock/gap flag, fields "to fill in" emptied (v2.11.1).
-            $record->interacteurs_data = json_encode(consigne_lock::seed(cdcf_helper::decode($provided->interacteurs_data ?? null)),
-                JSON_UNESCAPED_UNICODE);
+            // The consigne of this copy: its non-drawn FS are given complete (request 42, v2.16.0).
+            $record->interacteurs_data = json_encode(consigne_lock::seed(gestionprojet_cdcf_consigne($gestionprojet, $record,
+                (string)($provided->interacteurs_data ?? ''))), JSON_UNESCAPED_UNICODE);
             // Locked elements and zones frozen by a validated level stay as they are (v2.11.2).
             $record->interacteurs_data = gestionprojet_cdcf_enforce_consigne($gestionprojet, $record->interacteurs_data, $record);
         }

@@ -120,6 +120,24 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         $mform->addHelpButton('langue_accepted', 'langue_accepted', 'gestionprojet');
         $mform->hideIf('langue_accepted', 'langue_enabled', 'eq', 0);
 
+        // FS per copy (request 42, D-088): every FS, N FS drawn at random, or one predefined subject drawn.
+        $mform->addElement('select', 'step4_fs_mode', get_string('step4_fs_mode', 'gestionprojet'), [
+            0 => get_string('step4_fs_mode_all', 'gestionprojet'),
+            1 => get_string('step4_fs_mode_random', 'gestionprojet'),
+            2 => get_string('step4_fs_mode_sujets', 'gestionprojet'),
+        ]);
+        $mform->setDefault('step4_fs_mode', 0);
+        $mform->addHelpButton('step4_fs_mode', 'step4_fs_mode', 'gestionprojet');
+        $mform->addElement('text', 'step4_fs_tirage', get_string('step4_fs_tirage', 'gestionprojet'), ['size' => 4]);
+        $mform->setType('step4_fs_tirage', PARAM_INT);
+        $mform->setDefault('step4_fs_tirage', 3);
+        $mform->hideIf('step4_fs_tirage', 'step4_fs_mode', 'neq', 1);
+        $mform->addElement('textarea', 'step4_fs_sujets', get_string('step4_fs_sujets', 'gestionprojet'),
+            ['rows' => 4, 'cols' => 40]);
+        $mform->setType('step4_fs_sujets', PARAM_TEXT);
+        $mform->addHelpButton('step4_fs_sujets', 'step4_fs_sujets', 'gestionprojet');
+        $mform->hideIf('step4_fs_sujets', 'step4_fs_mode', 'neq', 2);
+
         // AI Evaluation settings.
         $mform->addElement('header', 'ai_settings', get_string('ai_settings', 'gestionprojet'));
         $mform->setExpanded('ai_settings', false);
@@ -231,6 +249,21 @@ class mod_gestionprojet_mod_form extends moodleform_mod
                 && (!is_numeric($languepoints) || (float)$languepoints < 2 || (float)$languepoints > 10)) {
             $errors['langue_points'] = get_string('error_langue_points', 'gestionprojet');
         }
+        $fsmode = (int)($data['step4_fs_mode'] ?? 0);
+        if ($fsmode === 1 && ((int)($data['step4_fs_tirage'] ?? 0) < 1 || (int)$data['step4_fs_tirage'] > 20)) {
+            $errors['step4_fs_tirage'] = get_string('error_fs_tirage', 'gestionprojet');
+        }
+        if ($fsmode === 2) {
+            $consigne = gestionprojet_fs_consigne_of((int)($data['instance'] ?? 0));
+            $parsed = \mod_gestionprojet\fs_tirage::parse_sujets((string)($data['step4_fs_sujets'] ?? ''), $consigne);
+            if ($parsed['erreurs']) {
+                $errors['step4_fs_sujets'] = implode(' ', array_map(function (array $e): string {
+                    return get_string('error_fs_sujet', 'gestionprojet', (object)$e);
+                }, $parsed['erreurs']));
+            } else if (!$parsed['sujets']) {
+                $errors['step4_fs_sujets'] = get_string('error_fs_sujets_empty', 'gestionprojet');
+            }
+        }
         if (isset($data['step4_palier_seuil'])
                 && ((int)$data['step4_palier_seuil'] < 0 || (int)$data['step4_palier_seuil'] > 100)) {
             $errors['step4_palier_seuil'] = get_string('error_palier_seuil', 'gestionprojet');
@@ -240,7 +273,7 @@ class mod_gestionprojet_mod_form extends moodleform_mod
     }
 
     /**
-     * Accepted words (stored as JSON) shown one per line.
+     * Accepted words (stored as JSON) shown one per line; predefined subjects shown as FS numbers.
      *
      * @param array $defaultvalues
      */
@@ -249,6 +282,12 @@ class mod_gestionprojet_mod_form extends moodleform_mod
         if (isset($defaultvalues['langue_accepted'])) {
             $words = json_decode((string)$defaultvalues['langue_accepted'], true);
             $defaultvalues['langue_accepted'] = is_array($words) ? implode("\n", $words) : '';
+        }
+        // Subjects stored as FS ids, shown as FS numbers of the consigne (request 42).
+        if (isset($defaultvalues['step4_fs_sujets'])) {
+            $defaultvalues['step4_fs_sujets'] = \mod_gestionprojet\fs_tirage::format_sujets(
+                \mod_gestionprojet\fs_tirage::decode_sujets($defaultvalues['step4_fs_sujets']),
+                gestionprojet_fs_consigne_of((int)($defaultvalues['instance'] ?? 0)));
         }
     }
 }

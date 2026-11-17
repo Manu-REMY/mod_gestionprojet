@@ -161,7 +161,7 @@ test('review C: a copy two consigne versions behind gets no duplicate', fn() => 
 $lib = (string)file_get_contents(GP_ROOT . '/lib.php');
 $ws = (string)file_get_contents(GP_ROOT . '/classes/external/autosave.php');
 test('lib: gestionprojet_cdcf_follow_consigne() updates the draft copies', fn() =>
-    strpos($lib, 'function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjson): int') !== false
+    strpos($lib, 'function gestionprojet_cdcf_follow_consigne(object $gestionprojet, string $oldjson, ?string $oldmodeljson = null): int') !== false
     && strpos($lib, 'consigne_lock::follow(') !== false);
 test('lib: the student save no longer needs the stored copy (the page flags decide)', fn() =>
     strpos($lib, '$stored') === false);

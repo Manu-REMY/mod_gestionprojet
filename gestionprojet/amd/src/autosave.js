@@ -230,9 +230,10 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str', 'mod_gestionproj
                     }
                 } else {
                     self.showStatus('error');
-                    // Only show notification for actual errors, not just failed status updates.
-                    if (response.message) {
-                        console.error('Autosave error:', response.message);
+                    // Tell the student why, once per message (e.g. the FS of the group changed: reload the page).
+                    if (response.message && response.message !== self.lastErrorShown) {
+                        self.lastErrorShown = response.message;
+                        Toast.error(response.message, 15000);
                     }
                 }
             }).fail(function(ex) {

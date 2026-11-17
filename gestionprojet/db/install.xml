@@ -41,6 +41,9 @@
         <FIELD NAME="langue_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1 = spelling graded at step 4 (request 32)"/>
         <FIELD NAME="langue_points" TYPE="number" LENGTH="5" NOTNULL="true" DEFAULT="2" SEQUENCE="false" DECIMALS="2" COMMENT="Points of the language out of 20 (2 to 10)"/>
         <FIELD NAME="langue_accepted" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON list of words the teacher accepted: never counted as mistakes"/>
+        <FIELD NAME="step4_fs_mode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Step 4 FS per copy (request 42): 0 = every FS, 1 = N FS drawn at random, 2 = one predefined subject drawn"/>
+        <FIELD NAME="step4_fs_tirage" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="3" SEQUENCE="false" COMMENT="Number of FS drawn per copy in mode 1"/>
+        <FIELD NAME="step4_fs_sujets" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON list of predefined subjects (lists of FS ids) for mode 2"/>
         <FIELD NAME="enable_submission" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=student submission enabled"/>
         <FIELD NAME="grade_mode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=combined (single average grade), 1=per_step (separate grade items)"/>
       </FIELDS>
@@ -128,6 +131,7 @@
         <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=individual work"/>
         <FIELD NAME="interacteurs_data" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of interactors with FCs and criteres"/>
         <FIELD NAME="zones_validees" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON zone => id of the evaluation that validated it (frozen zones)"/>
+        <FIELD NAME="fs_tirees" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON list of the FS ids this copy completes (request 42); null = every FS"/>
         <FIELD NAME="grade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Note sur 20"/>
         <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Teacher comments"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="User ID for individual submission"/>

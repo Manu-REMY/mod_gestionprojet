@@ -39,7 +39,7 @@ class consigne_lock {
 
     /** @var string[] Keys that only describe the consigne, never stored in a student copy. */
     const FLAG_KEYS = ['locked', 'gap', 'prefill', 'niveauLocked', 'niveauGap', 'niveauPrefill', 'linksLocked', 'hint',
-        'niveauHint'];
+        'niveauHint', 'tiree', 'donnee'];
 
     /**
      * Remove every flag key.
@@ -706,7 +706,9 @@ class consigne_lock {
      * @return array
      */
     private static function copy_flags(array $element, array $source, string $field): array {
-        foreach (['locked', 'gap', 'prefill', 'niveauLocked', 'niveauGap', 'niveauPrefill', 'linksLocked'] as $flag) {
+        // FS drawn by the copy (tiree) or given complete (donnee): request 42, v2.16.0.
+        foreach (['locked', 'gap', 'prefill', 'niveauLocked', 'niveauGap', 'niveauPrefill', 'linksLocked', 'tiree', 'donnee']
+                as $flag) {
             if (!empty($source[$flag])) {
                 $element[$flag] = true;
             }

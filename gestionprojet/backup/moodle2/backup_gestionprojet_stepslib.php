@@ -47,6 +47,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
             'enable_step9', 'step9_provided',
             'ai_provider', 'ai_api_key', 'ai_enabled', 'ai_auto_apply', 'ai_hide_answers', 'step4_flexibility',
             'step4_paliers', 'step4_palier_seuil', 'formative_limit', 'langue_enabled', 'langue_points', 'langue_accepted',
+            'step4_fs_mode', 'step4_fs_tirage', 'step4_fs_sujets',
             'enable_submission', 'grade_mode',
         ]);
 
@@ -123,7 +124,7 @@ class backup_gestionprojet_activity_structure_step extends backup_activity_struc
         // Student submission tables.
         $cdcfs = new backup_nested_element('cdcfs');
         $cdcf = new backup_nested_element('cdcf', ['id'], [
-            'groupid', 'userid', 'interacteurs_data', 'zones_validees',
+            'groupid', 'userid', 'interacteurs_data', 'zones_validees', 'fs_tirees',
             'grade', 'feedback', 'status', 'timesubmitted', 'timecreated', 'timemodified',
         ]);
 

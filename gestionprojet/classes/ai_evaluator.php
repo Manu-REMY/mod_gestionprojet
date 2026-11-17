@@ -286,6 +286,13 @@ class ai_evaluator {
                     && (int)($gestionprojet->{'step' . $evaluation->step . '_provided'} ?? 0) === 1) {
                 $cfg = $providedmap[$evaluation->step];
                 $providedrec = $DB->get_record($cfg['table'], ['gestionprojetid' => $evaluation->gestionprojetid]);
+                require_once(__DIR__ . '/../lib.php');
+                if ($providedrec && (int)$evaluation->step === 4 && gestionprojet_cdcf_drawn($gestionprojet, $submission)) {
+                    // FS drawn per copy (request 42, v2.16.0): the FS the copy did not draw are provided, never graded.
+                    $providedrec = clone $providedrec;
+                    $providedrec->interacteurs_data = json_encode(gestionprojet_cdcf_consigne($gestionprojet, $submission,
+                        (string)$providedrec->interacteurs_data), JSON_UNESCAPED_UNICODE);
+                }
                 if ($providedrec) {
                     if (!empty(trim(strip_tags($providedrec->intro_text ?? '')))) {
                         $teacherintro = $providedrec->intro_text;

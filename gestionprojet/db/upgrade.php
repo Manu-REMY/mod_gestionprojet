@@ -897,5 +897,26 @@ function xmldb_gestionprojet_upgrade($oldversion)
         upgrade_mod_savepoint(true, 2026111106, 'gestionprojet');
     }
 
+    // 2.16.0 — step 4: each copy completes FS drawn at random or a predefined subject (request 42, D-088).
+    if ($oldversion < 2026111700) {
+        $table = new xmldb_table('gestionprojet');
+        $fields = [
+            new xmldb_field('step4_fs_mode', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'langue_accepted'),
+            new xmldb_field('step4_fs_tirage', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '3', 'step4_fs_mode'),
+            new xmldb_field('step4_fs_sujets', XMLDB_TYPE_TEXT, null, null, null, null, null, 'step4_fs_tirage'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        $table = new xmldb_table('gestionprojet_cdcf');
+        $field = new xmldb_field('fs_tirees', XMLDB_TYPE_TEXT, null, null, null, null, null, 'zones_validees');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026111700, 'gestionprojet');
+    }
+
     return true;
 }
