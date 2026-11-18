@@ -14,15 +14,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Formative feedback of the student step pages (v2.11.4).
+ * Formative feedback of the student step pages (v2.11.4, window v2.17.0).
  *
  * Ask: the copy on screen is saved first (Autosave and the registered savers), then the feedback is asked for and
- * the page reloads. Waiting: a spinner turns and the status is polled; when the feedback is ready it replaces the
- * banner by itself (v2.12.2), without reloading: the student keeps typing and loses nothing. The ask button comes
- * back when another feedback can be asked for.
+ * the page reloads. Waiting: the status is polled; when the feedback is ready it replaces the banner of the panel by
+ * itself (v2.12.2), without reloading: nothing typed is lost. The ask button comes back when another feedback can be
+ * asked for.
  *
- * While waiting, a window in the middle of the screen says so (request 36, v2.13.4): spinner and words. The student
- * may close it and keep working; when the feedback is ready the window says so and shows it on click.
+ * The feedback window (v2.17.0, as mod_redaction D-086): while waiting, a window in the middle of the screen that
+ * cannot be closed shows a timer and the true steps (copy sent; the AI corrects, waiting in line or in progress; the
+ * feedback shows). When the feedback is ready, the window shows it: level reached, what works, what is missing, next
+ * steps, language. From SAT the final submission is put forward. A failure says the feedback is not counted.
  *
  * @module     mod_gestionprojet/formative_button
  * @copyright  2026 Emmanuel REMY
@@ -35,21 +37,53 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
 
     var POLL_MS = 5000;
 
-    /** @type {?Object} The waiting window: overlay, title, detail, button; null when closed. */
+    /** @type {number} After this wait (ms) the student may leave the waiting window; the polling goes on. */
+    var LEAVE_AFTER_MS = 180000;
+
+    /** @type {?Object} The window: overlay, box, timer, closable, returnFocus, onKey, step2; null when closed. */
     var modal = null;
 
     /**
-     * Close the waiting window.
+     * Create an element with a class and a text.
+     *
+     * @param {string} tag
+     * @param {string} className
+     * @param {string} [text]
+     * @returns {HTMLElement}
      */
-    function closeWait() {
+    function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    /**
+     * Stop the timer of the window.
+     */
+    function stopTimer() {
+        if (modal && modal.timer) {
+            clearInterval(modal.timer);
+            modal.timer = null;
+        }
+    }
+
+    /**
+     * Close the window and give the focus back where the student was.
+     */
+    function closeModal() {
         if (!modal) {
             return;
         }
+        stopTimer();
         document.removeEventListener('keydown', modal.onKey);
         if (modal.overlay.parentNode) {
             modal.overlay.parentNode.removeChild(modal.overlay);
         }
-        // Give the focus back where the student was (the editor, or the ask button).
         var back = modal.returnFocus;
         modal = null;
         if (back && document.body.contains(back) && typeof back.focus === 'function') {
@@ -58,119 +92,253 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     }
 
     /**
-     * Put a label and an action on the window button.
+     * Keyboard in the window: Escape closes it only when closable; Tab stays among its controls.
      *
-     * @param {string} label
-     * @param {Function} action
+     * @param {KeyboardEvent} event
      */
-    function setButton(label, action) {
-        modal.button.textContent = label;
-        modal.button.onclick = action;
-        modal.button.hidden = false;
-        modal.closable = true;
-        modal.button.focus();
+    function onKey(event) {
+        if (!modal) {
+            return;
+        }
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            if (modal.closable) {
+                closeModal();
+            }
+        } else if (event.key === 'Tab') {
+            var controls = Array.prototype.slice.call(modal.box.querySelectorAll('button, a[href]'));
+            if (!controls.length) {
+                event.preventDefault();
+                modal.box.focus();
+                return;
+            }
+            var index = controls.indexOf(document.activeElement);
+            if (event.shiftKey && index <= 0) {
+                event.preventDefault();
+                controls[controls.length - 1].focus();
+            } else if (!event.shiftKey && (index === -1 || index === controls.length - 1)) {
+                event.preventDefault();
+                controls[0].focus();
+            }
+        }
     }
 
     /**
-     * Open the waiting window (once): spinner, words, and a button to keep working.
+     * Words of the second step for a status: waiting in line, or in progress.
      *
-     * While the feedback is being asked for (closable false), the window cannot be closed: the page reloads once the
-     * request is queued, and anything typed meanwhile would be lost. That lasts a few seconds; a failure closes it.
-     *
-     * @param {Object} strings pending, waitDetail, keepWorking
-     * @param {boolean} closable Whether the student may close it now.
+     * @param {Object} strings queue, processing
+     * @param {string} status pending or processing
+     * @returns {string}
      */
-    function openWait(strings, closable) {
+    function stepWords(strings, status) {
+        return status === 'processing' ? strings.processing : strings.queue;
+    }
+
+    /**
+     * Format seconds as m:ss.
+     *
+     * @param {number} seconds
+     * @returns {string}
+     */
+    function clock(seconds) {
+        var s = Math.max(0, Math.floor(seconds));
+        var rest = s % 60;
+        return Math.floor(s / 60) + ':' + (rest < 10 ? '0' : '') + rest;
+    }
+
+    /**
+     * Open the waiting window (once): timer, true steps, words of patience. It cannot be closed.
+     *
+     * @param {Object} strings pending, sent, queue, processing, show, patience, elapsed
+     * @param {string} status pending or processing
+     * @param {number} elapsed Seconds since the feedback was asked for.
+     */
+    function openWait(strings, status, elapsed) {
         if (modal || !strings) {
             return;
         }
-        var overlay = document.createElement('div');
-        overlay.className = 'gp-formative-modal';
-        var box = document.createElement('div');
-        box.className = 'gp-formative-modal-box';
+        var overlay = el('div', 'gp-formative-modal');
+        var box = el('div', 'gp-formative-modal-box gp-retour-box');
         box.setAttribute('role', 'dialog');
         box.setAttribute('aria-modal', 'true');
-        box.setAttribute('aria-labelledby', 'gpFormativeModalTitle');
-        var spinner = document.createElement('span');
-        spinner.className = 'gp-formative-modal-spinner';
+        box.setAttribute('aria-labelledby', 'gpRetourTitle');
+        box.setAttribute('tabindex', '-1');
+
+        var ring = el('div', 'gp-retour-ring');
+        var spinner = el('span', 'gp-formative-modal-spinner');
         spinner.setAttribute('aria-hidden', 'true');
-        var text = document.createElement('div');
-        text.className = 'gp-formative-modal-text';
-        text.setAttribute('aria-live', 'polite');
-        var title = document.createElement('p');
-        title.className = 'gp-formative-modal-title';
-        title.id = 'gpFormativeModalTitle';
-        title.textContent = strings.pending;
-        var detail = document.createElement('p');
-        detail.className = 'gp-formative-modal-detail';
-        detail.textContent = strings.waitDetail;
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'btn btn-outline-primary';
-        text.appendChild(title);
-        text.appendChild(detail);
-        box.appendChild(spinner);
-        box.appendChild(text);
-        box.appendChild(button);
+        var time = el('span', 'gp-retour-timer', clock(elapsed));
+        time.setAttribute('aria-label', strings.elapsed);
+        ring.appendChild(spinner);
+        ring.appendChild(time);
+
+        var title = el('p', 'gp-formative-modal-title', strings.pending);
+        title.id = 'gpRetourTitle';
+        var steps = el('ol', 'gp-retour-steps');
+        steps.setAttribute('aria-live', 'polite');
+        var step1 = el('li', 'gp-retour-step gp-retour-step-done');
+        step1.appendChild(el('span', 'gp-retour-step-mark', '✓'));
+        step1.appendChild(el('span', '', strings.sent));
+        var step2 = el('li', 'gp-retour-step gp-retour-step-current');
+        step2.appendChild(el('span', 'gp-retour-step-mark', '●'));
+        var step2text = el('span', '', stepWords(strings, status));
+        step2.appendChild(step2text);
+        var step3 = el('li', 'gp-retour-step gp-retour-step-todo');
+        step3.appendChild(el('span', 'gp-retour-step-mark', '○'));
+        step3.appendChild(el('span', '', strings.show));
+        steps.appendChild(step1);
+        steps.appendChild(step2);
+        steps.appendChild(step3);
+
+        box.appendChild(ring);
+        box.appendChild(title);
+        box.appendChild(steps);
+        box.appendChild(el('p', 'gp-formative-modal-detail', strings.patience));
         overlay.appendChild(box);
         document.body.appendChild(overlay);
-        modal = {overlay: overlay, box: box, spinner: spinner, title: title, detail: detail, button: button,
-            closable: false, returnFocus: document.activeElement,
-            onKey: function(event) {
-                if (event.key === 'Escape' && modal && modal.closable) {
-                    closeWait();
-                } else if (event.key === 'Tab' && modal) {
-                    // Keep the keyboard in the window: its only control is the button.
-                    event.preventDefault();
-                    if (!modal.button.hidden) {
-                        modal.button.focus();
-                    }
+
+        var start = Date.now() - 1000 * Math.max(0, elapsed || 0);
+        modal = {overlay: overlay, box: box, closable: false, returnFocus: document.activeElement, onKey: onKey,
+            step2text: step2text, timer: setInterval(function() {
+                time.textContent = clock((Date.now() - start) / 1000);
+            }, 1000)};
+        document.addEventListener('keydown', onKey);
+        box.focus();
+    }
+
+    /**
+     * Show the status of the correction in the second step (waiting in line, in progress).
+     *
+     * @param {Object} strings queue, processing
+     * @param {string} status
+     */
+    function setStatus(strings, status) {
+        if (modal && modal.step2text && (status === 'pending' || status === 'processing')) {
+            modal.step2text.textContent = stepWords(strings, status);
+        }
+    }
+
+    /**
+     * Empty the window and make it closable, with a title and a close cross.
+     *
+     * @param {Object} strings title, close
+     * @param {string} titleText
+     * @returns {HTMLElement} The box, ready for its content.
+     */
+    function resetBox(strings, titleText) {
+        stopTimer();
+        var box = modal.box;
+        while (box.firstChild) {
+            box.removeChild(box.firstChild);
+        }
+        box.classList.add('gp-retour-result');
+        var head = el('div', 'gp-retour-head');
+        var title = el('h2', 'gp-retour-title', titleText);
+        title.id = 'gpRetourTitle';
+        var cross = el('button', 'gp-retour-cross', '×');
+        cross.type = 'button';
+        cross.setAttribute('aria-label', strings.close);
+        cross.addEventListener('click', closeModal);
+        head.appendChild(title);
+        head.appendChild(cross);
+        box.appendChild(head);
+        modal.closable = true;
+        modal.step2text = null;
+        return box;
+    }
+
+    /**
+     * Add a button to the actions of the window.
+     *
+     * @param {HTMLElement} actions
+     * @param {string} label
+     * @param {string} className
+     * @param {Function} action
+     * @returns {HTMLElement}
+     */
+    function addAction(actions, label, className, action) {
+        var button = el('button', 'btn ' + className, label);
+        button.type = 'button';
+        button.addEventListener('click', action);
+        actions.appendChild(button);
+        return button;
+    }
+
+    /**
+     * A long wait (cron late, queue full): let the student go back to the copy; the feedback still shows in the panel.
+     *
+     * @param {Object} strings back
+     */
+    function allowLeave(strings) {
+        if (!modal || modal.closable) {
+            return;
+        }
+        modal.closable = true;
+        var actions = el('div', 'gp-retour-actions');
+        modal.box.appendChild(actions);
+        addAction(actions, strings.back, 'btn-outline-primary', closeModal);
+    }
+
+    /**
+     * The feedback is ready: show it in the window, with the actions it calls for.
+     *
+     * From SAT (propose_submit): "Submit my final version" put forward, and "Improve again" while feedbacks are left.
+     * Otherwise: "Back to my copy".
+     *
+     * @param {Object} strings title, back, submit, close
+     * @param {Object} data feedback_html, propose_submit, improve_label from the status endpoint
+     * @returns {null}
+     */
+    function showResult(strings, data) {
+        if (!modal) {
+            return null;
+        }
+        var box = resetBox(strings, strings.title);
+        var body = el('div', 'gp-retour-body');
+        box.appendChild(body);
+        var actions = el('div', 'gp-retour-actions');
+        box.appendChild(actions);
+        var first;
+        if (data.propose_submit && document.getElementById('submitButton')) {
+            if (data.improve_label) {
+                addAction(actions, data.improve_label, 'btn-outline-primary', closeModal);
+            }
+            first = addAction(actions, strings.submit, 'btn-primary', function() {
+                closeModal();
+                var submit = document.getElementById('submitButton');
+                if (submit && !submit.disabled) {
+                    submit.click();
                 }
-            }};
-        document.addEventListener('keydown', modal.onKey);
-        if (closable) {
-            setButton(strings.keepWorking, closeWait);
+            });
         } else {
-            button.hidden = true;
-            box.setAttribute('tabindex', '-1');
-            box.focus();
+            first = addAction(actions, strings.back, 'btn-primary', closeModal);
         }
+        // Server-rendered and escaped (the same view as the panel). replaceNodeContents is synchronous and returns
+        // the new nodes, not a promise.
+        Templates.replaceNodeContents(body, data.feedback_html, '');
+        first.focus();
+        return null;
     }
 
     /**
-     * The feedback is ready: say so in the window (if still open), show the feedback on click.
+     * The feedback failed: say so in the window (not counted, ask again), with a button back to the copy.
      *
-     * @param {Object} strings ready, show
-     * @param {HTMLElement} live Region holding the feedback
+     * @param {Object} strings failed, back, close
+     * @param {string} [message] Words to show instead of strings.failed.
      */
-    function showReady(strings, live) {
+    function showFailed(strings, message) {
         if (!modal) {
             return;
         }
-        modal.box.classList.add('gp-formative-modal-ready');
-        modal.spinner.textContent = '✓';
-        modal.title.textContent = strings.ready;
-        modal.detail.textContent = '';
-        setButton(strings.show, function() {
-            closeWait();
-            live.scrollIntoView({behavior: 'smooth', block: 'center'});
-        });
-    }
-
-    /**
-     * The feedback failed: say so in the window (if still open), with a close button.
-     *
-     * @param {Object} strings error, close
-     */
-    function showFailed(strings) {
-        if (!modal) {
-            return;
-        }
-        modal.box.classList.add('gp-formative-modal-failed');
-        modal.spinner.textContent = '!';
-        modal.title.textContent = strings.error;
-        modal.detail.textContent = '';
-        setButton(strings.close, closeWait);
+        var box = resetBox(strings, '');
+        box.classList.add('gp-formative-modal-failed');
+        var line = el('p', 'gp-retour-failed');
+        line.appendChild(el('span', 'gp-formative-modal-spinner', '!'));
+        line.appendChild(el('span', '', message || strings.failed));
+        box.appendChild(line);
+        var actions = el('div', 'gp-retour-actions');
+        box.appendChild(actions);
+        addAction(actions, strings.back, 'btn-primary', closeModal).focus();
     }
 
     /**
@@ -204,7 +372,7 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     function wireAsk(button, cfg) {
         button.addEventListener('click', function() {
             button.disabled = true;
-            openWait(cfg.strings, false);
+            openWait(cfg.strings, 'pending', 0);
             // Save the copy on screen first: the feedback is about what the student sees.
             saveCopy()
                 .then(function() {
@@ -218,7 +386,7 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
                     return null;
                 })
                 .catch(function(error) {
-                    closeWait();
+                    closeModal();
                     button.disabled = false;
                     Notification.exception(error);
                 });
@@ -266,39 +434,51 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     }
 
     /**
-     * Follow a running feedback; when it is ready, show it in place of the banner (no click, no reload).
+     * Follow a running feedback; when it is ready, show it in the window and in place of the banner of the panel
+     * (no reload).
      *
-     * @param {Object} cfg cmid, step, groupid, pendingId, statusUrl, bannerId, strings
+     * @param {Object} cfg cmid, step, groupid, pendingId, pendingStatus, elapsed, statusUrl, bannerId, strings
      */
     function follow(cfg) {
         var live = document.getElementById(cfg.bannerId);
         if (!live) {
             return;
         }
-        openWait(cfg.strings, true);
+        openWait(cfg.strings, cfg.pendingStatus || 'pending', cfg.elapsed || 0);
         // Polls may overlap on a slow server: the finished feedback is handled once.
         var done = false;
+        var leaveAt = Date.now() + Math.max(0, LEAVE_AFTER_MS - 1000 * (cfg.elapsed || 0));
         var timer = setInterval(function() {
+            if (Date.now() >= leaveAt) {
+                allowLeave(cfg.strings);
+            }
             var sesskey = window.M && window.M.cfg ? window.M.cfg.sesskey : '';
             var url = cfg.statusUrl + '?id=' + encodeURIComponent(cfg.cmid) + '&evaluationid='
                 + encodeURIComponent(cfg.pendingId) + '&sesskey=' + encodeURIComponent(sesskey);
             fetch(url, {credentials: 'same-origin'})
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    if (done || !data || !data.success || (data.status !== 'completed' && data.status !== 'failed')) {
+                    if (done || !data || !data.success) {
+                        return null;
+                    }
+                    // The evaluation was deleted (by a teacher): nothing will come, say so instead of waiting forever.
+                    var gone = data.has_evaluation === false;
+                    if (!gone && data.status !== 'completed' && data.status !== 'failed') {
+                        setStatus(cfg.strings, data.status);
                         return null;
                     }
                     done = true;
                     clearInterval(timer);
                     restoreAsk(data, cfg);
                     if (data.status === 'completed' && data.feedback_html) {
-                        // Server-rendered and escaped (the same view as after a reload).
-                        return Templates.replaceNodeContents(live, data.feedback_html, '').then(function() {
-                            showReady(cfg.strings, live);
-                            return null;
+                        // Server-rendered and escaped (the same view as after a reload). replaceNodeContents returns
+                        // the new nodes, not a promise: a .then on it threw and the window stayed on "in preparation".
+                        return Promise.resolve().then(function() {
+                            Templates.replaceNodeContents(live, data.feedback_html, '');
+                            return showResult(cfg.strings, data);
                         }).catch(function() {
                             // Shown after a reload anyway; the window must not stay on "in preparation".
-                            showFailed(cfg.strings);
+                            showFailed(cfg.strings, cfg.strings.error);
                         });
                     }
                     showFailed(cfg.strings);
@@ -307,7 +487,7 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
                         banner.className = banner.className.replace(/\bstatus-\S+/g, '') + ' status-failed';
                     }
                     var label = live.querySelector('.ai-progress-label') || live;
-                    label.textContent = cfg.strings.error;
+                    label.textContent = cfg.strings.failed;
                     return null;
                 })
                 .catch(function() {
@@ -319,7 +499,8 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     /**
      * Wire the ask button, or follow a running feedback.
      *
-     * @param {Object} cfg cmid, step, groupid, buttonId; or pendingId, statusUrl, bannerId, strings
+     * @param {Object} cfg cmid, step, groupid, buttonId, strings; or pendingId, pendingStatus, elapsed, statusUrl,
+     *     bannerId, strings
      */
     function init(cfg) {
         if (cfg.pendingId) {

@@ -364,7 +364,9 @@ function gestionprojet_spelling_block_html(?array $langue, int $dismisscmid = 0)
     } else {
         $items = [];
         foreach ($fautes as $faute) {
-            $line = '« ' . s($faute['cite']) . ' » → ' . s($faute['correction']);
+            // Student: the word as written, struck out, then the correction (v2.17.0, as in mod_redaction).
+            $line = $dismisscmid > 0 ? '« ' . s($faute['cite']) . ' » → ' . s($faute['correction'])
+                : html_writer::tag('del', s($faute['cite'])) . ' → ' . html_writer::tag('strong', s($faute['correction']));
             if ($dismisscmid > 0) {
                 $line .= ' ' . html_writer::tag('button', s(get_string('langue_dismiss', 'gestionprojet')), [
                     'type' => 'button', 'class' => 'btn btn-link btn-sm gp-langue-dismiss',
@@ -1921,50 +1923,73 @@ function gestionprojet_level_banner_html(?array $level): string {
 }
 
 /**
- * Student view of a feedback of the progress panel: date, text, suggestions, criteria, keywords (v2.12.2).
+ * Student view of a feedback: level, text, what works / what is missing, next steps, language, keywords (v2.17.0).
  *
- * Shared by the panel and by the status endpoint (a formative feedback shown in place when it is ready).
+ * Shared by the progress panel and by the feedback window (status endpoint, a formative feedback shown when ready),
+ * with the colour code of mod_redaction (D-086): "✓ What works" light blue, "✗ What is missing" orange frame,
+ * "→ For your next feedback" blue frame; a mark and a word always go with the colour.
  *
  * @param array $feedback The 'feedback' entry of gestionprojet_progress_state() (already filtered for the student).
  * @return string HTML, every value escaped.
  */
 function gestionprojet_progress_feedback_html(array $feedback): string {
     $out = gestionprojet_level_banner_html($feedback['level'] ?? null);
-    $out .= gestionprojet_spelling_block_html($feedback['langue'] ?? null);
     $out .= html_writer::tag('p', userdate($feedback['time'], get_string('strftimedatetimeshort')),
         ['class' => 'gp-progress-date']);
     if ($feedback['text'] !== '') {
-        $out .= html_writer::tag('p', nl2br(s($feedback['text'])));
+        $out .= html_writer::tag('p', nl2br(s($feedback['text'])), ['class' => 'gp-retour-text']);
     }
-    if ($feedback['suggestions']) {
-        $out .= html_writer::alist(array_map(function ($suggestion): string {
-            return s(is_scalar($suggestion) ? (string)$suggestion : '');
-        }, $feedback['suggestions']));
-    }
-    // Criteria of the grade (score per criterion), as the former grade block showed them.
-    if ($feedback['criteria']) {
-        $out .= html_writer::tag('h4', get_string('progress_criteria', 'gestionprojet'));
-        $items = [];
-        foreach ($feedback['criteria'] as $criterion) {
-            if (!is_array($criterion)) {
-                continue;
-            }
-            $line = (string)($criterion['name'] ?? '');
-            if (isset($criterion['score'], $criterion['max'])) {
-                $line .= ' : ' . format_float((float)$criterion['score'], 1) . '/' . format_float((float)$criterion['max'], 1);
-            }
-            if (!empty($criterion['comment'])) {
-                $line .= ' — ' . (string)$criterion['comment'];
-            }
-            $items[] = s($line);
-        }
-        $out .= html_writer::alist($items, ['class' => 'gp-progress-criteria']);
-    }
+    $out .= gestionprojet_feedback_columns_html($feedback['criteria'] ?? [], $feedback['suggestions'] ?? []);
+    $out .= gestionprojet_spelling_block_html($feedback['langue'] ?? null);
     if ($feedback['keywords']) {
         $out .= html_writer::tag('h4', get_string('progress_keywords', 'gestionprojet'));
         $out .= html_writer::alist(array_map(function ($keyword): string {
             return '✓ ' . s(is_scalar($keyword) ? (string)$keyword : '');
         }, $feedback['keywords']), ['class' => 'gp-progress-keywords']);
+    }
+    return $out;
+}
+
+/**
+ * "✓ What works" / "✗ What is missing" columns and "→ For your next feedback" frame of a feedback (v2.17.0).
+ *
+ * An empty column is not shown; no criteria (hidden by the teacher): no columns.
+ *
+ * @param array $criteria Criteria (name, score, max, comment), already filtered for the student.
+ * @param array $suggestions Next steps, already filtered for the student.
+ * @return string HTML, every value escaped.
+ */
+function gestionprojet_feedback_columns_html(array $criteria, array $suggestions): string {
+    $split = \mod_gestionprojet\retour_view::split_criteria($criteria);
+    $columns = '';
+    foreach (['va' => '✓', 'manque' => '✗'] as $kind => $mark) {
+        if (!$split[$kind]) {
+            continue;
+        }
+        $items = array_map(function (array $item): string {
+            $line = html_writer::tag('strong', s($item['name']));
+            if ($item['max'] !== null) {
+                $line .= ' (' . format_float($item['score'], 1, true, true) . '/' . format_float($item['max'], 1, true, true) . ')';
+            }
+            if ($item['comment'] !== '') {
+                $line .= ($item['name'] !== '' ? ' : ' : '') . s($item['comment']);
+            }
+            return $line;
+        }, $split[$kind]);
+        $columns .= html_writer::div(
+            html_writer::tag('h4', html_writer::span($mark, 'gp-retour-mark', ['aria-hidden' => 'true']) . ' '
+                . s(get_string('retour_' . $kind, 'gestionprojet')))
+            . html_writer::alist($items), 'gp-retour-col gp-retour-' . $kind);
+    }
+    $out = $columns !== '' ? html_writer::div($columns, 'gp-retour-cols') : '';
+    $suggestions = array_values(array_filter(array_map(function ($suggestion): string {
+        return is_scalar($suggestion) ? trim((string)$suggestion) : '';
+    }, $suggestions), 'strlen'));
+    if ($suggestions) {
+        $out .= html_writer::div(
+            html_writer::tag('h4', html_writer::span('→', 'gp-retour-mark', ['aria-hidden' => 'true']) . ' '
+                . s(get_string('retour_next', 'gestionprojet')))
+            . html_writer::alist(array_map('s', $suggestions)), 'gp-retour-next');
     }
     return $out;
 }

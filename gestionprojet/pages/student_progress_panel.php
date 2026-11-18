@@ -29,12 +29,44 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-echo '</div>';
-
 if (!empty($submission)) {
     // Read-only for a teacher looking at someone else's copy (a group's, or another user's); their own copy is theirs.
     $progressreadonly = (int)$submission->userid !== (int)$USER->id && has_capability('mod/gestionprojet:grade', $context);
     $progress = gestionprojet_progress_state($gestionprojet, (int)$step, $submission, $progressreadonly);
+
+    // Blue banner while the last feedback reaches SAT and the copy can be submitted (v2.17.0): rendered at the end of
+    // the main column, moved to its top by mod_gestionprojet/progress_panel.
+    if ($progress['formative'] && !$progress['formative']['pending'] && $progress['feedback']['source'] === 'formative'
+            && \mod_gestionprojet\retour_view::propose_submit($progress['feedback']['level'], (bool)$progress['cansubmit'])) {
+        $seuillevel = get_string('grille_palier_' . strtolower($progress['feedback']['level']['reached']), 'gestionprojet');
+        echo html_writer::div(
+            html_writer::span('✓', 'gp-retour-mark', ['aria-hidden' => 'true'])
+            . html_writer::span(s(get_string('retour_seuil', 'gestionprojet', $seuillevel)), 'gp-retour-seuil-text')
+            . html_writer::tag('button', get_string('progress_submit', 'gestionprojet'),
+                ['type' => 'button', 'class' => 'btn btn-primary', 'data-gp-forward' => 'submitButton']),
+            'gp-retour-seuil', ['role' => 'status']);
+    }
+}
+
+echo '</div>';
+
+if (!empty($submission)) {
+    // Words of the feedback window (v2.17.0): waiting, result, failure.
+    $retourstrings = [
+        'pending' => get_string('formative_pending', 'gestionprojet'),
+        'sent' => get_string('retour_step_sent', 'gestionprojet'),
+        'queue' => get_string('retour_step_queue', 'gestionprojet'),
+        'processing' => get_string('retour_step_processing', 'gestionprojet'),
+        'show' => get_string('retour_step_show', 'gestionprojet'),
+        'patience' => get_string('retour_patience', 'gestionprojet'),
+        'elapsed' => get_string('retour_elapsed', 'gestionprojet'),
+        'title' => get_string('retour_title', 'gestionprojet'),
+        'back' => get_string('retour_back', 'gestionprojet'),
+        'submit' => get_string('progress_submit', 'gestionprojet'),
+        'failed' => get_string('retour_failed', 'gestionprojet'),
+        'error' => get_string('formative_error', 'gestionprojet'),
+        'close' => get_string('formative_close', 'gestionprojet'),
+    ];
 
     echo html_writer::start_tag('aside', ['class' => 'gp-progress-panel', 'aria-label' => get_string('progress_title', 'gestionprojet')]);
     echo html_writer::tag('h2', get_string('progress_title', 'gestionprojet'));
@@ -118,24 +150,21 @@ if (!empty($submission)) {
             echo html_writer::div(html_writer::div($banner,
                 'gp-formative-status ai-progress-banner status-' . s($formative['pending']->status)),
                 'gp-formative-live', ['id' => 'gpFormativeBanner', 'aria-live' => 'polite']);
-            $PAGE->requires->js_call_amd('mod_gestionprojet/formative_button', 'init', [[
-                'cmid' => (int)$cm->id,
-                'pendingId' => (int)$formative['pending']->id,
-                'step' => (int)$step,
-                'groupid' => (int)$groupid,
-                'statusUrl' => (new moodle_url('/mod/gestionprojet/ajax/get_evaluation_status.php'))->out(false),
-                'bannerId' => 'gpFormativeBanner',
-                // Waiting window (request 36): words of the spinner, of the ready and failed states.
-                'strings' => [
-                    'pending' => get_string('formative_pending', 'gestionprojet'),
-                    'waitDetail' => get_string('formative_wait_detail', 'gestionprojet'),
-                    'keepWorking' => get_string('formative_keep_working', 'gestionprojet'),
-                    'ready' => get_string('formative_ready', 'gestionprojet'),
-                    'show' => get_string('formative_show', 'gestionprojet'),
-                    'error' => get_string('formative_error', 'gestionprojet'),
-                    'close' => get_string('formative_close', 'gestionprojet'),
-                ],
-            ]]);
+            // A teacher looking at the copy is never blocked by the waiting window: the banner of the panel is enough.
+            if (!$progressreadonly) {
+                $PAGE->requires->js_call_amd('mod_gestionprojet/formative_button', 'init', [[
+                    'cmid' => (int)$cm->id,
+                    'pendingId' => (int)$formative['pending']->id,
+                    'step' => (int)$step,
+                    'groupid' => (int)$groupid,
+                    'statusUrl' => (new moodle_url('/mod/gestionprojet/ajax/get_evaluation_status.php'))->out(false),
+                    'bannerId' => 'gpFormativeBanner',
+                    // Feedback window (v2.17.0): status and seconds elapsed since the request, for the steps and the timer.
+                    'pendingStatus' => (string)$formative['pending']->status,
+                    'elapsed' => max(0, time() - (int)$formative['pending']->timecreated),
+                    'strings' => $retourstrings,
+                ]]);
+            }
         } else if ($progress['feedback']['source'] !== 'none') {
             echo gestionprojet_progress_feedback_html($progress['feedback']);
         } else {
@@ -159,13 +188,7 @@ if (!empty($submission)) {
                 'step' => (int)$step,
                 'groupid' => (int)$groupid,
                 'buttonId' => 'gpFormativeButton',
-                'strings' => [
-                    'pending' => get_string('formative_pending', 'gestionprojet'),
-                    'waitDetail' => get_string('formative_wait_detail', 'gestionprojet'),
-                    'keepWorking' => get_string('formative_keep_working', 'gestionprojet'),
-                    'error' => get_string('formative_error', 'gestionprojet'),
-                    'close' => get_string('formative_close', 'gestionprojet'),
-                ],
+                'strings' => $retourstrings,
             ]]);
         } else {
             echo html_writer::div('⊘ ' . get_string('formative_none_left', 'gestionprojet'), 'gp-formative-none');

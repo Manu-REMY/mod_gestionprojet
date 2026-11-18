@@ -38,7 +38,7 @@ test('the teacher comment shows even when AI is off', fn() => strpos($body, '$ap
 test('the teacher comment is not filtered', fn() => strpos($body, "\$pick['source'] !== 'teacher'") !== false);
 // v2.12.2: the feedback markup lives in gestionprojet_progress_feedback_html() (lib.php), shared with the endpoint.
 test('the criteria of the applied evaluation are back (show_criteria)', fn() => strpos($body, 'show_criteria') !== false
-    && strpos(file_get_contents(GP_ROOT . '/lib.php'), "'gp-progress-criteria'") !== false);
+    && strpos(file_get_contents(GP_ROOT . '/lib.php'), "gestionprojet_feedback_columns_html(\$feedback['criteria']") !== false);
 test('the keywords found are back (show_keywords_found)', fn() => strpos($body, 'show_keywords_found') !== false
     && strpos(file_get_contents(GP_ROOT . '/lib.php'), "'gp-progress-keywords'") !== false);
 test('submitted but not graded: its own words', fn() => strpos($panel, "'progress_grade_pending'") !== false);

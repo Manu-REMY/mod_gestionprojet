@@ -45,10 +45,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define([
-    'core/modal_factory',
+    'core/modal_save_cancel',
     'core/modal_events',
     'core/notification'
-], function(ModalFactory, ModalEvents, Notification) {
+], function(ModalSaveCancel, ModalEvents, Notification) {
     'use strict';
 
     /**
@@ -79,8 +79,7 @@ define([
 
         resetBtn.addEventListener('click', function() {
             var lang = cfg.resetLang || {};
-            ModalFactory.create({
-                type: ModalFactory.types.SAVE_CANCEL,
+            ModalSaveCancel.create({
                 title: lang.modalTitle,
                 body: '<p>' + escapeHtml(lang.modalBody) + '</p>',
                 large: false

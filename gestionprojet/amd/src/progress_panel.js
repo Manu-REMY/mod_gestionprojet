@@ -152,6 +152,11 @@ define([], function() {
      *     interactor, constraint}
      */
     function init(cfg) {
+        // "Level reached" banner (v2.17.0): rendered at the end of the main column, shown at its top.
+        var seuil = document.querySelector('.gp-progress-main > .gp-retour-seuil');
+        if (seuil && seuil.parentNode.firstChild !== seuil) {
+            seuil.parentNode.insertBefore(seuil, seuil.parentNode.firstChild);
+        }
         // Bar buttons forward the click to the panel's own buttons (one #submitButton per page).
         Array.prototype.slice.call(document.querySelectorAll('[data-gp-forward]')).forEach(function(button) {
             button.addEventListener('click', function() {
