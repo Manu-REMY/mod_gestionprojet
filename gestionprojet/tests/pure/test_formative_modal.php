@@ -73,6 +73,8 @@ test('js: failure -> not counted, back to the copy', fn() =>
     preg_match('/function showFailed\(strings, message\).*?strings\.failed.*?strings\.back/s', $js) === 1);
 test('js: a failed render does not leave the window on "in preparation"', fn() =>
     preg_match('/return showResult\(cfg\.strings, data\);.*?\.catch\(function\(\) \{.*?showFailed\(cfg\.strings, cfg\.strings\.error\);/s', $js) === 1);
+test('js: replaceNodeContents is not a promise: never .then on it (preprod, 18/11)', fn() =>
+    preg_match('/replaceNodeContents\([^;]*?\)\s*\.then/', $js) === 0);
 test('js: never innerHTML', fn() => $js !== '' && strpos($js, 'innerHTML') === false);
 
 // Server.

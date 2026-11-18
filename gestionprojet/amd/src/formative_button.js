@@ -287,11 +287,11 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
      *
      * @param {Object} strings title, back, submit, close
      * @param {Object} data feedback_html, propose_submit, improve_label from the status endpoint
-     * @returns {Promise}
+     * @returns {null}
      */
     function showResult(strings, data) {
         if (!modal) {
-            return Promise.resolve();
+            return null;
         }
         var box = resetBox(strings, strings.title);
         var body = el('div', 'gp-retour-body');
@@ -313,11 +313,11 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
         } else {
             first = addAction(actions, strings.back, 'btn-primary', closeModal);
         }
-        // Server-rendered and escaped (the same view as the panel).
-        return Templates.replaceNodeContents(body, data.feedback_html, '').then(function() {
-            first.focus();
-            return null;
-        });
+        // Server-rendered and escaped (the same view as the panel). replaceNodeContents is synchronous and returns
+        // the new nodes, not a promise.
+        Templates.replaceNodeContents(body, data.feedback_html, '');
+        first.focus();
+        return null;
     }
 
     /**
@@ -471,8 +471,10 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
                     clearInterval(timer);
                     restoreAsk(data, cfg);
                     if (data.status === 'completed' && data.feedback_html) {
-                        // Server-rendered and escaped (the same view as after a reload).
-                        return Templates.replaceNodeContents(live, data.feedback_html, '').then(function() {
+                        // Server-rendered and escaped (the same view as after a reload). replaceNodeContents returns
+                        // the new nodes, not a promise: a .then on it threw and the window stayed on "in preparation".
+                        return Promise.resolve().then(function() {
+                            Templates.replaceNodeContents(live, data.feedback_html, '');
                             return showResult(cfg.strings, data);
                         }).catch(function() {
                             // Shown after a reload anyway; the window must not stay on "in preparation".
