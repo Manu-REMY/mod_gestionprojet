@@ -24,11 +24,11 @@
 define([
     'jquery',
     'core/ajax',
-    'core/modal_factory',
+    'core/modal_save_cancel',
     'core/modal_events',
     'core/templates',
     'core/notification'
-], function($, Ajax, ModalFactory, ModalEvents, Templates, Notification) {
+], function($, Ajax, ModalSaveCancel, ModalEvents, Templates, Notification) {
 
     var config = {};
 
@@ -61,8 +61,7 @@ define([
             canask: canask,
             asklabel: canask ? ask.textContent : ''
         }).then(function(html) {
-            return ModalFactory.create({
-                type: ModalFactory.types.SAVE_CANCEL,
+            return ModalSaveCancel.create({
                 title: config.strings.modal_title,
                 body: html,
                 large: false
