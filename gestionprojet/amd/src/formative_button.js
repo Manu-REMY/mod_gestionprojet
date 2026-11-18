@@ -37,6 +37,9 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
 
     var POLL_MS = 5000;
 
+    /** @type {number} After this wait (ms) the student may leave the waiting window; the polling goes on. */
+    var LEAVE_AFTER_MS = 180000;
+
     /** @type {?Object} The window: overlay, box, timer, closable, returnFocus, onKey, step2; null when closed. */
     var modal = null;
 
@@ -262,6 +265,21 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
     }
 
     /**
+     * A long wait (cron late, queue full): let the student go back to the copy; the feedback still shows in the panel.
+     *
+     * @param {Object} strings back
+     */
+    function allowLeave(strings) {
+        if (!modal || modal.closable) {
+            return;
+        }
+        modal.closable = true;
+        var actions = el('div', 'gp-retour-actions');
+        modal.box.appendChild(actions);
+        addAction(actions, strings.back, 'btn-outline-primary', closeModal);
+    }
+
+    /**
      * The feedback is ready: show it in the window, with the actions it calls for.
      *
      * From SAT (propose_submit): "Submit my final version" put forward, and "Improve again" while feedbacks are left.
@@ -429,7 +447,11 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
         openWait(cfg.strings, cfg.pendingStatus || 'pending', cfg.elapsed || 0);
         // Polls may overlap on a slow server: the finished feedback is handled once.
         var done = false;
+        var leaveAt = Date.now() + Math.max(0, LEAVE_AFTER_MS - 1000 * (cfg.elapsed || 0));
         var timer = setInterval(function() {
+            if (Date.now() >= leaveAt) {
+                allowLeave(cfg.strings);
+            }
             var sesskey = window.M && window.M.cfg ? window.M.cfg.sesskey : '';
             var url = cfg.statusUrl + '?id=' + encodeURIComponent(cfg.cmid) + '&evaluationid='
                 + encodeURIComponent(cfg.pendingId) + '&sesskey=' + encodeURIComponent(sesskey);
@@ -439,7 +461,9 @@ function(Ajax, Notification, Templates, Autosave, SaveHooks) {
                     if (done || !data || !data.success) {
                         return null;
                     }
-                    if (data.status !== 'completed' && data.status !== 'failed') {
+                    // The evaluation was deleted (by a teacher): nothing will come, say so instead of waiting forever.
+                    var gone = data.has_evaluation === false;
+                    if (!gone && data.status !== 'completed' && data.status !== 'failed') {
                         setStatus(cfg.strings, data.status);
                         return null;
                     }

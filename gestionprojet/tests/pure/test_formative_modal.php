@@ -50,6 +50,15 @@ test('js: focus kept in the window and given back on close', fn() => strpos($js,
     && strpos($js, 'returnFocus: document.activeElement') !== false);
 test('js: a failed ask closes the window', fn() => preg_match('/\.catch\(function\(error\) \{\s*closeModal\(\);/', $js) === 1);
 
+test('panel: a read-only teacher is never blocked by the waiting window (review)', fn() =>
+    preg_match('/if \(!\$progressreadonly\) \{\s*\$PAGE->requires->js_call_amd\(\'mod_gestionprojet\/formative_button\', \'init\', \[\[\s*\'cmid\' => \(int\)\$cm->id,\s*\'pendingId\'/', $panel) === 1);
+test('js: a deleted evaluation ends the wait as a failure (review)', fn() =>
+    strpos($js, 'var gone = data.has_evaluation === false;') !== false
+    && strpos($js, "if (!gone && data.status !== 'completed' && data.status !== 'failed')") !== false);
+test('js: after 3 minutes the student may leave the window, polling goes on (review)', fn() =>
+    strpos($js, 'LEAVE_AFTER_MS = 180000') !== false && strpos($js, 'allowLeave(cfg.strings);') !== false
+    && preg_match('/function allowLeave\(strings\) \{.*?modal\.closable = true;.*?strings\.back/s', $js) === 1);
+
 // Result.
 test('js: the feedback is shown in the window (server HTML, escaped there)', fn() =>
     strpos($js, 'Templates.replaceNodeContents(body, data.feedback_html') !== false);

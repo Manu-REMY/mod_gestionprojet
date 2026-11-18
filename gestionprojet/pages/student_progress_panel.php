@@ -150,18 +150,21 @@ if (!empty($submission)) {
             echo html_writer::div(html_writer::div($banner,
                 'gp-formative-status ai-progress-banner status-' . s($formative['pending']->status)),
                 'gp-formative-live', ['id' => 'gpFormativeBanner', 'aria-live' => 'polite']);
-            $PAGE->requires->js_call_amd('mod_gestionprojet/formative_button', 'init', [[
-                'cmid' => (int)$cm->id,
-                'pendingId' => (int)$formative['pending']->id,
-                'step' => (int)$step,
-                'groupid' => (int)$groupid,
-                'statusUrl' => (new moodle_url('/mod/gestionprojet/ajax/get_evaluation_status.php'))->out(false),
-                'bannerId' => 'gpFormativeBanner',
-                // Feedback window (v2.17.0): status and seconds elapsed since the request, for the steps and the timer.
-                'pendingStatus' => (string)$formative['pending']->status,
-                'elapsed' => max(0, time() - (int)$formative['pending']->timecreated),
-                'strings' => $retourstrings,
-            ]]);
+            // A teacher looking at the copy is never blocked by the waiting window: the banner of the panel is enough.
+            if (!$progressreadonly) {
+                $PAGE->requires->js_call_amd('mod_gestionprojet/formative_button', 'init', [[
+                    'cmid' => (int)$cm->id,
+                    'pendingId' => (int)$formative['pending']->id,
+                    'step' => (int)$step,
+                    'groupid' => (int)$groupid,
+                    'statusUrl' => (new moodle_url('/mod/gestionprojet/ajax/get_evaluation_status.php'))->out(false),
+                    'bannerId' => 'gpFormativeBanner',
+                    // Feedback window (v2.17.0): status and seconds elapsed since the request, for the steps and the timer.
+                    'pendingStatus' => (string)$formative['pending']->status,
+                    'elapsed' => max(0, time() - (int)$formative['pending']->timecreated),
+                    'strings' => $retourstrings,
+                ]]);
+            }
         } else if ($progress['feedback']['source'] !== 'none') {
             echo gestionprojet_progress_feedback_html($progress['feedback']);
         } else {

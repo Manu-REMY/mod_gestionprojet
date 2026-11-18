@@ -43,7 +43,7 @@ test('upgrade: 2026111700 adds the four fields', function () use ($read) {
     return strpos($up, '2026111700') && strpos($up, "'step4_fs_mode'") && strpos($up, "'step4_fs_sujets'")
         && strpos($up, "'fs_tirees'");
 });
-test('version 2.16.0', fn() => strpos($read('version.php'), "2026111700") && strpos($read('version.php'), "'2.16.0'"));
+test('version 2.16.0 or later', fn() => preg_match('/plugin->version = (\d+);/', $read('version.php'), $m) && (int)$m[1] >= 2026111700);
 test('backup: settings and the draw of each copy', function () use ($read) {
     $b = $read('backup/moodle2/backup_gestionprojet_stepslib.php');
     return strpos($b, "'step4_fs_mode', 'step4_fs_tirage', 'step4_fs_sujets'") && strpos($b, "'zones_validees', 'fs_tirees'");

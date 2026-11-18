@@ -5873,7 +5873,6 @@
     max-height: none;
 }
 
-.path-mod-gestionprojet .gp-progress-criteria,
 .path-mod-gestionprojet .gp-progress-keywords {
     padding-left: 1.1rem;
     font-size: 0.9rem;
@@ -6045,10 +6044,6 @@
     font-size: 1.25rem;
 }
 
-.path-mod-gestionprojet .gp-formative-modal-text {
-    flex: 1 1 14rem;
-}
-
 .path-mod-gestionprojet .gp-formative-modal-title {
     margin: 0;
     font-size: 1.1rem;
@@ -6068,8 +6063,7 @@
     margin-left: auto;
 }
 
-/* Ready: a still ring with a check mark; failed: an exclamation mark on a light orange (never the colour alone). */
-.path-mod-gestionprojet .gp-formative-modal-ready .gp-formative-modal-spinner,
+/* Failed: an exclamation mark on a light orange (never the colour alone). */
 .path-mod-gestionprojet .gp-formative-modal-failed .gp-formative-modal-spinner {
     animation: none;
     border-color: #2f6fb3;
