@@ -114,10 +114,15 @@ try {
             $state = gestionprojet_progress_state($gestionprojet, (int)$evaluation->step, $submission, $readonly);
             if ($evaluation->status === 'completed' && $state['feedback']['source'] !== 'none') {
                 $response['feedback_html'] = gestionprojet_progress_feedback_html($state['feedback']);
+                // Feedback window (v2.17.0): the final submission is put forward from SAT.
+                $response['propose_submit'] = \mod_gestionprojet\retour_view::propose_submit(
+                    $state['feedback']['level'], (bool)$state['cansubmit']);
             }
             if ($state['canask'] && !$state['formative']['pending']) {
                 if ($state['formative']['remaining'] > 0) {
                     $response['ask_label'] = get_string('formative_request', 'gestionprojet',
+                        $state['formative']['remaining']);
+                    $response['improve_label'] = get_string('retour_improve', 'gestionprojet',
                         $state['formative']['remaining']);
                 } else {
                     $response['none_left'] = '⊘ ' . get_string('formative_none_left', 'gestionprojet');

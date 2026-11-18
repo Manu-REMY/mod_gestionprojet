@@ -85,7 +85,7 @@ foreach (['save_hooks', 'fast_editor', 'formative_button'] as $m) {
 foreach (['en', 'fr'] as $l) {
     $string = [];
     include(GP_ROOT . "/lang/$l/gestionprojet.php");
-    foreach (['formative_ready', 'formative_show'] as $k) {
+    foreach (['retour_title', 'retour_failed', 'retour_va', 'retour_manque', 'retour_next'] as $k) {
         test("string $k in $l", fn() => !empty($string[$k]));
     }
 }
